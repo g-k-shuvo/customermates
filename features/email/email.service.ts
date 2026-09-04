@@ -1,8 +1,10 @@
 import type React from "react";
 
-import { Resend } from "resend";
-
 import { env } from "@/env";
+
+import type { EmailTransport } from "./email-transport";
+import { ResendTransport } from "./resend.transport";
+import { SmtpTransport } from "./smtp.transport";
 
 type SendArgs = {
   to: string;
@@ -12,6 +14,10 @@ type SendArgs = {
 };
 
 const defaultSender = `Customermates <${env.RESEND_OPERATOR_EMAIL}>`;
+
+function selectTransport(): EmailTransport {
+  return env.EMAIL_TRANSPORT === "smtp" ? new SmtpTransport() : new ResendTransport();
+}
 
 export class EmailService {
   async send(args: SendArgs): Promise<boolean> {
@@ -26,17 +32,11 @@ export class EmailService {
       return true;
     }
 
-    if (!env.RESEND_API_KEY) throw new Error("RESEND_API_KEY is not configured");
-
-    const resend = new Resend(env.RESEND_API_KEY);
-
-    const { error } = await resend.emails.send({
+    return selectTransport().send({
       from: args.from ?? defaultSender,
       to: args.to,
       subject: args.subject,
       react: args.react,
     });
-
-    return error === null;
   }
 }
