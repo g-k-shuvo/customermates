@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Analytics } from "@vercel/analytics/next";
 
 import { Toaster } from "@/components/ui/sonner";
@@ -12,6 +12,8 @@ type Props = {
 
 export default async function StaticLayout({ children, params }: Props) {
   const { locale } = await params;
+
+  if (env.APP_MODE === "self-hosted") redirect("/dashboard");
 
   if (!isContentLocale(locale)) notFound();
 
