@@ -23,7 +23,14 @@ import type { WithdrawAdAttributionRepo } from "@/features/acquisition/withdraw-
 import { randomUUID } from "node:crypto";
 
 import { getTranslations } from "next-intl/server";
-import { ConversionEventType, CustomColumnType, EntityType, Status, SubscriptionStatus } from "@/generated/prisma";
+import {
+  ConversionEventType,
+  CustomColumnType,
+  EntityType,
+  StageKind,
+  Status,
+  SubscriptionStatus,
+} from "@/generated/prisma";
 
 import { type UserDto } from "./user.schema";
 
@@ -76,6 +83,16 @@ const DEFAULT_SELECT_COLUMNS: DefaultSelectColumn[] = [
     ],
   },
 ] as const;
+
+const DEFAULT_PIPELINE_NAME = "Sales";
+
+const DEFAULT_PIPELINE_STAGE_KINDS: Record<string, StageKind> = {
+  won: StageKind.won,
+  lost: StageKind.lost,
+};
+
+const DEFAULT_PIPELINE_STAGES =
+  DEFAULT_SELECT_COLUMNS.find((column) => column.entityType === EntityType.deal)?.options ?? [];
 
 export class PrismaUserRepo
   extends BaseRepository
@@ -322,6 +339,28 @@ export class PrismaUserRepo
     return dealColumnId;
   }
 
+  private async createDefaultPipeline(companyId: string) {
+    const t = await getTranslations();
+
+    await this.prisma.pipeline.create({
+      data: {
+        companyId,
+        name: DEFAULT_PIPELINE_NAME,
+        position: 0,
+        isDefault: true,
+        stages: {
+          create: DEFAULT_PIPELINE_STAGES.map((option, index) => ({
+            companyId,
+            name: t(`Common.defaultData.${EntityType.deal}.options.${option.key}`),
+            position: index,
+            probability: option.weight ?? 0,
+            kind: DEFAULT_PIPELINE_STAGE_KINDS[option.key] ?? StageKind.open,
+          })),
+        },
+      },
+    });
+  }
+
   @Transaction
   async createCompanyAndUser(args: RepoArgs<RegisterUserRepo, "createCompanyAndUser">) {
     if (await this.prisma.user.findFirst({ where: { email: args.email } })) throw new Error("User already exists.");
@@ -332,6 +371,8 @@ export class PrismaUserRepo
 
     if (dealWeightingColumnId)
       await this.prisma.company.update({ where: { id: company.id }, data: { dealWeightingColumnId } });
+
+    await this.createDefaultPipeline(company.id);
 
     const adminRole = await this.prisma.userRole.create({
       data: {

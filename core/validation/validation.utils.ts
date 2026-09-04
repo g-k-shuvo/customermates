@@ -65,6 +65,8 @@ const NOT_FOUND_FAILURE_CODES = new Set<CustomErrorCode>([
   CustomErrorCode.customColumnIdNotFound,
   CustomErrorCode.dealNotFound,
   CustomErrorCode.organizationNotFound,
+  CustomErrorCode.pipelineNotFound,
+  CustomErrorCode.pipelineStageNotFound,
   CustomErrorCode.roleNotFound,
   CustomErrorCode.serviceNotFound,
   CustomErrorCode.taskNotFound,
@@ -76,6 +78,10 @@ const NOT_FOUND_FAILURE_CODES = new Set<CustomErrorCode>([
 ]);
 const CONFLICT_FAILURE_CODES = new Set<CustomErrorCode>([
   CustomErrorCode.operatorConflict,
+  CustomErrorCode.pipelineHasDeals,
+  CustomErrorCode.pipelineDefaultRequired,
+  CustomErrorCode.pipelineStageHasDeals,
+  CustomErrorCode.pipelineStageLastInPipeline,
   CustomErrorCode.roleSystemImmutable,
 ]);
 

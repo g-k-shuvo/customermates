@@ -23,6 +23,7 @@
 import { PrismaContactRepo } from "@/features/contacts/prisma-contact.repository";
 import { PrismaOrganizationRepo } from "@/features/organizations/prisma-organization.repository";
 import { PrismaDealRepo } from "@/features/deals/prisma-deal.repository";
+import { PrismaPipelineRepo, PrismaPipelineStageRepo } from "@/features/pipelines/prisma-pipeline.repository";
 import { PrismaServiceRepo } from "@/features/services/prisma-service.repository";
 import { PrismaTaskRepo } from "@/features/tasks/prisma-task.repository";
 import { PrismaUserRepo } from "@/features/user/prisma-user.repository";
@@ -97,6 +98,8 @@ import { ValidateCustomColumnIdsInteractor } from "@/core/validation/validators/
 import { ValidateCustomFieldValuesInteractor } from "@/core/validation/validators/validate-custom-field-values.interactor";
 import { ValidateDealIdsInteractor } from "@/core/validation/validators/validate-deal-ids.interactor";
 import { ValidateOrganizationIdsInteractor } from "@/core/validation/validators/validate-organization-ids.interactor";
+import { ValidatePipelineIdsInteractor } from "@/core/validation/validators/validate-pipeline-ids.interactor";
+import { ValidatePipelineStageIdsInteractor } from "@/core/validation/validators/validate-pipeline-stage-ids.interactor";
 import { ValidateRoleIdsInteractor } from "@/core/validation/validators/validate-role-ids.interactor";
 import { ValidateServiceIdsInteractor } from "@/core/validation/validators/validate-service-ids.interactor";
 import { ValidateTaskIdsInteractor } from "@/core/validation/validators/validate-task-ids.interactor";
@@ -133,6 +136,16 @@ import { UpdateDealInteractor } from "@/features/deals/upsert/update-deal.intera
 import { UpdateManyDealsInteractor } from "@/features/deals/upsert/update-many-deals.interactor";
 import { DeleteDealInteractor } from "@/features/deals/delete/delete-deal.interactor";
 import { DeleteManyDealsInteractor } from "@/features/deals/delete/delete-many-deals.interactor";
+// Pipelines interactors
+import { GetPipelinesInteractor } from "@/features/pipelines/get/get-pipelines.interactor";
+import { GetPipelineByIdInteractor } from "@/features/pipelines/get/get-pipeline-by-id.interactor";
+import { CreatePipelineInteractor } from "@/features/pipelines/upsert/create-pipeline.interactor";
+import { UpdatePipelineInteractor } from "@/features/pipelines/upsert/update-pipeline.interactor";
+import { ReorderStagesInteractor } from "@/features/pipelines/upsert/reorder-stages.interactor";
+import { DeletePipelineInteractor } from "@/features/pipelines/delete/delete-pipeline.interactor";
+import { CreateStageInteractor } from "@/features/pipelines/stages/create-stage.interactor";
+import { UpdateStageInteractor } from "@/features/pipelines/stages/update-stage.interactor";
+import { DeleteStageInteractor } from "@/features/pipelines/stages/delete-stage.interactor";
 // Services interactors
 import { GetServicesInteractor } from "@/features/services/get/get-services.interactor";
 import { GetServicesConfigurationInteractor } from "@/features/services/get/get-services-configuration.interactor";
@@ -362,6 +375,8 @@ import { ResetOperatorUserCreditsInteractor } from "@/ee/operator/reset-operator
 export const getContactRepo = () => new PrismaContactRepo();
 export const getOrganizationRepo = () => new PrismaOrganizationRepo();
 export const getDealRepo = () => new PrismaDealRepo();
+export const getPipelineRepo = () => new PrismaPipelineRepo();
+export const getPipelineStageIdsRepo = () => new PrismaPipelineStageRepo();
 export const getServiceRepo = () => new PrismaServiceRepo();
 export const getTaskRepo = () => new PrismaTaskRepo();
 export const getUserRepo = () => new PrismaUserRepo();
@@ -453,6 +468,8 @@ export const getOrganizationIdsValidator = () => new ValidateOrganizationIdsInte
 export const getContactIdsValidator = () => new ValidateContactIdsInteractor(getContactRepo());
 export const getUserIdsValidator = () => new ValidateUserIdsInteractor(getUserRepo());
 export const getDealIdsValidator = () => new ValidateDealIdsInteractor(getDealRepo());
+export const getPipelineIdsValidator = () => new ValidatePipelineIdsInteractor(getPipelineRepo());
+export const getPipelineStageIdsValidator = () => new ValidatePipelineStageIdsInteractor(getPipelineStageIdsRepo());
 export const getTaskIdsValidator = () => new ValidateTaskIdsInteractor(getTaskRepo());
 export const getCustomFieldValuesValidator = () => new ValidateCustomFieldValuesInteractor(getCustomColumnRepo());
 export const getAssigneeGuardValidator = () => new ValidateAssigneeGuardInteractor(getUserService());
@@ -754,6 +771,31 @@ export const getDeleteManyDealsInteractor = () =>
     getEventService(),
     getDealWritePrecheck(),
   );
+
+// --- Pipelines ---
+
+export const getGetPipelinesInteractor = () => new GetPipelinesInteractor(getPipelineRepo());
+
+export const getGetPipelineByIdInteractor = () => new GetPipelineByIdInteractor(getPipelineRepo());
+
+export const getCreatePipelineInteractor = () => new CreatePipelineInteractor(getPipelineRepo());
+
+export const getUpdatePipelineInteractor = () =>
+  new UpdatePipelineInteractor(getPipelineRepo(), getPipelineIdsValidator());
+
+export const getReorderStagesInteractor = () =>
+  new ReorderStagesInteractor(getPipelineRepo(), getPipelineIdsValidator(), getPipelineStageIdsValidator());
+
+export const getDeletePipelineInteractor = () =>
+  new DeletePipelineInteractor(getPipelineRepo(), getPipelineIdsValidator());
+
+export const getCreateStageInteractor = () => new CreateStageInteractor(getPipelineRepo(), getPipelineIdsValidator());
+
+export const getUpdateStageInteractor = () =>
+  new UpdateStageInteractor(getPipelineRepo(), getPipelineStageIdsValidator());
+
+export const getDeleteStageInteractor = () =>
+  new DeleteStageInteractor(getPipelineRepo(), getPipelineRepo(), getPipelineStageIdsValidator());
 
 // --- Services ---
 

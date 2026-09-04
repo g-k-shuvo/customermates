@@ -1,6 +1,14 @@
 import type { TenantUser } from "@/features/user/user.schema";
 
-import { Status, CountryCode, Locale, Theme, type Resource, type Action } from "@/generated/prisma";
+import { Status, CountryCode, Locale, Theme, Resource, Action } from "@/generated/prisma";
+
+const PIPELINE_PERMISSIONS = [
+  { id: "perm-pipelines-create", resource: Resource.pipelines, action: Action.create },
+  { id: "perm-pipelines-read-all", resource: Resource.pipelines, action: Action.readAll },
+  { id: "perm-pipelines-read-own", resource: Resource.pipelines, action: Action.readOwn },
+  { id: "perm-pipelines-update", resource: Resource.pipelines, action: Action.update },
+  { id: "perm-pipelines-delete", resource: Resource.pipelines, action: Action.delete },
+];
 
 const MOCK_ROLE = {
   id: "test-role-id",
@@ -9,7 +17,7 @@ const MOCK_ROLE = {
   isSystemRole: true,
   createdAt: new Date(0),
   updatedAt: new Date(0),
-  permissions: [],
+  permissions: [...PIPELINE_PERMISSIONS],
 } satisfies NonNullable<TenantUser["role"]>;
 
 const BASE_MOCK_USER = {

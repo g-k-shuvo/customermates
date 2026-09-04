@@ -36,6 +36,15 @@ import { updateManyDealsOperation } from "@/features/deals/upsert/update-many-de
 import { webhookDealCreatedOperation } from "@/features/deals/upsert/deal-created.openapi";
 import { webhookDealUpdatedOperation } from "@/features/deals/upsert/deal-updated.openapi";
 import { webhookDealDeletedOperation } from "@/features/deals/delete/deal-deleted.openapi";
+import { getPipelinesOperation } from "@/features/pipelines/get/get-pipelines.openapi";
+import { getPipelineByIdOperation } from "@/features/pipelines/get/get-pipeline-by-id.openapi";
+import { createPipelineOperation } from "@/features/pipelines/upsert/create-pipeline.openapi";
+import { updatePipelineOperation } from "@/features/pipelines/upsert/update-pipeline.openapi";
+import { reorderStagesOperation } from "@/features/pipelines/upsert/reorder-stages.openapi";
+import { deletePipelineOperation } from "@/features/pipelines/delete/delete-pipeline.openapi";
+import { createPipelineStageOperation } from "@/features/pipelines/stages/create-stage.openapi";
+import { updatePipelineStageOperation } from "@/features/pipelines/stages/update-stage.openapi";
+import { deletePipelineStageOperation } from "@/features/pipelines/stages/delete-stage.openapi";
 import { getServicesOperation } from "@/features/services/get/get-services.openapi";
 import { getServicesConfigurationOperation } from "@/features/services/get/get-services-configuration.openapi";
 import { getServiceByIdOperation } from "@/features/services/get/get-service-by-id.openapi";
@@ -130,6 +139,14 @@ import { UpdateDealSchema } from "@/features/deals/upsert/update-deal.interactor
 import { UpdateManyDealsSchema } from "@/features/deals/upsert/update-many-deals.interactor";
 import { DeleteManyDealsSchema } from "@/features/deals/delete/delete-many-deals.interactor";
 import { GetDealByIdSchema } from "@/features/deals/get/get-deal-by-id.interactor";
+import { CreatePipelineSchema } from "@/features/pipelines/upsert/create-pipeline.interactor";
+import { UpdatePipelineSchema } from "@/features/pipelines/upsert/update-pipeline.interactor";
+import { ReorderStagesSchema } from "@/features/pipelines/upsert/reorder-stages.interactor";
+import { DeletePipelineSchema } from "@/features/pipelines/delete/delete-pipeline.interactor";
+import { GetPipelineByIdSchema } from "@/features/pipelines/get/get-pipeline-by-id.interactor";
+import { CreateStageSchema } from "@/features/pipelines/stages/create-stage.interactor";
+import { UpdateStageSchema } from "@/features/pipelines/stages/update-stage.interactor";
+import { DeleteStageSchema } from "@/features/pipelines/stages/delete-stage.interactor";
 import { CreateServiceSchema } from "@/features/services/upsert/create-service.interactor";
 import { CreateManyServicesSchema } from "@/features/services/upsert/create-many-services.interactor";
 import { UpdateServiceSchema } from "@/features/services/upsert/update-service.interactor";
@@ -244,6 +261,25 @@ export function generateOpenApiSpec() {
         get: getDealByIdOperation,
         put: updateDealOperation,
         delete: deleteDealOperation,
+      },
+      "/v1/pipelines": {
+        get: getPipelinesOperation,
+        post: createPipelineOperation,
+      },
+      "/v1/pipelines/{id}": {
+        get: getPipelineByIdOperation,
+        put: updatePipelineOperation,
+        delete: deletePipelineOperation,
+      },
+      "/v1/pipelines/{id}/stages": {
+        post: createPipelineStageOperation,
+      },
+      "/v1/pipelines/{id}/stages/reorder": {
+        put: reorderStagesOperation,
+      },
+      "/v1/pipeline-stages/{id}": {
+        put: updatePipelineStageOperation,
+        delete: deletePipelineStageOperation,
       },
       "/v1/services": {
         post: createServiceOperation,
@@ -481,6 +517,14 @@ export function generateOpenApiSpec() {
         UpdateDealSchema,
         UpdateManyDealsSchema,
         GetDealByIdSchema,
+        DeletePipelineSchema,
+        CreatePipelineSchema,
+        UpdatePipelineSchema,
+        ReorderStagesSchema,
+        GetPipelineByIdSchema,
+        CreateStageSchema,
+        UpdateStageSchema,
+        DeleteStageSchema,
         DeleteServiceSchema,
         DeleteManyServicesSchema,
         CreateServiceSchema,

@@ -79,6 +79,8 @@ export function createMockDiModule(getMockUser: () => TenantUser) {
     }),
     getOrganizationRepo: () => ({ findIds: makeFindIds() }),
     getDealRepo: () => ({ findIds: makeFindIds() }),
+    getPipelineRepo: () => ({ findIds: makeFindIds(), findPipelineIdsByStageIds: makeFindIdsMap() }),
+    getPipelineStageIdsRepo: () => ({ findIds: makeFindIds() }),
     getCompanyRepo: () => ({ findIds: makeFindIds() }),
     getUserRepo: () => ({ findIds: makeFindIds(), findExistingEmailsCompanyWide: makeFindIds() }),
     getCustomColumnRepo: () => ({ findByEntityType: vi.fn().mockResolvedValue([]), findIds: makeFindIds() }),
