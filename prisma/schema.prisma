@@ -218,6 +218,8 @@ model Company {
   contacts                    Contact[]
   organizations               Organization[]
   deals                       Deal[]
+  pipelines                   Pipeline[]
+  pipelineStages              PipelineStage[]
   services                    Service[]
   CustomColumn                CustomColumn[]
   auditLogs                   AuditLog[]
@@ -462,6 +464,12 @@ model Deal {
   weightedValue     Float?
   companyId         String
   notes             Json?
+  pipelineId        String?
+  stageId           String?
+  status            DealStatus         @default(open)
+  expectedCloseDate DateTime?
+  probability       Float?
+  stageEnteredAt    DateTime?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   company           Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -471,6 +479,8 @@ model Deal {
   services          ServiceDeal[]
   tasks             TaskDeal[]
   customFieldValues CustomFieldValue[]
+  pipeline          Pipeline?          @relation(fields: [pipelineId], references: [id], onDelete: SetNull)
+  stage             PipelineStage?     @relation(fields: [stageId], references: [id], onDelete: SetNull)
 
   @@index([companyId])
   @@index([name])
@@ -478,6 +488,11 @@ model Deal {
   @@index([totalValue])
   @@index([totalQuantity])
   @@index([weightedValue])
+  @@index([companyId, pipelineId, stageId])
+  @@index([companyId, status])
+  @@index([expectedCloseDate])
+  @@index([pipelineId])
+  @@index([stageId])
 }
 
 model Service {
@@ -1151,6 +1166,18 @@ enum EntityType {
   deal
   service
   task
+}
+
+enum StageKind {
+  open
+  won
+  lost
+}
+
+enum DealStatus {
+  open
+  won
+  lost
 }
 
 enum Currency {
@@ -1920,4 +1947,40 @@ model ConversionEvent {
 enum ConversionEventType {
   signup
   paid
+}
+
+model Pipeline {
+  id         String          @id @default(uuid())
+  companyId  String
+  name       String
+  position   Int             @default(0)
+  isDefault  Boolean         @default(false)
+  archivedAt DateTime?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  company    Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  stages     PipelineStage[]
+  deals      Deal[]
+
+  @@index([companyId])
+  @@index([companyId, position])
+}
+
+model PipelineStage {
+  id          String    @id @default(uuid())
+  companyId   String
+  pipelineId  String
+  name        String
+  position    Int       @default(0)
+  probability Float     @default(0)
+  rottingDays Int?
+  kind        StageKind @default(open)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  pipeline    Pipeline  @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  deals       Deal[]
+
+  @@index([companyId])
+  @@index([pipelineId, position])
 }
