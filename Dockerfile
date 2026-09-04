@@ -26,7 +26,8 @@ COPY --from=builder /app/ee/LICENSE.md ./ee/LICENSE.md
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/env.ts ./env.ts
-COPY --from=builder /app/core/config/environment.ts ./core/config/environment.ts
+COPY --from=builder /app/core ./core
+COPY --from=builder /app/content ./content
 COPY --from=builder /app/i18n ./i18n
 COPY --from=builder /app/instrumentation.ts ./instrumentation.ts
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
@@ -36,6 +37,5 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/generated ./generated
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/core/fumadocs ./core/fumadocs
 EXPOSE 4000
 CMD ["sh", "-c", "npx prisma migrate deploy && yarn workflow:setup && exec yarn start"]
