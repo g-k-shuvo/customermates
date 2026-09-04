@@ -898,6 +898,7 @@ enum Resource {
   users
   company
   tasks
+  pipelines
   api
   auditLog
   inboxMessages

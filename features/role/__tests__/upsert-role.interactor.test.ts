@@ -63,6 +63,7 @@ class MockRepo extends UpsertRoleRepo {
 const escalatingPermissions = (): UpsertRoleData["permissions"] => ({
   contacts: { canManage: "yes", readAccess: "all" },
   deals: { canManage: "yes", readAccess: "all" },
+  pipelines: { canManage: "yes", readAccess: "all" },
   organizations: { canManage: "yes", readAccess: "all" },
   services: { canManage: "yes", readAccess: "all" },
   users: { canManage: "yes", readAccess: "all" },

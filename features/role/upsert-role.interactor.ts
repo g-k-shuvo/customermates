@@ -28,6 +28,10 @@ const Schema = z.object({
       canManage: z.enum(["yes", "no"]),
       readAccess: z.enum(["none", "own", "all"]),
     }),
+    pipelines: z.object({
+      canManage: z.enum(["yes", "no"]),
+      readAccess: z.enum(["none", "own", "all"]),
+    }),
     organizations: z.object({
       canManage: z.enum(["yes", "no"]),
       readAccess: z.enum(["none", "own", "all"]),
