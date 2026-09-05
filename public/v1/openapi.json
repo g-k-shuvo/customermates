@@ -17409,6 +17409,16 @@
                   },
                   "isDefault": {
                     "type": "boolean"
+                  },
+                  "archivedAt": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 }
               }
@@ -59003,6 +59013,16 @@
           },
           "isDefault": {
             "type": "boolean"
+          },
+          "archivedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [

@@ -2781,6 +2781,43 @@
     "subtitle": "Dein Konto wird derzeit von einem Administrator deines Unternehmens geprüft",
     "title": "Warten auf Genehmigung"
   },
+  "Pipelines": {
+    "addStage": "Phase hinzufügen",
+    "archive": "Archivieren",
+    "archivedBadge": "Archiviert",
+    "createPipeline": "Pipeline hinzufügen",
+    "defaultBadge": "Standard",
+    "defaultStageName": "Neue Phase",
+    "deletePipelineLabel": "Pipeline {name} löschen",
+    "deleteStage": {
+      "confirm": "Verschieben und löschen",
+      "description": "{count, plural, one {Diese Phase enthält noch # {dealSingular}.} other {Diese Phase enthält noch # {deals}.}} Wählen Sie die Phase, in die sie verschoben werden, bevor sie gelöscht wird.",
+      "destinationLabel": "In Phase verschieben",
+      "destinationPlaceholder": "Phase auswählen",
+      "title": "{deals} aus dieser Phase verschieben"
+    },
+    "deleteStageLabel": "Phase {name} löschen",
+    "description": "Pipelines enthalten die Phasen, die Ihre {deals} durchlaufen. Ziehen Sie eine Pipeline, um ihre Reihenfolge zu ändern.",
+    "emptyDescription": "Legen Sie eine Pipeline an, um Phasen zu verfolgen.",
+    "emptyTitle": "Noch keine Pipelines",
+    "hideArchived": "Archivierte Pipelines ausblenden",
+    "loadErrorDescription": "Aktualisieren Sie, um die Pipelines erneut zu laden.",
+    "loadErrorTitle": "Pipelines konnten nicht geladen werden",
+    "newPipelineName": "Name der Pipeline",
+    "newStageName": "Name der Phase",
+    "noStages": "Diese Pipeline hat noch keine Phasen.",
+    "pipelineNameLabel": "Name der Pipeline {name}",
+    "probabilityLabel": "Gewinnwahrscheinlichkeit der Phase {name}",
+    "reorderPipelineLabel": "Pipeline {name} neu anordnen",
+    "reorderStageLabel": "Phase {name} neu anordnen",
+    "setDefault": "Als Standard festlegen",
+    "showArchived": "Archivierte Pipelines anzeigen",
+    "stageNameLabel": "Name der Phase {name}",
+    "stagesTitle": "Phasen von {name}",
+    "title": "Pipelines",
+    "unarchive": "Wiederherstellen",
+    "viewStages": "Phasen"
+  },
   "ProfileSections": {
     "apiKeysDescription": "Langlebige API-Schlüssel für den programmatischen Zugriff."
   },

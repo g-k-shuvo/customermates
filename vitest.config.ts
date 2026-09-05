@@ -14,6 +14,9 @@ const testEnvironment = {
 };
 const domTestFiles = [
   "app/**/company/components/company-settings/__tests__/company-settings-form.test.ts",
+  "app/**/company/components/pipelines/__tests__/pipelines-section.test.ts",
+  "app/**/company/components/pipelines/__tests__/pipeline-stages-list.test.ts",
+  "app/**/company/components/pipelines/__tests__/delete-stage-modal.test.ts",
   "app/**/dashboard/components/__tests__/widget-chart.test.ts",
   "app/[locale]/(protected)/__tests__/protected-layout.test.ts",
   "app/components/agent-chat/__tests__/use-activity-group-state.test.ts",

@@ -2781,6 +2781,43 @@
     "subtitle": "Your account is currently being reviewed by your company's administrator",
     "title": "Waiting for Approval"
   },
+  "Pipelines": {
+    "addStage": "Add stage",
+    "archive": "Archive",
+    "archivedBadge": "Archived",
+    "createPipeline": "Add pipeline",
+    "defaultBadge": "Default",
+    "defaultStageName": "New stage",
+    "deletePipelineLabel": "Delete the {name} pipeline",
+    "deleteStage": {
+      "confirm": "Move and delete",
+      "description": "{count, plural, one {This stage still holds # {dealSingular}.} other {This stage still holds # {deals}.}} Choose the stage they move to before it is deleted.",
+      "destinationLabel": "Move to stage",
+      "destinationPlaceholder": "Select a stage",
+      "title": "Move {deals} out of this stage"
+    },
+    "deleteStageLabel": "Delete the {name} stage",
+    "description": "Pipelines hold the stages your {deals} move through. Drag a pipeline to change the order it appears in.",
+    "emptyDescription": "Add a pipeline to start tracking stages.",
+    "emptyTitle": "No pipelines yet",
+    "hideArchived": "Hide archived pipelines",
+    "loadErrorDescription": "Refresh to try loading the pipelines again.",
+    "loadErrorTitle": "Pipelines could not be loaded",
+    "newPipelineName": "Pipeline name",
+    "newStageName": "Stage name",
+    "noStages": "This pipeline has no stages yet.",
+    "pipelineNameLabel": "Name of the {name} pipeline",
+    "probabilityLabel": "Win probability of the {name} stage",
+    "reorderPipelineLabel": "Reorder the {name} pipeline",
+    "reorderStageLabel": "Reorder the {name} stage",
+    "setDefault": "Make default",
+    "showArchived": "Show archived pipelines",
+    "stageNameLabel": "Name of the {name} stage",
+    "stagesTitle": "Stages of {name}",
+    "title": "Pipelines",
+    "unarchive": "Restore",
+    "viewStages": "Stages"
+  },
   "ProfileSections": {
     "apiKeysDescription": "Long-lived API keys for programmatic access."
   },

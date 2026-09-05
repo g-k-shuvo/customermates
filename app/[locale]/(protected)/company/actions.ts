@@ -13,6 +13,12 @@ import type { ResendWebhookDeliveryData } from "@/features/webhook/resend-webhoo
 import type { InviteUsersByEmailData } from "@/features/company/invite-users-by-email.interactor";
 import type { CreateCheckoutSessionData } from "@/ee/subscription/create-checkout-session.interactor";
 import type { UpdateStageData } from "@/features/pipelines/stages/update-stage.interactor";
+import type { CreateStageData } from "@/features/pipelines/stages/create-stage.interactor";
+import type { DeleteStageData } from "@/features/pipelines/stages/delete-stage.interactor";
+import type { CreatePipelineData } from "@/features/pipelines/upsert/create-pipeline.interactor";
+import type { UpdatePipelineData } from "@/features/pipelines/upsert/update-pipeline.interactor";
+import type { ReorderStagesData } from "@/features/pipelines/upsert/reorder-stages.interactor";
+import type { DeletePipelineData } from "@/features/pipelines/delete/delete-pipeline.interactor";
 
 import { z } from "zod";
 
@@ -21,7 +27,13 @@ import { STAGE_GROUPING_KEY } from "@/core/base/base-get.schema";
 import {
   getGetDealsInteractor,
   getGetPipelinesInteractor,
+  getCreatePipelineInteractor,
+  getUpdatePipelineInteractor,
+  getDeletePipelineInteractor,
+  getReorderStagesInteractor,
+  getCreateStageInteractor,
   getUpdateStageInteractor,
+  getDeleteStageInteractor,
   getGetUsersInteractor,
   getGetUserByIdInteractor,
   getAdminUpdateUserDetailsInteractor,
@@ -46,6 +58,7 @@ import {
 import { serializeResult } from "@/core/utils/action-result";
 import { isRedirect } from "@/features/auth/auth-outcome";
 import { unwrapValidated } from "@/core/validation/validation.utils";
+import { stageDeletionConflict } from "@/features/pipelines/stage-deletion-conflict";
 
 export async function createCheckoutSessionAction(data: CreateCheckoutSessionData) {
   const result = await getCreateCheckoutSessionInteractor().invoke(data);
@@ -80,8 +93,39 @@ export async function getPipelinesAction() {
   return unwrapValidated(getGetPipelinesInteractor().invoke());
 }
 
+export async function createPipelineAction(data: CreatePipelineData) {
+  return serializeResult(getCreatePipelineInteractor().invoke(data));
+}
+
+export async function updatePipelineAction(data: UpdatePipelineData) {
+  return serializeResult(getUpdatePipelineInteractor().invoke(data));
+}
+
+export async function deletePipelineAction(data: DeletePipelineData) {
+  return serializeResult(getDeletePipelineInteractor().invoke(data));
+}
+
+export async function reorderStagesAction(data: ReorderStagesData) {
+  return serializeResult(getReorderStagesInteractor().invoke(data));
+}
+
+export async function createStageAction(data: CreateStageData) {
+  return serializeResult(getCreateStageInteractor().invoke(data));
+}
+
 export async function updateStageAction(data: UpdateStageData) {
   return serializeResult(getUpdateStageInteractor().invoke(data));
+}
+
+export async function deleteStageAction(data: DeleteStageData) {
+  const result = await getDeleteStageInteractor().invoke(data);
+  if (result.ok) return { ok: true as const, data: result.data };
+
+  return {
+    ok: false as const,
+    error: z.treeifyError(result.error),
+    conflict: stageDeletionConflict(result.error),
+  };
 }
 
 export async function sendFeedbackAction(data: SendFeedbackData) {

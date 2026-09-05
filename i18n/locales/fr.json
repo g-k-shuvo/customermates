@@ -2781,6 +2781,43 @@
     "subtitle": "Votre compte est en cours d'examen par l'administrateur de votre entreprise",
     "title": "En attente d'approbation"
   },
+  "Pipelines": {
+    "addStage": "Ajouter une étape",
+    "archive": "Archiver",
+    "archivedBadge": "Archivé",
+    "createPipeline": "Ajouter un pipeline",
+    "defaultBadge": "Par défaut",
+    "defaultStageName": "Nouvelle étape",
+    "deletePipelineLabel": "Supprimer le pipeline {name}",
+    "deleteStage": {
+      "confirm": "Déplacer et supprimer",
+      "description": "{count, plural, one {Cette étape contient encore # {dealSingular}.} other {Cette étape contient encore # {deals}.}} Choisissez l’étape vers laquelle les déplacer avant sa suppression.",
+      "destinationLabel": "Déplacer vers l’étape",
+      "destinationPlaceholder": "Sélectionner une étape",
+      "title": "Déplacer les {deals} hors de cette étape"
+    },
+    "deleteStageLabel": "Supprimer l’étape {name}",
+    "description": "Les pipelines contiennent les étapes que traversent vos {deals}. Faites glisser un pipeline pour changer son ordre.",
+    "emptyDescription": "Ajoutez un pipeline pour commencer à suivre des étapes.",
+    "emptyTitle": "Aucun pipeline pour l’instant",
+    "hideArchived": "Masquer les pipelines archivés",
+    "loadErrorDescription": "Actualisez pour recharger les pipelines.",
+    "loadErrorTitle": "Impossible de charger les pipelines",
+    "newPipelineName": "Nom du pipeline",
+    "newStageName": "Nom de l’étape",
+    "noStages": "Ce pipeline n’a encore aucune étape.",
+    "pipelineNameLabel": "Nom du pipeline {name}",
+    "probabilityLabel": "Probabilité de réussite de l’étape {name}",
+    "reorderPipelineLabel": "Réordonner le pipeline {name}",
+    "reorderStageLabel": "Réordonner l’étape {name}",
+    "setDefault": "Définir par défaut",
+    "showArchived": "Afficher les pipelines archivés",
+    "stageNameLabel": "Nom de l’étape {name}",
+    "stagesTitle": "Étapes de {name}",
+    "title": "Pipelines",
+    "unarchive": "Restaurer",
+    "viewStages": "Étapes"
+  },
   "ProfileSections": {
     "apiKeysDescription": "Clés API de longue durée pour un accès programmatique."
   },

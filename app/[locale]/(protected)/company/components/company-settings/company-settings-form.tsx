@@ -17,6 +17,7 @@ import { useRouter } from "@/i18n/navigation";
 import { reportApplicationError } from "@/core/errors/report-application-error";
 
 import { CompanyForecastingSection } from "./company-forecasting-section";
+import { PipelinesSection } from "../pipelines/pipelines-section";
 
 type Props = {
   currency: Currency;
@@ -78,6 +79,10 @@ export const CompanySettingsForm = observer(({ currency }: Props) => {
         </div>
 
         <CompanyForecastingSection />
+
+        <div className="border-t border-border" />
+
+        <PipelinesSection />
 
         <div className="border-t border-border" />
 

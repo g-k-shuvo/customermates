@@ -35,6 +35,9 @@ vi.mock("@/components/card/form-actions", () => ({ FormActions: () => null }));
 vi.mock("../company-forecasting-section", () => ({
   CompanyForecastingSection: () => createElement("div", { "data-forecasting": true }),
 }));
+vi.mock("../../pipelines/pipelines-section", () => ({
+  PipelinesSection: () => createElement("div", { "data-pipelines": true }),
+}));
 vi.mock("@/components/entity-terminology/terminology-relationship-diagram", () => ({
   TerminologyRelationshipDiagram: ({ readOnly, onPreset }: { readOnly: boolean; onPreset?: unknown }) =>
     createElement("div", {

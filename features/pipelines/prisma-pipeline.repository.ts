@@ -211,6 +211,7 @@ export class PrismaPipelineRepo
     if (fields.name !== undefined) data.name = fields.name;
     if (fields.position !== undefined) data.position = fields.position;
     if (fields.isDefault !== undefined) data.isDefault = fields.isDefault;
+    if (fields.archivedAt !== undefined) data.archivedAt = fields.archivedAt;
 
     await this.prisma.pipeline.updateMany({ where: { id, companyId }, data });
 

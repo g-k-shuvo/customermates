@@ -8,6 +8,7 @@ import { runWithTenant } from "@/core/decorators/tenant-context";
 import { createMockUser } from "@/tests/helpers/mock-user";
 
 const customColumnCreate = vi.fn().mockResolvedValue({ id: "column-1" });
+const pipelineCreate = vi.fn().mockResolvedValue({ id: "pipeline-1" });
 
 const prismaMock = {
   user: {
@@ -29,6 +30,7 @@ const prismaMock = {
   userRole: { create: vi.fn().mockResolvedValue({ id: "role-1" }) },
   subscription: { create: vi.fn().mockResolvedValue({ id: "subscription-1" }) },
   customColumn: { create: customColumnCreate },
+  pipeline: { create: pipelineCreate },
 };
 
 vi.mock("@/prisma/db", () => ({ prisma: prismaMock }));

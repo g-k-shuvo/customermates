@@ -2781,6 +2781,43 @@
     "subtitle": "El administrador de tu empresa está revisando tu cuenta",
     "title": "A la espera de aprobación"
   },
+  "Pipelines": {
+    "addStage": "Añadir etapa",
+    "archive": "Archivar",
+    "archivedBadge": "Archivado",
+    "createPipeline": "Añadir embudo",
+    "defaultBadge": "Predeterminado",
+    "defaultStageName": "Nueva etapa",
+    "deletePipelineLabel": "Eliminar el embudo {name}",
+    "deleteStage": {
+      "confirm": "Mover y eliminar",
+      "description": "{count, plural, one {Esta etapa todavía contiene # {dealSingular}.} other {Esta etapa todavía contiene # {deals}.}} Elige la etapa a la que se moverán antes de eliminarla.",
+      "destinationLabel": "Mover a la etapa",
+      "destinationPlaceholder": "Selecciona una etapa",
+      "title": "Mover {deals} fuera de esta etapa"
+    },
+    "deleteStageLabel": "Eliminar la etapa {name}",
+    "description": "Los embudos contienen las etapas por las que pasan tus {deals}. Arrastra un embudo para cambiar su orden.",
+    "emptyDescription": "Añade un embudo para empezar a seguir etapas.",
+    "emptyTitle": "Todavía no hay embudos",
+    "hideArchived": "Ocultar embudos archivados",
+    "loadErrorDescription": "Actualiza para volver a cargar los embudos.",
+    "loadErrorTitle": "No se pudieron cargar los embudos",
+    "newPipelineName": "Nombre del embudo",
+    "newStageName": "Nombre de la etapa",
+    "noStages": "Este embudo todavía no tiene etapas.",
+    "pipelineNameLabel": "Nombre del embudo {name}",
+    "probabilityLabel": "Probabilidad de éxito de la etapa {name}",
+    "reorderPipelineLabel": "Reordenar el embudo {name}",
+    "reorderStageLabel": "Reordenar la etapa {name}",
+    "setDefault": "Marcar como predeterminado",
+    "showArchived": "Mostrar embudos archivados",
+    "stageNameLabel": "Nombre de la etapa {name}",
+    "stagesTitle": "Etapas de {name}",
+    "title": "Embudos",
+    "unarchive": "Restaurar",
+    "viewStages": "Etapas"
+  },
   "ProfileSections": {
     "apiKeysDescription": "Claves de API de larga duración para el acceso programático."
   },

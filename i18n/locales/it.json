@@ -2781,6 +2781,43 @@
     "subtitle": "Il tuo account è in fase di verifica da parte dell'amministratore della tua azienda",
     "title": "In attesa di approvazione"
   },
+  "Pipelines": {
+    "addStage": "Aggiungi fase",
+    "archive": "Archivia",
+    "archivedBadge": "Archiviata",
+    "createPipeline": "Aggiungi pipeline",
+    "defaultBadge": "Predefinita",
+    "defaultStageName": "Nuova fase",
+    "deletePipelineLabel": "Elimina la pipeline {name}",
+    "deleteStage": {
+      "confirm": "Sposta ed elimina",
+      "description": "{count, plural, one {Questa fase contiene ancora # {dealSingular}.} other {Questa fase contiene ancora # {deals}.}} Scegli la fase in cui spostarle prima di eliminarla.",
+      "destinationLabel": "Sposta nella fase",
+      "destinationPlaceholder": "Seleziona una fase",
+      "title": "Sposta le {deals} fuori da questa fase"
+    },
+    "deleteStageLabel": "Elimina la fase {name}",
+    "description": "Le pipeline contengono le fasi attraversate dalle tue {deals}. Trascina una pipeline per cambiarne l’ordine.",
+    "emptyDescription": "Aggiungi una pipeline per iniziare a monitorare le fasi.",
+    "emptyTitle": "Nessuna pipeline ancora",
+    "hideArchived": "Nascondi le pipeline archiviate",
+    "loadErrorDescription": "Aggiorna per ricaricare le pipeline.",
+    "loadErrorTitle": "Impossibile caricare le pipeline",
+    "newPipelineName": "Nome della pipeline",
+    "newStageName": "Nome della fase",
+    "noStages": "Questa pipeline non ha ancora fasi.",
+    "pipelineNameLabel": "Nome della pipeline {name}",
+    "probabilityLabel": "Probabilità di successo della fase {name}",
+    "reorderPipelineLabel": "Riordina la pipeline {name}",
+    "reorderStageLabel": "Riordina la fase {name}",
+    "setDefault": "Imposta come predefinita",
+    "showArchived": "Mostra le pipeline archiviate",
+    "stageNameLabel": "Nome della fase {name}",
+    "stagesTitle": "Fasi di {name}",
+    "title": "Pipeline",
+    "unarchive": "Ripristina",
+    "viewStages": "Fasi"
+  },
   "ProfileSections": {
     "apiKeysDescription": "Chiavi API di lunga durata per l'accesso programmatico."
   },
