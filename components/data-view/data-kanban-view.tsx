@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { AppChip } from "@/components/chip/app-chip";
 import type { CustomColumnOption } from "@/features/custom-column/custom-column.schema";
 import type { GroupValueSums } from "@/core/base/base-get.schema";
-import { KANBAN_EMPTY_GROUP_KEY } from "@/core/base/base-get.schema";
+import { KANBAN_EMPTY_GROUP_KEY, STAGE_GROUPING_FIELD, STAGE_GROUPING_KEY } from "@/core/base/base-get.schema";
 import { DEAL_GROUP_SUM_FIELDS } from "@/features/deals/deal-weighting";
 import { visibleColumnDefs } from "./visible-column-defs";
 import { useRootStore } from "@/core/stores/root-store.provider";
@@ -62,8 +62,12 @@ function getGroupValue<E extends HasId>(
   item: E & { customFieldValues?: Array<{ columnId: string; value: unknown }> },
   groupingColumnId: string,
 ): string {
-  const custom = item.customFieldValues?.find((cfv) => cfv.columnId === groupingColumnId)?.value;
-  const raw = custom ?? (item as unknown as Record<string, unknown>)[groupingColumnId];
+  const values = item as unknown as Record<string, unknown>;
+  const custom =
+    groupingColumnId === STAGE_GROUPING_KEY
+      ? values[STAGE_GROUPING_FIELD]
+      : item.customFieldValues?.find((cfv) => cfv.columnId === groupingColumnId)?.value;
+  const raw = custom ?? values[groupingColumnId];
   if (raw == null || raw === "") return KANBAN_EMPTY_GROUP_KEY;
   if (typeof raw === "object") return JSON.stringify(raw);
   return String(raw);
@@ -74,6 +78,10 @@ function patchCustomFieldValue<E extends HasCustomFieldValues>(item: E, columnId
   const others = existing.filter((cfv) => cfv.columnId !== columnId);
   const next = value == null ? others : [...others, { columnId, value }];
   return { ...item, customFieldValues: next };
+}
+
+function patchStageValue<E extends HasId>(item: E, value: string | null): E {
+  return { ...item, [STAGE_GROUPING_FIELD]: value };
 }
 
 function KanbanCard({
@@ -143,6 +151,7 @@ const KanbanColumn = observer(function KanbanColumn({
   count,
   valueSums,
   option,
+  weight,
   entityType,
   onHeaderClick,
   loadMore,
@@ -153,6 +162,7 @@ const KanbanColumn = observer(function KanbanColumn({
   count: number;
   valueSums?: GroupValueSums;
   option?: CustomColumnOption;
+  weight?: number;
   entityType?: EntityType;
   onHeaderClick?: () => void;
   loadMore?: LoadMoreAction;
@@ -172,6 +182,7 @@ const KanbanColumn = observer(function KanbanColumn({
 
   const totalSum = valueSums?.[DEAL_GROUP_SUM_FIELDS.total];
   const weightedSum = valueSums?.[DEAL_GROUP_SUM_FIELDS.weighted];
+  const columnWeight = weight ?? option?.weight;
 
   const countLabel = entityType ? `${count} ${count === 1 ? singular(entityType) : plural(entityType)}` : String(count);
   const rateLabel = t("Common.stageProbability");
@@ -211,10 +222,10 @@ const KanbanColumn = observer(function KanbanColumn({
           <TooltipContent>{countLabel}</TooltipContent>
         </Tooltip>
 
-        {option?.weight !== undefined && weightedSum !== undefined && (
+        {columnWeight !== undefined && weightedSum !== undefined && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="text-xs text-muted-foreground tabular-nums">{option.weight}%</span>
+              <span className="text-xs text-muted-foreground tabular-nums">{columnWeight}%</span>
             </TooltipTrigger>
 
             <TooltipContent>{rateLabel}</TooltipContent>
@@ -278,9 +289,11 @@ export const DataKanbanView = observer(function DataKanbanView<E extends HasCust
   const t = useTranslations();
   const { customColumnModalStore } = useRootStore();
   const groupingColumnId = store.groupingColumnId ?? "";
+  const isStageGrouping = groupingColumnId === STAGE_GROUPING_KEY;
   const rawGrouping = store.customColumns.find((c) => c.id === groupingColumnId);
   const groupingCustomColumn =
     rawGrouping && rawGrouping.type === CustomColumnType.singleSelect ? rawGrouping : undefined;
+  const stageOptions = isStageGrouping ? store.groupOptions : [];
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -298,7 +311,8 @@ export const DataKanbanView = observer(function DataKanbanView<E extends HasCust
 
   const groups = new Map<string, E[]>();
 
-  if (groupingCustomColumn?.options?.options)
+  if (isStageGrouping) for (const opt of stageOptions) groups.set(opt.value, []);
+  else if (groupingCustomColumn?.options?.options)
     for (const opt of groupingCustomColumn.options.options) groups.set(opt.value, []);
 
   groups.set(KANBAN_EMPTY_GROUP_KEY, []);
@@ -316,7 +330,9 @@ export const DataKanbanView = observer(function DataKanbanView<E extends HasCust
     const total = (item as { totalValue?: unknown }).totalValue;
     if (typeof total !== "number") return undefined;
 
-    const weight = groupingCustomColumn?.options?.options?.find((opt) => opt.value === groupKey)?.weight;
+    const weight = isStageGrouping
+      ? stageOptions.find((opt) => opt.value === groupKey)?.weight
+      : groupingCustomColumn?.options?.options?.find((opt) => opt.value === groupKey)?.weight;
 
     return weight === undefined
       ? { [DEAL_GROUP_SUM_FIELDS.total]: total }
@@ -341,7 +357,9 @@ export const DataKanbanView = observer(function DataKanbanView<E extends HasCust
 
     await store.moveItemBetweenGroups({
       item,
-      optimisticItem: patchCustomFieldValue(item, groupingColumnId, nextValue),
+      optimisticItem: isStageGrouping
+        ? patchStageValue(item, nextValue)
+        : patchCustomFieldValue(item, groupingColumnId, nextValue),
       columnId: groupingColumnId,
       fromGroupKey: currentValue,
       toGroupKey: targetGroup,
@@ -360,10 +378,11 @@ export const DataKanbanView = observer(function DataKanbanView<E extends HasCust
         <div className={DATA_KANBAN_TRACK_CLASS_NAME}>
           {Array.from(groups.entries()).map(([key, items]) => {
             const option = groupingCustomColumn?.options?.options.find((o) => o.value === key);
+            const stageOption = stageOptions.find((o) => o.value === key);
             const label =
               key === KANBAN_EMPTY_GROUP_KEY
                 ? t("DataView.noValue")
-                : (option?.label ?? t("Common.inputs.unavailableSelection"));
+                : (stageOption?.label ?? option?.label ?? t("Common.inputs.unavailableSelection"));
             const total = store.groupCounts?.[key] ?? items.length;
             const loadMore =
               total > items.length
@@ -383,6 +402,7 @@ export const DataKanbanView = observer(function DataKanbanView<E extends HasCust
                 loadMore={loadMore}
                 option={option}
                 valueSums={store.groupValueSums?.[key]}
+                weight={stageOption?.weight}
                 onHeaderClick={
                   groupingCustomColumn ? () => customColumnModalStore.openWithColumn(groupingCustomColumn) : undefined
                 }

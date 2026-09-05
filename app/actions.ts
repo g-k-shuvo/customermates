@@ -91,6 +91,12 @@ export async function updateEntityCustomFieldValueAction(data: {
   }
 }
 
+export async function updateEntityStageAction(data: { entityId: string; stageId: string | null }) {
+  const { entityId, stageId } = data;
+
+  return serializeResult(getUpdateDealInteractor().invoke({ id: entityId, stageId }));
+}
+
 export async function bulkDeleteEntitiesAction(data: { entityType: EntityType; ids: string[] }) {
   const { entityType, ids } = data;
   switch (entityType) {

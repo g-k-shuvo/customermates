@@ -27,6 +27,7 @@ vi.mock("@/app/actions", () => ({
   bulkDeleteEntitiesAction,
   bulkUpdateCustomFieldValuesAction,
   getCustomColumnsByEntityTypeAction: vi.fn(),
+  updateEntityStageAction: vi.fn(),
   updateEntityCustomFieldValueAction: vi.fn(),
   upsertP13nAction: vi.fn(),
 }));

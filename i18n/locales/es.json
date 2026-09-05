@@ -1740,6 +1740,7 @@
   "DataView": {
     "dragToReorder": "Arrastrar para reordenar",
     "editColumn": "Editar columna",
+    "groupByStage": "Etapa del pipeline",
     "noValue": "Sin valor",
     "resizeColumn": "Redimensiona la columna {column}. Arrastra o usa las teclas de flecha; toca dos veces o pulsa Intro para restablecer.",
     "resizeHint": "Arrastra para redimensionar. Haz doble clic para restablecer.",

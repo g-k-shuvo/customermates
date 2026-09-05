@@ -7,6 +7,7 @@ import type {
   FilterableField,
   Filter,
   GetQueryParams,
+  GroupOption,
   GroupValueSums,
   GroupedPaginationRequest,
   PaginationRequest,
@@ -21,7 +22,12 @@ import type { NumericFieldSums, SummableModel } from "./base-repository";
 import type { QueryParamsPrecheckInteractor } from "./query-params-precheck.interactor";
 
 import { env } from "@/env";
-import { KANBAN_EMPTY_GROUP_KEY, KANBAN_PER_GROUP_DEFAULT } from "./base-get.schema";
+import {
+  KANBAN_EMPTY_GROUP_KEY,
+  KANBAN_PER_GROUP_DEFAULT,
+  STAGE_GROUPING_FIELD,
+  STAGE_GROUPING_KEY,
+} from "./base-get.schema";
 import { FilterOperatorKey, ViewMode } from "./base-query-builder";
 import { runPrecheck } from "../validation/run-precheck";
 
@@ -40,6 +46,7 @@ export interface GetResult<T> {
   savedFilterPresets?: SavedFilterPreset[];
   viewMode?: ViewMode;
   groupingColumnId?: string;
+  groupOptions?: GroupOption[];
   groupCounts?: Record<string, number>;
   groupValueSums?: Record<string, GroupValueSums>;
   valueSums?: GroupValueSums;
@@ -68,11 +75,14 @@ export abstract class BaseGetRepo<T> {
     fields: readonly F[];
     params: GetQueryParams;
   }): Promise<NumericFieldSums<F>>;
+  getGroupOptions?(): Promise<GroupOption[]>;
 }
 
 type BaseQuery = { filters?: Filter[]; searchTerm?: string; sortDescriptor?: SortDescriptor };
 
 type SingleSelectColumn = Extract<CustomColumnDto, { type: typeof CustomColumnType.singleSelect }>;
+
+type GroupingSpec = { filterField: string; groupKeys: string[]; options?: GroupOption[] };
 
 type FetchResult<T> = {
   items: T[];
@@ -182,13 +192,19 @@ export abstract class BaseGetInteractor<T> {
     }
 
     const baseQuery: BaseQuery = { filters, searchTerm, sortDescriptor };
-    const groupingColumn = pickGroupingColumn(params.groupedPagination, viewMode, groupingColumnId, customColumns);
+    const grouping = await resolveGrouping(
+      this.repo,
+      params.groupedPagination,
+      viewMode,
+      groupingColumnId,
+      customColumns,
+    );
 
-    const { items, total, groupCounts, groupValueSums } = groupingColumn
+    const { items, total, groupCounts, groupValueSums } = grouping
       ? await this.fetchGrouped(
           baseQuery,
-          params.groupedPagination ?? { groupingColumnId: groupingColumn.id, perGroup: KANBAN_PER_GROUP_DEFAULT },
-          groupingColumn,
+          params.groupedPagination ?? { groupingColumnId: grouping.filterField, perGroup: KANBAN_PER_GROUP_DEFAULT },
+          grouping,
         )
       : await this.fetchFlat(baseQuery, pagination);
 
@@ -213,6 +229,7 @@ export abstract class BaseGetInteractor<T> {
         savedFilterPresets,
         viewMode,
         groupingColumnId,
+        groupOptions: grouping?.options,
         groupCounts,
         groupValueSums,
         valueSums,
@@ -237,9 +254,9 @@ export abstract class BaseGetInteractor<T> {
   private async fetchGrouped(
     baseQuery: BaseQuery,
     groupedPagination: GroupedPaginationRequest,
-    groupingColumn: SingleSelectColumn,
+    grouping: GroupingSpec,
   ): Promise<FetchResult<T>> {
-    const groupKeys = [...groupingColumn.options.options.map((o) => o.value), KANBAN_EMPTY_GROUP_KEY];
+    const groupKeys = grouping.groupKeys;
 
     const takeFor = (groupKey: string) =>
       groupedPagination.overrides?.[groupKey] ?? groupedPagination.perGroup ?? KANBAN_PER_GROUP_DEFAULT;
@@ -248,8 +265,8 @@ export abstract class BaseGetInteractor<T> {
       groupKeys.map(async (groupKey) => {
         const groupFilter: Filter =
           groupKey === KANBAN_EMPTY_GROUP_KEY
-            ? { field: groupingColumn.id, operator: FilterOperatorKey.isNull }
-            : { field: groupingColumn.id, operator: FilterOperatorKey.in, value: [groupKey] };
+            ? { field: grouping.filterField, operator: FilterOperatorKey.isNull }
+            : { field: grouping.filterField, operator: FilterOperatorKey.in, value: [groupKey] };
         const filters = [...(baseQuery.filters ?? []), groupFilter];
         const [items, count, valueSums] = await Promise.all([
           this.repo.getItems({ ...baseQuery, filters, take: takeFor(groupKey), skip: 0 }),
@@ -284,16 +301,36 @@ export abstract class BaseGetInteractor<T> {
   }
 }
 
-function pickGroupingColumn(
+async function resolveGrouping<T>(
+  repo: BaseGetRepo<T>,
   groupedPagination: GroupedPaginationRequest | undefined,
   viewMode: ViewMode | undefined,
   groupingColumnId: string | undefined,
   customColumns: CustomColumnDto[],
-): SingleSelectColumn | undefined {
+): Promise<GroupingSpec | undefined> {
   const targetColumnId =
     groupedPagination?.groupingColumnId ?? (viewMode === ViewMode.card ? groupingColumnId : undefined);
   if (!targetColumnId) return undefined;
 
+  if (targetColumnId === STAGE_GROUPING_KEY) {
+    if (!repo.getGroupOptions) return undefined;
+
+    const options = await repo.getGroupOptions();
+
+    return {
+      filterField: STAGE_GROUPING_FIELD,
+      groupKeys: [...options.map((option) => option.value), KANBAN_EMPTY_GROUP_KEY],
+      options,
+    };
+  }
+
   const column = customColumns.find((c) => c.id === targetColumnId);
-  return column?.type === CustomColumnType.singleSelect ? column : undefined;
+  if (column?.type !== CustomColumnType.singleSelect) return undefined;
+
+  const singleSelect: SingleSelectColumn = column;
+
+  return {
+    filterField: singleSelect.id,
+    groupKeys: [...singleSelect.options.options.map((o) => o.value), KANBAN_EMPTY_GROUP_KEY],
+  };
 }

@@ -1740,6 +1740,7 @@
   "DataView": {
     "dragToReorder": "Trascina per riordinare",
     "editColumn": "Modifica colonna",
+    "groupByStage": "Fase della pipeline",
     "noValue": "Nessun valore",
     "resizeColumn": "Ridimensiona la colonna «{column}». Trascina o usa i tasti freccia; tocca due volte o premi Invio per ripristinare.",
     "resizeHint": "Trascina per ridimensionare. Fai doppio clic per ripristinare.",

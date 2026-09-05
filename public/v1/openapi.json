@@ -30309,6 +30309,28 @@
                     "groupingColumnId": {
                       "type": "string"
                     },
+                    "groupOptions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "weight": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "label"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
                     "groupCounts": {
                       "type": "object",
                       "propertyNames": {
@@ -58006,6 +58028,28 @@
           },
           "groupingColumnId": {
             "type": "string"
+          },
+          "groupOptions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "weight": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "value",
+                "label"
+              ],
+              "additionalProperties": false
+            }
           },
           "groupCounts": {
             "type": "object",

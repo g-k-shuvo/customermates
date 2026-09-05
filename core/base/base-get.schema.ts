@@ -104,6 +104,8 @@ export type PaginationResponse = Data<typeof PaginationResponseSchema>;
 const KANBAN_PER_GROUP_MAX = 500;
 export const KANBAN_PER_GROUP_DEFAULT = 10;
 export const KANBAN_EMPTY_GROUP_KEY = "__empty__";
+export const STAGE_GROUPING_KEY = "__stage__";
+export const STAGE_GROUPING_FIELD = "stageId";
 
 export const GroupedPaginationRequestSchema = z.object({
   groupingColumnId: z.string(),
@@ -114,6 +116,13 @@ export type GroupedPaginationRequest = Data<typeof GroupedPaginationRequestSchem
 
 export const GroupValueSumsSchema = z.record(z.string(), z.number());
 export type GroupValueSums = Data<typeof GroupValueSumsSchema>;
+
+export const GroupOptionSchema = z.object({
+  value: z.string(),
+  label: z.string(),
+  weight: z.number().optional(),
+});
+export type GroupOption = Data<typeof GroupOptionSchema>;
 
 export const SavedFilterPresetSchema = z.object({
   id: z.uuid(),
@@ -196,6 +205,7 @@ export function createGetResultSchema<T extends z.ZodSchema>(itemSchema: T) {
     savedFilterPresets: z.array(z.any()).optional(),
     viewMode: z.string().optional(),
     groupingColumnId: z.string().optional(),
+    groupOptions: z.array(GroupOptionSchema).optional(),
     groupCounts: z.record(z.string(), z.number()).optional(),
     groupValueSums: z.record(z.string(), GroupValueSumsSchema).optional(),
     valueSums: GroupValueSumsSchema.optional(),

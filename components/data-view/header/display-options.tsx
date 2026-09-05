@@ -11,7 +11,7 @@ import { ArrowDownAZ, ArrowUpAZ, GripVertical, LayoutGrid, LayoutList, SlidersHo
 import { observer } from "mobx-react-lite";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { CustomColumnType } from "@/generated/prisma";
+import { CustomColumnType, EntityType } from "@/generated/prisma";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { STAGE_GROUPING_KEY } from "@/core/base/base-get.schema";
 import { ViewMode } from "@/core/base/base-query-builder";
 import { useColumnLabel } from "@/components/entity-terminology/use-column-label";
 import { cn } from "@/core/utils/cn";
@@ -108,7 +109,8 @@ export const DataViewDisplayOptions = observer(function DataViewDisplayOptions<E
   const isCardView = store.viewMode === ViewMode.card;
   const sortable = store.columnsDefinition.filter((col) => col.sortable);
   const singleSelectColumns = store.customColumns.filter((col) => col.type === CustomColumnType.singleSelect);
-  const canUseKanban = singleSelectColumns.length > 0;
+  const canGroupByStage = store.entityType === EntityType.deal;
+  const canUseKanban = singleSelectColumns.length > 0 || canGroupByStage;
 
   const currentSortField = store.sortDescriptor?.field ?? "";
   const currentSortDirection = store.sortDescriptor?.direction ?? "asc";
@@ -133,7 +135,9 @@ export const DataViewDisplayOptions = observer(function DataViewDisplayOptions<E
         });
         break;
       case "kanban": {
-        const defaultGrouping = store.singleSelectCustomColumns[0]?.id ?? store.columnsDefinition[0]?.uid ?? "";
+        const defaultGrouping = canGroupByStage
+          ? STAGE_GROUPING_KEY
+          : (store.singleSelectCustomColumns[0]?.id ?? store.columnsDefinition[0]?.uid ?? "");
         store.setViewOptions({
           viewMode: ViewMode.card,
           groupingColumnId: store.groupingColumnId ?? defaultGrouping,
@@ -327,7 +331,7 @@ export const DataViewDisplayOptions = observer(function DataViewDisplayOptions<E
             </>
           )}
 
-          {isCardView && singleSelectColumns.length > 0 && (
+          {isCardView && canUseKanban && (
             <>
               <Separator />
 
@@ -339,6 +343,10 @@ export const DataViewDisplayOptions = observer(function DataViewDisplayOptions<E
 
                   <SelectContent>
                     <SelectItem value="__none__">{t("Common.none")}</SelectItem>
+
+                    {canGroupByStage && (
+                      <SelectItem value={STAGE_GROUPING_KEY}>{t("DataView.groupByStage")}</SelectItem>
+                    )}
 
                     {singleSelectColumns.map((col) => (
                       <SelectItem key={col.id} value={col.id}>

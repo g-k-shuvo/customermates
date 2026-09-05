@@ -1740,6 +1740,7 @@
   "DataView": {
     "dragToReorder": "Drag to reorder",
     "editColumn": "Edit column",
+    "groupByStage": "Pipeline stage",
     "noValue": "No value",
     "resizeColumn": "Resize {column} column. Drag or use arrow keys to resize; double-tap or press Enter to reset.",
     "resizeHint": "Drag to resize. Double-click to reset.",

@@ -12,6 +12,7 @@ import {
   SortDescriptorSchema,
   SavedFilterPresetSchema,
   PaginationRequestSchema,
+  STAGE_GROUPING_KEY,
 } from "@/core/base/base-get.schema";
 import { ViewMode } from "@/core/base/base-query-builder";
 import { EntityDetailOptionsSchema, P13nEntrySchema } from "./p13n.schema";
@@ -27,7 +28,9 @@ const Schema = z.object({
   columnWidths: z.record(z.string(), z.number()).nullish(),
   hiddenColumns: z.array(z.string()).optional(),
   viewMode: z.enum(ViewMode).nullish(),
-  groupingColumnId: z.uuid().nullish(),
+  groupingColumnId: z
+    .union([z.uuid().meta({ title: "Custom column id" }), z.literal(STAGE_GROUPING_KEY).meta({ title: "Stage board" })])
+    .nullish(),
   detailOptions: EntityDetailOptionsSchema.nullish(),
 });
 export type UpsertP13nData = Data<typeof Schema>;

@@ -1,6 +1,13 @@
 import type { ObservableSet } from "mobx";
 import type { RootStore } from "../stores/root.store";
-import type { Filter, FilterableField, GroupValueSums, PaginationRequest, SortDescriptor } from "./base-get.schema";
+import type {
+  Filter,
+  FilterableField,
+  GroupOption,
+  GroupValueSums,
+  PaginationRequest,
+  SortDescriptor,
+} from "./base-get.schema";
 import type { GetResult } from "./base-get.interactor";
 import type { GetQueryParams, GroupedPaginationRequest } from "@/core/base/base-get.schema";
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
@@ -18,13 +25,14 @@ import { reportApplicationError } from "../errors/report-application-error";
 import { ViewMode } from "./base-query-builder";
 import { BaseStore } from "./base.store";
 
-import { KANBAN_PER_GROUP_DEFAULT } from "./base-get.schema";
+import { KANBAN_PER_GROUP_DEFAULT, STAGE_GROUPING_KEY } from "./base-get.schema";
 import {
   upsertP13nAction,
   getCustomColumnsByEntityTypeAction,
   bulkDeleteEntitiesAction,
   bulkUpdateCustomFieldValuesAction,
   updateEntityCustomFieldValueAction,
+  updateEntityStageAction,
 } from "@/app/actions";
 
 export const MAX_SELECTION_SIZE = 100;
@@ -86,6 +94,7 @@ export abstract class BaseDataViewStore<Entity extends HasId> extends BaseStore 
   selectedScopeKey: string | undefined = undefined;
 
   groupCounts: Record<string, number> = {};
+  groupOptions: GroupOption[] = [];
   groupValueSums: Record<string, GroupValueSums> = {};
   groupedTakeOverrides: Record<string, number> = {};
   isBulkMutating = false;
@@ -133,6 +142,7 @@ export abstract class BaseDataViewStore<Entity extends HasId> extends BaseStore 
       selectedScopeKey: observable,
 
       groupCounts: observable,
+      groupOptions: observable,
       groupValueSums: observable,
       groupedTakeOverrides: observable,
       isBulkMutating: observable,
@@ -287,11 +297,15 @@ export abstract class BaseDataViewStore<Entity extends HasId> extends BaseStore 
     const entityType = this.entityType;
     if (!entityType) return;
 
-    const groupingColumn = this.customColumns.find((column) => column.id === params.columnId);
+    const isStageGrouping = params.columnId === STAGE_GROUPING_KEY;
 
-    if (groupingColumn?.type !== CustomColumnType.singleSelect) {
-      this.toastError("Common.notifications.unexpectedError");
-      return;
+    if (!isStageGrouping) {
+      const groupingColumn = this.customColumns.find((column) => column.id === params.columnId);
+
+      if (groupingColumn?.type !== CustomColumnType.singleSelect) {
+        this.toastError("Common.notifications.unexpectedError");
+        return;
+      }
     }
 
     const summedFields = [...new Set(Object.values(this.groupValueSums).flatMap((sums) => Object.keys(sums)))];
@@ -310,11 +324,13 @@ export abstract class BaseDataViewStore<Entity extends HasId> extends BaseStore 
     };
 
     try {
-      const res = await updateEntityCustomFieldValueAction({
-        entityType,
-        entityId: params.item.id,
-        customFieldValues: [{ columnId: params.columnId, value: params.value }],
-      });
+      const res = isStageGrouping
+        ? await updateEntityStageAction({ entityId: params.item.id, stageId: params.value })
+        : await updateEntityCustomFieldValueAction({
+            entityType,
+            entityId: params.item.id,
+            customFieldValues: [{ columnId: params.columnId, value: params.value }],
+          });
       if (res?.ok) await this.upsertItem(res.data as unknown as Entity);
       else {
         revert();
@@ -525,6 +541,7 @@ export abstract class BaseDataViewStore<Entity extends HasId> extends BaseStore 
       this.groupingColumnId = args.groupingColumnId;
     }
     this.groupCounts = args.groupCounts ?? {};
+    this.groupOptions = args.groupOptions ?? [];
     this.groupValueSums = args.groupValueSums ?? {};
     this.requestState = { status: "ready" };
   }
@@ -787,8 +804,10 @@ export abstract class BaseDataViewStore<Entity extends HasId> extends BaseStore 
   private buildGroupedPaginationRequest(): GroupedPaginationRequest | undefined {
     if (!this.isKanbanMode || !this.groupingColumnId) return undefined;
 
-    const groupingColumn = this.customColumns.find((c) => c.id === this.groupingColumnId);
-    if (!groupingColumn || groupingColumn.type !== CustomColumnType.singleSelect) return undefined;
+    if (this.groupingColumnId !== STAGE_GROUPING_KEY) {
+      const groupingColumn = this.customColumns.find((c) => c.id === this.groupingColumnId);
+      if (!groupingColumn || groupingColumn.type !== CustomColumnType.singleSelect) return undefined;
+    }
 
     const overrides = Object.keys(this.groupedTakeOverrides).length > 0 ? toJS(this.groupedTakeOverrides) : undefined;
 

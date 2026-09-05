@@ -587,6 +587,22 @@ export class PrismaDealRepo
     return getCustomColumnRepo().findByEntityType(EntityType.deal);
   }
 
+  private async findDefaultPipelineStages() {
+    const { companyId } = this.user;
+
+    return this.prisma.pipelineStage.findMany({
+      where: { companyId, pipeline: { isDefault: true, archivedAt: null } },
+      select: { id: true, name: true, probability: true },
+      orderBy: [{ position: "asc" }, { id: "asc" }],
+    });
+  }
+
+  async getGroupOptions() {
+    const stages = await this.findDefaultPipelineStages();
+
+    return stages.map((stage) => ({ value: stage.id, label: stage.name, weight: stage.probability }));
+  }
+
   async findIds(ids: Set<string>) {
     if (ids.size === 0) return new Set<string>();
 
