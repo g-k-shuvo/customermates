@@ -79,7 +79,12 @@ export function createMockDiModule(getMockUser: () => TenantUser) {
     }),
     getOrganizationRepo: () => ({ findIds: makeFindIds() }),
     getDealRepo: () => ({ findIds: makeFindIds() }),
-    getPipelineRepo: () => ({ findIds: makeFindIds(), findPipelineIdsByStageIds: makeFindIdsMap() }),
+    getPipelineRepo: () => ({
+      findIds: makeFindIds(),
+      findPipelineIdsByStageIds: makeFindIdsMap(),
+      getDefaultPipelineWithFirstStage: () => Promise.resolve(null),
+      getFirstStageOfPipeline: () => Promise.resolve(null),
+    }),
     getPipelineStageIdsRepo: () => ({ findIds: makeFindIds() }),
     getCompanyRepo: () => ({ findIds: makeFindIds() }),
     getUserRepo: () => ({ findIds: makeFindIds(), findExistingEmailsCompanyWide: makeFindIds() }),

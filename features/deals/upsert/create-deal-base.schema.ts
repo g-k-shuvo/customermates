@@ -6,6 +6,10 @@ import { zx } from "@/core/validation/validation.utils";
 export const BaseCreateDealSchema = z.object({
   name: zx.nonBlankText(255),
   notes: NotesSchema,
+  pipelineId: z.uuid().optional(),
+  stageId: z.uuid().optional(),
+  expectedCloseDate: z.coerce.date().optional(),
+  probability: z.number().min(0).max(100).optional(),
   organizationIds: z.array(z.uuid()).optional().default([]),
   userIds: z.array(z.uuid()).optional().default([]),
   contactIds: z.array(z.uuid()).optional().default([]),

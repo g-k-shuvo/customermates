@@ -22,8 +22,17 @@ import { Transaction } from "@/core/decorators/transaction.decorator";
 import { type GetQueryParams } from "@/core/base/base-get.schema";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
-import { getCustomColumnRepo } from "@/core/di";
+import { FilterOperatorKey } from "@/core/base/base-query-builder";
+import { getCustomColumnRepo, getPipelineRepo } from "@/core/di";
 import { computeWeightedValue, readOptionWeights } from "./deal-weighting";
+
+const PIPELINE_PLACEMENT_FILTER_OPERATORS = [
+  FilterOperatorKey.equals,
+  FilterOperatorKey.in,
+  FilterOperatorKey.notIn,
+  FilterOperatorKey.isNull,
+  FilterOperatorKey.isNotNull,
+];
 
 export class PrismaDealRepo
   extends BaseRepository
@@ -48,6 +57,12 @@ export class PrismaDealRepo
       totalQuantity: true,
       weightedValue: true,
       notes: true,
+      pipelineId: true,
+      stageId: true,
+      status: true,
+      expectedCloseDate: true,
+      probability: true,
+      stageEnteredAt: true,
       createdAt: true,
       updatedAt: true,
       organizations: {
@@ -113,6 +128,7 @@ export class PrismaDealRepo
       { field: "totalValue", resolvedFields: ["totalValue"] },
       { field: "totalQuantity", resolvedFields: ["totalQuantity"] },
       { field: "weightedValue", resolvedFields: ["weightedValue"] },
+      { field: "expectedCloseDate", resolvedFields: ["expectedCloseDate"] },
       { field: "createdAt", resolvedFields: ["createdAt"] },
       { field: "updatedAt", resolvedFields: ["updatedAt"] },
     ];
@@ -162,6 +178,8 @@ export class PrismaDealRepo
       },
       { field: FilterFieldKey.updatedAt, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.updatedAt] },
       { field: FilterFieldKey.createdAt, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.createdAt] },
+      { field: "stageId", operators: PIPELINE_PLACEMENT_FILTER_OPERATORS },
+      { field: "pipelineId", operators: PIPELINE_PLACEMENT_FILTER_OPERATORS },
     ];
   }
 
@@ -256,15 +274,55 @@ export class PrismaDealRepo
     return this.prisma.deal.count({ where });
   }
 
+  private async resolvePlacement(pipelineId?: string, stageId?: string) {
+    if (pipelineId && stageId) return { pipelineId, stageId };
+
+    if (pipelineId) {
+      const firstStageId = await getPipelineRepo().getFirstStageOfPipeline(pipelineId);
+
+      return { pipelineId, stageId: firstStageId ?? undefined };
+    }
+
+    if (stageId) {
+      const pipelineIdByStageId = await getPipelineRepo().findPipelineIdsByStageIds(new Set([stageId]));
+
+      return { pipelineId: pipelineIdByStageId.get(stageId), stageId };
+    }
+
+    const defaultPlacement = await getPipelineRepo().getDefaultPipelineWithFirstStage();
+
+    return { pipelineId: defaultPlacement?.pipelineId, stageId: defaultPlacement?.stageId };
+  }
+
   @Transaction
   async createDealOrThrow(args: RepoArgs<CreateDealRepo, "createDealOrThrow">) {
     const { companyId } = this.user;
-    const { organizationIds, userIds, contactIds, services, taskIds, customFieldValues, name, notes } = args;
+    const {
+      organizationIds,
+      userIds,
+      contactIds,
+      services,
+      taskIds,
+      customFieldValues,
+      name,
+      notes,
+      pipelineId,
+      stageId,
+      expectedCloseDate,
+      probability,
+    } = args;
+
+    const placement = await this.resolvePlacement(pipelineId, stageId);
 
     const data = {
       name,
       notes: notes,
       companyId,
+      pipelineId: placement.pipelineId ?? null,
+      stageId: placement.stageId ?? null,
+      stageEnteredAt: placement.stageId ? new Date() : null,
+      expectedCloseDate: expectedCloseDate ?? null,
+      probability: probability ?? null,
     };
 
     const deal = await this.prisma.deal.create({
@@ -358,10 +416,42 @@ export class PrismaDealRepo
     const { companyId } = this.user;
     const { id, organizationIds, userIds, contactIds, services, taskIds, customFieldValues, ...dealData } = args;
 
-    const data: Prisma.DealUpdateManyArgs["data"] = { companyId };
+    const data: Prisma.DealUncheckedUpdateManyInput = { companyId };
 
     if (dealData.name !== undefined) data.name = dealData.name;
     if (dealData.notes !== undefined) data.notes = dealData.notes;
+    if (dealData.pipelineId !== undefined) data.pipelineId = dealData.pipelineId;
+    if (dealData.expectedCloseDate !== undefined) data.expectedCloseDate = dealData.expectedCloseDate;
+    if (dealData.probability !== undefined) data.probability = dealData.probability;
+
+    if (dealData.stageId !== undefined) {
+      const existing = await this.prisma.deal.findFirst({
+        where: { id, ...this.accessWhere("deal") },
+        select: { stageId: true },
+      });
+
+      if (existing && existing.stageId !== dealData.stageId) {
+        data.stageId = dealData.stageId;
+        data.stageEnteredAt = dealData.stageId ? new Date() : null;
+
+        if (dealData.stageId) {
+          const pipelineIdByStageId = await getPipelineRepo().findPipelineIdsByStageIds(new Set([dealData.stageId]));
+          const stagePipelineId = pipelineIdByStageId.get(dealData.stageId);
+
+          if (stagePipelineId) data.pipelineId = stagePipelineId;
+        }
+      }
+    } else if (dealData.pipelineId) {
+      const existing = await this.prisma.deal.findFirst({
+        where: { id, ...this.accessWhere("deal") },
+        select: { pipelineId: true },
+      });
+
+      if (existing && existing.pipelineId !== dealData.pipelineId) {
+        data.stageId = await getPipelineRepo().getFirstStageOfPipeline(dealData.pipelineId);
+        data.stageEnteredAt = data.stageId ? new Date() : null;
+      }
+    }
 
     await this.prisma.deal.updateMany({
       where: { id, ...this.accessWhere("deal") },

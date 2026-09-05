@@ -24,6 +24,8 @@ import { DomainEvent } from "@/features/event/domain-events";
 
 import { DealWritePrecheckInteractor } from "../upsert/deal-write-precheck.interactor";
 import { ValidateAssigneeGuardInteractor } from "@/core/validation/validators/validate-assignee-guard.interactor";
+import { ValidatePipelineIdsInteractor } from "@/core/validation/validators/validate-pipeline-ids.interactor";
+import { ValidatePipelineStageIdsInteractor } from "@/core/validation/validators/validate-pipeline-stage-ids.interactor";
 import { ValidateContactIdsInteractor } from "@/core/validation/validators/validate-contact-ids.interactor";
 import { ValidateCustomFieldValuesInteractor } from "@/core/validation/validators/validate-custom-field-values.interactor";
 import { ValidateDealIdsInteractor } from "@/core/validation/validators/validate-deal-ids.interactor";
@@ -40,6 +42,8 @@ import {
   getDealRepo,
   getCustomColumnRepo,
   getUserService,
+  getPipelineRepo,
+  getPipelineStageIdsRepo,
 } from "@/core/di";
 import type { UserService } from "@/features/user/user.service";
 
@@ -53,6 +57,9 @@ function makeDealWritePrecheck(): DealWritePrecheckInteractor {
     new ValidateDealIdsInteractor(getDealRepo()),
     new ValidateCustomFieldValuesInteractor(getCustomColumnRepo()),
     new ValidateAssigneeGuardInteractor(getUserService() as unknown as UserService),
+    new ValidatePipelineIdsInteractor(getPipelineRepo()),
+    new ValidatePipelineStageIdsInteractor(getPipelineStageIdsRepo()),
+    getPipelineRepo(),
   );
 }
 
@@ -69,6 +76,12 @@ function makeDealDto(overrides: Record<string, unknown> = {}) {
     totalValue: 100,
     totalQuantity: 1,
     weightedValue: null,
+    pipelineId: null,
+    stageId: null,
+    status: "open" as const,
+    expectedCloseDate: null,
+    probability: null,
+    stageEnteredAt: null,
     notes: null,
     createdAt: new Date("2025-01-01"),
     updatedAt: new Date("2025-01-01"),

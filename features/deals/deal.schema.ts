@@ -1,6 +1,7 @@
 import type { Data } from "@/core/validation/validation.utils";
 
 import { z } from "zod";
+import { DealStatus } from "@/generated/prisma";
 
 import {
   CustomFieldValueSchema,
@@ -11,7 +12,9 @@ import {
   TaskReferenceSchema,
   NotesSchema,
 } from "@/core/base/base-entity.schema";
+import { GetConfigurationSchema } from "@/core/base/base-get.schema";
 import { CustomColumnDtoSchema } from "@/features/custom-column/custom-column.schema";
+import { PipelineDtoSchema } from "@/features/pipelines/pipeline.schema";
 
 export const DealDtoSchema = z.object({
   id: z.uuid(),
@@ -20,6 +23,12 @@ export const DealDtoSchema = z.object({
   totalQuantity: z.number(),
   weightedValue: z.number().nullable(),
   notes: NotesSchema,
+  pipelineId: z.uuid().nullable(),
+  stageId: z.uuid().nullable(),
+  status: z.enum(DealStatus),
+  expectedCloseDate: z.date().nullable(),
+  probability: z.number().min(0).max(100).nullable(),
+  stageEnteredAt: z.date().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
   organizations: z.array(OrganizationReferenceSchema),
@@ -40,3 +49,9 @@ export const DealByIdResponseSchema = z.object({
   deal: DealDtoSchema.nullable(),
   customColumns: z.array(CustomColumnDtoSchema),
 });
+
+export const DealsConfigurationSchema = GetConfigurationSchema.extend({
+  pipelines: z.array(PipelineDtoSchema),
+});
+
+export type DealsConfiguration = Data<typeof DealsConfigurationSchema>;

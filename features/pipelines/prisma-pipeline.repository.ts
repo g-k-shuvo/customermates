@@ -123,6 +123,18 @@ export class PrismaPipelineRepo
     return { pipelineId: pipeline.id, stageId };
   }
 
+  async getFirstStageOfPipeline(pipelineId: string) {
+    const { companyId } = this.user;
+
+    const stage = await this.prisma.pipelineStage.findFirst({
+      where: { companyId, pipelineId },
+      select: { id: true },
+      orderBy: { position: "asc" },
+    });
+
+    return stage?.id ?? null;
+  }
+
   async findIds(ids: Set<string>) {
     if (ids.size === 0) return new Set<string>();
 

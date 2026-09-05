@@ -546,6 +546,9 @@ export const getDealWritePrecheck = () =>
     getDealIdsValidator(),
     getCustomFieldValuesValidator(),
     getAssigneeGuardValidator(),
+    getPipelineIdsValidator(),
+    getPipelineStageIdsValidator(),
+    getPipelineRepo(),
   );
 
 export const getServiceWritePrecheck = () =>
@@ -702,7 +705,8 @@ export const getGetDealsInteractor = () =>
 export const getGetDealsApiInteractor = () =>
   new GetDealsInteractor(getDealRepo(), getP13nRepo(), "api", getQueryParamsPrecheck());
 
-export const getGetDealsConfigurationInteractor = () => new GetDealsConfigurationInteractor(getDealRepo());
+export const getGetDealsConfigurationInteractor = () =>
+  new GetDealsConfigurationInteractor(getDealRepo(), getPipelineRepo());
 
 export const getGetDealByIdInteractor = () => new GetDealByIdInteractor(getDealRepo(), getCustomColumnRepo());
 

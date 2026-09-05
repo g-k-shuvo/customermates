@@ -63,6 +63,10 @@ export class DealDetailStore extends BaseCustomColumnEntityModalStore<CreateDeal
       return {
         ...entity,
         ...baseData,
+        pipelineId: entity.pipelineId ?? undefined,
+        stageId: entity.stageId ?? undefined,
+        expectedCloseDate: entity.expectedCloseDate ?? undefined,
+        probability: entity.probability ?? undefined,
         organizationIds: entity.organizations.map((org) => org.id),
         userIds: entity.users.map((user) => user.id),
         contactIds: entity.contacts.map((contact) => contact.id),

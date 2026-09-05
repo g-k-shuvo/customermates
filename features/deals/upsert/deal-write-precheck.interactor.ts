@@ -5,9 +5,12 @@ import type { ValidateContactIdsInteractor } from "@/core/validation/validators/
 import type { ValidateCustomFieldValuesInteractor } from "@/core/validation/validators/validate-custom-field-values.interactor";
 import type { ValidateDealIdsInteractor } from "@/core/validation/validators/validate-deal-ids.interactor";
 import type { ValidateOrganizationIdsInteractor } from "@/core/validation/validators/validate-organization-ids.interactor";
+import type { ValidatePipelineIdsInteractor } from "@/core/validation/validators/validate-pipeline-ids.interactor";
+import type { ValidatePipelineStageIdsInteractor } from "@/core/validation/validators/validate-pipeline-stage-ids.interactor";
 import type { ValidateServiceIdsInteractor } from "@/core/validation/validators/validate-service-ids.interactor";
 import type { ValidateTaskIdsInteractor } from "@/core/validation/validators/validate-task-ids.interactor";
 import type { ValidateUserIdsInteractor } from "@/core/validation/validators/validate-user-ids.interactor";
+import type { FindStagePipelineRepo } from "@/features/pipelines/find-stage-pipeline.repo";
 import type { CreateDealData } from "./create-deal.interactor";
 import type { UpdateDealData } from "./update-deal.interactor";
 import type { CreateManyDealsData } from "./create-many-deals.interactor";
@@ -17,7 +20,14 @@ import type { DeleteManyDealsData } from "../delete/delete-many-deals.interactor
 
 import { Resource, EntityType } from "@/generated/prisma";
 
+import { CustomErrorCode } from "@/core/validation/validation.types";
 import { unique } from "@/core/utils/unique";
+
+type StagePlacementEntry = {
+  pipelineId?: string | null;
+  stageId?: string | null;
+  path: (string | number)[];
+};
 
 export class DealWritePrecheckInteractor {
   constructor(
@@ -29,6 +39,9 @@ export class DealWritePrecheckInteractor {
     private dealValidator: ValidateDealIdsInteractor,
     private customFieldValuesValidator: ValidateCustomFieldValuesInteractor,
     private assigneeGuardValidator: ValidateAssigneeGuardInteractor,
+    private pipelineValidator: ValidatePipelineIdsInteractor,
+    private stageValidator: ValidatePipelineStageIdsInteractor,
+    private stagePipelineRepo: FindStagePipelineRepo,
   ) {}
 
   async create(data: CreateDealData, ctx: z.RefinementCtx) {
@@ -38,6 +51,9 @@ export class DealWritePrecheckInteractor {
       this.contactValidator.invoke([{ ids: data.contactIds, path: ["contactIds"] }], ctx),
       this.serviceValidator.invoke([{ ids: data.services.map((s) => s.serviceId), path: ["services"] }], ctx),
       this.taskValidator.invoke([{ ids: data.taskIds, path: ["taskIds"] }], ctx),
+      this.pipelineValidator.invoke([{ ids: data.pipelineId, path: ["pipelineId"] }], ctx),
+      this.stageValidator.invoke([{ ids: data.stageId, path: ["stageId"] }], ctx),
+      this.checkStagePlacement([{ pipelineId: data.pipelineId, stageId: data.stageId, path: ["stageId"] }], ctx),
       this.customFieldValuesValidator.invoke(
         [{ values: data.customFieldValues, path: ["customFieldValues"] }],
         EntityType.deal,
@@ -55,6 +71,9 @@ export class DealWritePrecheckInteractor {
       this.contactValidator.invoke([{ ids: data.contactIds, path: ["contactIds"] }], ctx),
       this.serviceValidator.invoke([{ ids: data.services?.map((s) => s.serviceId), path: ["services"] }], ctx),
       this.taskValidator.invoke([{ ids: data.taskIds, path: ["taskIds"] }], ctx),
+      this.pipelineValidator.invoke([{ ids: data.pipelineId, path: ["pipelineId"] }], ctx),
+      this.stageValidator.invoke([{ ids: data.stageId, path: ["stageId"] }], ctx),
+      this.checkStagePlacement([{ pipelineId: data.pipelineId, stageId: data.stageId, path: ["stageId"] }], ctx),
       this.customFieldValuesValidator.invoke(
         [{ values: data.customFieldValues, path: ["customFieldValues"] }],
         EntityType.deal,
@@ -85,6 +104,22 @@ export class DealWritePrecheckInteractor {
       ),
       this.taskValidator.invoke(
         data.deals.map((deal, i) => ({ ids: deal.taskIds, path: ["deals", i, "taskIds"] })),
+        ctx,
+      ),
+      this.pipelineValidator.invoke(
+        data.deals.map((deal, i) => ({ ids: deal.pipelineId, path: ["deals", i, "pipelineId"] })),
+        ctx,
+      ),
+      this.stageValidator.invoke(
+        data.deals.map((deal, i) => ({ ids: deal.stageId, path: ["deals", i, "stageId"] })),
+        ctx,
+      ),
+      this.checkStagePlacement(
+        data.deals.map((deal, i) => ({
+          pipelineId: deal.pipelineId,
+          stageId: deal.stageId,
+          path: ["deals", i, "stageId"],
+        })),
         ctx,
       ),
       this.customFieldValuesValidator.invoke(
@@ -127,6 +162,22 @@ export class DealWritePrecheckInteractor {
         data.deals.map((deal, i) => ({ ids: deal.taskIds, path: ["deals", i, "taskIds"] })),
         ctx,
       ),
+      this.pipelineValidator.invoke(
+        data.deals.map((deal, i) => ({ ids: deal.pipelineId, path: ["deals", i, "pipelineId"] })),
+        ctx,
+      ),
+      this.stageValidator.invoke(
+        data.deals.map((deal, i) => ({ ids: deal.stageId, path: ["deals", i, "stageId"] })),
+        ctx,
+      ),
+      this.checkStagePlacement(
+        data.deals.map((deal, i) => ({
+          pipelineId: deal.pipelineId,
+          stageId: deal.stageId,
+          path: ["deals", i, "stageId"],
+        })),
+        ctx,
+      ),
       this.customFieldValuesValidator.invoke(
         data.deals.map((deal, i) => ({ values: deal.customFieldValues, path: ["deals", i, "customFieldValues"] })),
         EntityType.deal,
@@ -146,5 +197,22 @@ export class DealWritePrecheckInteractor {
 
   async deleteMany(data: DeleteManyDealsData, ctx: z.RefinementCtx) {
     await this.dealValidator.invoke([{ ids: data.ids, path: ["ids"] }], ctx);
+  }
+
+  private async checkStagePlacement(entries: StagePlacementEntry[], ctx: z.RefinementCtx) {
+    const placements = entries.flatMap(({ pipelineId, stageId, path }) =>
+      pipelineId && stageId ? [{ pipelineId, stageId, path }] : [],
+    );
+    if (placements.length === 0) return;
+
+    const stagePipelineIds = await this.stagePipelineRepo.findPipelineIdsByStageIds(
+      new Set(placements.map((placement) => placement.stageId)),
+    );
+
+    for (const { pipelineId, stageId, path } of placements) {
+      const stagePipelineId = stagePipelineIds.get(stageId);
+      if (stagePipelineId && stagePipelineId !== pipelineId)
+        ctx.addIssue({ code: "custom", params: { error: CustomErrorCode.pipelineStageMismatch }, path });
+    }
   }
 }
