@@ -15,7 +15,7 @@ import type { CreateAuthLinkSubscriptionRepo } from "@/ee/messaging/connect/crea
 
 import { ConversionEventType, SubscriptionStatus } from "@/generated/prisma";
 
-import { getCustomColumnRepo, getDealRepo } from "@/core/di";
+import { getCustomColumnRepo } from "@/core/di";
 import { BypassTenantGuard } from "@/core/decorators/bypass-tenant.decorator";
 import { Transaction } from "@/core/decorators/transaction.decorator";
 import { BaseRepository } from "@/core/base/base-repository";
@@ -44,8 +44,6 @@ export class PrismaCompanyRepo
       data: { ...args, id: companyId },
       where: { id: companyId },
     });
-
-    if (args.dealWeightingColumnId !== undefined) await getDealRepo().recalculateWeightedValuesForCompany();
   }
 
   async getDetails() {

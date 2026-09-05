@@ -25,6 +25,8 @@ const DEAL_ID = "40000000-0000-4000-8000-000000000001";
 const SERVICE_ID = "50000000-0000-4000-8000-000000000001";
 const STAGE_COLUMN_ID = "60000000-0000-4000-8000-000000000001";
 
+const STAGE_ID = "00000000-0000-4000-8000-0000000000a1";
+
 const stageColumn: CustomColumnDto = {
   id: STAGE_COLUMN_ID,
   entityType: EntityType.deal,
@@ -52,7 +54,7 @@ function deal(): DealDto {
     totalQuantity: 10,
     weightedValue: null,
     pipelineId: null,
-    stageId: null,
+    stageId: STAGE_ID,
     status: "open" as const,
     expectedCloseDate: null,
     probability: null,
@@ -71,6 +73,7 @@ function deal(): DealDto {
 
 function rootStore(canReadAllServices: boolean): RootStore {
   const dealsStore = {
+    stages: [{ id: STAGE_ID, name: "Proposal", probability: 50 }],
     customColumns: [] as CustomColumnDto[],
     setCustomColumns: vi.fn((columns: CustomColumnDto[]) => {
       dealsStore.customColumns = columns;
@@ -83,7 +86,7 @@ function rootStore(canReadAllServices: boolean): RootStore {
   return {
     registerModalStore: vi.fn(),
     dealsStore,
-    companyStore: { company: { dealWeightingColumnId: STAGE_COLUMN_ID } },
+    companyStore: { company: {} },
     userStore: {
       user: { id: "user-1" },
       can: vi.fn((resource: Resource, action: Action) =>

@@ -18,6 +18,7 @@ import type { Prisma } from "@/generated/prisma";
 
 import { BaseRepository } from "@/core/base/base-repository";
 import { Transaction } from "@/core/decorators/transaction.decorator";
+import { getDealRepo } from "@/core/di";
 
 export class PrismaPipelineRepo
   extends BaseRepository
@@ -306,6 +307,11 @@ export class PrismaPipelineRepo
     const { companyId } = this.user;
     const { id, ...fields } = args;
 
+    const previous = await this.prisma.pipelineStage.findFirstOrThrow({
+      where: { id, companyId },
+      select: { probability: true },
+    });
+
     const data: Prisma.PipelineStageUncheckedUpdateManyInput = {};
 
     if (fields.name !== undefined) data.name = fields.name;
@@ -316,7 +322,24 @@ export class PrismaPipelineRepo
 
     await this.prisma.pipelineStage.updateMany({ where: { id, companyId }, data });
 
+    if (fields.probability !== undefined && fields.probability !== previous.probability)
+      await this.recalculateDeals(await this.findDealIdsInStage(id));
+
     return this.prisma.pipelineStage.findFirstOrThrow({ where: { id, companyId }, select: this.stageSelect });
+  }
+
+  private async findDealIdsInStage(stageId: string) {
+    const { companyId } = this.user;
+
+    const deals = await this.prisma.deal.findMany({ where: { companyId, stageId }, select: { id: true } });
+
+    return deals.map((deal) => deal.id);
+  }
+
+  private async recalculateDeals(dealIds: string[]) {
+    if (dealIds.length === 0) return;
+
+    await getDealRepo().recalculateTotals(dealIds);
   }
 
   async countStagesInPipeline(pipelineId: string) {
@@ -340,10 +363,14 @@ export class PrismaPipelineRepo
   async moveDealsToStage(fromStageId: string, toStageId: string) {
     const { companyId } = this.user;
 
+    const movedDealIds = await this.findDealIdsInStage(fromStageId);
+
     const moved = await this.prisma.deal.updateMany({
       where: { companyId, stageId: fromStageId },
       data: { stageId: toStageId, stageEnteredAt: new Date() },
     });
+
+    await this.recalculateDeals(movedDealIds);
 
     return moved.count;
   }
@@ -357,7 +384,11 @@ export class PrismaPipelineRepo
       select: this.stageSelect,
     });
 
+    const strandedDealIds = await this.findDealIdsInStage(id);
+
     await this.prisma.pipelineStage.deleteMany({ where: { id, companyId } });
+
+    await this.recalculateDeals(strandedDealIds);
 
     return stage;
   }

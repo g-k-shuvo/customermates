@@ -24,7 +24,7 @@ import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { getCustomColumnRepo, getPipelineRepo } from "@/core/di";
-import { computeWeightedValue, readOptionWeights } from "./deal-weighting";
+import { computeWeightedValue, effectiveProbability } from "./deal-weighting";
 
 const PIPELINE_PLACEMENT_FILTER_OPERATORS = [
   FilterOperatorKey.equals,
@@ -637,16 +637,22 @@ export class PrismaDealRepo
     const { companyId } = this.user;
     const uniqueDealIds = Array.from(new Set(dealIds));
 
-    const [existingDeals, serviceDeals, weighting] = await Promise.all([
+    const [existingDeals, serviceDeals] = await Promise.all([
       this.prisma.deal.findMany({
         where: { id: { in: uniqueDealIds }, companyId },
-        select: { id: true, totalValue: true, totalQuantity: true, weightedValue: true },
+        select: {
+          id: true,
+          totalValue: true,
+          totalQuantity: true,
+          weightedValue: true,
+          stageId: true,
+          probability: true,
+        },
       }),
       this.prisma.serviceDeal.findMany({
         where: { dealId: { in: uniqueDealIds }, companyId },
         include: { service: { select: { amount: true } } },
       }),
-      this.resolveDealWeighting(companyId),
     ]);
 
     const computedTotalsByDealId = new Map<string, { totalValue: number; totalQuantity: number }>(
@@ -660,9 +666,10 @@ export class PrismaDealRepo
       totals.totalQuantity += serviceDeal.quantity;
     }
 
-    const stageValueByDealId = weighting
-      ? await this.findStageValuesByDealId(weighting.columnId, uniqueDealIds, companyId)
-      : new Map<string, string>();
+    const probabilityByStageId = await this.findStageProbabilities(
+      existingDeals.flatMap((deal) => (deal.stageId ? [deal.stageId] : [])),
+      companyId,
+    );
 
     const existingDealsById = new Map(existingDeals.map((deal) => [deal.id, deal]));
     const updates: Promise<unknown>[] = [];
@@ -671,13 +678,11 @@ export class PrismaDealRepo
       const existing = existingDealsById.get(dealId);
       if (!existing) continue;
 
-      const stageValue = stageValueByDealId.get(dealId);
-      const weightedValue = weighting
-        ? computeWeightedValue(
-            totals.totalValue,
-            stageValue ? weighting.weightByOptionValue.get(stageValue) : undefined,
-          )
-        : null;
+      const stageProbability = existing.stageId ? probabilityByStageId.get(existing.stageId) : undefined;
+      const weightedValue = computeWeightedValue(
+        totals.totalValue,
+        effectiveProbability(existing.probability, stageProbability),
+      );
 
       if (
         existing.totalValue === totals.totalValue &&
@@ -700,30 +705,16 @@ export class PrismaDealRepo
     await this.recalculateTotals(deals.map((deal) => deal.id));
   }
 
-  private async resolveDealWeighting(companyId: string) {
-    const company = await this.prisma.company.findUnique({
-      where: { id: companyId },
-      select: { dealWeightingColumnId: true },
+  private async findStageProbabilities(stageIds: string[], companyId: string) {
+    const uniqueStageIds = Array.from(new Set(stageIds));
+
+    if (uniqueStageIds.length === 0) return new Map<string, number>();
+
+    const stages = await this.prisma.pipelineStage.findMany({
+      where: { id: { in: uniqueStageIds }, companyId },
+      select: { id: true, probability: true },
     });
 
-    if (!company?.dealWeightingColumnId) return null;
-
-    const column = await this.prisma.customColumn.findFirst({
-      where: { id: company.dealWeightingColumnId, companyId, entityType: EntityType.deal },
-      select: { id: true, options: true },
-    });
-
-    if (!column) return null;
-
-    return { columnId: column.id, weightByOptionValue: readOptionWeights(column.options) };
-  }
-
-  private async findStageValuesByDealId(columnId: string, dealIds: string[], companyId: string) {
-    const rows = await this.prisma.customFieldValue.findMany({
-      where: { columnId, companyId, dealId: { in: dealIds } },
-      select: { dealId: true, value: true },
-    });
-
-    return new Map(rows.flatMap((row) => (row.dealId && row.value ? [[row.dealId, row.value] as const] : [])));
+    return new Map(stages.map((stage) => [stage.id, stage.probability]));
   }
 }

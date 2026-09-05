@@ -17,6 +17,16 @@ export function readOptionWeights(options: unknown): Map<string, number> {
   return weights;
 }
 
+export function effectiveProbability(
+  dealProbability: number | null | undefined,
+  stageProbability: number | null | undefined,
+): number | undefined {
+  if (typeof dealProbability === "number" && Number.isFinite(dealProbability)) return dealProbability;
+  if (typeof stageProbability === "number" && Number.isFinite(stageProbability)) return stageProbability;
+
+  return undefined;
+}
+
 export function computeWeightedValue(totalValue: number, weight: number | undefined): number | null {
   if (weight === undefined) return null;
 

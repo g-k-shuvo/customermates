@@ -1425,17 +1425,14 @@
     "currencyDescription": "Used for all money values across the CRM, for example: {deals}, {services}.",
     "dataModelTitle": "Data model",
     "forecasting": {
-      "columnLabel": "{deal} stage field",
-      "columnPlaceholder": "Select a field",
       "currentTotal": "Weighted pipeline",
       "currentTotalHelp": "Sum of value × stage probability for every staged record. Changes come from {services}, quantities, or stages in {deals}; probabilities are managed above.",
-      "description": "Weight each {deal} stage by its win probability to see a discounted pipeline value.",
-      "noColumn": "Not configured",
+      "description": "Give every stage of your {deal} pipeline a win probability to see a discounted pipeline value.",
       "totalPipeline": "Total pipeline",
       "totalPipelineHelp": "Sum of all values in {deals}. Changes come from {services} or quantities on those records.",
       "weightsTitle": "Stage probabilities",
-      "withoutStage": "Not weighted · no {column}",
-      "withoutStageHelp": "Value of records in {deals} without a selection in {column}. Selecting a stage moves them into the weighted pipeline."
+      "withoutStage": "Not weighted · no stage",
+      "withoutStageHelp": "Value of records in {deals} that sit in no pipeline stage. Moving one into a stage adds it to the weighted pipeline."
     }
   },
   "CompanyUserModal": {

@@ -205,7 +205,9 @@ const fixtures: Fixture[] = [
     render: (value, initial) => {
       const linked = { contactsStore: {}, organizationsStore: {}, servicesStore: {} };
       setRoot("dealsStore", value, linked);
-      return renderToStaticMarkup(createElement(DealsPageView, { deals: initial as never }));
+      return renderToStaticMarkup(
+        createElement(DealsPageView, { deals: initial as never, forecastsByStage: true, stages: [] }),
+      );
     },
     verifyAdd: () => expect(harness.openEntity).toHaveBeenCalledWith(EntityType.deal, "new"),
     verifyRow: (props) => expect((props.rowHref as (item: { id: string }) => string)({ id: "row" })).toBe("/deal/row"),

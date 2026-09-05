@@ -3,9 +3,10 @@
 import type { ReactNode } from "react";
 import type { GetResult } from "@/core/base/base-get.interactor";
 import type { DealDto } from "@/features/deals/deal.schema";
+import type { DealStageOption } from "./deals.store";
 
 import { observer } from "mobx-react-lite";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { EntityType } from "@/generated/prisma";
 
@@ -26,15 +27,19 @@ import { useRootStore } from "@/core/stores/root-store.provider";
 import { DealsPageSkeleton } from "./deals-page-skeleton";
 import { useDealColumns } from "./use-deal-columns";
 
-type Props = { deals: GetResult<DealDto> };
+type Props = { deals: GetResult<DealDto>; forecastsByStage: boolean; stages: DealStageOption[] };
 
-export const DealsPageView = observer(function DealsPageView({ deals }: Props) {
+export const DealsPageView = observer(function DealsPageView({ deals, forecastsByStage, stages }: Props) {
   const { contactsStore, dealsStore, importWizardStore, organizationsStore, servicesStore } = useRootStore();
 
   useDataViewSync(dealsStore, deals, [organizationsStore, contactsStore, servicesStore]);
+
+  useEffect(() => {
+    dealsStore.setStages(stages);
+  }, [dealsStore, stages]);
   const openEntity = useOpenEntity();
   const entityHref = useEntityHref();
-  const columns = useDealColumns();
+  const columns = useDealColumns(forecastsByStage);
   const { singular } = useEntityTerminology();
   const t = useTranslations();
 

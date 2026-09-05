@@ -1425,17 +1425,14 @@
     "currencyDescription": "Wird für alle Geldwerte im CRM verwendet, zum Beispiel: {deals}, {services}.",
     "dataModelTitle": "Datenmodell",
     "forecasting": {
-      "columnLabel": "{deal}-Phasenfeld",
-      "columnPlaceholder": "Feld auswählen",
       "currentTotal": "Gewichtete Pipeline",
       "currentTotalHelp": "Summe aus Wert × Phasenwahrscheinlichkeit für jeden Eintrag mit Phase. Änderungen ergeben sich aus „{services}“, Mengen oder Phasen in „{deals}“; Wahrscheinlichkeiten werden oben verwaltet.",
-      "description": "Gewichte jede {deal}-Phase mit ihrer Abschlusswahrscheinlichkeit, um einen abgezinsten Pipeline-Wert zu sehen.",
-      "noColumn": "Nicht konfiguriert",
+      "description": "Gib jeder Phase deiner {deal}-Pipeline eine Abschlusswahrscheinlichkeit, um einen abgezinsten Pipeline-Wert zu sehen.",
       "totalPipeline": "Gesamtpipeline",
       "totalPipelineHelp": "Summe aller Werte in „{deals}“. Änderungen ergeben sich aus „{services}“ oder Mengen in diesen Einträgen.",
       "weightsTitle": "Phasenwahrscheinlichkeiten",
-      "withoutStage": "Nicht gewichtet · kein {column}",
-      "withoutStageHelp": "Wert der Einträge in „{deals}“ ohne Auswahl in „{column}“. Mit einer Phase fließen sie in die gewichtete Pipeline ein."
+      "withoutStage": "Nicht gewichtet · ohne Phase",
+      "withoutStageHelp": "Wert der Einträge in „{deals}“ ohne Pipeline-Phase. Sobald ein Eintrag in eine Phase kommt, fließt er in die gewichtete Pipeline ein."
     }
   },
   "CompanyUserModal": {

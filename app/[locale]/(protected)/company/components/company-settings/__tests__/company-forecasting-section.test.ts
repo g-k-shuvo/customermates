@@ -10,22 +10,14 @@ const harness = vi.hoisted(() => ({
 }));
 
 const store = vi.hoisted(() => ({
-  dealStageColumns: [{ id: "stage-column", label: "Stage", options: [{ value: "qualified", label: "Qualified" }] }],
   form: {
     currency: "eur",
-    dealStageWeights: [{ optionValue: "qualified", weight: 40 }],
-    dealWeightingColumnId: "stage-column",
+    stageProbabilities: [{ stageId: "stage-qualified", probability: 40 }],
   },
   forecastingRequest: "ready",
-  isLoadingDealStageColumns: false,
+  pipelineStages: [{ id: "stage-qualified", name: "Qualified", probability: 40 }],
   pipelineTotal: 12_000,
-  selectedStageColumn: {
-    id: "stage-column",
-    label: "Stage",
-    options: [{ value: "qualified", label: "Qualified" }],
-  },
-  selectedStageValueSums: { qualified: { totalValue: 10_000 }, __empty__: { totalValue: 2_000 } },
-  setDealWeightingColumn: vi.fn(),
+  stageValueSums: { "stage-qualified": { totalValue: 10_000 }, __empty__: { totalValue: 2_000 } },
   unweightedPipelineTotal: 2_000,
   weightedPipelineTotal: 4_000,
 }));
@@ -46,7 +38,6 @@ vi.mock("@/components/chip/app-chip", () => ({
   AppChip: ({ children }: { children: ReactNode }) => createElement("span", null, children),
 }));
 vi.mock("@/components/forms/form-number-input", () => ({ FormNumberInput: () => null }));
-vi.mock("@/components/forms/form-select", () => ({ FormSelect: () => null }));
 vi.mock("@/components/forms/form-output-field", () => ({
   FormOutputField: (props: { help?: ReactNode; label: string; children: ReactNode }) => {
     harness.outputs.push(props);
@@ -97,7 +88,7 @@ describe("CompanyForecastingSection computed outputs", () => {
     });
     expect(harness.translationCalls).toContainEqual({
       key: "CompanySettings.forecasting.withoutStageHelp",
-      values: { column: "Stage", deals: "deals" },
+      values: { deals: "deals" },
     });
   });
 });

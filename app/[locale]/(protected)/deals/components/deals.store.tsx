@@ -3,16 +3,28 @@ import type { RootStore } from "@/core/stores/root.store";
 import type { TableColumn } from "@/core/base/base-data-view.store";
 import type { DealDto } from "@/features/deals/deal.schema";
 
+import { action, makeObservable, observable } from "mobx";
+
 import { EntityType, Resource } from "@/generated/prisma";
 
 import { getDealsAction } from "../actions";
 
 import { BaseDataViewStore } from "@/core/base/base-data-view.store";
 
+export type DealStageOption = { id: string; name: string; probability: number };
+
 export class DealsStore extends BaseDataViewStore<DealDto> {
+  stages: DealStageOption[] = [];
+
   constructor(rootStore: RootStore) {
     super(rootStore, Resource.deals, EntityType.deal);
+
+    makeObservable(this, { stages: observable, setStages: action });
   }
+
+  setStages = (stages: DealStageOption[]) => {
+    this.stages = stages;
+  };
 
   get canAccessOrganizations() {
     return this.rootStore.userStore.canAccess(Resource.organizations);

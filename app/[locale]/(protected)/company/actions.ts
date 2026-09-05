@@ -12,11 +12,16 @@ import type { DeleteWebhookData } from "@/features/webhook/delete-webhook.intera
 import type { ResendWebhookDeliveryData } from "@/features/webhook/resend-webhook-delivery.interactor";
 import type { InviteUsersByEmailData } from "@/features/company/invite-users-by-email.interactor";
 import type { CreateCheckoutSessionData } from "@/ee/subscription/create-checkout-session.interactor";
+import type { UpdateStageData } from "@/features/pipelines/stages/update-stage.interactor";
 
 import { z } from "zod";
 
+import { STAGE_GROUPING_KEY } from "@/core/base/base-get.schema";
+
 import {
   getGetDealsInteractor,
+  getGetPipelinesInteractor,
+  getUpdateStageInteractor,
   getGetUsersInteractor,
   getGetUserByIdInteractor,
   getAdminUpdateUserDetailsInteractor,
@@ -61,14 +66,22 @@ export async function updateCompanyAction(data: UpdateCompanySettingsData) {
   return serializeResult(getUpdateCompanySettingsInteractor().invoke(data));
 }
 
-export async function getDealStageValueSumsAction(columnId: string) {
+export async function getDealStageValueSumsAction() {
   const result = await getGetDealsInteractor().invoke({
-    groupedPagination: { groupingColumnId: columnId, perGroup: 1 },
+    groupedPagination: { groupingColumnId: STAGE_GROUPING_KEY, perGroup: 1 },
   });
 
   if (!result.ok) return { ok: false as const, error: z.treeifyError(result.error) };
 
   return { ok: true as const, data: result.data.groupValueSums ?? {} };
+}
+
+export async function getPipelinesAction() {
+  return unwrapValidated(getGetPipelinesInteractor().invoke());
+}
+
+export async function updateStageAction(data: UpdateStageData) {
+  return serializeResult(getUpdateStageInteractor().invoke(data));
 }
 
 export async function sendFeedbackAction(data: SendFeedbackData) {

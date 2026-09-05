@@ -1425,17 +1425,14 @@
     "currencyDescription": "Usata per tutti i valori monetari del CRM, ad esempio: {deals}, {services}.",
     "dataModelTitle": "Modello di dati",
     "forecasting": {
-      "columnLabel": "Campo della fase di {deal}",
-      "columnPlaceholder": "Seleziona un campo",
       "currentTotal": "Pipeline ponderata",
       "currentTotalHelp": "Somma del valore × la probabilità di fase per ogni elemento con una fase. Le modifiche derivano da «{services}», quantità o fasi in «{deals}»; le probabilità vengono gestite qui sopra.",
-      "description": "Pondera ogni fase di {deal} con la sua probabilità di chiusura per vedere un valore di pipeline scontato.",
-      "noColumn": "Non configurato",
+      "description": "Assegna a ogni fase della pipeline di {deal} una probabilità di chiusura per vedere un valore di pipeline scontato.",
       "totalPipeline": "Pipeline totale",
       "totalPipelineHelp": "Somma di tutti i valori in «{deals}». Le modifiche derivano da «{services}» o quantità in tali elementi.",
       "weightsTitle": "Probabilità per fase",
-      "withoutStage": "Non ponderato · senza {column}",
-      "withoutStageHelp": "Valore degli elementi in «{deals}» senza selezione in «{column}». Selezionando una fase, vengono inclusi nella pipeline ponderata."
+      "withoutStage": "Non ponderato · senza fase",
+      "withoutStageHelp": "Valore degli elementi in «{deals}» che non si trovano in nessuna fase della pipeline. Quando un elemento entra in una fase, rientra nella pipeline ponderata."
     }
   },
   "CompanyUserModal": {

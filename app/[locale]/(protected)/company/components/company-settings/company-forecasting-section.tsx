@@ -11,7 +11,6 @@ import { AppChip } from "@/components/chip/app-chip";
 import { useEntityTerminology } from "@/components/entity-terminology/use-entity-terminology";
 import { FormNumberInput } from "@/components/forms/form-number-input";
 import { FormOutputField } from "@/components/forms/form-output-field";
-import { FormSelect } from "@/components/forms/form-select";
 import { PageState } from "@/components/page-state/page-state";
 import { SettingsFieldSkeleton, SettingsFormSkeleton } from "@/components/forms/settings-form-skeleton";
 import { useRootStore } from "@/core/stores/root-store.provider";
@@ -19,8 +18,6 @@ import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { terminologyLabelForSentence } from "@/features/entity-terminology/entity-terminology-label.utils";
 
 import { resolveForecastingState } from "./company-forecasting-state";
-
-const NO_COLUMN_VALUE = "__none__";
 
 export const CompanyForecastingSection = observer(() => {
   const locale = useLocale();
@@ -33,16 +30,11 @@ export const CompanyForecastingSection = observer(() => {
 
   const state = resolveForecastingState({
     status: store.forecastingRequest,
-    columnId: store.form.dealWeightingColumnId,
-    hasStageValueSums: store.selectedStageValueSums !== undefined,
+    hasStages: store.pipelineStages.length > 0,
+    hasStageValueSums: store.stageValueSums !== undefined,
   });
 
-  const columnItems = [
-    { value: NO_COLUMN_VALUE, label: t("CompanySettings.forecasting.noColumn") },
-    ...store.dealStageColumns.map((column) => ({ value: column.id, label: column.label })),
-  ];
-
-  const optionByValue = new Map((store.selectedStageColumn?.options ?? []).map((option) => [option.value, option]));
+  const stageById = new Map(store.pipelineStages.map((stage) => [stage.id, stage]));
 
   let body: ReactNode;
 
@@ -77,20 +69,19 @@ export const CompanyForecastingSection = observer(() => {
       body = (
         <div className="flex flex-col gap-2">
           <ul className="flex flex-col gap-2">
-            {store.form.dealStageWeights.map((stage, index) => {
-              const option = optionByValue.get(stage.optionValue);
-              const label = option?.label ?? stage.optionValue;
+            {store.form.stageProbabilities.map((stage, index) => {
+              const label = stageById.get(stage.stageId)?.name ?? stage.stageId;
 
               return (
-                <li key={stage.optionValue} className="flex items-center justify-between gap-3">
-                  <AppChip variant={option?.color}>{label}</AppChip>
+                <li key={stage.stageId} className="flex items-center justify-between gap-3">
+                  <AppChip>{label}</AppChip>
 
                   <FormNumberInput
                     aria-label={label}
                     className="text-right"
                     containerClassName="w-24 shrink-0"
                     endContent="%"
-                    id={`dealStageWeights[${index}].weight`}
+                    id={`stageProbabilities[${index}].probability`}
                     label={null}
                   />
                 </li>
@@ -109,18 +100,7 @@ export const CompanyForecastingSection = observer(() => {
   return (
     <section data-company-forecasting className="flex flex-col gap-3">
       <div className="flex flex-col gap-1.5">
-        <FormSelect
-          id="dealWeightingColumnId"
-          items={columnItems}
-          label={t("CompanySettings.forecasting.columnLabel", { deal: singular(EntityType.deal) })}
-          optionsLoading={store.isLoadingDealStageColumns}
-          placeholder={t("CompanySettings.forecasting.columnPlaceholder")}
-          onValueChange={(value) => {
-            if (!value) return;
-
-            store.setDealWeightingColumn(value === NO_COLUMN_VALUE ? null : value);
-          }}
-        />
+        <h2 className="text-sm font-medium">{t("CompanySettings.forecasting.weightsTitle")}</h2>
 
         <p className="text-subdued text-xs">
           {t("CompanySettings.forecasting.description", { deal: singular(EntityType.deal) })}
@@ -151,11 +131,8 @@ export const CompanyForecastingSection = observer(() => {
 
           {store.unweightedPipelineTotal > 0 && (
             <FormOutputField
-              help={t("CompanySettings.forecasting.withoutStageHelp", {
-                column: store.selectedStageColumn?.label ?? "",
-                deals,
-              })}
-              label={t("CompanySettings.forecasting.withoutStage", { column: store.selectedStageColumn?.label ?? "" })}
+              help={t("CompanySettings.forecasting.withoutStageHelp", { deals })}
+              label={t("CompanySettings.forecasting.withoutStage")}
             >
               <span className="text-x-md text-subdued font-mono tabular-nums">
                 {intlStore.formatCurrency(store.unweightedPipelineTotal, store.form.currency)}

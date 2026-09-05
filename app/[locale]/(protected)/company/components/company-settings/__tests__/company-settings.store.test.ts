@@ -3,7 +3,12 @@ import type { RootStore } from "@/core/stores/root.store";
 import { describe, expect, it, vi } from "vitest";
 import { Currency, EntityType } from "@/generated/prisma";
 
-const actions = vi.hoisted(() => ({ updateCompanyAction: vi.fn() }));
+const actions = vi.hoisted(() => ({
+  getDealStageValueSumsAction: vi.fn(),
+  getPipelinesAction: vi.fn(),
+  updateCompanyAction: vi.fn(),
+  updateStageAction: vi.fn(),
+}));
 
 vi.mock("../../../actions", () => actions);
 vi.mock("@/app/actions", () => ({ upsertEntityTerminologyAction: vi.fn() }));
@@ -111,27 +116,17 @@ describe("CompanySettingsStore terminology", () => {
 });
 
 describe("CompanySettingsStore pipeline totals", () => {
-  const COLUMN_ID = "column-stage";
-  const OPEN = "option-open";
-  const WON = "option-won";
+  const OPEN = "stage-open";
+  const WON = "stage-won";
 
   function storeWithSums(sums: Record<string, Record<string, number>>) {
     const store = new CompanySettingsStore(makeRootStore());
 
-    store.applyDealStageColumns(
-      [
-        {
-          id: COLUMN_ID,
-          label: "Status",
-          options: [
-            { value: OPEN, label: "Open", color: "warning", isDefault: true, index: 0, weight: 30 },
-            { value: WON, label: "Won", color: "success", isDefault: false, index: 1, weight: 100 },
-          ],
-        },
-      ] as never,
-      COLUMN_ID,
-    );
-    store.applyStageValueSums(COLUMN_ID, sums);
+    store.applyPipelineStages([
+      { id: OPEN, name: "Open", probability: 30, pipelineName: "Sales" },
+      { id: WON, name: "Won", probability: 100, pipelineName: "Sales" },
+    ]);
+    store.applyStageValueSums(sums);
 
     return store;
   }
@@ -162,5 +157,38 @@ describe("CompanySettingsStore pipeline totals", () => {
 
     expect(store.pipelineTotal).toBe(0);
     expect(store.weightedPipelineTotal).toBe(0);
+  });
+});
+
+describe("CompanySettingsStore stage probabilities", () => {
+  it("writes only the stages whose probability changed", async () => {
+    const store = new CompanySettingsStore(makeRootStore());
+    store.applyPipelineStages([
+      { id: "stage-open", name: "Open", probability: 30, pipelineName: "Sales" },
+      { id: "stage-won", name: "Won", probability: 100, pipelineName: "Sales" },
+    ]);
+    store.onChange("stageProbabilities[0].probability", 45);
+    actions.updateCompanyAction.mockResolvedValue({ ok: true, data: { currency: Currency.eur } });
+    actions.updateStageAction.mockResolvedValue({ ok: true, data: { id: "stage-open" } });
+
+    await store.onSubmit();
+
+    expect(actions.updateStageAction).toHaveBeenCalledTimes(1);
+    expect(actions.updateStageAction).toHaveBeenCalledWith({ id: "stage-open", probability: 45 });
+    expect(store.hasUnsavedChanges).toBe(false);
+  });
+
+  it("keeps a rejected stage probability dirty", async () => {
+    const store = new CompanySettingsStore(makeRootStore());
+    store.applyPipelineStages([{ id: "stage-open", name: "Open", probability: 30, pipelineName: "Sales" }]);
+    store.onChange("stageProbabilities[0].probability", 45);
+    const error = { errors: ["failed"] };
+    actions.updateCompanyAction.mockResolvedValue({ ok: true, data: { currency: Currency.eur } });
+    actions.updateStageAction.mockResolvedValue({ ok: false, error });
+
+    await store.onSubmit();
+
+    expect(store.error).toEqual(error);
+    expect(store.hasForecastingChanges).toBe(true);
   });
 });

@@ -1,7 +1,8 @@
 import type { FormEvent } from "react";
 import type { RootStore } from "@/core/stores/root.store";
 import type { GroupValueSums } from "@/core/base/base-get.schema";
-import type { CustomColumnDto, CustomColumnOption } from "@/features/custom-column/custom-column.schema";
+import type { EntityType } from "@/generated/prisma";
+import type { PipelineDto } from "@/features/pipelines/pipeline.schema";
 import type { ForecastingRequestStatus } from "./company-forecasting-state";
 import type {
   EntityTerminologyOverride,
@@ -11,14 +12,12 @@ import type {
 import { action, computed, makeObservable, observable, toJS } from "mobx";
 import { cloneDeep } from "lodash";
 import equal from "fast-deep-equal/es6";
-import { Currency, CustomColumnType, EntityType, Resource } from "@/generated/prisma";
+import { Currency, Resource } from "@/generated/prisma";
 
 import { KANBAN_EMPTY_GROUP_KEY } from "@/core/base/base-get.schema";
 import { DEAL_GROUP_SUM_FIELDS } from "@/features/deals/deal-weighting";
 
-import { getCustomColumnsByEntityTypeAction } from "@/app/actions";
-
-import { getDealStageValueSumsAction, updateCompanyAction } from "../../actions";
+import { getDealStageValueSumsAction, getPipelinesAction, updateCompanyAction, updateStageAction } from "../../actions";
 
 import { BaseFormStore } from "@/core/base/base-form.store";
 import {
@@ -28,41 +27,43 @@ import {
   terminologySelectionsToEntries,
 } from "@/features/entity-terminology/entity-terminology.constants";
 
-export type DealStageColumn = {
+export type DealPipelineStage = {
   id: string;
-  label: string;
-  options: CustomColumnOption[];
+  name: string;
+  probability: number;
+  pipelineName: string;
 };
 
-type DealStageWeightDraft = {
-  optionValue: string;
-  weight: number | undefined;
+type StageProbabilityDraft = {
+  stageId: string;
+  probability: number | undefined;
 };
 
 type CompanySettingsFormData = {
   currency: Currency;
   terminology: TerminologySelectionMap;
-  dealWeightingColumnId: string | null;
-  dealStageWeights: DealStageWeightDraft[];
+  stageProbabilities: StageProbabilityDraft[];
 };
 
-function toDealStageColumns(customColumns: CustomColumnDto[]): DealStageColumn[] {
-  return customColumns.flatMap((column) =>
-    column.type === CustomColumnType.singleSelect
-      ? [
-          {
-            id: column.id,
-            label: column.label,
-            options: [...column.options.options].sort((first, second) => first.index - second.index),
-          },
-        ]
-      : [],
-  );
+function toPipelineStages(pipelines: PipelineDto[]): DealPipelineStage[] {
+  return [...pipelines]
+    .filter((entry) => entry.archivedAt === null)
+    .sort((first, second) => Number(second.isDefault) - Number(first.isDefault) || first.position - second.position)
+    .flatMap((pipeline) =>
+      [...pipeline.stages]
+        .sort((first, second) => first.position - second.position)
+        .map((stage) => ({
+          id: stage.id,
+          name: stage.name,
+          probability: stage.probability,
+          pipelineName: pipeline.name,
+        })),
+    );
 }
 
 export class CompanySettingsStore extends BaseFormStore<CompanySettingsFormData> {
-  public dealStageColumns: DealStageColumn[] = [];
-  public stageValueSumsByColumnId: Record<string, Record<string, GroupValueSums>> = {};
+  public pipelineStages: DealPipelineStage[] = [];
+  public stageValueSums: Record<string, GroupValueSums> | undefined = undefined;
   public forecastingRequest: ForecastingRequestStatus = "uninitialized";
 
   constructor(rootStore: RootStore) {
@@ -71,19 +72,15 @@ export class CompanySettingsStore extends BaseFormStore<CompanySettingsFormData>
       {
         currency: Currency.eur,
         terminology: defaultTerminologySelections(),
-        dealWeightingColumnId: null,
-        dealStageWeights: [],
+        stageProbabilities: [],
       },
       Resource.company,
     );
 
     makeObservable(this, {
-      dealStageColumns: observable,
-      stageValueSumsByColumnId: observable,
+      pipelineStages: observable,
+      stageValueSums: observable,
       forecastingRequest: observable,
-      isLoadingDealStageColumns: computed,
-      selectedStageColumn: computed,
-      selectedStageValueSums: computed,
       pipelineTotal: computed,
       unweightedPipelineTotal: computed,
       weightedPipelineTotal: computed,
@@ -92,125 +89,97 @@ export class CompanySettingsStore extends BaseFormStore<CompanySettingsFormData>
       initTerminology: action,
       setTerminologyPreset: action,
       setForecastingRequest: action,
-      applyDealStageColumns: action,
+      applyPipelineStages: action,
       applyStageValueSums: action,
-      setDealWeightingColumn: action,
     });
   }
 
-  get isLoadingDealStageColumns(): boolean {
-    return this.forecastingRequest === "uninitialized" || this.forecastingRequest === "loading";
-  }
-
-  get selectedStageColumn(): DealStageColumn | undefined {
-    const columnId = this.form.dealWeightingColumnId;
-    if (!columnId) return undefined;
-
-    return this.dealStageColumns.find((column) => column.id === columnId);
-  }
-
-  get selectedStageValueSums(): Record<string, GroupValueSums> | undefined {
-    const columnId = this.form.dealWeightingColumnId;
-    if (!columnId) return undefined;
-
-    return this.stageValueSumsByColumnId[columnId];
-  }
-
   get pipelineTotal(): number {
-    const stageValueSums = this.selectedStageValueSums;
+    const stageValueSums = this.stageValueSums;
     if (!stageValueSums) return 0;
 
     return (
-      this.form.dealStageWeights.reduce(
-        (total, { optionValue }) => total + (stageValueSums[optionValue]?.[DEAL_GROUP_SUM_FIELDS.total] ?? 0),
+      this.form.stageProbabilities.reduce(
+        (total, { stageId }) => total + (stageValueSums[stageId]?.[DEAL_GROUP_SUM_FIELDS.total] ?? 0),
         0,
       ) + this.unweightedPipelineTotal
     );
   }
 
   get unweightedPipelineTotal(): number {
-    const stageValueSums = this.selectedStageValueSums;
+    const stageValueSums = this.stageValueSums;
     if (!stageValueSums) return 0;
 
     return stageValueSums[KANBAN_EMPTY_GROUP_KEY]?.[DEAL_GROUP_SUM_FIELDS.total] ?? 0;
   }
 
   get weightedPipelineTotal(): number {
-    const stageValueSums = this.selectedStageValueSums;
+    const stageValueSums = this.stageValueSums;
     if (!stageValueSums) return 0;
 
-    return this.form.dealStageWeights.reduce(
-      (total, { optionValue, weight }) =>
-        total + ((stageValueSums[optionValue]?.[DEAL_GROUP_SUM_FIELDS.total] ?? 0) * (weight ?? 0)) / 100,
+    return this.form.stageProbabilities.reduce(
+      (total, { stageId, probability }) =>
+        total + ((stageValueSums[stageId]?.[DEAL_GROUP_SUM_FIELDS.total] ?? 0) * (probability ?? 0)) / 100,
       0,
     );
   }
 
   get hasForecastingChanges(): boolean {
-    return (
-      this.form.dealWeightingColumnId !== this.savedState.dealWeightingColumnId ||
-      !equal(this.form.dealStageWeights, this.savedState.dealStageWeights)
-    );
+    return !equal(this.form.stageProbabilities, this.savedState.stageProbabilities);
   }
 
   initTerminology = (overrides: EntityTerminologyOverride[]) => {
     const terminology = terminologySelectionsFromOverrides(overrides);
     this.form = { ...this.form, terminology };
-    this.savedState = { ...this.savedState, terminology: cloneDeep(terminology) };
+    this.savedState = {
+      ...this.savedState,
+      terminology: cloneDeep(terminology),
+    };
   };
 
   setTerminologyPreset = (entityType: EntityType, presetKey: string) => {
     if (!isTerminologyPresetKey(entityType, presetKey)) return;
 
-    this.form = { ...this.form, terminology: { ...this.form.terminology, [entityType]: presetKey } };
+    this.form = {
+      ...this.form,
+      terminology: { ...this.form.terminology, [entityType]: presetKey },
+    };
   };
 
   setForecastingRequest = (forecastingRequest: ForecastingRequestStatus) => {
     this.forecastingRequest = forecastingRequest;
   };
 
-  applyDealStageColumns = (dealStageColumns: DealStageColumn[], dealWeightingColumnId: string | null) => {
-    this.dealStageColumns = dealStageColumns;
+  applyPipelineStages = (pipelineStages: DealPipelineStage[]) => {
+    this.pipelineStages = pipelineStages;
 
-    const dealStageWeights = this.stageWeightsFor(dealWeightingColumnId);
+    const stageProbabilities = pipelineStages.map((stage) => ({
+      stageId: stage.id,
+      probability: stage.probability,
+    }));
 
-    this.form = { ...this.form, dealWeightingColumnId, dealStageWeights };
-    this.savedState = { ...this.savedState, dealWeightingColumnId, dealStageWeights: cloneDeep(dealStageWeights) };
+    this.form = { ...this.form, stageProbabilities };
+    this.savedState = {
+      ...this.savedState,
+      stageProbabilities: cloneDeep(stageProbabilities),
+    };
   };
 
-  applyStageValueSums = (columnId: string, stageValueSums: Record<string, GroupValueSums>) => {
-    this.stageValueSumsByColumnId = { ...this.stageValueSumsByColumnId, [columnId]: stageValueSums };
+  applyStageValueSums = (stageValueSums: Record<string, GroupValueSums>) => {
+    this.stageValueSums = stageValueSums;
     this.forecastingRequest = "ready";
   };
 
-  setDealWeightingColumn = (dealWeightingColumnId: string | null) => {
-    this.form = {
-      ...this.form,
-      dealWeightingColumnId,
-      dealStageWeights: this.stageWeightsFor(dealWeightingColumnId),
-    };
-
-    if (!dealWeightingColumnId) return;
-
-    if (this.stageValueSumsByColumnId[dealWeightingColumnId]) this.setForecastingRequest("ready");
-    else void this.loadStageValueSums(dealWeightingColumnId);
-  };
-
-  loadForecasting = async (dealWeightingColumnId: string | null) => {
+  loadForecasting = async () => {
     this.setForecastingRequest("loading");
 
     try {
-      const dealStageColumns = toDealStageColumns(
-        await getCustomColumnsByEntityTypeAction({ entityType: EntityType.deal }),
-      );
-      const selectedColumnId = dealStageColumns.some((column) => column.id === dealWeightingColumnId)
-        ? dealWeightingColumnId
-        : null;
+      this.applyPipelineStages(toPipelineStages(await getPipelinesAction()));
 
-      this.applyDealStageColumns(dealStageColumns, selectedColumnId);
+      const result = await getDealStageValueSumsAction();
 
-      if (selectedColumnId) await this.loadStageValueSums(selectedColumnId);
-      else this.setForecastingRequest("ready");
+      if (result.ok) this.applyStageValueSums(result.data);
+      else this.setForecastingRequest("error");
     } catch {
       this.setForecastingRequest("error");
     }
@@ -220,55 +189,53 @@ export class CompanySettingsStore extends BaseFormStore<CompanySettingsFormData>
     event?.preventDefault();
     this.setIsLoading(true);
 
-    const forecastingChanged = this.hasForecastingChanges;
-
     try {
       const result = await updateCompanyAction({
         currency: this.form.currency,
         terminology: terminologySelectionsToEntries(this.form.terminology),
-        ...(forecastingChanged
-          ? {
-              dealWeightingColumnId: this.form.dealWeightingColumnId,
-              dealStageWeights: this.form.dealStageWeights.map(({ optionValue, weight }) => ({
-                optionValue,
-                weight: weight ?? 0,
-              })),
-            }
-          : {}),
       });
 
-      if (result.ok) {
-        const company = this.rootStore.companyStore.company;
-        if (company) this.rootStore.companyStore.setCompany({ ...company, currency: this.form.currency });
+      if (!result.ok) {
+        this.setError(result.error);
+        return;
+      }
 
-        await this.rootStore.terminologyStore.refresh();
-        this.onInitOrRefresh({
-          currency: this.form.currency,
-          terminology: toJS(this.form.terminology),
-          dealWeightingColumnId: this.form.dealWeightingColumnId,
-          dealStageWeights: toJS(this.form.dealStageWeights),
-        });
-      } else this.setError(result.error);
+      const stageFailure = this.hasForecastingChanges ? await this.saveStageProbabilities() : undefined;
+
+      if (stageFailure) {
+        this.setError(stageFailure);
+        return;
+      }
+
+      const company = this.rootStore.companyStore.company;
+      if (company) this.rootStore.companyStore.setCompany({ ...company, currency: this.form.currency });
+
+      await this.rootStore.terminologyStore.refresh();
+      this.onInitOrRefresh({
+        currency: this.form.currency,
+        terminology: toJS(this.form.terminology),
+        stageProbabilities: toJS(this.form.stageProbabilities),
+      });
     } finally {
       this.setIsLoading(false);
     }
   };
 
-  private stageWeightsFor = (columnId: string | null): DealStageWeightDraft[] => {
-    const column = this.dealStageColumns.find((entry) => entry.id === columnId);
-    if (!column) return [];
+  private saveStageProbabilities = async () => {
+    const savedProbabilities = new Map(
+      this.savedState.stageProbabilities.map(({ stageId, probability }) => [stageId, probability]),
+    );
 
-    return column.options.map((option) => ({ optionValue: option.value, weight: option.weight ?? 0 }));
-  };
+    for (const { stageId, probability } of toJS(this.form.stageProbabilities)) {
+      const nextProbability = probability ?? 0;
 
-  private loadStageValueSums = async (columnId: string) => {
-    try {
-      const result = await getDealStageValueSumsAction(columnId);
+      if (nextProbability === savedProbabilities.get(stageId)) continue;
 
-      if (result.ok) this.applyStageValueSums(columnId, result.data);
-      else this.setForecastingRequest("error");
-    } catch {
-      this.setForecastingRequest("error");
+      const result = await updateStageAction({ id: stageId, probability: nextProbability });
+
+      if (!result.ok) return result.error;
     }
+
+    return undefined;
   };
 }

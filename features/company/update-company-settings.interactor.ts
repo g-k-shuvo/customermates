@@ -26,7 +26,6 @@ export const DealStageWeightSchema = z.object({
 export const UpdateCompanySettingsSchema = z.object({
   currency: z.enum(Currency).optional(),
   terminology: z.array(EntityTerminologyEntrySchema).optional(),
-  dealWeightingColumnId: z.string().nullable().optional(),
   dealStageWeights: z.array(DealStageWeightSchema).optional(),
 });
 
@@ -35,7 +34,7 @@ export type DealStageWeight = Data<typeof DealStageWeightSchema>;
 export type UpdateCompanySettingsData = Data<typeof UpdateCompanySettingsSchema>;
 
 export abstract class UpdateCompanySettingsRepo {
-  abstract updateDetails(args: { currency?: Currency; dealWeightingColumnId?: string | null }): Promise<void>;
+  abstract updateDetails(args: { currency?: Currency }): Promise<void>;
   abstract upsertTerminology(entries: EntityTerminologyEntry[]): Promise<void>;
   abstract setDealStageWeights(entries: DealStageWeight[]): Promise<void>;
 }
@@ -58,12 +57,7 @@ export class UpdateCompanySettingsInteractor extends AuthenticatedInteractor<
   async invoke(data: UpdateCompanySettingsData): Validated<UpdateCompanySettingsData> {
     if (data.terminology?.length) await this.repo.upsertTerminology(data.terminology);
 
-    const details: { currency?: Currency; dealWeightingColumnId?: string | null } = {};
-
-    if (data.currency) details.currency = data.currency;
-    if (data.dealWeightingColumnId !== undefined) details.dealWeightingColumnId = data.dealWeightingColumnId;
-
-    if (Object.keys(details).length > 0) await this.repo.updateDetails(details);
+    if (data.currency) await this.repo.updateDetails({ currency: data.currency });
 
     if (data.dealStageWeights?.length) await this.repo.setDealStageWeights(data.dealStageWeights);
 

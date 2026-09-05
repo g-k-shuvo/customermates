@@ -1425,17 +1425,14 @@
     "currencyDescription": "Se usa para todos los valores monetarios del CRM, por ejemplo: {deals}, {services}.",
     "dataModelTitle": "Modelo de datos",
     "forecasting": {
-      "columnLabel": "Campo de etapa de {deal}",
-      "columnPlaceholder": "Selecciona un campo",
       "currentTotal": "Cartera ponderada",
       "currentTotalHelp": "Suma del valor × la probabilidad de etapa de cada registro con etapa. Los cambios proceden de «{services}», cantidades o etapas en «{deals}»; las probabilidades se gestionan arriba.",
-      "description": "Pondera cada etapa de {deal} por su probabilidad de cierre para ver un valor de cartera descontado.",
-      "noColumn": "Sin configurar",
+      "description": "Asigna a cada etapa de tu cartera de {deal} una probabilidad de cierre para ver un valor de cartera descontado.",
       "totalPipeline": "Pipeline total",
       "totalPipelineHelp": "Suma de todos los valores en «{deals}». Los cambios proceden de «{services}» o cantidades en esos registros.",
       "weightsTitle": "Probabilidades por etapa",
-      "withoutStage": "Sin ponderar · sin {column}",
-      "withoutStageHelp": "Valor de los registros en «{deals}» sin selección en «{column}». Al seleccionar una etapa, pasan a la cartera ponderada."
+      "withoutStage": "Sin ponderar · sin etapa",
+      "withoutStageHelp": "Valor de los registros en «{deals}» que no están en ninguna etapa del pipeline. Al mover uno a una etapa, pasa a la cartera ponderada."
     }
   },
   "CompanyUserModal": {

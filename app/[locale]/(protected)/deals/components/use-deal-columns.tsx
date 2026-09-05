@@ -15,10 +15,9 @@ import { useRootStore } from "@/core/stores/root-store.provider";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { getSystemTaskNameTranslationKey } from "../../tasks/components/system-task.config";
 
-export function useDealColumns(): ColumnDef<DealDto>[] {
-  const { companyStore, dealsStore, userModalStore } = useRootStore();
+export function useDealColumns(forecastsByStage: boolean): ColumnDef<DealDto>[] {
+  const { dealsStore, userModalStore } = useRootStore();
   const intlStore = useHydratedIntlStore();
-  const forecastsByStage = Boolean(companyStore.company?.dealWeightingColumnId);
   const openEntity = useOpenEntity();
   const entityHref = useEntityHref();
   const t = useTranslations();

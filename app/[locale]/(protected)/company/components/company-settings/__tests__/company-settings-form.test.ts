@@ -63,7 +63,7 @@ function renderForm(canManage: boolean): string {
     terminologyStore: { overrides: [] },
   } as unknown as RootStore;
 
-  return renderToString(createElement(CompanySettingsForm, { currency: Currency.eur, dealWeightingColumnId: null }));
+  return renderToString(createElement(CompanySettingsForm, { currency: Currency.eur }));
 }
 
 beforeEach(() => {
@@ -100,13 +100,9 @@ describe("CompanySettingsForm terminology permissions", () => {
 
       const recoverableErrors: unknown[] = [];
       const root = await act(() =>
-        hydrateRoot(
-          container,
-          createElement(CompanySettingsForm, { currency: Currency.eur, dealWeightingColumnId: null }),
-          {
-            onRecoverableError: (error) => recoverableErrors.push(error),
-          },
-        ),
+        hydrateRoot(container, createElement(CompanySettingsForm, { currency: Currency.eur }), {
+          onRecoverableError: (error) => recoverableErrors.push(error),
+        }),
       );
       mountedRoots.push(root);
 

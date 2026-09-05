@@ -3,12 +3,13 @@ import type { RootStore } from "@/core/stores/root.store";
 import type { DealDto } from "@/features/deals/deal.schema";
 
 import { action, computed, makeObservable, observable } from "mobx";
-import { Action, CustomColumnType, Resource } from "@/generated/prisma";
+import { Action, Resource } from "@/generated/prisma";
 
 import { deleteDealAction, getDealByIdAction, createDealAction, updateDealAction } from "../actions";
 import { createServiceByNameAction, getServicesAction } from "../../services/actions";
 
 import { BaseCustomColumnEntityModalStore } from "@/core/base/base-custom-column-entity-modal.store";
+import { computeWeightedValue, effectiveProbability } from "@/features/deals/deal-weighting";
 
 export class DealDetailStore extends BaseCustomColumnEntityModalStore<CreateDealData & { id?: string }, DealDto> {
   serviceAmountById = new Map<string, number>();
@@ -177,25 +178,22 @@ export class DealDetailStore extends BaseCustomColumnEntityModalStore<CreateDeal
   get weightedValueBreakdown(): { value: number; percent: number; stage: string; weightedValue: number } | null {
     if (!this.fetchedEntity) return null;
 
-    const weightingColumnId = this.rootStore.companyStore.company?.dealWeightingColumnId;
-    if (!weightingColumnId) return null;
+    const stageId = this.form.stageId;
+    if (!stageId) return null;
 
-    const column = this.customColumns.find((it) => it.id === weightingColumnId);
-    if (column?.type !== CustomColumnType.singleSelect) return null;
+    const stage = this.rootStore.dealsStore.stages.find((it) => it.id === stageId);
+    if (!stage) return null;
 
-    const selectedValue = this.form.customFieldValues.find((it) => it.columnId === weightingColumnId)?.value;
-    if (!selectedValue) return null;
-
-    const option = column.options.options.find((it) => it.value === selectedValue);
-    if (!option || option.weight === undefined) return null;
+    const percent = effectiveProbability(this.form.probability, stage.probability);
+    if (percent === undefined) return null;
 
     const value = this.totalValue;
 
     return {
       value,
-      percent: option.weight,
-      stage: option.label,
-      weightedValue: value * (option.weight / 100),
+      percent,
+      stage: stage.name,
+      weightedValue: computeWeightedValue(value, percent) ?? 0,
     };
   }
 

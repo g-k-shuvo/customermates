@@ -20,10 +20,9 @@ import { CompanyForecastingSection } from "./company-forecasting-section";
 
 type Props = {
   currency: Currency;
-  dealWeightingColumnId: string | null;
 };
 
-export const CompanySettingsForm = observer(({ currency, dealWeightingColumnId }: Props) => {
+export const CompanySettingsForm = observer(({ currency }: Props) => {
   const t = useTranslations();
   const router = useRouter();
   const formId = useId();
@@ -47,8 +46,8 @@ export const CompanySettingsForm = observer(({ currency, dealWeightingColumnId }
   }, [store, terminologyKey]);
 
   useEffect(() => {
-    void store.loadForecasting(dealWeightingColumnId).catch(reportApplicationError);
-  }, [store, dealWeightingColumnId]);
+    void store.loadForecasting().catch(reportApplicationError);
+  }, [store]);
 
   const topBarActions = useMemo(
     () => <FormActions anchorScope="company-settings" formId={formId} store={store} variant="topbar" />,
