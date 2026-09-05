@@ -38,15 +38,64 @@ const FIELD_SYNONYMS: Record<string, string[]> = {
   amount: ["amount", "price", "value", "betrag", "preis", "montant", "importe", "prezzo"],
   contactIds: ["contacts", "kontakte", "contactos", "contatti"],
   dealIds: ["deals", "opportunities", "abschlusse", "oportunidades"],
+  expectedCloseDate: [
+    "expectedclosedate",
+    "closedate",
+    "closingdate",
+    "abschlussdatum",
+    "datedecloture",
+    "fechadecierre",
+    "datadichiusura",
+  ],
   firstName: ["firstname", "givenname", "vorname", "prenom", "nombre", "nome"],
   lastName: ["lastname", "surname", "familyname", "nachname", "nom", "apellido", "cognome"],
   name: ["name", "title", "companyname", "accountname", "dealname", "firmenname", "titel"],
   notes: ["notes", "note", "description", "comments", "notizen", "beschreibung", "descripcion"],
   organizationIds: ["organizations", "companies", "accounts", "organisationen", "firmen", "empresas"],
+  pipelineId: ["pipeline", "pipelineid", "embudo"],
+  probability: ["probability", "winprobability", "wahrscheinlichkeit", "probabilite", "probabilidad", "probabilita"],
   serviceIds: ["services", "products", "leistungen", "servicios", "servizi"],
   services: ["services", "products", "leistungen", "servicios", "servizi"],
+  stageId: ["stage", "stageid", "phase", "etappe", "etape", "etapa", "fase"],
   taskIds: ["tasks", "todos", "aufgaben", "tareas", "attivita"],
   userIds: ["assigned", "owner", "assignee", "zugewiesen", "verantwortlich", "asignado"],
+};
+
+const IDENTIFIER_SYNONYMS: Record<string, string[]> = {
+  [MessagingProvider.instagram]: ["instagram", "instagramhandle"],
+  [MessagingProvider.linkedin]: ["linkedin", "linkedinurl", "linkedinprofile"],
+  [MessagingProvider.mail]: [
+    "email",
+    "emailaddress",
+    "mail",
+    "mailaddress",
+    "epost",
+    "courriel",
+    "adresseemail",
+    "correo",
+    "correoelectronico",
+    "posta",
+    "postaelettronica",
+    "indirizzoemail",
+  ],
+  [MessagingProvider.telegram]: ["telegram", "telegramhandle"],
+  [MessagingProvider.whatsapp]: [
+    "phone",
+    "phonenumber",
+    "mobile",
+    "mobilephone",
+    "cellphone",
+    "whatsapp",
+    "whatsappnumber",
+    "telefon",
+    "telefonnummer",
+    "handy",
+    "telephone",
+    "portable",
+    "telefono",
+    "movil",
+    "cellulare",
+  ],
 };
 
 const RECORD_ID_SYNONYMS = ["id", "recordid", "customermatesid", RECORD_ID_COLUMN_KEY.toLowerCase()];
@@ -169,6 +218,18 @@ function fieldCandidates(normalized: string, descriptor: ImportEntityDescriptor)
   return candidates;
 }
 
+const IDENTIFIER_MATCH_SCORE = 90;
+
+function identifierCandidates(normalized: string, descriptor: ImportEntityDescriptor): Candidate[] {
+  if (!descriptor.supportsIdentifiers) return [];
+
+  return Object.entries(IDENTIFIER_SYNONYMS).flatMap(([provider, synonyms]) =>
+    synonyms.includes(normalized)
+      ? [{ target: { kind: "identifier" as const, provider }, score: IDENTIFIER_MATCH_SCORE }]
+      : [],
+  );
+}
+
 function customCandidates(normalized: string, customColumns: CustomColumnDto[]): Candidate[] {
   const matches = customColumns.filter((column) => normalizeHeader(column.label) === normalized);
   if (matches.length !== 1) return [];
@@ -185,7 +246,11 @@ function matchSource(
   const normalized = normalizeHeader(source.header);
   if (normalized.length === 0) return { kind: "ignore" };
 
-  const candidates = [...fieldCandidates(normalized, descriptor), ...customCandidates(normalized, customColumns)];
+  const candidates = [
+    ...fieldCandidates(normalized, descriptor),
+    ...identifierCandidates(normalized, descriptor),
+    ...customCandidates(normalized, customColumns),
+  ];
   const best = candidates.sort((a, b) => b.score - a.score)[0];
 
   if (!best || best.score < AUTO_MATCH_THRESHOLD) return { kind: "ignore" };

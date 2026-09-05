@@ -1,5 +1,5 @@
+import type { CatalogTarget, ImportEntityDescriptor } from "./import-entity.registry";
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
-import type { ImportEntityDescriptor } from "./import-entity.registry";
 import type { MappingTarget, SourceColumn } from "./import-mapping";
 import type { WorkbookCellValue } from "../workbook-cell";
 
@@ -26,15 +26,25 @@ export type PlanRow = {
 
 export const IMPORT_ISSUE_CODES = [
   "channelsNotUpdated",
+  "duplicateKeyAmbiguous",
+  "duplicateLookupFailed",
   "duplicateRecordId",
+  "duplicateSkipped",
   "invalidChannelValue",
+  "notADate",
   "notANumber",
   "notAPhoneNumber",
   "relationAmbiguous",
   "relationNotFound",
+  "stageAmbiguous",
   "unknownOption",
   "unknownProvider",
 ] as const;
+
+const AMBIGUOUS_CATALOG_ISSUE: Record<CatalogTarget, string> = {
+  pipeline: "relationAmbiguous",
+  stage: "stageAmbiguous",
+};
 
 export type IssueValues = Record<string, string | number>;
 
@@ -55,6 +65,8 @@ export type ImportPlan = {
 };
 
 export type RelationIndex = Record<string, Map<string, string[]>>;
+
+export type CatalogIndex = Partial<Record<CatalogTarget, Map<string, string[]>>>;
 
 export type IdentifierRow = { provider: string; value: string; displayName?: string };
 
@@ -123,7 +135,36 @@ export function dealServicesBySheetRow(rows: Array<Record<string, string>>): Map
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function asText(value: WorkbookCellValue): string {
+const BARE_NUMBER_PATTERN = /^-?\d+(?:[.,]\d+)?$/;
+
+const ISO_DAY_PATTERN = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
+
+const ISO_DATETIME_PATTERN = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/;
+
+function utcDayIso(year: number, month: number, day: number): string | null {
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+
+  if (parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) return null;
+
+  return parsed.toISOString();
+}
+
+export function parseImportDate(text: string): string | null {
+  if (BARE_NUMBER_PATTERN.test(text)) return null;
+
+  const isoDay = ISO_DAY_PATTERN.exec(text);
+  if (isoDay) return utcDayIso(Number(isoDay[1]), Number(isoDay[2]), Number(isoDay[3]));
+
+  if (!ISO_DATETIME_PATTERN.test(text)) return null;
+
+  const parsed = new Date(text);
+
+  return isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
+export function asText(value: WorkbookCellValue): string {
   if (value === null) return "";
   if (value instanceof Date) return value.toISOString();
 
@@ -177,10 +218,12 @@ export function buildPlan(args: {
   descriptor: ImportEntityDescriptor;
   customColumns: CustomColumnDto[];
   relationIndex: RelationIndex;
+  catalogIndex?: CatalogIndex;
   identifiersByRow?: Map<number, IdentifierRow[]>;
   dealServicesByRow?: Map<number, DealServiceRow[]>;
 }): ImportPlan {
   const { rows, sources, mapping, descriptor, customColumns, relationIndex, identifiersByRow } = args;
+  const catalogIndex = args.catalogIndex ?? {};
   const customById = new Map(customColumns.map((column) => [column.id, column]));
   const fieldByKey = new Map(descriptor.fields.map((field) => [field.key, field]));
 
@@ -268,41 +311,78 @@ export function buildPlan(args: {
         return;
       }
 
-      if (field.kind === "number") {
-        const numeric = Number(text.replace(",", "."));
-        if (isNaN(numeric)) fail(index, "notANumber", { value: text });
-        else payload[field.key] = numeric;
-        return;
-      }
+      switch (field.kind) {
+        case "text":
+        case "notes":
+          payload[field.key] = text;
+          return;
 
-      if (field.kind === "relationIds" || field.kind === "dealServices") {
-        const target_ = field.relationTarget ?? "service";
-        const index_ = relationIndex[target_] ?? new Map<string, string[]>();
-        const ids: string[] = [];
-
-        for (const token of splitMulti(text)) {
-          if (UUID_PATTERN.test(token)) {
-            ids.push(token);
-            continue;
-          }
-
-          const byName = index_.get(token.toLocaleLowerCase()) ?? index_.get(normalizeHeader(token));
-
-          if (!byName || byName.length === 0) fail(index, "relationNotFound", { value: token });
-          else if (byName.length > 1) fail(index, "relationAmbiguous", { value: token });
-          else ids.push(byName[0]);
+        case "number": {
+          const numeric = Number(text.replace(",", "."));
+          if (isNaN(numeric)) fail(index, "notANumber", { value: text });
+          else payload[field.key] = numeric;
+          return;
         }
 
-        if (field.kind === "dealServices") {
-          const fromSheet = args.dealServicesByRow?.get(row.sheetRow) ?? [];
-          const quantityById = new Map(fromSheet.map((entry) => [entry.serviceId, entry.quantity]));
+        case "date": {
+          const parsed = parseImportDate(text);
+          if (parsed === null) fail(index, "notADate", { value: text });
+          else payload[field.key] = parsed;
+          return;
+        }
 
-          payload[field.key] = ids.map((serviceId) => ({ serviceId, quantity: quantityById.get(serviceId) ?? 1 }));
-        } else payload[field.key] = ids;
-        return;
+        case "relationId": {
+          const catalogTarget = field.catalogTarget;
+          if (!catalogTarget) return;
+
+          if (UUID_PATTERN.test(text)) {
+            payload[field.key] = text;
+            return;
+          }
+
+          const catalog = catalogIndex[catalogTarget] ?? new Map<string, string[]>();
+          const byName = catalog.get(text.toLocaleLowerCase()) ?? catalog.get(normalizeHeader(text));
+
+          if (!byName || byName.length === 0) fail(index, "relationNotFound", { value: text });
+          else if (byName.length > 1) fail(index, AMBIGUOUS_CATALOG_ISSUE[catalogTarget], { value: text });
+          else payload[field.key] = byName[0];
+          return;
+        }
+
+        case "relationIds":
+        case "dealServices": {
+          const target_ = field.relationTarget ?? "service";
+          const index_ = relationIndex[target_] ?? new Map<string, string[]>();
+          const ids: string[] = [];
+
+          for (const token of splitMulti(text)) {
+            if (UUID_PATTERN.test(token)) {
+              ids.push(token);
+              continue;
+            }
+
+            const byName = index_.get(token.toLocaleLowerCase()) ?? index_.get(normalizeHeader(token));
+
+            if (!byName || byName.length === 0) fail(index, "relationNotFound", { value: token });
+            else if (byName.length > 1) fail(index, "relationAmbiguous", { value: token });
+            else ids.push(byName[0]);
+          }
+
+          if (field.kind === "dealServices") {
+            const fromSheet = args.dealServicesByRow?.get(row.sheetRow) ?? [];
+            const quantityById = new Map(fromSheet.map((entry) => [entry.serviceId, entry.quantity]));
+
+            payload[field.key] = ids.map((serviceId) => ({ serviceId, quantity: quantityById.get(serviceId) ?? 1 }));
+          } else payload[field.key] = ids;
+          return;
+        }
+
+        default: {
+          const unhandled: never = field.kind;
+          fail(index, unhandled, { value: text });
+          return;
+        }
       }
-
-      payload[field.key] = text;
     });
 
     if (!recordId) for (const key of blankRequiredText) payload[key] ??= "";

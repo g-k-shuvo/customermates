@@ -1,8 +1,10 @@
 import { EntityType } from "@/generated/prisma";
 
-export type ImportFieldKind = "text" | "number" | "notes" | "relationIds" | "dealServices";
+export type ImportFieldKind = "text" | "number" | "notes" | "date" | "relationId" | "relationIds" | "dealServices";
 
 export type RelationTarget = "contact" | "organization" | "deal" | "service" | "task" | "user";
+
+export type CatalogTarget = "pipeline" | "stage";
 
 export type ImportFieldDescriptor = {
   key: string;
@@ -10,6 +12,7 @@ export type ImportFieldDescriptor = {
   kind: ImportFieldKind;
   requiredOnCreate: boolean;
   relationTarget?: RelationTarget;
+  catalogTarget?: CatalogTarget;
 };
 
 export type ImportEntityDescriptor = {
@@ -36,6 +39,33 @@ const NOTES_FIELD: ImportFieldDescriptor = {
 function relation(key: string, target: RelationTarget, labelKey: string): ImportFieldDescriptor {
   return { key, labelKey, kind: "relationIds", requiredOnCreate: false, relationTarget: target };
 }
+
+const DEAL_PLACEMENT_FIELDS: ImportFieldDescriptor[] = [
+  {
+    key: "pipelineId",
+    labelKey: "Common.filters.fields.pipelineId",
+    kind: "relationId",
+    requiredOnCreate: false,
+    catalogTarget: "pipeline",
+  },
+  {
+    key: "stageId",
+    labelKey: "Common.filters.fields.stageId",
+    kind: "relationId",
+    requiredOnCreate: false,
+    catalogTarget: "stage",
+  },
+  { key: "expectedCloseDate", labelKey: "DealModal.expectedCloseDateLabel", kind: "date", requiredOnCreate: false },
+  { key: "probability", labelKey: "Common.probability", kind: "number", requiredOnCreate: false },
+];
+
+export const IMPORT_KEY_FIELDS: Record<EntityType, string[]> = {
+  [EntityType.contact]: ["firstName", "lastName"],
+  [EntityType.organization]: ["name"],
+  [EntityType.deal]: ["name"],
+  [EntityType.service]: ["name"],
+  [EntityType.task]: ["name"],
+};
 
 export const IMPORT_ENTITIES: Record<EntityType, ImportEntityDescriptor> = {
   [EntityType.contact]: {
@@ -72,6 +102,7 @@ export const IMPORT_ENTITIES: Record<EntityType, ImportEntityDescriptor> = {
     fields: [
       NAME_FIELD,
       NOTES_FIELD,
+      ...DEAL_PLACEMENT_FIELDS,
       relation("organizationIds", "organization", "Common.table.columns.organizations"),
       relation("userIds", "user", "Common.table.columns.users"),
       relation("contactIds", "contact", "Common.table.columns.contacts"),

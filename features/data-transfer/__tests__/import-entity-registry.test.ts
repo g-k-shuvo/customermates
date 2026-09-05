@@ -15,6 +15,25 @@ describe("import entity registry", () => {
     expect(missing).toEqual([]);
   });
 
+  it("declares a catalog target on every singular relation, which has no relation index to fall back on", () => {
+    const missing = Object.values(IMPORT_ENTITIES).flatMap((descriptor) =>
+      descriptor.fields
+        .filter((field) => field.kind === "relationId" && !field.catalogTarget)
+        .map((field) => `${descriptor.entityType}.${field.key}`),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("places a deal in its pipeline through single ids, not the array a relation list would send", () => {
+    const byKey = new Map(IMPORT_ENTITIES.deal.fields.map((field) => [field.key, field]));
+
+    expect(byKey.get("pipelineId")).toMatchObject({ kind: "relationId", catalogTarget: "pipeline" });
+    expect(byKey.get("stageId")).toMatchObject({ kind: "relationId", catalogTarget: "stage" });
+    expect(byKey.get("expectedCloseDate")?.kind).toBe("date");
+    expect(byKey.get("probability")?.kind).toBe("number");
+  });
+
   it("keeps deal services resolvable, which is what a deals round trip depends on", () => {
     const services = IMPORT_ENTITIES.deal.fields.find((field) => field.key === "services");
 

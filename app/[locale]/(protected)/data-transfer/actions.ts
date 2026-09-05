@@ -3,6 +3,8 @@
 import type {
   GetImportRelationIndexData,
   ImportMode,
+  MatchImportKeysData,
+  MatchImportKeysResult,
   RelationIndexResult,
 } from "@/features/data-transfer/data-transfer.schema";
 import type { RowActionResult } from "@/core/utils/action-result";
@@ -25,6 +27,7 @@ import {
   getDryRunImportServicesInteractor,
   getDryRunImportTasksInteractor,
   getGetImportRelationIndexInteractor,
+  getMatchImportKeysInteractor,
   getUpdateManyContactsInteractor,
   getUpdateManyDealsInteractor,
   getUpdateManyOrganizationsInteractor,
@@ -110,4 +113,8 @@ export async function commitImportChunkAction(data: ImportChunkInput): Promise<R
 
 export async function getImportRelationIndexAction(data: GetImportRelationIndexData) {
   return await serializeResult<RelationIndexResult>(getGetImportRelationIndexInteractor().invoke(data));
+}
+
+export async function matchImportKeysAction(data: MatchImportKeysData) {
+  return await serializeResult<MatchImportKeysResult>(getMatchImportKeysInteractor().invoke(data));
 }

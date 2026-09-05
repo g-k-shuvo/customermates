@@ -1,9 +1,11 @@
 import type { Data } from "@/core/validation/validation.utils";
 
 import { z } from "zod";
-import { EntityType } from "@/generated/prisma";
+import { EntityType, MessagingProvider } from "@/generated/prisma";
 
+import { CustomErrorCode } from "@/core/validation/validation.types";
 import { FilterSchema, SortDescriptorSchema } from "@/core/base/base-get.schema";
+import { IMPORT_ENTITIES, IMPORT_KEY_FIELDS } from "./import/import-entity.registry";
 
 export const SCHEMA_SHEET_NAME = "Schema";
 
@@ -58,6 +60,43 @@ export const GetImportRelationIndexSchema = z.object({
   includeUsers: z.boolean().optional(),
 });
 export type GetImportRelationIndexData = Data<typeof GetImportRelationIndexSchema>;
+
+export const DUPLICATE_STRATEGIES = ["create", "update", "skip"] as const;
+
+export const DuplicateStrategySchema = z.enum(DUPLICATE_STRATEGIES);
+export type DuplicateStrategy = Data<typeof DuplicateStrategySchema>;
+
+export const IMPORT_KEY_MATCH_BATCH = 200;
+
+export const IMPORT_KEY_VALUE_MAX_LENGTH = 400;
+
+export const ImportKeyColumnSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("field"), key: z.string().trim().min(1).max(100) }),
+  z.object({ kind: z.literal("identifier"), provider: z.enum(MessagingProvider) }),
+  z.object({ kind: z.literal("customField"), columnId: z.uuid() }),
+]);
+export type ImportKeyColumn = Data<typeof ImportKeyColumnSchema>;
+
+export const MatchImportKeysSchema = z
+  .object({
+    entityType: z.enum(EntityType),
+    key: ImportKeyColumnSchema,
+    values: z.array(z.string().trim().min(1).max(IMPORT_KEY_VALUE_MAX_LENGTH)).min(1).max(IMPORT_KEY_MATCH_BATCH),
+  })
+  .superRefine((data, ctx) => {
+    const supported =
+      data.key.kind === "field"
+        ? IMPORT_KEY_FIELDS[data.entityType].includes(data.key.key)
+        : data.key.kind !== "identifier" || IMPORT_ENTITIES[data.entityType].supportsIdentifiers;
+
+    if (!supported)
+      ctx.addIssue({ code: "custom", params: { error: CustomErrorCode.importKeyUnsupported }, path: ["key"] });
+  });
+export type MatchImportKeysData = Data<typeof MatchImportKeysSchema>;
+
+export type ImportKeyMatch = [value: string, ids: string[]];
+
+export type MatchImportKeysResult = { matches: ImportKeyMatch[] };
 
 export const USER_RELATION_KEY = "user";
 

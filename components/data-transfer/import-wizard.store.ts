@@ -1,5 +1,7 @@
+import type { CatalogIndex, ImportPlan, PlanRow, RelationIndex } from "@/features/data-transfer/import/import-plan";
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
-import type { ImportPlan, PlanRow, RelationIndex } from "@/features/data-transfer/import/import-plan";
+import type { DuplicateKeyColumn } from "@/features/data-transfer/import/duplicate-plan";
+import type { DuplicateStrategy } from "@/features/data-transfer/data-transfer.schema";
 import type { ImportRowIssue } from "@/features/data-transfer/import/import-issues";
 import type { MappingTarget } from "@/features/data-transfer/import/import-mapping";
 import type { ParsedWorkbook } from "@/features/data-transfer/import/read-workbook-file";
@@ -15,16 +17,26 @@ import {
   commitImportChunkAction,
   dryRunImportChunkAction,
   getImportRelationIndexAction,
+  matchImportKeysAction,
 } from "@/app/[locale]/(protected)/data-transfer/actions";
 import {
   CHANNELS_SHEET_NAME,
   IMPORT_CHUNK_SIZE,
+  IMPORT_KEY_MATCH_BATCH,
+  IMPORT_KEY_VALUE_MAX_LENGTH,
   SERVICES_SHEET_NAME,
   type ImportMode,
 } from "@/features/data-transfer/data-transfer.schema";
+import {
+  applyDuplicateStrategy,
+  duplicateKeyColumns,
+  duplicateKeysBySheetRow,
+} from "@/features/data-transfer/import/duplicate-plan";
+import { buildPipelineCatalogIndex } from "@/features/data-transfer/import/pipeline-catalog";
 import { IMPORT_ENTITIES } from "@/features/data-transfer/import/import-entity.registry";
 import { isDemoEnvironment } from "@/core/errors/report-application-error";
-import { ImportFileError, readWorkbookFile } from "@/features/data-transfer/import/read-workbook-file";
+import { ImportFileError } from "@/features/data-transfer/import/read-workbook-file";
+import { readImportFile } from "@/features/data-transfer/import/read-import-file";
 import {
   autoMatchColumns,
   duplicateTargets,
@@ -62,6 +74,19 @@ const RELATION_TARGETS: Record<string, EntityType> = {
   task: EntityType.task,
 };
 
+function duplicateLookupFailure(column: DuplicateKeyColumn): ImportRowIssue {
+  return {
+    sheetRow: null,
+    columnLetter: column.letter,
+    columnLabel: column.header,
+    fieldPath: "",
+    message: "",
+    values: {},
+    code: "duplicateLookupFailed",
+    blocking: true,
+  };
+}
+
 export class ImportWizardStore extends BaseModalStore {
   entityType: EntityType = EntityType.contact;
   step: ImportStep = "file";
@@ -70,6 +95,7 @@ export class ImportWizardStore extends BaseModalStore {
   mapping: MappingTarget[] = [];
   customColumns: CustomColumnDto[] = [];
   relationIndex: RelationIndex = {};
+  catalogIndex: CatalogIndex = {};
   plan?: ImportPlan;
   issues: ImportRowIssue[] = [];
   summary?: ImportSummary;
@@ -77,6 +103,8 @@ export class ImportWizardStore extends BaseModalStore {
   progressTotal = 0;
   fileError: string | null = null;
   skipInvalid = false;
+  duplicateStrategy: DuplicateStrategy = "create";
+  duplicateKeyIndex: number | null = null;
   private onComplete?: () => Promise<void> | void;
 
   constructor(rootStore: RootStore) {
@@ -90,6 +118,7 @@ export class ImportWizardStore extends BaseModalStore {
       mapping: observable,
       customColumns: observable.ref,
       relationIndex: observable.ref,
+      catalogIndex: observable.ref,
       plan: observable.ref,
       issues: observable.ref,
       summary: observable.ref,
@@ -97,18 +126,24 @@ export class ImportWizardStore extends BaseModalStore {
       progressTotal: observable,
       fileError: observable,
       skipInvalid: observable,
+      duplicateStrategy: observable,
+      duplicateKeyIndex: observable,
 
       descriptor: computed,
       hasBlockingIssues: computed,
       invalidSheetRows: computed,
       skippableCount: computed,
       duplicateTargetCount: computed,
+      duplicateKeyColumns: computed,
+      duplicateKeyColumn: computed,
 
       openForEntity: action,
       reset: action,
       setStep: action,
       setTarget: action,
       setSkipInvalid: action,
+      setDuplicateStrategy: action,
+      setDuplicateKeyIndex: action,
     });
   }
 
@@ -118,6 +153,18 @@ export class ImportWizardStore extends BaseModalStore {
 
   get duplicateTargetCount(): number {
     return duplicateTargets(this.mapping).length;
+  }
+
+  get duplicateKeyColumns(): DuplicateKeyColumn[] {
+    return duplicateKeyColumns({
+      sources: this.parsed?.sources ?? [],
+      mapping: this.mapping,
+      entityType: this.entityType,
+    });
+  }
+
+  get duplicateKeyColumn(): DuplicateKeyColumn | null {
+    return this.duplicateKeyColumns.find((column) => column.index === this.duplicateKeyIndex) ?? null;
   }
 
   get invalidSheetRows(): Set<number> {
@@ -141,6 +188,7 @@ export class ImportWizardStore extends BaseModalStore {
     this.fileName = "";
     this.parsed = undefined;
     this.mapping = [];
+    this.catalogIndex = {};
     this.plan = undefined;
     this.issues = [];
     this.summary = undefined;
@@ -149,6 +197,8 @@ export class ImportWizardStore extends BaseModalStore {
     this.progressTotal = 0;
     this.fileError = null;
     this.skipInvalid = false;
+    this.duplicateStrategy = "create";
+    this.duplicateKeyIndex = null;
   };
 
   setStep = (step: ImportStep) => {
@@ -157,6 +207,15 @@ export class ImportWizardStore extends BaseModalStore {
 
   setSkipInvalid = (value: boolean) => {
     this.skipInvalid = value;
+  };
+
+  setDuplicateStrategy = (strategy: DuplicateStrategy) => {
+    this.duplicateStrategy = strategy;
+  };
+
+  setDuplicateKeyIndex = (index: number | null) => {
+    this.duplicateKeyIndex = index;
+    if (index === null) this.duplicateStrategy = "create";
   };
 
   setTarget = (index: number, target: MappingTarget) => {
@@ -182,7 +241,7 @@ export class ImportWizardStore extends BaseModalStore {
     this.setFileError(null);
 
     try {
-      const parsed = await readWorkbookFile(file);
+      const parsed = await readImportFile(file);
       const customColumns = await getCustomColumnsByEntityTypeAction({ entityType: this.entityType });
 
       const targets = new Set(
@@ -204,6 +263,7 @@ export class ImportWizardStore extends BaseModalStore {
         relationIndex[key] = map;
       }
 
+      const catalogIndex = await this.loadCatalogIndex();
       const fromSchema = mappingFromSchemaSheet(parsed.sources, parsed.schemaRows, this.descriptor, customColumns);
 
       this.applyParsed(
@@ -211,6 +271,7 @@ export class ImportWizardStore extends BaseModalStore {
         parsed,
         customColumns,
         relationIndex,
+        catalogIndex,
         fromSchema ?? autoMatchColumns(parsed.sources, this.descriptor, customColumns),
       );
     } catch (error) {
@@ -221,30 +282,69 @@ export class ImportWizardStore extends BaseModalStore {
     }
   };
 
+  loadCatalogIndex = async (): Promise<CatalogIndex> => {
+    if (!this.descriptor.fields.some((field) => field.catalogTarget)) return {};
+
+    const dealsStore = this.rootStore.dealsStore;
+    await dealsStore.ensurePipelinesLoaded();
+
+    return buildPipelineCatalogIndex(dealsStore.pipelines, dealsStore.stages);
+  };
+
+  resolveDuplicates = async (plan: ImportPlan): Promise<{ plan: ImportPlan; issues: ImportRowIssue[] }> => {
+    const column = this.duplicateKeyColumn;
+    if (!column || this.duplicateStrategy === "create" || plan.create.length === 0) return { plan, issues: [] };
+
+    const keysBySheetRow = duplicateKeysBySheetRow(this.parsed?.rows ?? [], column.index);
+    const usable = (value: string | undefined): value is string =>
+      value !== undefined && value.length <= IMPORT_KEY_VALUE_MAX_LENGTH;
+    const values = [...new Set(plan.create.map((row) => keysBySheetRow.get(row.sheetRow)).filter(usable))];
+    if (values.length === 0) return { plan, issues: [] };
+
+    const matches = new Map<string, string[]>();
+
+    for (const batch of chunkRows(values, IMPORT_KEY_MATCH_BATCH)) {
+      const result = await matchImportKeysAction({ entityType: this.entityType, key: column.key, values: batch });
+
+      if (!result.ok) return { plan, issues: [duplicateLookupFailure(column)] };
+
+      for (const [value, ids] of result.data.matches) matches.set(value, ids);
+    }
+
+    return {
+      plan: applyDuplicateStrategy({ plan, strategy: this.duplicateStrategy, column, keysBySheetRow, matches }),
+      issues: [],
+    };
+  };
+
   runDryRun = async () => {
     if (!this.parsed) return;
 
-    const plan = buildPlan({
+    const parsedPlan = buildPlan({
       rows: this.parsed.rows,
       sources: this.parsed.sources,
       mapping: this.mapping,
       descriptor: this.descriptor,
       customColumns: this.customColumns,
       relationIndex: this.relationIndex,
+      catalogIndex: this.catalogIndex,
       identifiersByRow: identifiersBySheetRow(this.parsed.relationSheets[CHANNELS_SHEET_NAME] ?? []),
       dealServicesByRow: dealServicesBySheetRow(this.parsed.relationSheets[SERVICES_SHEET_NAME] ?? []),
     });
 
-    const planIssues = plan.issues.map(planIssueToRowIssue);
-    const updateChunks = chunkRows(plan.update, IMPORT_CHUNK_SIZE);
-    const createChunks = chunkRows(plan.create, IMPORT_CHUNK_SIZE);
-
     this.setIsLoading(true);
-    this.setProgress(0, updateChunks.length + createChunks.length);
-
-    const found: ImportRowIssue[] = [...planIssues];
+    this.setProgress(0, 0);
 
     try {
+      const resolved = await this.resolveDuplicates(parsedPlan);
+      const plan = resolved.plan;
+      const updateChunks = chunkRows(plan.update, IMPORT_CHUNK_SIZE);
+      const createChunks = chunkRows(plan.create, IMPORT_CHUNK_SIZE);
+
+      this.setProgress(0, updateChunks.length + createChunks.length);
+
+      const found: ImportRowIssue[] = [...plan.issues.map(planIssueToRowIssue), ...resolved.issues];
+
       for (const [mode, chunks] of [
         ["update", updateChunks],
         ["create", createChunks],
@@ -368,6 +468,7 @@ export class ImportWizardStore extends BaseModalStore {
     parsed: ParsedWorkbook,
     customColumns: CustomColumnDto[],
     relationIndex: RelationIndex,
+    catalogIndex: CatalogIndex,
     mapping: MappingTarget[],
   ) {
     runInAction(() => {
@@ -375,7 +476,10 @@ export class ImportWizardStore extends BaseModalStore {
       this.parsed = parsed;
       this.customColumns = customColumns;
       this.relationIndex = relationIndex;
+      this.catalogIndex = catalogIndex;
       this.mapping = mapping;
+      this.duplicateKeyIndex = null;
+      this.duplicateStrategy = "create";
       this.step = "mapping";
     });
   }

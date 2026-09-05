@@ -7,7 +7,14 @@ import { CustomColumnType, EntityType } from "@/generated/prisma";
 
 import { IMPORT_ENTITIES } from "../import/import-entity.registry";
 import { autoMatchColumns, mappingFromSchemaSheet, normalizeHeader } from "../import/import-mapping";
-import { buildPlan, chunkRows, dealServicesBySheetRow, identifiersBySheetRow } from "../import/import-plan";
+import {
+  buildPlan,
+  chunkRows,
+  dealServicesBySheetRow,
+  identifiersBySheetRow,
+  parseImportDate,
+} from "../import/import-plan";
+import { buildPipelineCatalogIndex } from "../import/pipeline-catalog";
 import { mapFailureToRows } from "../import/import-issues";
 
 const STATUS_A = "aaaa1111-0000-4000-8000-00000000000a";
@@ -651,5 +658,168 @@ describe("dealServicesBySheetRow", () => {
       { serviceId: "c", quantity: 1 },
     ]);
     expect(byRow.size).toBe(1);
+  });
+});
+
+describe("buildPlan deal pipeline placement", () => {
+  const deal = IMPORT_ENTITIES[EntityType.deal];
+  const SALES = "a0000000-0000-4000-8000-000000000001";
+  const PARTNERS = "a0000000-0000-4000-8000-000000000002";
+  const SALES_WON = "b0000000-0000-4000-8000-000000000001";
+  const PARTNERS_WON = "b0000000-0000-4000-8000-000000000002";
+  const SALES_DEMO = "b0000000-0000-4000-8000-000000000003";
+
+  const catalogIndex = buildPipelineCatalogIndex(
+    [
+      { id: SALES, name: "Sales", isArchived: false },
+      { id: PARTNERS, name: "Partners", isArchived: false },
+    ],
+    [
+      { id: SALES_WON, name: "Won", pipelineId: SALES },
+      { id: PARTNERS_WON, name: "Won", pipelineId: PARTNERS },
+      { id: SALES_DEMO, name: "Demo", pipelineId: SALES },
+    ],
+  );
+
+  function planPlacement(headers: string[], mapping: MappingTarget[], cells: Array<string | null>) {
+    return buildPlan({
+      rows: [{ sourceIndex: 0, sheetRow: 2, cells }],
+      sources: sources(headers),
+      mapping,
+      descriptor: deal,
+      customColumns: [],
+      relationIndex: {},
+      catalogIndex,
+    });
+  }
+
+  it("sends a single stage id, not an array, so the server uuid schema accepts the row", () => {
+    const result = planPlacement(["Stage"], [{ kind: "field", key: "stageId" }], ["Demo"]);
+
+    expect(result.issues).toHaveLength(0);
+    expect(result.create[0].payload.stageId).toBe(SALES_DEMO);
+  });
+
+  it("resolves a pipeline name and keeps a stage id that is already a uuid", () => {
+    const result = planPlacement(
+      ["Pipeline", "Stage"],
+      [
+        { kind: "field", key: "pipelineId" },
+        { kind: "field", key: "stageId" },
+      ],
+      ["Partners", PARTNERS_WON],
+    );
+
+    expect(result.issues).toHaveLength(0);
+    expect(result.create[0].payload).toMatchObject({ pipelineId: PARTNERS, stageId: PARTNERS_WON });
+  });
+
+  it("blocks a stage name that two pipelines share and asks the user to qualify it", () => {
+    const result = planPlacement(["Stage"], [{ kind: "field", key: "stageId" }], ["Won"]);
+
+    expect(result.issues.map((issue) => issue.code)).toEqual(["stageAmbiguous"]);
+    expect(result.issues[0].blocking).toBe(true);
+    expect(result.create).toHaveLength(0);
+  });
+
+  it("accepts the qualified form, so a file spanning several pipelines still imports", () => {
+    const result = buildPlan({
+      rows: rows([["Sales / Won"], ["Partners / Won"]]),
+      sources: sources(["Stage"]),
+      mapping: [{ kind: "field", key: "stageId" }],
+      descriptor: deal,
+      customColumns: [],
+      relationIndex: {},
+      catalogIndex,
+    });
+
+    expect(result.issues).toHaveLength(0);
+    expect(result.create.map((row) => row.payload.stageId)).toEqual([SALES_WON, PARTNERS_WON]);
+  });
+
+  it("attributes an unknown stage to its column instead of letting the server reject the chunk", () => {
+    const result = planPlacement(["Stage"], [{ kind: "field", key: "stageId" }], ["Nurture"]);
+
+    expect(result.issues[0]).toMatchObject({ code: "relationNotFound", columnLabel: "Stage", blocking: true });
+  });
+
+  it("reads a close date and rejects a bare spreadsheet serial rather than dating it in the year 45000", () => {
+    const mapping: MappingTarget[] = [{ kind: "field", key: "expectedCloseDate" }];
+
+    expect(planPlacement(["Close date"], mapping, ["2026-05-01"]).create[0].payload).toEqual({
+      expectedCloseDate: "2026-05-01T00:00:00.000Z",
+    });
+
+    const serial = planPlacement(["Close date"], mapping, ["45000"]);
+    expect(serial.issues.map((issue) => issue.code)).toEqual(["notADate"]);
+    expect(serial.create).toHaveLength(0);
+  });
+
+  it("keeps probability numeric and blank placement keys absent from an update payload", () => {
+    const result = buildPlan({
+      rows: rows([["60000000-0000-4000-8000-000000000001", "", "", "40"]]),
+      sources: sources(["ID", "Pipeline", "Stage", "Probability"]),
+      mapping: [
+        { kind: "recordId" },
+        { kind: "field", key: "pipelineId" },
+        { kind: "field", key: "stageId" },
+        { kind: "field", key: "probability" },
+      ],
+      descriptor: deal,
+      customColumns: [],
+      relationIndex: {},
+      catalogIndex,
+    });
+
+    expect(result.issues).toHaveLength(0);
+    expect(result.update[0].payload).toEqual({ id: "60000000-0000-4000-8000-000000000001", probability: 40 });
+  });
+});
+
+describe("buildPipelineCatalogIndex", () => {
+  const SALES = "a0000000-0000-4000-8000-000000000001";
+  const ARCHIVED = "a0000000-0000-4000-8000-000000000009";
+
+  it("keys a stage on both its bare name and the qualified form", () => {
+    const index = buildPipelineCatalogIndex(
+      [{ id: SALES, name: "Sales", isArchived: false }],
+      [{ id: "b0000000-0000-4000-8000-000000000001", name: "Demo", pipelineId: SALES }],
+    );
+
+    expect(index.stage?.get("demo")).toEqual(["b0000000-0000-4000-8000-000000000001"]);
+    expect(index.stage?.get("sales / demo")).toEqual(["b0000000-0000-4000-8000-000000000001"]);
+    expect(index.pipeline?.get("sales")).toEqual([SALES]);
+  });
+
+  it("leaves an archived pipeline and its stages out, which the server would refuse anyway", () => {
+    const index = buildPipelineCatalogIndex(
+      [{ id: ARCHIVED, name: "Old", isArchived: true }],
+      [{ id: "b0000000-0000-4000-8000-000000000002", name: "Old stage", pipelineId: ARCHIVED }],
+    );
+
+    expect(index.pipeline?.size).toBe(0);
+    expect(index.stage?.size).toBe(0);
+  });
+});
+
+describe("parseImportDate ambiguity", () => {
+  it("refuses a dotted european date rather than guessing its order", () => {
+    expect(parseImportDate("01.03.2026")).toBeNull();
+  });
+
+  it("refuses a slashed date rather than guessing its order", () => {
+    expect(parseImportDate("03/01/2026")).toBeNull();
+  });
+
+  it("reads an iso day as utc midnight", () => {
+    expect(parseImportDate("2026-03-01")).toBe("2026-03-01T00:00:00.000Z");
+  });
+
+  it("refuses an impossible iso day", () => {
+    expect(parseImportDate("2026-13-01")).toBeNull();
+  });
+
+  it("keeps an iso timestamp", () => {
+    expect(parseImportDate("2026-03-01T09:30:00Z")).toBe("2026-03-01T09:30:00.000Z");
   });
 });

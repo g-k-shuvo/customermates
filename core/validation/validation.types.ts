@@ -34,6 +34,7 @@ export enum CustomErrorCode {
   customColumnNotFound = "customColumnNotFound",
   customColumnIdNotFound = "customColumnIdNotFound",
   customColumnTypeMismatch = "customColumnTypeMismatch",
+  importKeyUnsupported = "importKeyUnsupported",
   invalidChannelValue = "invalidChannelValue",
   channelAlreadyLinked = "channelAlreadyLinked",
   duplicateChannel = "duplicateChannel",

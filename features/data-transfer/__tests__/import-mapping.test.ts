@@ -135,4 +135,26 @@ describe("autoMatchColumns", () => {
       { kind: "field", key: "lastName" },
     ]);
   });
+
+  it("matches a channel header, which a file without a schema sheet can only reach this way", () => {
+    expect(autoMatchColumns(sourcesFrom(["E-Mail", "Telefon", "LinkedIn"]), CONTACTS, [])).toEqual([
+      { kind: "identifier", provider: "mail" },
+      { kind: "identifier", provider: "whatsapp" },
+      { kind: "identifier", provider: "linkedin" },
+    ]);
+  });
+
+  it("leaves a channel header alone for an entity that holds no channels", () => {
+    expect(autoMatchColumns(sourcesFrom(["Email"]), IMPORT_ENTITIES[EntityType.deal], [])).toEqual([
+      { kind: "ignore" },
+    ]);
+  });
+
+  it("gives a custom column of the same name precedence over the channel guess", () => {
+    const custom = [{ id: "col-1", label: "Email" }] as never;
+
+    expect(autoMatchColumns(sourcesFrom(["Email"]), CONTACTS, custom)).toEqual([
+      { kind: "customField", columnId: "col-1" },
+    ]);
+  });
 });

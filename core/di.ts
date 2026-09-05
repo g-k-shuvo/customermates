@@ -84,6 +84,8 @@ import { ExportServicesPageInteractor } from "@/features/data-transfer/export/ex
 import { ExportTasksPageInteractor } from "@/features/data-transfer/export/export-tasks-page.interactor";
 import { GetImportRelationIndexInteractor } from "@/features/data-transfer/import/get-import-relation-index.interactor";
 import { ImportRelationIndex } from "@/features/data-transfer/import/relation-index.service";
+import { ImportKeyMatcher } from "@/features/data-transfer/import/import-key-matcher.service";
+import { MatchImportKeysInteractor } from "@/features/data-transfer/import/match-import-keys.interactor";
 import { GetContactsConfigurationInteractor } from "@/features/contacts/get/get-contacts-configuration.interactor";
 import { GetContactByIdInteractor } from "@/features/contacts/get/get-contact-by-id.interactor";
 import { CreateContactInteractor } from "@/features/contacts/upsert/create-contact.interactor";
@@ -1758,6 +1760,11 @@ export const getImportRelationIndex = () => new ImportRelationIndex();
 
 export const getGetImportRelationIndexInteractor = () =>
   new GetImportRelationIndexInteractor(getImportRelationIndex(), getUserService());
+
+export const getImportKeyMatcher = () => new ImportKeyMatcher();
+
+export const getMatchImportKeysInteractor = () =>
+  new MatchImportKeysInteractor(getImportKeyMatcher(), getUserService());
 
 export const getDryRunImportOrganizationsInteractor = () =>
   new DryRunImportOrganizationsInteractor(getOrganizationWritePrecheck());

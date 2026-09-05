@@ -60,10 +60,11 @@ const RETIRED_CLAIMS: readonly RetiredClaim[] = [
   {
     id: "non-xlsx-data-transfer",
     pattern:
-      /\b(?:CSV|TSV|ODS|JSON|XML|Google[ -]?(?:Sheets?|Tabellen))[ -]?(?:import(?:er|s)?|export(?:er|s)?|upload|download|Import\w*|Export\w*|Upload|Download|Feldzuordnung)\b|\b(?:import|export|upload|download|importier\w*|exportier\w*|hochlad\w*|herunterlad\w*)[^.!?;|]{0,28}\b(?:CSV|TSV|ODS|Google[ -]?(?:Sheets?|Tabellen))\b|\b(?:CSV|TSV|ODS|Google[ -]?(?:Sheets?|Tabellen))[^.!?;|]{0,28}\b(?:import|export|upload|download|importier\w*|exportier\w*|hochlad\w*|herunterlad\w*)/iu,
+      /\b(?:CSV|TSV|ODS|JSON|XML|Google[ -]?(?:Sheets?|Tabellen))[ -]?(?:export(?:er|s)?|download|Export\w*|Download)\b|\b(?:ODS|JSON|XML|Google[ -]?(?:Sheets?|Tabellen))[ -]?(?:import(?:er|s)?|upload|Import\w*|Upload|Feldzuordnung)\b|\b(?:export|download|exportier\w*|herunterlad\w*)[^.!?;|]{0,28}\b(?:CSV|TSV|ODS|Google[ -]?(?:Sheets?|Tabellen))\b|\b(?:import|upload|importier\w*|hochlad\w*)[^.!?;|]{0,28}\b(?:ODS|Google[ -]?(?:Sheets?|Tabellen))\b|\b(?:CSV|TSV|ODS|Google[ -]?(?:Sheets?|Tabellen))[^.!?;|]{0,28}\b(?:export|download|exportier\w*|herunterlad\w*)|\b(?:ODS|Google[ -]?(?:Sheets?|Tabellen))[^.!?;|]{0,28}\b(?:import|upload|importier\w*|hochlad\w*)/iu,
     permittedContext: [...NO_OR_EXTERNAL, CONTRASTED],
-    why: "Records transfer as XLSX workbooks only; no other spreadsheet or data format is read or written",
-    authority: "features/data-transfer/import/read-workbook-file.ts, app/api/export/[entityType]/route.ts",
+    why: "Import reads XLSX workbooks and delimited CSV text; export writes XLSX workbooks only, and no other spreadsheet or data format is read or written",
+    authority:
+      "features/data-transfer/import/read-import-file.ts, features/data-transfer/import/csv-parser.ts, app/api/export/[entityType]/route.ts",
   },
   {
     id: "whole-account-data-export",
@@ -575,13 +576,13 @@ describe("retired claims stay retired", () => {
     ).toHaveLength(1);
   });
 
-  it("catches a data transfer claim for a format other than xlsx", () => {
+  it("catches a data transfer claim for a format the product does not read or write", () => {
     for (const claim of [
-      "Import your contacts from a CSV file.",
+      "Import your contacts from Google Sheets.",
       "One click CSV export for every list.",
       "Export to Google Sheets whenever you like.",
-      "Kontakte per CSV-Import anlegen.",
-      "Laden Sie eine CSV hoch, um Datensätze zu importieren.",
+      "Kontakte per ODS-Import anlegen.",
+      "Exportieren Sie jede Liste als CSV.",
     ]) {
       expect(findViolationsInSource("content/features/en/example.mdx", claim), claim).toHaveLength(1);
     }
@@ -589,7 +590,7 @@ describe("retired claims stay retired", () => {
 
   it("scans prose that opens with import or export, while still ignoring module statements", () => {
     expect(
-      findViolationsInSource("content/features/en/example.mdx", "Import your contacts from a CSV file."),
+      findViolationsInSource("content/features/en/example.mdx", "Import your contacts from Google Sheets."),
     ).toHaveLength(1);
     expect(
       findViolationsInSource("content/features/en/example.mdx", "Export every list to CSV in one click."),
@@ -602,12 +603,14 @@ describe("retired claims stay retired", () => {
     ).toHaveLength(0);
   });
 
-  it("leaves the xlsx transfer that actually ships alone", () => {
+  it("leaves the workbook and CSV transfer that actually ships alone", () => {
     for (const claim of [
       "Import your contacts from an Excel workbook.",
       "Export every list as an XLSX file.",
       "Records export to XLSX rather than CSV.",
-      "There is no CSV import; use an Excel workbook.",
+      "Import your contacts from a CSV file.",
+      "Kontakte per CSV-Import anlegen.",
+      "Laden Sie eine CSV hoch, um Datensätze zu importieren.",
       "Datensätze werden als XLSX-Datei exportiert.",
     ]) {
       expect(findViolationsInSource("content/features/en/example.mdx", claim), claim).toHaveLength(0);

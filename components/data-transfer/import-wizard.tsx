@@ -31,7 +31,14 @@ import {
 } from "@/components/ui/select";
 import { WizardProgress } from "@/components/shared/wizard-progress";
 import { runUserAction } from "@/core/errors/report-application-error";
+import { DUPLICATE_STRATEGIES, type DuplicateStrategy } from "@/features/data-transfer/data-transfer.schema";
 import { identifierTargetFor, targetIdentity } from "@/features/data-transfer/import/import-mapping";
+import { IMPORT_FILE_ACCEPT } from "@/features/data-transfer/import/read-import-file";
+import {
+  buildIssueReportCsv,
+  issueReportEntries,
+  issueReportFileName,
+} from "@/features/data-transfer/import/issue-report";
 import { useRootStore } from "@/core/stores/root-store.provider";
 
 const STEP_ORDER = ["file", "mapping", "preview", "result"] as const;
@@ -39,6 +46,23 @@ const STEP_ORDER = ["file", "mapping", "preview", "result"] as const;
 const IGNORE_VALUE = "ignore";
 
 const RECORD_ID_VALUE = "recordId";
+
+const NO_DUPLICATE_KEY_VALUE = "none";
+
+const CSV_MIME_TYPE = "text/csv;charset=utf-8";
+
+const BYTE_ORDER_MARK = "\uFEFF";
+
+function downloadCsv(text: string, name: string): void {
+  const url = URL.createObjectURL(new Blob([`${BYTE_ORDER_MARK}${text}`], { type: CSV_MIME_TYPE }));
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = name;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
 
 function columnPrefix(issue: ImportRowIssue): string {
   const letter = issue.columnLetter ? `${issue.columnLetter}. ` : "";
@@ -153,6 +177,35 @@ export const ImportWizard = observer(function ImportWizard() {
     { labelKey: "DataTransfer.import.groupChannels", icon: AtSign, options: channelOptions },
   ];
 
+  const strategyLabels: Record<DuplicateStrategy, string> = {
+    create: t("DataTransfer.import.duplicateStrategies.create"),
+    update: t("DataTransfer.import.duplicateStrategies.update"),
+    skip: t("DataTransfer.import.duplicateStrategies.skip"),
+  };
+
+  const downloadIssueReport = () => {
+    const entries = issueReportEntries({
+      issues: store.issues,
+      sources: store.parsed?.sources ?? [],
+      rows: store.parsed?.rows ?? [],
+      messageOf: (issue) =>
+        issue.values ? t(`DataTransfer.import.issues.${issue.code}`, issue.values) : issue.message,
+    });
+
+    const csv = buildIssueReportCsv(entries, {
+      row: t("DataTransfer.import.report.row"),
+      column: t("DataTransfer.import.report.column"),
+      header: t("DataTransfer.import.report.header"),
+      value: t("DataTransfer.import.report.value"),
+      message: t("DataTransfer.import.report.message"),
+      blocking: t("DataTransfer.import.report.blocking"),
+      blockingYes: t("DataTransfer.import.report.blockingYes"),
+      blockingNo: t("DataTransfer.import.report.blockingNo"),
+    });
+
+    downloadCsv(csv, issueReportFileName(store.fileName));
+  };
+
   return (
     <AppModal
       description={t("DataTransfer.import.description")}
@@ -183,7 +236,7 @@ export const ImportWizard = observer(function ImportWizard() {
 
               <input
                 ref={fileInputRef}
-                accept=".xlsx"
+                accept={IMPORT_FILE_ACCEPT}
                 className="hidden"
                 type="file"
                 onChange={(event) => {
@@ -289,6 +342,55 @@ export const ImportWizard = observer(function ImportWizard() {
                   </li>
                 ))}
               </ul>
+
+              {store.duplicateKeyColumns.length > 0 && (
+                <div className="flex flex-wrap items-center gap-3 border-t pt-3">
+                  <span className="text-sm font-medium">{t("DataTransfer.import.duplicateKeyLabel")}</span>
+
+                  <Select
+                    value={store.duplicateKeyIndex === null ? NO_DUPLICATE_KEY_VALUE : String(store.duplicateKeyIndex)}
+                    onValueChange={(value) =>
+                      store.setDuplicateKeyIndex(value === NO_DUPLICATE_KEY_VALUE ? null : Number(value))
+                    }
+                  >
+                    <SelectTrigger className="w-64" id="import-duplicate-key">
+                      <SelectValue placeholder=" " />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value={NO_DUPLICATE_KEY_VALUE}>
+                        {t("DataTransfer.import.duplicateKeyNone")}
+                      </SelectItem>
+
+                      {store.duplicateKeyColumns.map((column) => (
+                        <SelectItem key={column.index} value={String(column.index)}>
+                          {`${column.letter}. ${column.header || t("DataTransfer.import.unnamedColumn")}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <span className="text-sm font-medium">{t("DataTransfer.import.duplicateStrategyLabel")}</span>
+
+                  <Select
+                    disabled={store.duplicateKeyIndex === null}
+                    value={store.duplicateStrategy}
+                    onValueChange={(value) => store.setDuplicateStrategy(value as DuplicateStrategy)}
+                  >
+                    <SelectTrigger className="w-64" id="import-duplicate-strategy">
+                      <SelectValue placeholder=" " />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      {DUPLICATE_STRATEGIES.map((strategy) => (
+                        <SelectItem key={strategy} value={strategy}>
+                          {strategyLabels[strategy]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           )}
 
@@ -384,6 +486,17 @@ export const ImportWizard = observer(function ImportWizard() {
               onClick={() => store.setStep("mapping")}
             >
               {t("Common.actions.back")}
+            </Button>
+          )}
+
+          {(store.step === "preview" || store.step === "result") && store.issues.length > 0 && (
+            <Button
+              id="import-download-issues"
+              type="button"
+              variant="secondary"
+              onClick={() => runUserAction(downloadIssueReport)}
+            >
+              {t("DataTransfer.import.downloadIssues")}
             </Button>
           )}
 

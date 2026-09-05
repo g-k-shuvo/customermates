@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { EntityType } from "@/generated/prisma";
 
 import { IMPORT_ENTITIES } from "@/features/data-transfer/import/import-entity.registry";
+import { IMPORT_FILE_ACCEPT } from "@/features/data-transfer/import/read-import-file";
 
 const harness = { store: {} as Record<string, unknown> };
 
@@ -51,7 +52,12 @@ function stubStore(overrides: Record<string, unknown>) {
     skipInvalid: false,
     skippableCount: 0,
     duplicateTargetCount: 0,
+    duplicateKeyColumns: [],
+    duplicateKeyIndex: null,
+    duplicateStrategy: "create",
     setSkipInvalid: vi.fn(),
+    setDuplicateKeyIndex: vi.fn(),
+    setDuplicateStrategy: vi.fn(),
     descriptor: IMPORT_ENTITIES[EntityType.contact],
     setStep: vi.fn(),
     setTarget: vi.fn(),
@@ -76,11 +82,13 @@ function buttonFor(html: string, label: string): string | undefined {
 }
 
 describe("ImportWizard", () => {
-  it("offers a file picker restricted to workbooks on the first step", () => {
+  it("offers a file picker restricted to the formats both readers accept on the first step", () => {
     const html = render({ step: "file" });
 
     expect(html).toContain('type="file"');
-    expect(html).toContain('accept=".xlsx"');
+    expect(html).toContain(`accept="${IMPORT_FILE_ACCEPT}"`);
+    expect(IMPORT_FILE_ACCEPT).toContain(".xlsx");
+    expect(IMPORT_FILE_ACCEPT).toContain(".csv");
     expect(html).toContain("DataTransfer.import.chooseFile");
   });
 
@@ -441,5 +449,78 @@ describe("ImportWizard partial import", () => {
     });
 
     expect(html).toContain("DataTransfer.import.resultSkipped");
+  });
+});
+
+describe("ImportWizard issue report", () => {
+  const issues = [
+    {
+      sheetRow: 4,
+      columnLetter: "B",
+      columnLabel: "Amount",
+      fieldPath: "amount",
+      message: "",
+      values: { value: "n/a" },
+      code: "notANumber",
+      blocking: true,
+    },
+  ];
+
+  it("offers the report before the commit, while skipping rows is still a decision", () => {
+    const html = render({
+      step: "preview",
+      plan: { create: [{}], update: [], issues: [] },
+      issues,
+      hasBlockingIssues: true,
+    });
+
+    expect(buttonFor(html, "DataTransfer.import.downloadIssues")).toBeDefined();
+  });
+
+  it("offers the same report after the commit, so the failures outlive the modal", () => {
+    const html = render({
+      step: "result",
+      summary: { created: 1, updated: 0, skipped: 0, notAttempted: 1, stoppedAtSheetRow: 4 },
+      issues,
+    });
+
+    expect(buttonFor(html, "DataTransfer.import.downloadIssues")).toBeDefined();
+  });
+
+  it("keeps the report button away when there is nothing to report", () => {
+    const html = render({ step: "preview", plan: { create: [{}], update: [], issues: [] }, issues: [] });
+
+    expect(buttonFor(html, "DataTransfer.import.downloadIssues")).toBeUndefined();
+  });
+});
+
+describe("ImportWizard duplicate handling", () => {
+  const parsed = {
+    sheetName: "Contacts",
+    rows: [{ sourceIndex: 0, sheetRow: 2, cells: [] }],
+    schemaRows: [],
+    relationSheets: {},
+    sources: [{ index: 0, letter: "B", header: "E-Mail", samples: [] }],
+  };
+
+  const duplicateKeyColumns = [
+    { index: 0, letter: "B", header: "E-Mail", key: { kind: "identifier", provider: "mail" } },
+  ];
+
+  it("lets the user nominate a key column and choose what happens on a match", () => {
+    const html = render({ step: "mapping", parsed, mapping: [{ kind: "ignore" }], duplicateKeyColumns });
+
+    expect(html).toContain("DataTransfer.import.duplicateKeyLabel");
+    expect(html).toContain("DataTransfer.import.duplicateStrategyLabel");
+    expect(html).toContain('data-option="none"');
+    expect(html).toContain("DataTransfer.import.duplicateStrategies.create");
+    expect(html).toContain("DataTransfer.import.duplicateStrategies.update");
+    expect(html).toContain("DataTransfer.import.duplicateStrategies.skip");
+  });
+
+  it("says nothing about duplicates when no mapped column could identify a record", () => {
+    const html = render({ step: "mapping", parsed, mapping: [{ kind: "ignore" }] });
+
+    expect(html).not.toContain("DataTransfer.import.duplicateKeyLabel");
   });
 });
