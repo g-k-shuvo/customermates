@@ -196,6 +196,7 @@ model User {
   agentRunLeases                  AgentRunLease[]
   agentCreditAdjustments          AgentCreditAdjustment[]
   adAttributions                  AdAttribution[]
+  dealStageHistories              DealStageHistory[]
 
   @@index([companyId])
   @@index([companyId, status])
@@ -218,6 +219,7 @@ model Company {
   contacts                    Contact[]
   organizations               Organization[]
   deals                       Deal[]
+  dealStageHistories          DealStageHistory[]
   pipelines                   Pipeline[]
   pipelineStages              PipelineStage[]
   lostReasons                 LostReason[]
@@ -488,6 +490,7 @@ model Deal {
   pipeline          Pipeline?          @relation(fields: [pipelineId], references: [id], onDelete: SetNull)
   stage             PipelineStage?     @relation(fields: [stageId], references: [id], onDelete: SetNull)
   lostReason        LostReason?        @relation(fields: [lostReasonId], references: [id], onDelete: SetNull)
+  stageHistory      DealStageHistory[]
 
   @@index([companyId])
   @@index([name])
@@ -2006,4 +2009,23 @@ model LostReason {
   deals      Deal[]
 
   @@index([companyId, position])
+}
+
+model DealStageHistory {
+  id              String    @id @default(uuid())
+  companyId       String
+  dealId          String
+  fromStageId     String?
+  toStageId       String
+  enteredAt       DateTime  @default(now())
+  exitedAt        DateTime?
+  durationSeconds Int?
+  userId          String?
+  company         Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  deal            Deal      @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  user            User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, enteredAt])
+  @@index([dealId, enteredAt])
+  @@index([toStageId])
 }

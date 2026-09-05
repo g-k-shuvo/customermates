@@ -2,6 +2,7 @@ import type { DeleteStageRepo } from "./delete-stage.repo";
 import type { FindStagePipelineRepo } from "../find-stage-pipeline.repo";
 import type { Data, Validated } from "@/core/validation/validation.utils";
 import type { ValidatePipelineStageIdsInteractor } from "@/core/validation/validators/validate-pipeline-stage-ids.interactor";
+import type { EventService } from "@/features/event/event.service";
 
 import { z } from "zod";
 import { Resource, Action } from "@/generated/prisma";
@@ -9,6 +10,8 @@ import { Resource, Action } from "@/generated/prisma";
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
 import { Write } from "@/core/decorators/write.decorator";
 import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
+import { DomainEvent } from "@/features/event/domain-events";
+import { calculateChanges } from "@/core/utils/calculate-changes";
 import { fail, failConflict, failNotFound } from "@/core/validation/interactor-failure-server";
 import { CustomErrorCode } from "@/core/validation/validation.types";
 
@@ -27,6 +30,7 @@ export class DeleteStageInteractor extends AuthenticatedInteractor<DeleteStageDa
     private repo: DeleteStageRepo,
     private stagePipelineRepo: FindStagePipelineRepo,
     private validator: ValidatePipelineStageIdsInteractor,
+    private eventService: EventService,
   ) {
     super();
   }
@@ -65,7 +69,16 @@ export class DeleteStageInteractor extends AuthenticatedInteractor<DeleteStageDa
     if (dealCount > 0 && !data.moveToStageId)
       return failConflict(CustomErrorCode.pipelineStageHasDeals, ["id"], { count: dealCount });
 
-    if (dealCount > 0 && data.moveToStageId) await this.repo.moveDealsToStage(data.id, data.moveToStageId);
+    if (dealCount > 0 && data.moveToStageId) {
+      const moved = await this.repo.moveDealsToStage(data.id, data.moveToStageId);
+
+      for (const { before, after } of moved) {
+        await this.eventService.publish(DomainEvent.DEAL_UPDATED, {
+          entityId: after.id,
+          payload: { deal: after, changes: calculateChanges(before, after) },
+        });
+      }
+    }
 
     await this.repo.deleteStageOrThrow(data.id);
 

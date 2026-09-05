@@ -380,14 +380,25 @@ export class PrismaPipelineRepo
 
     const movedDealIds = await this.findDealIdsInStage(fromStageId);
 
-    const moved = await this.prisma.deal.updateMany({
+    if (movedDealIds.length === 0) return [];
+
+    const before = await getDealRepo().getManyOrThrowCompanyWide(movedDealIds);
+
+    await this.prisma.deal.updateMany({
       where: { companyId, stageId: fromStageId },
       data: { stageId: toStageId, stageEnteredAt: new Date() },
     });
 
     await this.recalculateDeals(movedDealIds);
 
-    return moved.count;
+    const after = await getDealRepo().getManyOrThrowCompanyWide(movedDealIds);
+    const afterById = new Map(after.map((deal) => [deal.id, deal]));
+
+    return before.flatMap((deal) => {
+      const updated = afterById.get(deal.id);
+
+      return updated ? [{ before: deal, after: updated }] : [];
+    });
   }
 
   @Transaction

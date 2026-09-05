@@ -66,6 +66,8 @@ import { ReadAdAttributionConsentInteractor } from "@/features/acquisition/read-
 import { WithdrawAdAttributionInteractor } from "@/features/acquisition/withdraw-ad-attribution.interactor";
 // Task Listeners
 import { UserPendingAuthorizationTaskListener } from "@/features/tasks/listener/user-pending-authorization-task.listener";
+// Deal Listeners
+import { DealStageHistoryListener } from "@/features/deals/listener/deal-stage-history.listener";
 import { DomainEvent } from "@/features/event/domain-events";
 // Contacts interactors
 import { GetContactsInteractor } from "@/features/contacts/get/get-contacts.interactor";
@@ -422,11 +424,16 @@ export const getRouteGuardService = () =>
   new RouteGuardService(getAuthService(), getUserRepo(), getCompanyRepo(), getGetLegalStatusInteractor());
 export const getBackgroundTaskService = () => new BackgroundTaskService();
 export const getUserPendingAuthorizationTaskListener = () => new UserPendingAuthorizationTaskListener(getTaskRepo());
+export const getDealStageHistoryListener = () => new DealStageHistoryListener(getDealRepo());
 
 const EXPECTED_EVENT_LISTENERS = [
   {
     factory: getUserPendingAuthorizationTaskListener,
     events: [DomainEvent.USER_REGISTERED, DomainEvent.USER_UPDATED],
+  },
+  {
+    factory: getDealStageHistoryListener,
+    events: [DomainEvent.DEAL_CREATED, DomainEvent.DEAL_UPDATED],
   },
 ] as const;
 
@@ -823,7 +830,7 @@ export const getUpdateStageInteractor = () =>
   new UpdateStageInteractor(getPipelineRepo(), getPipelineRepo(), getPipelineRepo(), getPipelineStageIdsValidator());
 
 export const getDeleteStageInteractor = () =>
-  new DeleteStageInteractor(getPipelineRepo(), getPipelineRepo(), getPipelineStageIdsValidator());
+  new DeleteStageInteractor(getPipelineRepo(), getPipelineRepo(), getPipelineStageIdsValidator(), getEventService());
 
 // --- Lost reasons ---
 

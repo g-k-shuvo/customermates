@@ -11,6 +11,7 @@ import type { MarkDealWonRepo } from "./close/mark-deal-won.repo";
 import type { MarkDealLostRepo } from "./close/mark-deal-lost.repo";
 import type { ReopenDealRepo } from "./close/reopen-deal.repo";
 import type { FindDealsByIdsRepo } from "./find-deals-by-ids.repo";
+import type { DealStageHistoryRepo } from "./listener/deal-stage-history.listener";
 import type { ModifyRelationDealRepo } from "@/features/relations/modify-entity-relation.interactor";
 
 import { DealStatus, EntityType, Resource, StageKind } from "@/generated/prisma";
@@ -53,6 +54,7 @@ export class PrismaDealRepo
     GetWidgetFilterableFieldsDealRepo,
     FindDealsByIdsRepo,
     GetCompanyWideDealRepo,
+    DealStageHistoryRepo,
     ModifyRelationDealRepo,
     ExportRecordsRepo<DealDto>
 {
@@ -738,6 +740,31 @@ export class PrismaDealRepo
         ...(stageMove.stageId ? { pipelineId: movedPipelineIds?.get(stageMove.stageId) ?? existing.pipelineId } : {}),
       },
     );
+  }
+
+  async findOpenStageHistory(dealId: string) {
+    return this.prisma.dealStageHistory.findFirst({
+      where: { dealId, companyId: this.companyId, exitedAt: null },
+      orderBy: { enteredAt: "desc" },
+      select: { id: true, toStageId: true, enteredAt: true },
+    });
+  }
+
+  async closeStageHistory(args: RepoArgs<DealStageHistoryRepo, "closeStageHistory">) {
+    const { id, exitedAt, durationSeconds } = args;
+
+    await this.prisma.dealStageHistory.updateMany({
+      where: { id, companyId: this.companyId, exitedAt: null },
+      data: { exitedAt, durationSeconds },
+    });
+  }
+
+  async openStageHistory(args: RepoArgs<DealStageHistoryRepo, "openStageHistory">) {
+    const { dealId, fromStageId, toStageId, enteredAt, userId } = args;
+
+    await this.prisma.dealStageHistory.create({
+      data: { companyId: this.companyId, dealId, fromStageId, toStageId, enteredAt, userId },
+    });
   }
 
   async recalculateTotals(dealIds: string[]) {

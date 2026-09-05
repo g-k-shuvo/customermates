@@ -86,7 +86,7 @@ describe("DeleteStageInteractor", () => {
     mockRepo = {
       countStagesInPipeline: vi.fn().mockResolvedValue(3),
       countDealsInStage: vi.fn().mockResolvedValue(0),
-      moveDealsToStage: vi.fn().mockResolvedValue(0),
+      moveDealsToStage: vi.fn().mockResolvedValue([]),
       deleteStageOrThrow: vi.fn().mockResolvedValue(makeStageDto()),
     };
     mockStagePipelineRepo = {
@@ -100,11 +100,14 @@ describe("DeleteStageInteractor", () => {
     };
   });
 
+  const mockEventService = { publish: vi.fn().mockResolvedValue(undefined) } as any;
+
   function createInteractor() {
     return new DeleteStageInteractor(
       mockRepo,
       mockStagePipelineRepo,
       new ValidatePipelineStageIdsInteractor(getPipelineStageIdsRepo()),
+      mockEventService,
     );
   }
 
@@ -157,6 +160,20 @@ describe("DeleteStageInteractor", () => {
     expect(result.ok).toBe(true);
     expect(mockRepo.moveDealsToStage).not.toHaveBeenCalled();
     expect(mockRepo.deleteStageOrThrow).toHaveBeenCalledWith(STAGE_ID);
+  });
+
+  it("announces every reassigned deal so its stage history records the move", async () => {
+    mockRepo.countDealsInStage.mockResolvedValue(2);
+    mockRepo.moveDealsToStage.mockResolvedValue([
+      { before: { id: "deal-1", stageId: STAGE_ID }, after: { id: "deal-1", stageId: MOVE_TO_STAGE_ID } },
+      { before: { id: "deal-2", stageId: STAGE_ID }, after: { id: "deal-2", stageId: MOVE_TO_STAGE_ID } },
+    ]);
+
+    const result: any = await createInteractor().invoke({ id: STAGE_ID, moveToStageId: MOVE_TO_STAGE_ID });
+
+    expect(result.ok).toBe(true);
+    expect(mockEventService.publish).toHaveBeenCalledTimes(2);
+    expect(mockEventService.publish.mock.calls[0][1].payload.changes).toHaveProperty("stageId");
   });
 
   it("refuses a moveToStageId belonging to a different pipeline", async () => {
