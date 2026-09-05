@@ -29,6 +29,8 @@ const RELATION_FILTER_FIELDS = [
   FilterFieldKey.status,
   FilterFieldKey.dealStatus,
   FilterFieldKey.rotting,
+  FilterFieldKey.pipelineId,
+  FilterFieldKey.stageId,
   FilterFieldKey.provider,
   FilterFieldKey.state,
   FilterFieldKey.timelineKind,

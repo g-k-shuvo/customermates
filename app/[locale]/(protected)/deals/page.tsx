@@ -29,13 +29,9 @@ export default async function DealsPage({ searchParams }: Props) {
     pipeline.stages.some((stage) => stage.probability > 0),
   );
 
-  const stages = configuration.pipelines.flatMap((pipeline) =>
-    pipeline.stages.map((stage) => ({ id: stage.id, name: stage.name, probability: stage.probability })),
-  );
-
   return (
     <PageContainer padded={false}>
-      <DealsPageView deals={deals} forecastsByStage={forecastsByStage} stages={stages} />
+      <DealsPageView deals={deals} forecastsByStage={forecastsByStage} pipelines={configuration.pipelines} />
     </PageContainer>
   );
 }

@@ -1,26 +1,32 @@
 import type { GetQueryParams } from "@/core/base/base-get.schema";
 import type { RootStore } from "@/core/stores/root.store";
-import type { TableColumn } from "@/core/base/base-data-view.store";
+import type { StageMoveOutcome, TableColumn } from "@/core/base/base-data-view.store";
 import type { DealDto } from "@/features/deals/deal.schema";
+import type { PipelineDto } from "@/features/pipelines/pipeline.schema";
 
-import { action, makeObservable, observable } from "mobx";
+import { action, computed, makeObservable, observable } from "mobx";
 
-import { EntityType, Resource } from "@/generated/prisma";
+import { EntityType, Resource, StageKind } from "@/generated/prisma";
 
 import { getDealsAction } from "../actions";
 
 import {
   DEAL_STATUS_FILTER_FIELD,
   DEFAULT_DEAL_STATUS_FILTER,
+  selectedPipelineFilterId,
   shouldSeedDefaultDealStatusFilter,
+  withPipelineFilter,
 } from "./deal-board-filters";
 
 import { BaseDataViewStore } from "@/core/base/base-data-view.store";
 
-export type DealStageOption = { id: string; name: string; probability: number };
+export type DealStageOption = { id: string; name: string; probability: number; pipelineId: string; kind: StageKind };
+
+export type DealPipelineOption = { id: string; name: string; isDefault: boolean; isArchived: boolean };
 
 export class DealsStore extends BaseDataViewStore<DealDto> {
   stages: DealStageOption[] = [];
+  pipelines: DealPipelineOption[] = [];
   hasSeededDefaultStatusFilter = false;
 
   constructor(rootStore: RootStore) {
@@ -28,14 +34,83 @@ export class DealsStore extends BaseDataViewStore<DealDto> {
 
     makeObservable(this, {
       stages: observable,
+      pipelines: observable,
       hasSeededDefaultStatusFilter: observable,
-      setStages: action,
+      stageById: computed,
+      selectedPipelineId: computed,
+      selectedPipeline: computed,
+      defaultPipelineId: computed,
+      setPipelineCatalog: action,
       seedDefaultStatusFilter: action,
+      selectPipeline: action,
     });
   }
 
-  setStages = (stages: DealStageOption[]) => {
-    this.stages = stages;
+  setPipelineCatalog = (pipelines: PipelineDto[]) => {
+    this.pipelines = pipelines.map((pipeline) => ({
+      id: pipeline.id,
+      name: pipeline.name,
+      isDefault: pipeline.isDefault,
+      isArchived: pipeline.archivedAt !== null,
+    }));
+
+    this.stages = pipelines.flatMap((pipeline) =>
+      pipeline.stages.map((stage) => ({
+        id: stage.id,
+        name: stage.name,
+        probability: stage.probability,
+        pipelineId: pipeline.id,
+        kind: stage.kind,
+      })),
+    );
+  };
+
+  get stageById(): Map<string, DealStageOption> {
+    return new Map(this.stages.map((stage) => [stage.id, stage]));
+  }
+
+  get selectedPipelineId(): string | null {
+    return selectedPipelineFilterId(this.filters);
+  }
+
+  get defaultPipelineId(): string | null {
+    const selectable = this.pipelines.filter((pipeline) => !pipeline.isArchived);
+
+    return (selectable.find((pipeline) => pipeline.isDefault) ?? selectable[0])?.id ?? null;
+  }
+
+  get selectedPipeline(): DealPipelineOption | null {
+    const selectedPipelineId = this.selectedPipelineId;
+    if (selectedPipelineId === null) return null;
+
+    return this.pipelines.find((pipeline) => pipeline.id === selectedPipelineId) ?? null;
+  }
+
+  stagesForPipeline = (pipelineId: string | null): DealStageOption[] => {
+    if (pipelineId === null) return this.stages;
+
+    return this.stages.filter((stage) => stage.pipelineId === pipelineId);
+  };
+
+  selectPipeline = (pipelineId: string | null) => {
+    if (this.selectedPipelineId === pipelineId) return;
+
+    this.setQueryOptions({ filters: withPipelineFilter(this.filters, pipelineId) });
+  };
+
+  ensurePipelinesLoaded = async (): Promise<void> => {
+    if (this.pipelines.length > 0) return;
+    if (!this.rootStore.userStore.canAccess(Resource.pipelines)) return;
+
+    const pipelinesStore = this.rootStore.pipelinesStore;
+
+    if (pipelinesStore.pipelines.length === 0) {
+      if (pipelinesStore.isLoading) return;
+
+      await pipelinesStore.load();
+    }
+
+    this.setPipelineCatalog(pipelinesStore.pipelines);
   };
 
   seedDefaultStatusFilter = () => {
@@ -84,6 +159,24 @@ export class DealsStore extends BaseDataViewStore<DealDto> {
     ];
 
     return columns.filter((col): col is TableColumn => Boolean(col));
+  }
+
+  protected async persistStageMove(entityId: string, stageId: string | null): Promise<StageMoveOutcome> {
+    const kind = stageId === null ? undefined : this.stageById.get(stageId)?.kind;
+
+    if (kind === StageKind.won) {
+      const closed = await this.rootStore.dealCloseStore.markWon(entityId);
+
+      return closed ? { status: "handled" } : { status: "cancelled" };
+    }
+
+    if (kind === StageKind.lost) {
+      const closed = await this.rootStore.dealCloseStore.requestLost(entityId);
+
+      return closed ? { status: "handled" } : { status: "cancelled" };
+    }
+
+    return super.persistStageMove(entityId, stageId);
   }
 
   protected async refreshAction(params?: GetQueryParams) {

@@ -1,9 +1,10 @@
 import type { CreateDealData } from "@/features/deals/upsert/create-deal.interactor";
 import type { RootStore } from "@/core/stores/root.store";
 import type { DealDto } from "@/features/deals/deal.schema";
+import type { DealPipelineOption, DealStageOption } from "./deals.store";
 
 import { action, computed, makeObservable, observable } from "mobx";
-import { Action, Resource } from "@/generated/prisma";
+import { Action, Resource, StageKind } from "@/generated/prisma";
 
 import { deleteDealAction, getDealByIdAction, createDealAction, updateDealAction } from "../actions";
 import { createServiceByNameAction, getServicesAction } from "../../services/actions";
@@ -41,6 +42,9 @@ export class DealDetailStore extends BaseCustomColumnEntityModalStore<CreateDeal
     makeObservable(this, {
       addService: action,
       deleteService: action,
+      pipelineOptions: computed,
+      stageOptions: computed,
+      applyDefaultPipeline: action,
       serviceAmountById: observable,
       serviceReferenceById: observable,
       rememberServiceAmounts: action,
@@ -88,8 +92,42 @@ export class DealDetailStore extends BaseCustomColumnEntityModalStore<CreateDeal
       contactIds: [],
       taskIds: [],
       services: [],
+      pipelineId: this.rootStore.dealsStore.defaultPipelineId ?? undefined,
+      stageId: undefined,
     };
   }
+
+  get pipelineOptions(): DealPipelineOption[] {
+    return this.rootStore.dealsStore.pipelines;
+  }
+
+  get stageOptions(): DealStageOption[] {
+    return this.rootStore.dealsStore
+      .stagesForPipeline(this.form.pipelineId ?? null)
+      .filter((stage) => stage.kind === StageKind.open);
+  }
+
+  applyDefaultPipeline = () => {
+    if (this.fetchedEntity || this.form.pipelineId) return;
+
+    const defaultPipelineId = this.rootStore.dealsStore.defaultPipelineId;
+    if (defaultPipelineId) this.onChange("pipelineId", defaultPipelineId);
+  };
+
+  selectPipeline = (pipelineId: string) => {
+    if (this.form.pipelineId === pipelineId) return;
+
+    this.onChange("pipelineId", pipelineId);
+    this.onChange("stageId", undefined);
+  };
+
+  selectStage = (stageId: string) => {
+    const stage = this.rootStore.dealsStore.stageById.get(stageId);
+
+    this.onChange("stageId", stageId);
+
+    if (stage && this.form.pipelineId !== stage.pipelineId) this.onChange("pipelineId", stage.pipelineId);
+  };
 
   addService = () => {
     const newServices = [...(this.form.services || [])];

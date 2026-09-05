@@ -92,6 +92,8 @@ function makePrecheck(overrides: PrecheckOverrides = {}): DealWritePrecheckInter
     new ValidatePipelineIdsInteractor(getPipelineRepo()),
     new ValidatePipelineStageIdsInteractor(stageRepo),
     getPipelineRepo(),
+    getPipelineRepo(),
+    getDealRepo(),
     new ValidateLostReasonIdsInteractor(lostReasonRepo),
   );
 }

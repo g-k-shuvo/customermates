@@ -66,6 +66,7 @@ export enum CustomErrorCode {
   dealNotFound = "dealNotFound",
   dealAlreadyClosed = "dealAlreadyClosed",
   dealNotClosed = "dealNotClosed",
+  pipelineArchived = "pipelineArchived",
   pipelineNotFound = "pipelineNotFound",
   pipelineStageNotFound = "pipelineStageNotFound",
   pipelineStageLastInPipeline = "pipelineStageLastInPipeline",

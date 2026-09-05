@@ -1026,6 +1026,7 @@
       "passwordInvalid": "Das Passwort muss mindestens 8 Zeichen lang sein und mindestens einen Großbuchstaben, einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.",
       "passwordMismatch": "Passwörter müssen übereinstimmen.",
       "permissionDenied": "Diese Aktion ist mit deinen aktuellen Berechtigungen nicht verfügbar.",
+      "pipelineArchived": "Diese Pipeline ist archiviert und nimmt keine neuen Deals mehr auf. Stellen Sie sie wieder her oder wählen Sie eine andere Pipeline.",
       "pipelineDefaultRequired": "Ein Unternehmen muss eine Standard-Pipeline behalten.",
       "pipelineHasDeals": "Diese Pipeline enthält noch {count} Deals. Verschieben oder schließen Sie sie, bevor Sie sie löschen.",
       "pipelineNotFound": "Pipeline-ID nicht gefunden oder nicht zugänglich.",
@@ -1186,9 +1187,11 @@
         "isPlatformOperator": "Plattform-Operator",
         "lastActiveAt": "Zuletzt aktiv",
         "participants": "Teilnehmer",
+        "pipelineId": "Pipeline",
         "plan": "Tarif",
         "provider": "Anbieter",
         "rotting": "Stagnierend",
+        "stageId": "Phase",
         "startsAt": "Beginnt am",
         "state": "Status",
         "status": "Status",
@@ -1786,6 +1789,17 @@
       "reopen": "Wieder öffnen"
     },
     "noServicesAdded": "Noch keine {entity} hinzugefügt",
+    "pipeline": {
+      "allPipelines": "Alle Pipelines",
+      "archivedOption": "{name} (archiviert)",
+      "emptyBody": "In dieser Pipeline liegen noch keine {plural}.",
+      "emptyTitle": "{pipeline} ist leer",
+      "label": "Pipeline",
+      "placeholder": "Pipeline auswählen",
+      "stageLabel": "Phase",
+      "stagePlaceholder": "Phase auswählen",
+      "switcherLabel": "Pipeline"
+    },
     "quantityLabel": "Anzahl",
     "title": "Deal",
     "valueLabel": "Wert"

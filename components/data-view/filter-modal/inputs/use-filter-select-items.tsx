@@ -29,7 +29,7 @@ import { type ChipColor } from "@/constants/chip-colors";
 import { USER_STATUS_COLORS_MAP } from "@/constants/user-statuses";
 import { SUBSCRIPTION_STATUS_COLOR_MAP } from "@/app/[locale]/(protected)/company/components/subscription/subscription-panel";
 import { OPERATOR_AUDIT_SOURCE } from "@/ee/operator/operator-lists.schema";
-import { getUsersAction } from "@/app/[locale]/(protected)/company/actions";
+import { getPipelinesAction, getUsersAction } from "@/app/[locale]/(protected)/company/actions";
 import { getContactsAction } from "@/app/[locale]/(protected)/contacts/actions";
 import { getOrganizationsAction } from "@/app/[locale]/(protected)/organizations/actions";
 import { getDealsAction } from "@/app/[locale]/(protected)/deals/actions";
@@ -203,6 +203,24 @@ export function useFilterSelectItems(
               : workspace.workspaceLabel,
           })),
         })),
+      [FilterFieldKey.pipelineId]: () =>
+        getPipelinesAction().then((pipelines) => ({
+          items: pipelines.map((pipeline) => ({
+            key: pipeline.id,
+            value: pipeline.id,
+            textValue: pipeline.name,
+          })),
+        })),
+      [FilterFieldKey.stageId]: () =>
+        getPipelinesAction().then((pipelines) => ({
+          items: pipelines.flatMap((pipeline) =>
+            pipeline.stages.map((stage) => ({
+              key: stage.id,
+              value: stage.id,
+              textValue: `${pipeline.name} · ${stage.name}`,
+            })),
+          ),
+        })),
       [FilterFieldKey.workspaceTags]: () =>
         getOperatorWorkspaceTagsAction().then((tags) => ({
           items: tags.map((tag) => ({ key: tag, value: tag, textValue: tag })),
@@ -360,7 +378,9 @@ export function useFilterSelectItems(
       case FilterFieldKey.timelineThreadId:
       case FilterFieldKey.connectedAccountId:
       case FilterFieldKey.workspaceId:
-      case FilterFieldKey.workspaceTags: {
+      case FilterFieldKey.workspaceTags:
+      case FilterFieldKey.pipelineId:
+      case FilterFieldKey.stageId: {
         return fetchedItems;
       }
 

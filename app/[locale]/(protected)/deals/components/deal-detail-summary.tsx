@@ -58,6 +58,16 @@ export const DealDetailSummary = observer(function DealDetailSummary() {
       value: lostReasonName,
     },
     {
+      id: DEAL_DETAIL_FIELD.pipelineId,
+      label: t("DealModal.pipeline.label"),
+      value: dealDetailStore.pipelineOptions.find((pipeline) => pipeline.id === form.pipelineId)?.name,
+    },
+    {
+      id: DEAL_DETAIL_FIELD.stageId,
+      label: t("DealModal.pipeline.stageLabel"),
+      value: dealDetailStore.stageOptions.find((stage) => stage.id === form.stageId)?.name,
+    },
+    {
       id: DEAL_DETAIL_FIELD.totalValue,
       label: columnLabel("totalValue"),
       value: intlStore.formatCurrency(totalValue),

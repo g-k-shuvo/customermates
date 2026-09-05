@@ -78,9 +78,10 @@ export function createMockDiModule(getMockUser: () => TenantUser) {
       findIdentifierOwnersCompanyWide: vi.fn().mockResolvedValue(new Map()),
     }),
     getOrganizationRepo: () => ({ findIds: makeFindIds() }),
-    getDealRepo: () => ({ findIds: makeFindIds() }),
+    getDealRepo: () => ({ findIds: makeFindIds(), findPipelineIdsByDealIds: makeFindIdsMap() }),
     getPipelineRepo: () => ({
       findIds: makeFindIds(),
+      findArchivedIds: vi.fn().mockResolvedValue(new Set<string>()),
       findPipelineIdsByStageIds: makeFindIdsMap(),
       getDefaultPipelineWithFirstStage: () => Promise.resolve(null),
       getFirstStageOfPipeline: () => Promise.resolve(null),

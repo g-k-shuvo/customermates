@@ -26,6 +26,7 @@ type SharedProps<E extends HasId> = {
   store: BaseDataViewStore<E>;
   onAdd?: () => void;
   descriptor?: EmptyStateDescriptor;
+  filteredDescriptor?: EmptyStateDescriptor;
   actionLabel?: string;
 };
 
@@ -42,6 +43,7 @@ export const DataViewEmpty = observer(function DataViewEmpty<E extends HasId>({
   store,
   onAdd,
   descriptor,
+  filteredDescriptor,
   reason,
   background,
   actionLabel,
@@ -59,16 +61,17 @@ export const DataViewEmpty = observer(function DataViewEmpty<E extends HasId>({
     return (
       <DataViewEmptyState
         body={
-          entityType
+          filteredDescriptor?.body ??
+          (entityType
             ? t("Common.emptyState.filteredBody", { plural: pluralLabel })
-            : t("Common.emptyState.genericFilteredBody")
+            : t("Common.emptyState.genericFilteredBody"))
         }
         icon={Icon}
         secondaryAction={{
           label: t("Common.emptyState.clearFilters"),
           onClick: () => store.setQueryOptions({ filters: [], searchTerm: "" }),
         }}
-        title={t("Common.emptyState.filteredTitle")}
+        title={filteredDescriptor?.title ?? t("Common.emptyState.filteredTitle")}
       />
     );
   }

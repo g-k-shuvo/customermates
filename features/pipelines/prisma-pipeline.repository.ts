@@ -1,4 +1,5 @@
 import type { RepoArgs } from "@/core/utils/types";
+import type { FindArchivedPipelinesRepo } from "./find-archived-pipelines.repo";
 import type { FindPipelinesByIdsRepo } from "./find-pipelines-by-ids.repo";
 import type { FindPipelineStagesByIdsRepo } from "./find-pipeline-stages-by-ids.repo";
 import type { FindStagePipelineRepo } from "./find-stage-pipeline.repo";
@@ -24,6 +25,7 @@ import { getDealRepo } from "@/core/di";
 export class PrismaPipelineRepo
   extends BaseRepository
   implements
+    FindArchivedPipelinesRepo,
     FindPipelinesByIdsRepo,
     FindStagePipelineRepo,
     FindTerminalStageRepo,
@@ -145,6 +147,19 @@ export class PrismaPipelineRepo
 
     const pipelines = await this.prisma.pipeline.findMany({
       where: { id: { in: [...ids] }, companyId },
+      select: { id: true },
+    });
+
+    return new Set(pipelines.map((pipeline) => pipeline.id));
+  }
+
+  async findArchivedIds(ids: Set<string>) {
+    if (ids.size === 0) return new Set<string>();
+
+    const { companyId } = this.user;
+
+    const pipelines = await this.prisma.pipeline.findMany({
+      where: { id: { in: [...ids] }, companyId, archivedAt: { not: null } },
       select: { id: true },
     });
 

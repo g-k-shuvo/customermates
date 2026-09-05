@@ -22,6 +22,7 @@ import { reportApplicationError } from "@/core/errors/report-application-error";
 
 import { DEAL_DETAIL_FIELD, DEAL_DETAIL_SECTION } from "./deal-detail-personalization";
 import { DealCloseActions } from "./deal-close-actions";
+import { DealPipelineFields } from "./deal-pipeline-fields";
 import { DealServicesSelection } from "./deal-services-selection";
 import { DealStatusBadge } from "./deal-status-badges";
 import { useDealLostReasonName } from "./use-deal-lost-reason-name";
@@ -82,6 +83,8 @@ export const DealDetailView = observer(({ layout = "drawer" }: Props) => {
         )}
 
         <DealCloseActions deal={fetchedEntity} />
+
+        <DealPipelineFields />
 
         <EntityRelationField
           currentEntityId={fetchedEntity?.id}
@@ -148,6 +151,8 @@ export const DealDetailView = observer(({ layout = "drawer" }: Props) => {
           )}
 
           <DealCloseActions deal={fetchedEntity} />
+
+          <DealPipelineFields showFieldActions />
 
           <EntityDetailStaticField
             fieldId={DEAL_DETAIL_FIELD.totalValue}

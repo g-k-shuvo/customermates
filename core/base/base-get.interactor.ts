@@ -75,7 +75,7 @@ export abstract class BaseGetRepo<T> {
     fields: readonly F[];
     params: GetQueryParams;
   }): Promise<NumericFieldSums<F>>;
-  getGroupOptions?(): Promise<GroupOption[]>;
+  getGroupOptions?(filters?: Filter[]): Promise<GroupOption[]>;
 }
 
 type BaseQuery = { filters?: Filter[]; searchTerm?: string; sortDescriptor?: SortDescriptor };
@@ -198,6 +198,7 @@ export abstract class BaseGetInteractor<T> {
       viewMode,
       groupingColumnId,
       customColumns,
+      baseQuery.filters,
     );
 
     const { items, total, groupCounts, groupValueSums } = grouping
@@ -307,6 +308,7 @@ async function resolveGrouping<T>(
   viewMode: ViewMode | undefined,
   groupingColumnId: string | undefined,
   customColumns: CustomColumnDto[],
+  filters?: Filter[],
 ): Promise<GroupingSpec | undefined> {
   const targetColumnId =
     groupedPagination?.groupingColumnId ?? (viewMode === ViewMode.card ? groupingColumnId : undefined);
@@ -315,7 +317,7 @@ async function resolveGrouping<T>(
   if (targetColumnId === STAGE_GROUPING_KEY) {
     if (!repo.getGroupOptions) return undefined;
 
-    const options = await repo.getGroupOptions();
+    const options = await repo.getGroupOptions(filters);
 
     return {
       filterField: STAGE_GROUPING_FIELD,

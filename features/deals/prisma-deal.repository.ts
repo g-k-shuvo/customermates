@@ -10,6 +10,7 @@ import type { DeleteDealRepo } from "./delete/delete-deal.repo";
 import type { MarkDealWonRepo } from "./close/mark-deal-won.repo";
 import type { MarkDealLostRepo } from "./close/mark-deal-lost.repo";
 import type { ReopenDealRepo } from "./close/reopen-deal.repo";
+import type { FindDealPipelinesRepo } from "./find-deal-pipelines.repo";
 import type { FindDealsByIdsRepo } from "./find-deals-by-ids.repo";
 import type { DealStageHistoryRepo } from "./listener/deal-stage-history.listener";
 import type { ModifyRelationDealRepo } from "@/features/relations/modify-entity-relation.interactor";
@@ -32,14 +33,6 @@ import { computeWeightedValue, effectiveProbability } from "./deal-weighting";
 import { computeRottingAt, isRotting } from "./deal-rotting";
 import { dealStageMove, lostTransition, reopenTransition, wonTransition } from "./close/closing-transition";
 
-const PIPELINE_PLACEMENT_FILTER_OPERATORS = [
-  FilterOperatorKey.equals,
-  FilterOperatorKey.in,
-  FilterOperatorKey.notIn,
-  FilterOperatorKey.isNull,
-  FilterOperatorKey.isNotNull,
-];
-
 const ROTTING_SORT_FIELD = "rottingAt";
 
 const DEAL_STATUS_VALUES = new Set<string>(Object.values(DealStatus));
@@ -49,6 +42,10 @@ const SELECTION_OPERATORS = [FilterOperatorKey.in, FilterOperatorKey.notIn];
 const DEAL_STATUS_FILTER_FIELD: string = FilterFieldKey.dealStatus;
 
 const ROTTING_FILTER_FIELD: string = FilterFieldKey.rotting;
+
+const PIPELINE_FILTER_FIELD: string = FilterFieldKey.pipelineId;
+
+const PIPELINE_SELECTION_OPERATORS: string[] = [FilterOperatorKey.equals, FilterOperatorKey.in];
 
 function partitionDealFilters(filters: Filter[] | undefined) {
   const dealStatus: Filter[] = [];
@@ -70,6 +67,19 @@ function selectedFilterValues(filter: Filter): string[] {
   return (Array.isArray(raw) ? (raw as unknown[]) : [raw]).flatMap((value) =>
     typeof value === "string" ? [value] : [],
   );
+}
+
+function selectedPipelineId(filters: Filter[] | undefined): string | null {
+  for (const filter of filters ?? []) {
+    if (filter.field !== PIPELINE_FILTER_FIELD) continue;
+    if (!PIPELINE_SELECTION_OPERATORS.includes(filter.operator)) continue;
+
+    const values = selectedFilterValues(filter);
+
+    if (values.length === 1) return values[0];
+  }
+
+  return null;
 }
 
 function dealStatusClause(filter: Filter): Prisma.DealWhereInput | null {
@@ -123,6 +133,7 @@ export class PrismaDealRepo
     MarkDealLostRepo,
     ReopenDealRepo,
     GetWidgetFilterableFieldsDealRepo,
+    FindDealPipelinesRepo,
     FindDealsByIdsRepo,
     GetCompanyWideDealRepo,
     DealStageHistoryRepo,
@@ -290,8 +301,8 @@ export class PrismaDealRepo
       { field: FilterFieldKey.createdAt, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.createdAt] },
       { field: FilterFieldKey.dealStatus, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.dealStatus] },
       { field: FilterFieldKey.rotting, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.rotting] },
-      { field: "stageId", operators: PIPELINE_PLACEMENT_FILTER_OPERATORS },
-      { field: "pipelineId", operators: PIPELINE_PLACEMENT_FILTER_OPERATORS },
+      { field: FilterFieldKey.stageId, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.stageId] },
+      { field: FilterFieldKey.pipelineId, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.pipelineId] },
     ];
   }
 
@@ -712,10 +723,35 @@ export class PrismaDealRepo
     });
   }
 
-  async getGroupOptions() {
-    const stages = await this.findDefaultPipelineStages();
+  private async findPipelineStages(pipelineId: string) {
+    const { companyId } = this.user;
+
+    return this.prisma.pipelineStage.findMany({
+      where: { companyId, pipelineId },
+      select: { id: true, name: true, probability: true },
+      orderBy: [{ position: "asc" }, { id: "asc" }],
+    });
+  }
+
+  async getGroupOptions(filters?: Filter[]) {
+    const pipelineId = selectedPipelineId(filters);
+    const stages = pipelineId ? await this.findPipelineStages(pipelineId) : await this.findDefaultPipelineStages();
 
     return stages.map((stage) => ({ value: stage.id, label: stage.name, weight: stage.probability }));
+  }
+
+  async findPipelineIdsByDealIds(ids: Set<string>) {
+    if (ids.size === 0) return new Map<string, string>();
+
+    const deals = await this.prisma.deal.findMany({
+      where: {
+        id: { in: Array.from(ids) },
+        ...this.accessWhere("deal"),
+      },
+      select: { id: true, pipelineId: true },
+    });
+
+    return new Map(deals.flatMap((deal) => (deal.pipelineId ? [[deal.id, deal.pipelineId] as const] : [])));
   }
 
   async findIds(ids: Set<string>) {

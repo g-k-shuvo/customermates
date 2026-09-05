@@ -9,12 +9,16 @@ import { FilterFieldKey } from "@/core/types/filter-field-key";
 
 import {
   DEFAULT_DEAL_STATUS_FILTER,
+  PIPELINE_FILTER_FIELD,
   ROTTING_DEALS_FILTER,
   hasActiveDealQuery,
   isDefaultDealStatusFilter,
   isRottingFilterActive,
+  pipelineFilter,
+  selectedPipelineFilterId,
   shouldSeedDefaultDealStatusFilter,
   toggleRottingDealsFilter,
+  withPipelineFilter,
 } from "../deal-board-filters";
 
 const userFilter: Filter = {
@@ -98,5 +102,51 @@ describe("the rotting chip", () => {
 
     expect(isRottingFilterActive([healthyOnly])).toBe(false);
     expect(toggleRottingDealsFilter([healthyOnly])).toEqual([ROTTING_DEALS_FILTER]);
+  });
+});
+
+describe("the pipeline switcher expressed as a filter", () => {
+  const PIPELINE_ID = "10000000-0000-4000-8000-000000000001";
+  const OTHER_PIPELINE_ID = "10000000-0000-4000-8000-000000000002";
+
+  it("selects a pipeline with the field the deal repository already reads", () => {
+    expect(pipelineFilter(PIPELINE_ID)).toEqual({
+      field: PIPELINE_FILTER_FIELD,
+      operator: FilterOperatorKey.in,
+      value: [PIPELINE_ID],
+    });
+  });
+
+  it("reads the selection back so the URL and stored personalization drive the switcher", () => {
+    expect(selectedPipelineFilterId(undefined)).toBeNull();
+    expect(selectedPipelineFilterId([userFilter])).toBeNull();
+    expect(selectedPipelineFilterId([userFilter, pipelineFilter(PIPELINE_ID)])).toBe(PIPELINE_ID);
+  });
+
+  it("ignores a multi-valued pipeline clause, exactly as the repository does", () => {
+    const both: Filter = {
+      field: PIPELINE_FILTER_FIELD,
+      operator: FilterOperatorKey.in,
+      value: [PIPELINE_ID, OTHER_PIPELINE_ID],
+    };
+
+    expect(selectedPipelineFilterId([both])).toBeNull();
+  });
+
+  it("replaces the previous pipeline rather than stacking a second clause", () => {
+    const first = withPipelineFilter([userFilter], PIPELINE_ID);
+
+    expect(first).toEqual([userFilter, pipelineFilter(PIPELINE_ID)]);
+    expect(withPipelineFilter(first, OTHER_PIPELINE_ID)).toEqual([userFilter, pipelineFilter(OTHER_PIPELINE_ID)]);
+  });
+
+  it("drops the clause when every pipeline is asked for, keeping the other filters", () => {
+    const applied = withPipelineFilter([DEFAULT_DEAL_STATUS_FILTER], PIPELINE_ID);
+
+    expect(withPipelineFilter(applied, null)).toEqual([DEFAULT_DEAL_STATUS_FILTER]);
+  });
+
+  it("counts as an active query, so an empty pipeline reaches the filtered empty state", () => {
+    expect(hasActiveDealQuery({ filters: withPipelineFilter([DEFAULT_DEAL_STATUS_FILTER], PIPELINE_ID) })).toBe(true);
   });
 });

@@ -1026,6 +1026,7 @@
       "passwordInvalid": "La password deve contenere almeno 8 caratteri e includere almeno una lettera maiuscola, una minuscola, un numero e un carattere speciale.",
       "passwordMismatch": "Le password devono coincidere.",
       "permissionDenied": "Questa azione non è disponibile con le tue autorizzazioni attuali.",
+      "pipelineArchived": "Questa pipeline è archiviata e non accetta nuove trattative. Ripristinala o scegli un’altra pipeline.",
       "pipelineDefaultRequired": "Un’azienda deve mantenere una pipeline predefinita.",
       "pipelineHasDeals": "Questa pipeline contiene ancora {count} trattative. Spostale o chiudile prima di eliminarla.",
       "pipelineNotFound": "ID pipeline non trovato o non accessibile.",
@@ -1186,9 +1187,11 @@
         "isPlatformOperator": "Operatore di piattaforma",
         "lastActiveAt": "Ultima attività",
         "participants": "Partecipanti",
+        "pipelineId": "Pipeline",
         "plan": "Piano",
         "provider": "Provider",
         "rotting": "In stallo",
+        "stageId": "Fase",
         "startsAt": "Inizia il",
         "state": "Stato",
         "status": "Stato",
@@ -1786,6 +1789,17 @@
       "reopen": "Riapri"
     },
     "noServicesAdded": "Ancora nessuna voce «{entity}» aggiunta",
+    "pipeline": {
+      "allPipelines": "Tutte le pipeline",
+      "archivedOption": "{name} (archiviata)",
+      "emptyBody": "Ancora nessuna voce «{plural}» in questa pipeline.",
+      "emptyTitle": "{pipeline} è vuota",
+      "label": "Pipeline",
+      "placeholder": "Seleziona una pipeline",
+      "stageLabel": "Fase",
+      "stagePlaceholder": "Seleziona una fase",
+      "switcherLabel": "Pipeline"
+    },
     "quantityLabel": "Quantità",
     "title": "Trattativa",
     "valueLabel": "Valore"

@@ -22,6 +22,8 @@ export class DealCloseStore extends BaseFormStore<MarkDealLostFormData> {
   targetDealId: string | null = null;
   isSubmitting = false;
 
+  private lostPromptSettle: ((confirmed: boolean) => void) | null = null;
+
   constructor(rootStore: RootStore) {
     super(rootStore, EMPTY_LOST_FORM, Resource.deals);
 
@@ -63,12 +65,25 @@ export class DealCloseStore extends BaseFormStore<MarkDealLostFormData> {
   closeLostPrompt = () => {
     this.targetDealId = null;
     this.onInitOrRefresh(EMPTY_LOST_FORM);
+    this.takeLostPromptSettle()?.(false);
   };
 
   openLostPrompt = async (dealId: string): Promise<void> => {
     this.startLostPrompt(dealId);
 
     await this.ensureLostReasonsLoaded();
+  };
+
+  requestLost = async (dealId: string): Promise<boolean> => {
+    this.takeLostPromptSettle()?.(false);
+
+    const outcome = new Promise<boolean>((settle) => {
+      this.lostPromptSettle = settle;
+    });
+
+    await this.openLostPrompt(dealId);
+
+    return await outcome;
   };
 
   markWon = async (dealId: string): Promise<boolean> => {
@@ -85,8 +100,24 @@ export class DealCloseStore extends BaseFormStore<MarkDealLostFormData> {
     if (!dealId || lostReasonId === "") return false;
 
     const notes = this.form.lostNotes.trim();
+    const settle = this.takeLostPromptSettle();
 
-    return this.applyTransition(dealId, markDealLostAction({ id: dealId, lostReasonId, lostNotes: notes || null }));
+    const closed = await this.applyTransition(
+      dealId,
+      markDealLostAction({ id: dealId, lostReasonId, lostNotes: notes || null }),
+    );
+
+    if (closed) settle?.(true);
+    else this.lostPromptSettle = settle;
+
+    return closed;
+  };
+
+  private takeLostPromptSettle = (): ((confirmed: boolean) => void) | null => {
+    const settle = this.lostPromptSettle;
+    this.lostPromptSettle = null;
+
+    return settle;
   };
 
   ensureLostReasonsLoaded = async (): Promise<void> => {
@@ -108,7 +139,7 @@ export class DealCloseStore extends BaseFormStore<MarkDealLostFormData> {
         return false;
       }
 
-      this.closeLostPrompt();
+      if (this.targetDealId === dealId) this.closeLostPrompt();
       await this.refreshAffectedViews(dealId);
 
       return true;

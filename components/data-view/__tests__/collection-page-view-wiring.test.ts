@@ -156,8 +156,10 @@ function store(items: Array<Record<string, unknown>>, canManage = true) {
     isReady: true,
     items,
     pagination: { page: 1, pageSize: 25, total: items.length, totalPages: items.length ? 1 : 0 },
+    pipelines: [],
     refreshQuery: vi.fn().mockResolvedValue(undefined),
     searchTerm: "",
+    selectedPipeline: null,
     setItems: vi.fn(),
     setQueryOptions: vi.fn(),
     viewMode: ViewMode.table,
@@ -207,7 +209,7 @@ const fixtures: Fixture[] = [
       const linked = { contactsStore: {}, organizationsStore: {}, servicesStore: {} };
       setRoot("dealsStore", value, linked);
       return renderToStaticMarkup(
-        createElement(DealsPageView, { deals: initial as never, forecastsByStage: true, stages: [] }),
+        createElement(DealsPageView, { deals: initial as never, forecastsByStage: true, pipelines: [] }),
       );
     },
     verifyAdd: () => expect(harness.openEntity).toHaveBeenCalledWith(EntityType.deal, "new"),

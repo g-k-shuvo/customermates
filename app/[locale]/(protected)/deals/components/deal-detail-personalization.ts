@@ -4,6 +4,8 @@ export const DEAL_DETAIL_FIELD = {
   name: "name",
   status: "status",
   lostReason: "lostReason",
+  pipelineId: "pipelineId",
+  stageId: "stageId",
   totalValue: "totalValue",
   totalQuantity: "totalQuantity",
   weightedValue: "weightedValue",

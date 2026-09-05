@@ -16,6 +16,8 @@ export enum FilterFieldKey {
   status = "status",
   dealStatus = "dealStatus",
   rotting = "rotting",
+  pipelineId = "pipelineId",
+  stageId = "stageId",
   provider = "provider",
   state = "state",
   connectedAccountId = "connectedAccountId",

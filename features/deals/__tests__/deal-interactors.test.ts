@@ -62,6 +62,8 @@ function makeDealWritePrecheck(): DealWritePrecheckInteractor {
     new ValidatePipelineIdsInteractor(getPipelineRepo()),
     new ValidatePipelineStageIdsInteractor(getPipelineStageIdsRepo()),
     getPipelineRepo(),
+    getPipelineRepo(),
+    getDealRepo(),
     new ValidateLostReasonIdsInteractor(getLostReasonRepo()),
   );
 }

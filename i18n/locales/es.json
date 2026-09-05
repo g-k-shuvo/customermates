@@ -1026,6 +1026,7 @@
       "passwordInvalid": "La contraseña debe tener al menos 8 caracteres e incluir al menos una mayúscula, una minúscula, un número y un carácter especial.",
       "passwordMismatch": "Las contraseñas deben coincidir.",
       "permissionDenied": "Esta acción no está disponible con tus permisos actuales.",
+      "pipelineArchived": "Este embudo está archivado y no admite nuevas oportunidades. Restáuralo o elige otro embudo.",
       "pipelineDefaultRequired": "Una empresa debe mantener un embudo predeterminado.",
       "pipelineHasDeals": "Este embudo todavía contiene {count} oportunidades. Muévelas o ciérralas antes de eliminarlo.",
       "pipelineNotFound": "ID de pipeline no encontrado o no accesible.",
@@ -1186,9 +1187,11 @@
         "isPlatformOperator": "Operador de plataforma",
         "lastActiveAt": "Última actividad",
         "participants": "Participantes",
+        "pipelineId": "Embudo",
         "plan": "Plan",
         "provider": "Proveedor",
         "rotting": "Estancado",
+        "stageId": "Etapa",
         "startsAt": "Comienza el",
         "state": "Estado",
         "status": "Estado",
@@ -1786,6 +1789,17 @@
       "reopen": "Reabrir"
     },
     "noServicesAdded": "Aún no se ha añadido ningún elemento «{entity}»",
+    "pipeline": {
+      "allPipelines": "Todos los embudos",
+      "archivedOption": "{name} (archivado)",
+      "emptyBody": "Todavía no hay elementos «{plural}» en este embudo.",
+      "emptyTitle": "{pipeline} está vacío",
+      "label": "Embudo",
+      "placeholder": "Selecciona un embudo",
+      "stageLabel": "Etapa",
+      "stagePlaceholder": "Selecciona una etapa",
+      "switcherLabel": "Embudo"
+    },
     "quantityLabel": "Cantidad",
     "title": "Oportunidad",
     "valueLabel": "Valor"

@@ -76,6 +76,8 @@ const RELATION_FIELD_MAPPING: Record<FilterFieldKey, string> = {
   [FilterFieldKey.status]: "status",
   [FilterFieldKey.dealStatus]: "status",
   [FilterFieldKey.rotting]: "rottingAt",
+  [FilterFieldKey.pipelineId]: "pipelineId",
+  [FilterFieldKey.stageId]: "stageId",
   [FilterFieldKey.provider]: "provider",
   [FilterFieldKey.state]: "state",
   [FilterFieldKey.participantContactId]: "participantContactId",

@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import type { GetResult } from "@/core/base/base-get.interactor";
 import type { DealDto } from "@/features/deals/deal.schema";
-import type { DealStageOption } from "./deals.store";
+import type { PipelineDto } from "@/features/pipelines/pipeline.schema";
 
 import { observer } from "mobx-react-lite";
 import { useCallback, useEffect, useMemo } from "react";
@@ -26,25 +26,26 @@ import { useRootStore } from "@/core/stores/root-store.provider";
 
 import { DealCloseActions } from "./deal-close-actions";
 import { hasActiveDealQuery } from "./deal-board-filters";
+import { DealPipelineSwitcher } from "./deal-pipeline-switcher";
 import { DealRottingFilterChip } from "./deal-rotting-filter-chip";
 import { DealsPageSkeleton } from "./deals-page-skeleton";
 import { useDealColumns } from "./use-deal-columns";
 
-type Props = { deals: GetResult<DealDto>; forecastsByStage: boolean; stages: DealStageOption[] };
+type Props = { deals: GetResult<DealDto>; forecastsByStage: boolean; pipelines: PipelineDto[] };
 
-export const DealsPageView = observer(function DealsPageView({ deals, forecastsByStage, stages }: Props) {
+export const DealsPageView = observer(function DealsPageView({ deals, forecastsByStage, pipelines }: Props) {
   const { contactsStore, dealsStore, importWizardStore, organizationsStore, servicesStore } = useRootStore();
 
   useDataViewSync(dealsStore, deals, [organizationsStore, contactsStore, servicesStore]);
 
   useEffect(() => {
-    dealsStore.setStages(stages);
+    dealsStore.setPipelineCatalog(pipelines);
     dealsStore.seedDefaultStatusFilter();
-  }, [dealsStore, stages]);
+  }, [dealsStore, pipelines]);
   const openEntity = useOpenEntity();
   const entityHref = useEntityHref();
   const columns = useDealColumns(forecastsByStage);
-  const { singular } = useEntityTerminology();
+  const { plural, singular } = useEntityTerminology();
   const t = useTranslations();
 
   const view = resolveDataViewView(dealsStore.viewMode, dealsStore.groupingColumnId);
@@ -56,6 +57,13 @@ export const DealsPageView = observer(function DealsPageView({ deals, forecastsB
     total: dealsStore.pagination?.total,
   });
   const emptyActionLabel = t("Common.emptyState.cta", { singular: singular(EntityType.deal) });
+  const selectedPipeline = dealsStore.selectedPipeline;
+  const pipelineEmptyDescriptor = selectedPipeline
+    ? {
+        title: t("DealModal.pipeline.emptyTitle", { pipeline: selectedPipeline.name }),
+        body: t("DealModal.pipeline.emptyBody", { plural: plural(EntityType.deal) }),
+      }
+    : undefined;
   const handleAdd = useCallback(() => openEntity(EntityType.deal, "new"), [openEntity]);
   const rowHref = useCallback((deal: DealDto) => entityHref(EntityType.deal, deal.id), [entityHref]);
   const handleExport = useExportAction(dealsStore);
@@ -67,6 +75,8 @@ export const DealsPageView = observer(function DealsPageView({ deals, forecastsB
   const topBarNode = useMemo(
     () => (
       <div className="flex items-center gap-1">
+        <DealPipelineSwitcher />
+
         <DealRottingFilterChip />
 
         <DataViewToolbar
@@ -105,7 +115,7 @@ export const DealsPageView = observer(function DealsPageView({ deals, forecastsB
       );
       break;
     case "filtered-empty":
-      body = <DataViewEmpty reason="filtered" store={dealsStore} />;
+      body = <DataViewEmpty filteredDescriptor={pipelineEmptyDescriptor} reason="filtered" store={dealsStore} />;
       break;
     case "true-empty":
       body = (

@@ -56,6 +56,12 @@ export type DataViewRequestState =
 
 export type DataViewRefreshMode = "background" | "visible";
 
+export type StageMoveOutcome =
+  | { readonly status: "updated"; readonly item: unknown }
+  | { readonly status: "handled" }
+  | { readonly status: "cancelled" }
+  | { readonly status: "failed"; readonly error?: unknown };
+
 function readItemValueSums(item: unknown, fields: readonly string[]): GroupValueSums | undefined {
   const values = item as Record<string, unknown>;
   const summed = fields.flatMap((field) =>
@@ -324,13 +330,23 @@ export abstract class BaseDataViewStore<Entity extends HasId> extends BaseStore 
     };
 
     try {
-      const res = isStageGrouping
-        ? await updateEntityStageAction({ entityId: params.item.id, stageId: params.value })
-        : await updateEntityCustomFieldValueAction({
-            entityType,
-            entityId: params.item.id,
-            customFieldValues: [{ columnId: params.columnId, value: params.value }],
-          });
+      if (isStageGrouping) {
+        const outcome = await this.persistStageMove(params.item.id, params.value);
+
+        if (outcome.status === "updated") await this.upsertItem(outcome.item as Entity);
+        else if (outcome.status !== "handled") {
+          revert();
+          if (outcome.status === "failed") toastZodErrorTree(outcome.error);
+        }
+
+        return;
+      }
+
+      const res = await updateEntityCustomFieldValueAction({
+        entityType,
+        entityId: params.item.id,
+        customFieldValues: [{ columnId: params.columnId, value: params.value }],
+      });
       if (res?.ok) await this.upsertItem(res.data as unknown as Entity);
       else {
         revert();
@@ -341,6 +357,12 @@ export abstract class BaseDataViewStore<Entity extends HasId> extends BaseStore 
       throw err;
     }
   };
+
+  protected async persistStageMove(entityId: string, stageId: string | null): Promise<StageMoveOutcome> {
+    const res = await updateEntityStageAction({ entityId, stageId });
+
+    return res?.ok ? { status: "updated", item: res.data } : { status: "failed", error: res?.error };
+  }
 
   get isKanbanMode(): boolean {
     return this.viewMode === ViewMode.card && Boolean(this.groupingColumnId);

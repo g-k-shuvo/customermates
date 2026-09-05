@@ -1026,6 +1026,7 @@
       "passwordInvalid": "Le mot de passe doit comporter au moins 8 caractères et contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial.",
       "passwordMismatch": "Les mots de passe doivent correspondre.",
       "permissionDenied": "Cette action n’est pas disponible avec vos autorisations actuelles.",
+      "pipelineArchived": "Ce pipeline est archivé et n’accepte plus de nouvelles affaires. Restaurez-le ou choisissez un autre pipeline.",
       "pipelineDefaultRequired": "Une entreprise doit conserver un pipeline par défaut.",
       "pipelineHasDeals": "Ce pipeline contient encore {count} affaires. Déplacez-les ou clôturez-les avant de le supprimer.",
       "pipelineNotFound": "ID de pipeline introuvable ou inaccessible.",
@@ -1186,9 +1187,11 @@
         "isPlatformOperator": "Opérateur de plateforme",
         "lastActiveAt": "Dernière activité",
         "participants": "Participants",
+        "pipelineId": "Pipeline",
         "plan": "Forfait",
         "provider": "Fournisseur",
         "rotting": "Stagnant",
+        "stageId": "Étape",
         "startsAt": "Commence le",
         "state": "État",
         "status": "Statut",
@@ -1786,6 +1789,17 @@
       "reopen": "Rouvrir"
     },
     "noServicesAdded": "Aucun élément « {entity} » ajouté pour le moment",
+    "pipeline": {
+      "allPipelines": "Tous les pipelines",
+      "archivedOption": "{name} (archivé)",
+      "emptyBody": "Aucun élément « {plural} » dans ce pipeline pour le moment.",
+      "emptyTitle": "{pipeline} est vide",
+      "label": "Pipeline",
+      "placeholder": "Sélectionner un pipeline",
+      "stageLabel": "Étape",
+      "stagePlaceholder": "Sélectionner une étape",
+      "switcherLabel": "Pipeline"
+    },
     "quantityLabel": "Quantité",
     "title": "Affaire",
     "valueLabel": "Valeur"

@@ -569,6 +569,8 @@ export const getDealWritePrecheck = () =>
     getPipelineIdsValidator(),
     getPipelineStageIdsValidator(),
     getPipelineRepo(),
+    getPipelineRepo(),
+    getDealRepo(),
     getLostReasonIdsValidator(),
   );
 

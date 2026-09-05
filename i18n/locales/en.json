@@ -1026,6 +1026,7 @@
       "passwordInvalid": "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
       "passwordMismatch": "Passwords must match.",
       "permissionDenied": "This action is not available with your current permissions.",
+      "pipelineArchived": "This pipeline is archived and cannot take new deals. Restore it or choose another pipeline.",
       "pipelineDefaultRequired": "A company must keep one default pipeline.",
       "pipelineHasDeals": "This pipeline still contains {count} deals. Move or close them before deleting it.",
       "pipelineNotFound": "Pipeline ID not found or not accessible.",
@@ -1186,9 +1187,11 @@
         "isPlatformOperator": "Platform operator",
         "lastActiveAt": "Last active",
         "participants": "Participants",
+        "pipelineId": "Pipeline",
         "plan": "Plan",
         "provider": "Provider",
         "rotting": "Rotting",
+        "stageId": "Stage",
         "startsAt": "Starts at",
         "state": "State",
         "status": "Status",
@@ -1786,6 +1789,17 @@
       "reopen": "Reopen"
     },
     "noServicesAdded": "No {entity} added yet",
+    "pipeline": {
+      "allPipelines": "All pipelines",
+      "archivedOption": "{name} (archived)",
+      "emptyBody": "No {plural} sit in this pipeline yet.",
+      "emptyTitle": "{pipeline} is empty",
+      "label": "Pipeline",
+      "placeholder": "Select a pipeline",
+      "stageLabel": "Stage",
+      "stagePlaceholder": "Select a stage",
+      "switcherLabel": "Pipeline"
+    },
     "quantityLabel": "Quantity",
     "title": "Deal",
     "valueLabel": "Value"

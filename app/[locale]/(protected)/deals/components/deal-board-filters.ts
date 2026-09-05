@@ -11,6 +11,10 @@ export const DEAL_STATUS_FILTER_FIELD: string = FilterFieldKey.dealStatus;
 
 export const ROTTING_FILTER_FIELD: string = FilterFieldKey.rotting;
 
+export const PIPELINE_FILTER_FIELD: string = FilterFieldKey.pipelineId;
+
+const PIPELINE_SELECTION_OPERATORS: string[] = [FilterOperatorKey.equals, FilterOperatorKey.in];
+
 export const DEFAULT_DEAL_STATUS_FILTER: Filter = {
   field: FilterFieldKey.dealStatus,
   operator: FilterOperatorKey.in,
@@ -33,6 +37,13 @@ function singleValue(filter: Filter): string | undefined {
   if (!Array.isArray(value) || value.length !== 1) return undefined;
 
   return value[0];
+}
+
+function onlySelectedValue(filter: Filter): string | undefined {
+  const value = "value" in filter ? filter.value : undefined;
+  if (typeof value === "string") return value;
+
+  return singleValue(filter);
 }
 
 export function isDefaultDealStatusFilter(filter: Filter): boolean {
@@ -59,6 +70,28 @@ export function toggleRottingDealsFilter(filters: Filter[] | undefined): Filter[
   const withoutRotting = current.filter((filter) => filter.field !== ROTTING_FILTER_FIELD);
 
   return wasActive ? withoutRotting : [...withoutRotting, ROTTING_DEALS_FILTER];
+}
+
+export function pipelineFilter(pipelineId: string): Filter {
+  return { field: PIPELINE_FILTER_FIELD, operator: FilterOperatorKey.in, value: [pipelineId] };
+}
+
+export function selectedPipelineFilterId(filters: Filter[] | undefined): string | null {
+  for (const filter of filters ?? []) {
+    if (filter.field !== PIPELINE_FILTER_FIELD) continue;
+    if (!PIPELINE_SELECTION_OPERATORS.includes(filter.operator)) continue;
+
+    const value = onlySelectedValue(filter);
+    if (value !== undefined) return value;
+  }
+
+  return null;
+}
+
+export function withPipelineFilter(filters: Filter[] | undefined, pipelineId: string | null): Filter[] {
+  const withoutPipeline = (filters ?? []).filter((filter) => filter.field !== PIPELINE_FILTER_FIELD);
+
+  return pipelineId === null ? withoutPipeline : [...withoutPipeline, pipelineFilter(pipelineId)];
 }
 
 export function shouldSeedDefaultDealStatusFilter(state: DealBoardQueryState): boolean {

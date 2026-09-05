@@ -22,6 +22,13 @@ const scalarSelectOperators = [FilterOperatorKey.in, FilterOperatorKey.notIn];
 
 const stringOperators = [FilterOperatorKey.equals, FilterOperatorKey.contains];
 
+const PIPELINE_PLACEMENT_OPERATORS = [
+  FilterOperatorKey.in,
+  FilterOperatorKey.notIn,
+  FilterOperatorKey.isNull,
+  FilterOperatorKey.isNotNull,
+];
+
 export const FILTER_FIELD_DEFAULT_OPERATORS: Record<FilterFieldKey, FilterOperatorKey[]> = {
   [FilterFieldKey.userIds]: relationOperators,
   [FilterFieldKey.serviceIds]: relationOperators,
@@ -40,6 +47,8 @@ export const FILTER_FIELD_DEFAULT_OPERATORS: Record<FilterFieldKey, FilterOperat
   [FilterFieldKey.status]: scalarSelectOperators,
   [FilterFieldKey.dealStatus]: scalarSelectOperators,
   [FilterFieldKey.rotting]: scalarSelectOperators,
+  [FilterFieldKey.pipelineId]: PIPELINE_PLACEMENT_OPERATORS,
+  [FilterFieldKey.stageId]: PIPELINE_PLACEMENT_OPERATORS,
   [FilterFieldKey.provider]: scalarSelectOperators,
   [FilterFieldKey.state]: scalarSelectOperators,
   [FilterFieldKey.connectedAccountId]: scalarSelectOperators,

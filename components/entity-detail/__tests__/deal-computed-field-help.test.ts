@@ -103,6 +103,9 @@ vi.mock("@/app/[locale]/(protected)/deals/components/deal-services-selection", (
 vi.mock("@/app/[locale]/(protected)/deals/components/deal-close-actions", () => ({
   DealCloseActions: () => null,
 }));
+vi.mock("@/app/[locale]/(protected)/deals/components/deal-pipeline-fields", () => ({
+  DealPipelineFields: () => null,
+}));
 vi.mock("@/app/[locale]/(protected)/deals/components/deal-status-badges", () => ({
   DealRottingBadge: () => null,
   DealStatusBadge: () => null,

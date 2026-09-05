@@ -11,6 +11,8 @@ import type { ValidatePipelineStageIdsInteractor } from "@/core/validation/valid
 import type { ValidateServiceIdsInteractor } from "@/core/validation/validators/validate-service-ids.interactor";
 import type { ValidateTaskIdsInteractor } from "@/core/validation/validators/validate-task-ids.interactor";
 import type { ValidateUserIdsInteractor } from "@/core/validation/validators/validate-user-ids.interactor";
+import type { FindDealPipelinesRepo } from "@/features/deals/find-deal-pipelines.repo";
+import type { FindArchivedPipelinesRepo } from "@/features/pipelines/find-archived-pipelines.repo";
 import type { FindStagePipelineRepo } from "@/features/pipelines/find-stage-pipeline.repo";
 import type { CreateDealData } from "./create-deal.interactor";
 import type { UpdateDealData } from "./update-deal.interactor";
@@ -28,10 +30,14 @@ import { CustomErrorCode } from "@/core/validation/validation.types";
 import { unique } from "@/core/utils/unique";
 
 type StagePlacementEntry = {
+  dealId?: string | null;
   pipelineId?: string | null;
   stageId?: string | null;
   path: (string | number)[];
+  pipelinePath: (string | number)[];
 };
+
+type ArchivedPipelineTarget = { pipelineId: string; path: (string | number)[] };
 
 export class DealWritePrecheckInteractor {
   constructor(
@@ -46,6 +52,8 @@ export class DealWritePrecheckInteractor {
     private pipelineValidator: ValidatePipelineIdsInteractor,
     private stageValidator: ValidatePipelineStageIdsInteractor,
     private stagePipelineRepo: FindStagePipelineRepo,
+    private archivedPipelineRepo: FindArchivedPipelinesRepo,
+    private dealPipelineRepo: FindDealPipelinesRepo,
     private lostReasonValidator: ValidateLostReasonIdsInteractor,
   ) {}
 
@@ -58,7 +66,10 @@ export class DealWritePrecheckInteractor {
       this.taskValidator.invoke([{ ids: data.taskIds, path: ["taskIds"] }], ctx),
       this.pipelineValidator.invoke([{ ids: data.pipelineId, path: ["pipelineId"] }], ctx),
       this.stageValidator.invoke([{ ids: data.stageId, path: ["stageId"] }], ctx),
-      this.checkStagePlacement([{ pipelineId: data.pipelineId, stageId: data.stageId, path: ["stageId"] }], ctx),
+      this.checkPipelinePlacement(
+        [{ pipelineId: data.pipelineId, stageId: data.stageId, path: ["stageId"], pipelinePath: ["pipelineId"] }],
+        ctx,
+      ),
       this.customFieldValuesValidator.invoke(
         [{ values: data.customFieldValues, path: ["customFieldValues"] }],
         EntityType.deal,
@@ -78,7 +89,18 @@ export class DealWritePrecheckInteractor {
       this.taskValidator.invoke([{ ids: data.taskIds, path: ["taskIds"] }], ctx),
       this.pipelineValidator.invoke([{ ids: data.pipelineId, path: ["pipelineId"] }], ctx),
       this.stageValidator.invoke([{ ids: data.stageId, path: ["stageId"] }], ctx),
-      this.checkStagePlacement([{ pipelineId: data.pipelineId, stageId: data.stageId, path: ["stageId"] }], ctx),
+      this.checkPipelinePlacement(
+        [
+          {
+            dealId: data.id,
+            pipelineId: data.pipelineId,
+            stageId: data.stageId,
+            path: ["stageId"],
+            pipelinePath: ["pipelineId"],
+          },
+        ],
+        ctx,
+      ),
       this.customFieldValuesValidator.invoke(
         [{ values: data.customFieldValues, path: ["customFieldValues"] }],
         EntityType.deal,
@@ -119,11 +141,12 @@ export class DealWritePrecheckInteractor {
         data.deals.map((deal, i) => ({ ids: deal.stageId, path: ["deals", i, "stageId"] })),
         ctx,
       ),
-      this.checkStagePlacement(
+      this.checkPipelinePlacement(
         data.deals.map((deal, i) => ({
           pipelineId: deal.pipelineId,
           stageId: deal.stageId,
           path: ["deals", i, "stageId"],
+          pipelinePath: ["deals", i, "pipelineId"],
         })),
         ctx,
       ),
@@ -175,11 +198,13 @@ export class DealWritePrecheckInteractor {
         data.deals.map((deal, i) => ({ ids: deal.stageId, path: ["deals", i, "stageId"] })),
         ctx,
       ),
-      this.checkStagePlacement(
+      this.checkPipelinePlacement(
         data.deals.map((deal, i) => ({
+          dealId: deal.id,
           pipelineId: deal.pipelineId,
           stageId: deal.stageId,
           path: ["deals", i, "stageId"],
+          pipelinePath: ["deals", i, "pipelineId"],
         })),
         ctx,
       ),
@@ -222,20 +247,47 @@ export class DealWritePrecheckInteractor {
     ]);
   }
 
-  private async checkStagePlacement(entries: StagePlacementEntry[], ctx: z.RefinementCtx) {
-    const placements = entries.flatMap(({ pipelineId, stageId, path }) =>
-      pipelineId && stageId ? [{ pipelineId, stageId, path }] : [],
-    );
-    if (placements.length === 0) return;
+  private async checkPipelinePlacement(entries: StagePlacementEntry[], ctx: z.RefinementCtx) {
+    const stageIds = new Set(entries.flatMap(({ stageId }) => (stageId ? [stageId] : [])));
+    const dealIds = new Set(entries.flatMap(({ dealId }) => (dealId ? [dealId] : [])));
 
-    const stagePipelineIds = await this.stagePipelineRepo.findPipelineIdsByStageIds(
-      new Set(placements.map((placement) => placement.stageId)),
-    );
+    const [stagePipelineIds, storedPipelineIds] = await Promise.all([
+      stageIds.size > 0 ? this.stagePipelineRepo.findPipelineIdsByStageIds(stageIds) : new Map<string, string>(),
+      dealIds.size > 0 ? this.dealPipelineRepo.findPipelineIdsByDealIds(dealIds) : new Map<string, string>(),
+    ]);
 
-    for (const { pipelineId, stageId, path } of placements) {
-      const stagePipelineId = stagePipelineIds.get(stageId);
-      if (stagePipelineId && stagePipelineId !== pipelineId)
+    const targets: ArchivedPipelineTarget[] = [];
+
+    for (const { dealId, pipelineId, stageId, path, pipelinePath } of entries) {
+      const stagePipelineId = stageId ? stagePipelineIds.get(stageId) : undefined;
+
+      if (pipelineId && stageId && stagePipelineId && stagePipelineId !== pipelineId) {
         ctx.addIssue({ code: "custom", params: { error: CustomErrorCode.pipelineStageMismatch }, path });
+        continue;
+      }
+
+      const target = pipelineId
+        ? { pipelineId, path: pipelinePath }
+        : stagePipelineId
+          ? { pipelineId: stagePipelineId, path }
+          : null;
+      if (!target) continue;
+
+      const storedPipelineId = dealId ? storedPipelineIds.get(dealId) : undefined;
+      if (storedPipelineId === target.pipelineId) continue;
+
+      targets.push(target);
+    }
+
+    if (targets.length === 0) return;
+
+    const archived = await this.archivedPipelineRepo.findArchivedIds(
+      new Set(targets.map((target) => target.pipelineId)),
+    );
+
+    for (const { pipelineId, path } of targets) {
+      if (archived.has(pipelineId))
+        ctx.addIssue({ code: "custom", params: { error: CustomErrorCode.pipelineArchived }, path });
     }
   }
 }
