@@ -15,6 +15,8 @@ import { useRootStore } from "@/core/stores/root-store.provider";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { getSystemTaskNameTranslationKey } from "../../tasks/components/system-task.config";
 
+import { DealRottingBadge, DealStatusBadge } from "./deal-status-badges";
+
 export function useDealColumns(forecastsByStage: boolean): ColumnDef<DealDto>[] {
   const { dealsStore, userModalStore } = useRootStore();
   const intlStore = useHydratedIntlStore();
@@ -27,6 +29,14 @@ export function useDealColumns(forecastsByStage: boolean): ColumnDef<DealDto>[] 
       {
         id: "name",
         cell: ({ row }) => <span className="truncate text-sm">{row.original.name ?? ""}</span>,
+      },
+      {
+        id: "status",
+        cell: ({ row }) => <DealStatusBadge status={row.original.status} />,
+      },
+      {
+        id: "rottingAt",
+        cell: ({ row }) => <DealRottingBadge isRotting={row.original.isRotting} />,
       },
       {
         id: "totalValue",

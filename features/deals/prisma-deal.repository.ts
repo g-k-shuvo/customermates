@@ -23,12 +23,13 @@ import { type DealDto } from "./deal.schema";
 
 import { BaseRepository } from "@/core/base/base-repository";
 import { Transaction } from "@/core/decorators/transaction.decorator";
-import { type GetQueryParams } from "@/core/base/base-get.schema";
+import { type Filter, type GetQueryParams } from "@/core/base/base-get.schema";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { getCustomColumnRepo, getPipelineRepo } from "@/core/di";
 import { computeWeightedValue, effectiveProbability } from "./deal-weighting";
+import { computeRottingAt, isRotting } from "./deal-rotting";
 import { dealStageMove, lostTransition, reopenTransition, wonTransition } from "./close/closing-transition";
 
 const PIPELINE_PLACEMENT_FILTER_OPERATORS = [
@@ -39,8 +40,78 @@ const PIPELINE_PLACEMENT_FILTER_OPERATORS = [
   FilterOperatorKey.isNotNull,
 ];
 
+const ROTTING_SORT_FIELD = "rottingAt";
+
+const DEAL_STATUS_VALUES = new Set<string>(Object.values(DealStatus));
+
+const SELECTION_OPERATORS = [FilterOperatorKey.in, FilterOperatorKey.notIn];
+
+const DEAL_STATUS_FILTER_FIELD: string = FilterFieldKey.dealStatus;
+
+const ROTTING_FILTER_FIELD: string = FilterFieldKey.rotting;
+
+function partitionDealFilters(filters: Filter[] | undefined) {
+  const dealStatus: Filter[] = [];
+  const rotting: Filter[] = [];
+  const rest: Filter[] = [];
+
+  for (const filter of filters ?? []) {
+    if (filter.field === DEAL_STATUS_FILTER_FIELD) dealStatus.push(filter);
+    else if (filter.field === ROTTING_FILTER_FIELD) rotting.push(filter);
+    else rest.push(filter);
+  }
+
+  return { dealStatus, rotting, rest };
+}
+
+function selectedFilterValues(filter: Filter): string[] {
+  const raw: unknown = "value" in filter ? filter.value : undefined;
+
+  return (Array.isArray(raw) ? (raw as unknown[]) : [raw]).flatMap((value) =>
+    typeof value === "string" ? [value] : [],
+  );
+}
+
+function dealStatusClause(filter: Filter): Prisma.DealWhereInput | null {
+  if (!SELECTION_OPERATORS.includes(filter.operator)) return null;
+
+  const values = selectedFilterValues(filter).filter((value): value is DealStatus => DEAL_STATUS_VALUES.has(value));
+
+  if (values.length === 0) return null;
+
+  return filter.operator === FilterOperatorKey.in ? { status: { in: values } } : { status: { notIn: values } };
+}
+
+function rottingClause(filter: Filter, now: Date): Prisma.DealWhereInput | null {
+  if (!SELECTION_OPERATORS.includes(filter.operator)) return null;
+
+  const selected = new Set(selectedFilterValues(filter).filter((value) => value === "true" || value === "false"));
+
+  if (selected.size !== 1) return null;
+
+  const wantsRotting = (filter.operator === FilterOperatorKey.in) === selected.has("true");
+
+  return wantsRotting ? { rottingAt: { lte: now } } : { OR: [{ rottingAt: null }, { rottingAt: { gt: now } }] };
+}
+
+function existingAndClauses(where: Prisma.DealWhereInput): Prisma.DealWhereInput[] {
+  if (!where.AND) return [];
+
+  return Array.isArray(where.AND) ? where.AND : [where.AND];
+}
+
+function rottingFirstOrderBy(orderBy: Record<string, unknown>[]): Record<string, unknown>[] {
+  return orderBy.map((clause) =>
+    Object.fromEntries(
+      Object.entries(clause).map(([field, direction]) =>
+        field === ROTTING_SORT_FIELD ? [field, direction === "asc" ? "desc" : "asc"] : [field, direction],
+      ),
+    ),
+  );
+}
+
 export class PrismaDealRepo
-  extends BaseRepository
+  extends BaseRepository<Prisma.DealWhereInput>
   implements
     CreateDealRepo,
     UpdateDealRepo,
@@ -72,6 +143,7 @@ export class PrismaDealRepo
       expectedCloseDate: true,
       probability: true,
       stageEnteredAt: true,
+      rottingAt: true,
       lostReasonId: true,
       lostNotes: true,
       wonAt: true,
@@ -143,9 +215,33 @@ export class PrismaDealRepo
       { field: "totalQuantity", resolvedFields: ["totalQuantity"] },
       { field: "weightedValue", resolvedFields: ["weightedValue"] },
       { field: "expectedCloseDate", resolvedFields: ["expectedCloseDate"] },
+      { field: ROTTING_SORT_FIELD, resolvedFields: [ROTTING_SORT_FIELD] },
       { field: "createdAt", resolvedFields: ["createdAt"] },
       { field: "updatedAt", resolvedFields: ["updatedAt"] },
     ];
+  }
+
+  override async buildQueryArgs(params: GetQueryParams, baseWhere: Prisma.DealWhereInput = {}) {
+    const { dealStatus, rotting, rest } = partitionDealFilters(params.filters);
+    const args = await super.buildQueryArgs({ ...params, filters: rest }, baseWhere);
+    const now = new Date();
+    const clauses = [
+      ...dealStatus.flatMap((filter) => {
+        const clause = dealStatusClause(filter);
+
+        return clause ? [clause] : [];
+      }),
+      ...rotting.flatMap((filter) => {
+        const clause = rottingClause(filter, now);
+
+        return clause ? [clause] : [];
+      }),
+    ];
+
+    const where =
+      clauses.length === 0 ? args.where : { ...args.where, AND: [...existingAndClauses(args.where), ...clauses] };
+
+    return { ...args, where, orderBy: rottingFirstOrderBy(args.orderBy) };
   }
 
   async getFilterableFields() {
@@ -192,6 +288,8 @@ export class PrismaDealRepo
       },
       { field: FilterFieldKey.updatedAt, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.updatedAt] },
       { field: FilterFieldKey.createdAt, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.createdAt] },
+      { field: FilterFieldKey.dealStatus, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.dealStatus] },
+      { field: FilterFieldKey.rotting, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.rotting] },
       { field: "stageId", operators: PIPELINE_PLACEMENT_FILTER_OPERATORS },
       { field: "pipelineId", operators: PIPELINE_PLACEMENT_FILTER_OPERATORS },
     ];
@@ -242,6 +340,7 @@ export class PrismaDealRepo
   private toDto(deal: Prisma.DealGetPayload<{ select: PrismaDealRepo["userScopedSelect"] }>): DealDto {
     return {
       ...deal,
+      isRotting: isRotting(deal.rottingAt, new Date()),
       organizations: deal.organizations.map((it) => it.organization),
       users: deal.users.map((it) => it.user),
       contacts: deal.contacts.map((it) => it.contact),
@@ -414,6 +513,7 @@ export class PrismaDealRepo
     await Promise.all(promises);
 
     await this.recalculateTotals([deal.id]);
+    await this.recalculateRotting([deal.id]);
 
     const createdDeal = await this.prisma.deal.findFirstOrThrow({
       where: { id: deal.id, ...this.accessWhere("deal") },
@@ -586,6 +686,7 @@ export class PrismaDealRepo
     await Promise.all(createPromises);
 
     await this.recalculateTotals([id]);
+    await this.recalculateRotting([id]);
 
     const updatedDeal = await this.prisma.deal.findFirstOrThrow({
       where: { id, ...this.accessWhere("deal") },
@@ -719,7 +820,7 @@ export class PrismaDealRepo
 
     const existing = await this.prisma.deal.findFirstOrThrow({
       where: { id, ...this.accessWhere("deal") },
-      select: { pipelineId: true, stageId: true },
+      select: { pipelineId: true, stageId: true, stageEnteredAt: true },
     });
 
     const reopenedAt = new Date();
@@ -729,13 +830,22 @@ export class PrismaDealRepo
     const movedPipelineIds = stageMove.stageId
       ? await getPipelineRepo().findPipelineIdsByStageIds(new Set([stageMove.stageId]))
       : null;
+    const reopenedStageId = stageMove.stageId ?? existing.stageId;
+    const reopenedStageEnteredAt = stageMove.stageEnteredAt ?? existing.stageEnteredAt;
+    const rottingDaysByStageId = await this.findStageRottingDays(reopenedStageId ? [reopenedStageId] : [], companyId);
 
     return this.applyClosingWrite(
       id,
       { not: DealStatus.open },
       {
         companyId,
-        ...reopenTransition(),
+        ...reopenTransition(
+          computeRottingAt(
+            DealStatus.open,
+            reopenedStageEnteredAt,
+            reopenedStageId ? rottingDaysByStageId.get(reopenedStageId) : null,
+          ),
+        ),
         ...stageMove,
         ...(stageMove.stageId ? { pipelineId: movedPipelineIds?.get(stageMove.stageId) ?? existing.pipelineId } : {}),
       },
@@ -839,6 +949,49 @@ export class PrismaDealRepo
     const deals = await this.prisma.deal.findMany({ where: { companyId }, select: { id: true } });
 
     await this.recalculateTotals(deals.map((deal) => deal.id));
+  }
+
+  async recalculateRotting(dealIds: string[]) {
+    if (dealIds.length === 0) return;
+
+    const { companyId } = this.user;
+    const uniqueDealIds = Array.from(new Set(dealIds));
+
+    const deals = await this.prisma.deal.findMany({
+      where: { id: { in: uniqueDealIds }, companyId },
+      select: { id: true, status: true, stageId: true, stageEnteredAt: true, rottingAt: true },
+    });
+
+    const rottingDaysByStageId = await this.findStageRottingDays(
+      deals.flatMap((deal) => (deal.stageId ? [deal.stageId] : [])),
+      companyId,
+    );
+
+    const updates: Promise<unknown>[] = [];
+
+    for (const deal of deals) {
+      const rottingDays = deal.stageId ? rottingDaysByStageId.get(deal.stageId) : null;
+      const rottingAt = computeRottingAt(deal.status, deal.stageEnteredAt, rottingDays);
+
+      if ((deal.rottingAt?.getTime() ?? null) === (rottingAt?.getTime() ?? null)) continue;
+
+      updates.push(this.prisma.deal.update({ where: { id: deal.id, companyId }, data: { rottingAt } }));
+    }
+
+    await Promise.all(updates);
+  }
+
+  private async findStageRottingDays(stageIds: string[], companyId: string) {
+    const uniqueStageIds = Array.from(new Set(stageIds));
+
+    if (uniqueStageIds.length === 0) return new Map<string, number | null>();
+
+    const stages = await this.prisma.pipelineStage.findMany({
+      where: { id: { in: uniqueStageIds }, companyId },
+      select: { id: true, rottingDays: true },
+    });
+
+    return new Map(stages.map((stage) => [stage.id, stage.rottingDays]));
   }
 
   private async findStageProbabilities(stageIds: string[], companyId: string) {

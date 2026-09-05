@@ -10904,6 +10904,11 @@
                         }
                       ]
                     },
+                    "isRotting": {
+                      "default": false,
+                      "description": "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
+                      "type": "boolean"
+                    },
                     "lostReasonId": {
                       "anyOf": [
                         {
@@ -11160,6 +11165,7 @@
                     "expectedCloseDate",
                     "probability",
                     "stageEnteredAt",
+                    "isRotting",
                     "lostReasonId",
                     "lostNotes",
                     "wonAt",
@@ -11352,6 +11358,11 @@
                           }
                         ]
                       },
+                      "isRotting": {
+                        "default": false,
+                        "description": "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
+                        "type": "boolean"
+                      },
                       "lostReasonId": {
                         "anyOf": [
                           {
@@ -11608,6 +11619,7 @@
                       "expectedCloseDate",
                       "probability",
                       "stageEnteredAt",
+                      "isRotting",
                       "lostReasonId",
                       "lostNotes",
                       "wonAt",
@@ -11799,6 +11811,11 @@
                           }
                         ]
                       },
+                      "isRotting": {
+                        "default": false,
+                        "description": "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
+                        "type": "boolean"
+                      },
                       "lostReasonId": {
                         "anyOf": [
                           {
@@ -12055,6 +12072,7 @@
                       "expectedCloseDate",
                       "probability",
                       "stageEnteredAt",
+                      "isRotting",
                       "lostReasonId",
                       "lostNotes",
                       "wonAt",
@@ -13889,6 +13907,11 @@
                               }
                             ]
                           },
+                          "isRotting": {
+                            "default": false,
+                            "description": "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
+                            "type": "boolean"
+                          },
                           "lostReasonId": {
                             "anyOf": [
                               {
@@ -14145,6 +14168,7 @@
                           "expectedCloseDate",
                           "probability",
                           "stageEnteredAt",
+                          "isRotting",
                           "lostReasonId",
                           "lostNotes",
                           "wonAt",
@@ -15360,6 +15384,11 @@
                                 }
                               ]
                             },
+                            "isRotting": {
+                              "default": false,
+                              "description": "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
+                              "type": "boolean"
+                            },
                             "lostReasonId": {
                               "anyOf": [
                                 {
@@ -15616,6 +15645,7 @@
                             "expectedCloseDate",
                             "probability",
                             "stageEnteredAt",
+                            "isRotting",
                             "lostReasonId",
                             "lostNotes",
                             "wonAt",
@@ -16772,6 +16802,11 @@
                         }
                       ]
                     },
+                    "isRotting": {
+                      "default": false,
+                      "description": "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
+                      "type": "boolean"
+                    },
                     "lostReasonId": {
                       "anyOf": [
                         {
@@ -17028,6 +17063,7 @@
                     "expectedCloseDate",
                     "probability",
                     "stageEnteredAt",
+                    "isRotting",
                     "lostReasonId",
                     "lostNotes",
                     "wonAt",
@@ -17302,6 +17338,11 @@
                         }
                       ]
                     },
+                    "isRotting": {
+                      "default": false,
+                      "description": "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
+                      "type": "boolean"
+                    },
                     "lostReasonId": {
                       "anyOf": [
                         {
@@ -17558,6 +17599,7 @@
                     "expectedCloseDate",
                     "probability",
                     "stageEnteredAt",
+                    "isRotting",
                     "lostReasonId",
                     "lostNotes",
                     "wonAt",
@@ -17781,6 +17823,11 @@
                         }
                       ]
                     },
+                    "isRotting": {
+                      "default": false,
+                      "description": "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
+                      "type": "boolean"
+                    },
                     "lostReasonId": {
                       "anyOf": [
                         {
@@ -18037,6 +18084,7 @@
                     "expectedCloseDate",
                     "probability",
                     "stageEnteredAt",
+                    "isRotting",
                     "lostReasonId",
                     "lostNotes",
                     "wonAt",
@@ -18234,6 +18282,11 @@
                         }
                       ]
                     },
+                    "isRotting": {
+                      "default": false,
+                      "description": "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
+                      "type": "boolean"
+                    },
                     "lostReasonId": {
                       "anyOf": [
                         {
@@ -18490,6 +18543,7 @@
                     "expectedCloseDate",
                     "probability",
                     "stageEnteredAt",
+                    "isRotting",
                     "lostReasonId",
                     "lostNotes",
                     "wonAt",
@@ -51035,6 +51089,11 @@
                       }
                     ]
                   },
+                  "isRotting": {
+                    "default": false,
+                    "description": "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
+                    "type": "boolean"
+                  },
                   "lostReasonId": {
                     "anyOf": [
                       {
@@ -51447,6 +51506,11 @@
                             "type": "null"
                           }
                         ]
+                      },
+                      "isRotting": {
+                        "default": false,
+                        "description": "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
+                        "type": "boolean"
                       },
                       "lostReasonId": {
                         "anyOf": [
@@ -51994,6 +52058,21 @@
                           "previous",
                           "current"
                         ]
+                      },
+                      "isRotting": {
+                        "type": "object",
+                        "properties": {
+                          "previous": {
+                            "default": false,
+                            "description": "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
+                            "type": "boolean"
+                          },
+                          "current": {
+                            "default": false,
+                            "description": "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
+                            "type": "boolean"
+                          }
+                        }
                       },
                       "lostReasonId": {
                         "type": "object",
@@ -52708,6 +52787,11 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "isRotting": {
+                    "default": false,
+                    "description": "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
+                    "type": "boolean"
                   },
                   "lostReasonId": {
                     "anyOf": [

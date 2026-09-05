@@ -63,6 +63,9 @@ vi.mock("../profile/components/connected-account-modal", () => ({
 vi.mock("../profile/components/connect-upsell-modal", () => ({
   ConnectUpsellModal: () => "upsell-modal",
 }));
+vi.mock("../deals/components/mark-deal-lost-modal", () => ({
+  MarkDealLostModal: () => "mark-deal-lost-modal",
+}));
 vi.mock("@/components/ui/sonner", () => ({ Toaster: () => "toaster" }));
 vi.mock("@/app/components/global-search-modal", () => ({
   GlobalSearchModal: () => "global-search-modal",

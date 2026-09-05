@@ -324,7 +324,7 @@ export class PrismaPipelineRepo
 
     const previous = await this.prisma.pipelineStage.findFirstOrThrow({
       where: { id, companyId },
-      select: { probability: true },
+      select: { probability: true, rottingDays: true },
     });
 
     const data: Prisma.PipelineStageUncheckedUpdateManyInput = {};
@@ -337,8 +337,10 @@ export class PrismaPipelineRepo
 
     await this.prisma.pipelineStage.updateMany({ where: { id, companyId }, data });
 
-    if (fields.probability !== undefined && fields.probability !== previous.probability)
-      await this.recalculateDeals(await this.findDealIdsInStage(id));
+    const probabilityChanged = fields.probability !== undefined && fields.probability !== previous.probability;
+    const rottingDaysChanged = fields.rottingDays !== undefined && fields.rottingDays !== previous.rottingDays;
+
+    if (probabilityChanged || rottingDaysChanged) await this.recalculateDeals(await this.findDealIdsInStage(id));
 
     return this.prisma.pipelineStage.findFirstOrThrow({ where: { id, companyId }, select: this.stageSelect });
   }
@@ -354,7 +356,10 @@ export class PrismaPipelineRepo
   private async recalculateDeals(dealIds: string[]) {
     if (dealIds.length === 0) return;
 
-    await getDealRepo().recalculateTotals(dealIds);
+    const dealRepo = getDealRepo();
+
+    await dealRepo.recalculateTotals(dealIds);
+    await dealRepo.recalculateRotting(dealIds);
   }
 
   async countStagesInPipeline(pipelineId: string) {

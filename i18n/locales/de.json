@@ -877,6 +877,11 @@
       "thisMonth": "Diesen Monat",
       "today": "Heute"
     },
+    "dealStatuses": {
+      "lost": "Verloren",
+      "open": "Offen",
+      "won": "Gewonnen"
+    },
     "default": "Standard",
     "defaultData": {
       "contact": {
@@ -1176,12 +1181,14 @@
         "calendarId": "Kalender",
         "connectedAccountId": "Kanal",
         "createdAt": "Erstellt am",
+        "dealStatus": "Status",
         "event": "Ereignis",
         "isPlatformOperator": "Plattform-Operator",
         "lastActiveAt": "Zuletzt aktiv",
         "participants": "Teilnehmer",
         "plan": "Tarif",
         "provider": "Anbieter",
+        "rotting": "Stagnierend",
         "startsAt": "Beginnt am",
         "state": "Status",
         "status": "Status",
@@ -1217,6 +1224,10 @@
         "label": "Preset",
         "namePlaceholder": "Preset-Name",
         "none": "Kein Preset"
+      },
+      "rottingValues": {
+        "healthy": "Nicht stagnierend",
+        "rotting": "Stagnierend"
       },
       "searchLabel": "Suche",
       "selectionLimit": "Du kannst bis zu {count} Werte auswählen.",
@@ -1381,6 +1392,7 @@
         "provider": "Anbieter",
         "reason": "Grund",
         "role": "Rolle",
+        "rottingAt": "Stagnierend",
         "secret": "Secret",
         "services": "Services",
         "source": "Quelle",
@@ -1760,6 +1772,19 @@
     "selectRow": "Zeile {id} auswählen"
   },
   "DealModal": {
+    "close": {
+      "lostDescription": "Wähle den Grund für den Verlust, damit er in der Auswertung erscheint.",
+      "lostNotesLabel": "Notizen",
+      "lostNotesPlaceholder": "Was zu diesem Verlust festgehalten werden sollte",
+      "lostReasonLabel": "Verlustgrund",
+      "lostReasonPlaceholder": "Grund auswählen",
+      "lostTitle": "Als verloren abschließen",
+      "markLost": "Als verloren markieren",
+      "markWon": "Als gewonnen markieren",
+      "menuLabel": "Statusaktionen",
+      "noLostReasons": "Es sind noch keine Verlustgründe angelegt. Lege zuerst einen in den Workspace-Einstellungen an.",
+      "reopen": "Wieder öffnen"
+    },
     "noServicesAdded": "Noch keine {entity} hinzugefügt",
     "quantityLabel": "Anzahl",
     "title": "Deal",
@@ -2842,6 +2867,8 @@
     "probabilityLabel": "Gewinnwahrscheinlichkeit der Phase {name}",
     "reorderPipelineLabel": "Pipeline {name} neu anordnen",
     "reorderStageLabel": "Phase {name} neu anordnen",
+    "rottingDaysLabel": "Stagnationsfenster der Phase {name} in Tagen",
+    "rottingDaysPlaceholder": "Aus",
     "setDefault": "Als Standard festlegen",
     "showArchived": "Archivierte Pipelines anzeigen",
     "stageKindLabel": "Typ der Phase {name}",

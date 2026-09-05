@@ -45,6 +45,16 @@ export function clampProbability(value: number | undefined, fallback: number): n
   return Math.min(100, Math.max(0, Math.round(value)));
 }
 
+export const MAX_ROTTING_DAYS = 3650;
+
+export function clampRottingDays(value: number | undefined): number | null {
+  if (value === undefined || Number.isNaN(value)) return null;
+
+  const days = Math.round(value);
+
+  return days < 1 ? null : Math.min(MAX_ROTTING_DAYS, days);
+}
+
 type StageRowProps = {
   stage: PipelineStageDto;
   index: number;
@@ -52,12 +62,23 @@ type StageRowProps = {
   kinds: StageKind[];
   onRename: (name: string) => void;
   onProbabilityChange: (probability: number) => void;
+  onRottingDaysChange: (rottingDays: number | null) => void;
   onKindChange: (kind: StageKind) => void;
   onDelete: () => void;
 };
 
 const SortableStageRow = observer(
-  ({ stage, index, isDisabled, kinds, onRename, onProbabilityChange, onKindChange, onDelete }: StageRowProps) => {
+  ({
+    stage,
+    index,
+    isDisabled,
+    kinds,
+    onRename,
+    onProbabilityChange,
+    onRottingDaysChange,
+    onKindChange,
+    onDelete,
+  }: StageRowProps) => {
     const t = useTranslations();
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
       id: stage.id,
@@ -65,6 +86,7 @@ const SortableStageRow = observer(
     });
     const [draftName, setDraftName] = useState(stage.name);
     const [draftProbability, setDraftProbability] = useState<number | undefined>(stage.probability);
+    const [draftRottingDays, setDraftRottingDays] = useState<number | undefined>(stage.rottingDays ?? undefined);
 
     useEffect(() => {
       setDraftName(stage.name);
@@ -73,6 +95,10 @@ const SortableStageRow = observer(
     useEffect(() => {
       setDraftProbability(stage.probability);
     }, [stage.probability]);
+
+    useEffect(() => {
+      setDraftRottingDays(stage.rottingDays ?? undefined);
+    }, [stage.rottingDays]);
 
     function commitName() {
       const next = draftName.trim();
@@ -88,6 +114,12 @@ const SortableStageRow = observer(
       const next = clampProbability(draftProbability, stage.probability);
       setDraftProbability(next);
       if (next !== stage.probability) onProbabilityChange(next);
+    }
+
+    function commitRottingDays() {
+      const next = clampRottingDays(draftRottingDays);
+      setDraftRottingDays(next ?? undefined);
+      if (next !== stage.rottingDays) onRottingDaysChange(next);
     }
 
     function kindLabel(kind: StageKind): string {
@@ -157,6 +189,20 @@ const SortableStageRow = observer(
           value={draftProbability}
           onBlur={commitProbability}
           onValueChange={setDraftProbability}
+        />
+
+        <FormNumberInput
+          aria-label={t("Pipelines.rottingDaysLabel", { name: stage.name })}
+          className="text-right"
+          containerClassName="w-24 shrink-0"
+          disabled={isDisabled}
+          endContent={t("Common.filters.daysSuffix")}
+          id={`pipelineStages[${index}].rottingDays`}
+          label={null}
+          placeholder={t("Pipelines.rottingDaysPlaceholder")}
+          value={draftRottingDays}
+          onBlur={commitRottingDays}
+          onValueChange={setDraftRottingDays}
         />
 
         <Button
@@ -244,6 +290,9 @@ export const PipelineStagesList = observer(() => {
                     runUserAction(() => store.setStageProbability(stage.id, probability))
                   }
                   onRename={(name) => runUserAction(() => store.renameStage(stage.id, name))}
+                  onRottingDaysChange={(rottingDays) =>
+                    runUserAction(() => store.setStageRottingDays(stage.id, rottingDays))
+                  }
                 />
               ))}
             </ul>

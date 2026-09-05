@@ -4,10 +4,17 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-type TestStage = { id: string; name: string; position: number; probability: number; kind: StageKind };
+type TestStage = {
+  id: string;
+  name: string;
+  position: number;
+  probability: number;
+  rottingDays: number | null;
+  kind: StageKind;
+};
 
 const harness = vi.hoisted(() => ({
-  numberInputs: [] as Array<{ id: string; value?: number; "aria-label"?: string }>,
+  numberInputs: [] as Array<{ id: string; value?: number; "aria-label"?: string; placeholder?: string }>,
   translationCalls: [] as Array<{ key: string; values?: Record<string, unknown> }>,
   selects: [] as Array<{ value: string; items: string[] }>,
 }));
@@ -19,6 +26,7 @@ const store = vi.hoisted(() => ({
   createStage: vi.fn(),
   renameStage: vi.fn(),
   setStageProbability: vi.fn(),
+  setStageRottingDays: vi.fn(),
   setStageKind: vi.fn(),
   reorderStages: vi.fn(),
   deleteStage: vi.fn(),
@@ -56,9 +64,14 @@ vi.mock("@dnd-kit/utilities", () => ({
 }));
 
 vi.mock("@/components/forms/form-number-input", () => ({
-  FormNumberInput: (props: { id: string; value?: number; "aria-label"?: string }) => {
+  FormNumberInput: (props: { id: string; value?: number; "aria-label"?: string; placeholder?: string }) => {
     harness.numberInputs.push(props);
-    return createElement("input", { id: props.id, readOnly: true, value: props.value ?? "" });
+    return createElement("input", {
+      id: props.id,
+      placeholder: props.placeholder,
+      readOnly: true,
+      value: props.value ?? "",
+    });
   },
 }));
 
@@ -88,7 +101,13 @@ vi.mock("@/core/stores/root-store.provider", () => ({
 
 import { StageKind } from "@/generated/prisma";
 
-import { PipelineStagesList, clampProbability, selectableStageKinds } from "../pipeline-stages-list";
+import {
+  MAX_ROTTING_DAYS,
+  PipelineStagesList,
+  clampProbability,
+  clampRottingDays,
+  selectableStageKinds,
+} from "../pipeline-stages-list";
 
 beforeEach(() => {
   harness.numberInputs.length = 0;
@@ -96,8 +115,8 @@ beforeEach(() => {
   harness.selects.length = 0;
   store.selectedPipeline = { id: "sales", name: "Sales" };
   store.selectedStages = [
-    { id: "stage-lead", name: "Lead", position: 0, probability: 10, kind: StageKind.open },
-    { id: "stage-won", name: "Won", position: 1, probability: 100, kind: StageKind.won },
+    { id: "stage-lead", name: "Lead", position: 0, probability: 10, rottingDays: 14, kind: StageKind.open },
+    { id: "stage-won", name: "Won", position: 1, probability: 100, rottingDays: null, kind: StageKind.won },
   ];
   store.isSaving = false;
 });
@@ -112,6 +131,20 @@ describe("clampProbability", () => {
   it("falls back to the stored probability when the field is cleared", () => {
     expect(clampProbability(undefined, 30)).toBe(30);
     expect(clampProbability(Number.NaN, 30)).toBe(30);
+  });
+});
+
+describe("clampRottingDays", () => {
+  it("disables rotting for an empty, zero or negative window", () => {
+    expect(clampRottingDays(undefined)).toBeNull();
+    expect(clampRottingDays(Number.NaN)).toBeNull();
+    expect(clampRottingDays(0)).toBeNull();
+    expect(clampRottingDays(-3)).toBeNull();
+  });
+
+  it("rounds a window to whole days and caps it", () => {
+    expect(clampRottingDays(14.4)).toBe(14);
+    expect(clampRottingDays(MAX_ROTTING_DAYS + 500)).toBe(MAX_ROTTING_DAYS);
   });
 });
 
@@ -147,12 +180,28 @@ describe("PipelineStagesList", () => {
     expect(markup).toContain('value="Won"');
     expect(harness.numberInputs.map(({ id, value }) => ({ id, value }))).toEqual([
       { id: "pipelineStages[0].probability", value: 10 },
+      { id: "pipelineStages[0].rottingDays", value: 14 },
       { id: "pipelineStages[1].probability", value: 100 },
+      { id: "pipelineStages[1].rottingDays", value: undefined },
     ]);
     expect(harness.translationCalls).toContainEqual({
       key: "Pipelines.probabilityLabel",
       values: { name: "Lead" },
     });
+  });
+
+  it("gives every stage its own rotting window, left empty when rotting is off", () => {
+    renderToStaticMarkup(createElement(PipelineStagesList));
+
+    expect(harness.numberInputs.filter(({ id }) => id.endsWith(".rottingDays")).map(({ value }) => value)).toEqual([
+      14,
+      undefined,
+    ]);
+    expect(harness.translationCalls).toContainEqual({
+      key: "Pipelines.rottingDaysLabel",
+      values: { name: "Lead" },
+    });
+    expect(harness.translationCalls).toContainEqual({ key: "Pipelines.rottingDaysPlaceholder", values: undefined });
   });
 
   it("titles the list with the selected pipeline and offers a stage to add", () => {

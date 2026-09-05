@@ -877,6 +877,11 @@
       "thisMonth": "Questo mese",
       "today": "Oggi"
     },
+    "dealStatuses": {
+      "lost": "Perso",
+      "open": "Aperto",
+      "won": "Vinto"
+    },
     "default": "Predefinito",
     "defaultData": {
       "contact": {
@@ -1176,12 +1181,14 @@
         "calendarId": "Calendario",
         "connectedAccountId": "Canale",
         "createdAt": "Creato il",
+        "dealStatus": "Stato",
         "event": "Evento",
         "isPlatformOperator": "Operatore di piattaforma",
         "lastActiveAt": "Ultima attività",
         "participants": "Partecipanti",
         "plan": "Piano",
         "provider": "Provider",
+        "rotting": "In stallo",
         "startsAt": "Inizia il",
         "state": "Stato",
         "status": "Stato",
@@ -1217,6 +1224,10 @@
         "label": "Preimpostazione",
         "namePlaceholder": "Nome della preimpostazione",
         "none": "Nessuna preimpostazione"
+      },
+      "rottingValues": {
+        "healthy": "Non in stallo",
+        "rotting": "In stallo"
       },
       "searchLabel": "Cerca",
       "selectionLimit": "Puoi selezionare fino a {count} valori.",
@@ -1381,6 +1392,7 @@
         "provider": "Provider",
         "reason": "Motivo",
         "role": "Ruolo",
+        "rottingAt": "In stallo",
         "secret": "Secret",
         "services": "Servizi",
         "source": "Origine",
@@ -1760,6 +1772,19 @@
     "selectRow": "Seleziona la riga {id}"
   },
   "DealModal": {
+    "close": {
+      "lostDescription": "Scegli il motivo della perdita così da ritrovarlo nei report.",
+      "lostNotesLabel": "Note",
+      "lostNotesPlaceholder": "Qualcosa che vale la pena ricordare su questa perdita",
+      "lostReasonLabel": "Motivo di perdita",
+      "lostReasonPlaceholder": "Seleziona un motivo",
+      "lostTitle": "Chiudi come perso",
+      "markLost": "Segna come perso",
+      "markWon": "Segna come vinto",
+      "menuLabel": "Azioni di stato",
+      "noLostReasons": "Non è ancora configurato alcun motivo di perdita. Aggiungine uno nelle impostazioni dello spazio di lavoro.",
+      "reopen": "Riapri"
+    },
     "noServicesAdded": "Ancora nessuna voce «{entity}» aggiunta",
     "quantityLabel": "Quantità",
     "title": "Trattativa",
@@ -2842,6 +2867,8 @@
     "probabilityLabel": "Probabilità di successo della fase {name}",
     "reorderPipelineLabel": "Riordina la pipeline {name}",
     "reorderStageLabel": "Riordina la fase {name}",
+    "rottingDaysLabel": "Finestra di stallo della fase {name} in giorni",
+    "rottingDaysPlaceholder": "Disattivato",
     "setDefault": "Imposta come predefinita",
     "showArchived": "Mostra le pipeline archiviate",
     "stageKindLabel": "Tipo della fase {name}",

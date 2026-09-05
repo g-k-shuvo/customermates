@@ -149,6 +149,7 @@ function store(items: Array<Record<string, unknown>>, canManage = true) {
     customColumns: [],
     dataRequest: { status: "ready" as const },
     entityType: undefined,
+    filterableFields: [],
     filters: [],
     groupingColumnId: null,
     isDisabled: !canManage,

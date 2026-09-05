@@ -877,6 +877,11 @@
       "thisMonth": "Ce mois-ci",
       "today": "Aujourd'hui"
     },
+    "dealStatuses": {
+      "lost": "Perdu",
+      "open": "Ouvert",
+      "won": "Gagné"
+    },
     "default": "Par défaut",
     "defaultData": {
       "contact": {
@@ -1176,12 +1181,14 @@
         "calendarId": "Calendrier",
         "connectedAccountId": "Canal",
         "createdAt": "Créé le",
+        "dealStatus": "Statut",
         "event": "Évènement",
         "isPlatformOperator": "Opérateur de plateforme",
         "lastActiveAt": "Dernière activité",
         "participants": "Participants",
         "plan": "Forfait",
         "provider": "Fournisseur",
+        "rotting": "Stagnant",
         "startsAt": "Commence le",
         "state": "État",
         "status": "Statut",
@@ -1217,6 +1224,10 @@
         "label": "Préréglage",
         "namePlaceholder": "Nom du préréglage",
         "none": "Aucun préréglage"
+      },
+      "rottingValues": {
+        "healthy": "Non stagnant",
+        "rotting": "Stagnant"
       },
       "searchLabel": "Rechercher",
       "selectionLimit": "Vous pouvez sélectionner jusqu'à {count} valeurs.",
@@ -1381,6 +1392,7 @@
         "provider": "Fournisseur",
         "reason": "Motif",
         "role": "Rôle",
+        "rottingAt": "Stagnant",
         "secret": "Secret",
         "services": "Services",
         "source": "Source",
@@ -1760,6 +1772,19 @@
     "selectRow": "Sélectionner la ligne {id}"
   },
   "DealModal": {
+    "close": {
+      "lostDescription": "Choisissez la raison de la perte pour qu’elle apparaisse dans les rapports.",
+      "lostNotesLabel": "Notes",
+      "lostNotesPlaceholder": "Ce qu’il faut retenir de cette perte",
+      "lostReasonLabel": "Motif de perte",
+      "lostReasonPlaceholder": "Sélectionnez un motif",
+      "lostTitle": "Clôturer comme perdu",
+      "markLost": "Marquer perdu",
+      "markWon": "Marquer gagné",
+      "menuLabel": "Actions de statut",
+      "noLostReasons": "Aucun motif de perte n’est encore configuré. Ajoutez-en un dans les paramètres de l’espace de travail.",
+      "reopen": "Rouvrir"
+    },
     "noServicesAdded": "Aucun élément « {entity} » ajouté pour le moment",
     "quantityLabel": "Quantité",
     "title": "Affaire",
@@ -2842,6 +2867,8 @@
     "probabilityLabel": "Probabilité de réussite de l’étape {name}",
     "reorderPipelineLabel": "Réordonner le pipeline {name}",
     "reorderStageLabel": "Réordonner l’étape {name}",
+    "rottingDaysLabel": "Fenêtre de stagnation de l’étape {name} en jours",
+    "rottingDaysPlaceholder": "Désactivé",
     "setDefault": "Définir par défaut",
     "showArchived": "Afficher les pipelines archivés",
     "stageKindLabel": "Type de l’étape {name}",

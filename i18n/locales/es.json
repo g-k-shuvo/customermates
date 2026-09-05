@@ -877,6 +877,11 @@
       "thisMonth": "Este mes",
       "today": "Hoy"
     },
+    "dealStatuses": {
+      "lost": "Perdido",
+      "open": "Abierto",
+      "won": "Ganado"
+    },
     "default": "Predeterminado",
     "defaultData": {
       "contact": {
@@ -1176,12 +1181,14 @@
         "calendarId": "Calendario",
         "connectedAccountId": "Canal",
         "createdAt": "Creado el",
+        "dealStatus": "Estado",
         "event": "Evento",
         "isPlatformOperator": "Operador de plataforma",
         "lastActiveAt": "Última actividad",
         "participants": "Participantes",
         "plan": "Plan",
         "provider": "Proveedor",
+        "rotting": "Estancado",
         "startsAt": "Comienza el",
         "state": "Estado",
         "status": "Estado",
@@ -1217,6 +1224,10 @@
         "label": "Preajuste",
         "namePlaceholder": "Nombre del preajuste",
         "none": "Sin preajuste"
+      },
+      "rottingValues": {
+        "healthy": "No estancado",
+        "rotting": "Estancado"
       },
       "searchLabel": "Buscar",
       "selectionLimit": "Puedes seleccionar hasta {count} valores.",
@@ -1381,6 +1392,7 @@
         "provider": "Proveedor",
         "reason": "Motivo",
         "role": "Rol",
+        "rottingAt": "Estancado",
         "secret": "Secreto",
         "services": "Servicios",
         "source": "Origen",
@@ -1760,6 +1772,19 @@
     "selectRow": "Seleccionar fila {id}"
   },
   "DealModal": {
+    "close": {
+      "lostDescription": "Elige por qué se perdió para que el motivo aparezca en los informes.",
+      "lostNotesLabel": "Notas",
+      "lostNotesPlaceholder": "Algo que merezca la pena recordar sobre esta pérdida",
+      "lostReasonLabel": "Motivo de pérdida",
+      "lostReasonPlaceholder": "Selecciona un motivo",
+      "lostTitle": "Cerrar como perdido",
+      "markLost": "Marcar como perdido",
+      "markWon": "Marcar como ganado",
+      "menuLabel": "Acciones de estado",
+      "noLostReasons": "Todavía no hay motivos de pérdida configurados. Añade uno primero en los ajustes del espacio de trabajo.",
+      "reopen": "Reabrir"
+    },
     "noServicesAdded": "Aún no se ha añadido ningún elemento «{entity}»",
     "quantityLabel": "Cantidad",
     "title": "Oportunidad",
@@ -2842,6 +2867,8 @@
     "probabilityLabel": "Probabilidad de éxito de la etapa {name}",
     "reorderPipelineLabel": "Reordenar el embudo {name}",
     "reorderStageLabel": "Reordenar la etapa {name}",
+    "rottingDaysLabel": "Ventana de estancamiento de la etapa {name} en días",
+    "rottingDaysPlaceholder": "Desactivado",
     "setDefault": "Marcar como predeterminado",
     "showArchived": "Mostrar embudos archivados",
     "stageKindLabel": "Tipo de la etapa {name}",

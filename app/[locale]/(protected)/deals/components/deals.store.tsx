@@ -9,21 +9,44 @@ import { EntityType, Resource } from "@/generated/prisma";
 
 import { getDealsAction } from "../actions";
 
+import {
+  DEAL_STATUS_FILTER_FIELD,
+  DEFAULT_DEAL_STATUS_FILTER,
+  shouldSeedDefaultDealStatusFilter,
+} from "./deal-board-filters";
+
 import { BaseDataViewStore } from "@/core/base/base-data-view.store";
 
 export type DealStageOption = { id: string; name: string; probability: number };
 
 export class DealsStore extends BaseDataViewStore<DealDto> {
   stages: DealStageOption[] = [];
+  hasSeededDefaultStatusFilter = false;
 
   constructor(rootStore: RootStore) {
     super(rootStore, Resource.deals, EntityType.deal);
 
-    makeObservable(this, { stages: observable, setStages: action });
+    makeObservable(this, {
+      stages: observable,
+      hasSeededDefaultStatusFilter: observable,
+      setStages: action,
+      seedDefaultStatusFilter: action,
+    });
   }
 
   setStages = (stages: DealStageOption[]) => {
     this.stages = stages;
+  };
+
+  seedDefaultStatusFilter = () => {
+    if (this.hasSeededDefaultStatusFilter) return;
+    this.hasSeededDefaultStatusFilter = true;
+
+    if (!this.isReady) return;
+    if (!this.filterableFields.some((field) => field.field === DEAL_STATUS_FILTER_FIELD)) return;
+    if (!shouldSeedDefaultDealStatusFilter({ filters: this.filters, searchTerm: this.searchTerm })) return;
+
+    this.setQueryOptions({ filters: [DEFAULT_DEAL_STATUS_FILTER] });
   };
 
   get canAccessOrganizations() {
@@ -45,6 +68,8 @@ export class DealsStore extends BaseDataViewStore<DealDto> {
   get columnsDefinition() {
     const columns: (TableColumn | false)[] = [
       { uid: "name", sortable: true },
+      { uid: "status" },
+      { uid: "rottingAt", sortable: true },
       { uid: "totalValue", sortable: true },
       { uid: "weightedValue", sortable: true },
       { uid: "totalQuantity", sortable: true },

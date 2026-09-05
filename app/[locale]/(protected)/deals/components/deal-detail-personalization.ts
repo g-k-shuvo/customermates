@@ -2,6 +2,8 @@ export const DEAL_DETAIL_P13N_ID = "deal-detail";
 
 export const DEAL_DETAIL_FIELD = {
   name: "name",
+  status: "status",
+  lostReason: "lostReason",
   totalValue: "totalValue",
   totalQuantity: "totalQuantity",
   weightedValue: "weightedValue",

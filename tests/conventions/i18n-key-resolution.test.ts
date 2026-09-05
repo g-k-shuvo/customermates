@@ -175,6 +175,7 @@ const TABLE_COLUMN_KEYS = [
   "Common.table.columns.permissions",
   "Common.table.columns.provider",
   "Common.table.columns.role",
+  "Common.table.columns.rottingAt",
   "Common.table.columns.secret",
   "Common.table.columns.services",
   "Common.table.columns.status",

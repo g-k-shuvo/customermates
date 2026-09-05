@@ -71,6 +71,8 @@ vi.mock("@/components/entity-terminology/use-entity-terminology", () => ({
 vi.mock("@/components/forms/form-input", () => ({ FormInput: () => null }));
 vi.mock("@/core/stores/root-store.provider", () => ({
   useRootStore: () => ({
+    dealCloseStore: { ensureLostReasonsLoaded: () => Promise.resolve() },
+    lostReasonsStore: { lostReasons: [] },
     dealDetailStore: {
       canManage: true,
       customColumns: [],
@@ -97,6 +99,13 @@ vi.mock("@/core/stores/use-hydrated-intl-store", () => ({
 }));
 vi.mock("@/app/[locale]/(protected)/deals/components/deal-services-selection", () => ({
   DealServicesSelection: () => null,
+}));
+vi.mock("@/app/[locale]/(protected)/deals/components/deal-close-actions", () => ({
+  DealCloseActions: () => null,
+}));
+vi.mock("@/app/[locale]/(protected)/deals/components/deal-status-badges", () => ({
+  DealRottingBadge: () => null,
+  DealStatusBadge: () => null,
 }));
 
 import { DealDetailView } from "@/app/[locale]/(protected)/deals/components/deal-detail-view";

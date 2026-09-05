@@ -19,6 +19,8 @@ import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { runUserAction } from "@/core/errors/report-application-error";
 
 import { DEAL_DETAIL_FIELD } from "./deal-detail-personalization";
+import { DealStatusBadge } from "./deal-status-badges";
+import { useDealLostReasonName } from "./use-deal-lost-reason-name";
 
 export const DealDetailSummary = observer(function DealDetailSummary() {
   const t = useTranslations();
@@ -29,6 +31,7 @@ export const DealDetailSummary = observer(function DealDetailSummary() {
   const { dealDetailStore, userModalStore } = useRootStore();
   const { fetchedEntity, form, customColumns, selectedServices, totalQuantity, totalValue, weightedValueBreakdown } =
     dealDetailStore;
+  const lostReasonName = useDealLostReasonName(fetchedEntity);
   if (!fetchedEntity) return null;
 
   const contacts = previewItems(previewFieldValues[DEAL_DETAIL_FIELD.contactIds], fetchedEntity.contacts);
@@ -43,6 +46,16 @@ export const DealDetailSummary = observer(function DealDetailSummary() {
       id: DEAL_DETAIL_FIELD.name,
       label: t("Common.inputs.name"),
       value: form.name,
+    },
+    {
+      id: DEAL_DETAIL_FIELD.status,
+      label: columnLabel("status"),
+      value: <DealStatusBadge lostReasonName={lostReasonName} status={fetchedEntity.status} />,
+    },
+    {
+      id: DEAL_DETAIL_FIELD.lostReason,
+      label: t("DealModal.close.lostReasonLabel"),
+      value: lostReasonName,
     },
     {
       id: DEAL_DETAIL_FIELD.totalValue,

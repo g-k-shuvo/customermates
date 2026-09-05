@@ -9,6 +9,7 @@ import { z } from "zod";
 import {
   ConnectedAccountStatus,
   CustomColumnType,
+  DealStatus,
   EntityType,
   MessagingProvider,
   MessagingThreadState,
@@ -409,6 +410,21 @@ export function useFilterSelectItems(
             color: USER_STATUS_COLORS_MAP[status],
           };
         });
+      }
+
+      case FilterFieldKey.dealStatus: {
+        return [
+          { key: DealStatus.open, value: DealStatus.open, textValue: t("Common.dealStatuses.open") },
+          { key: DealStatus.won, value: DealStatus.won, textValue: t("Common.dealStatuses.won") },
+          { key: DealStatus.lost, value: DealStatus.lost, textValue: t("Common.dealStatuses.lost") },
+        ];
+      }
+
+      case FilterFieldKey.rotting: {
+        return [
+          { key: "true", value: "true", textValue: t("Common.filters.rottingValues.rotting") },
+          { key: "false", value: "false", textValue: t("Common.filters.rottingValues.healthy") },
+        ];
       }
 
       case FilterFieldKey.plan: {

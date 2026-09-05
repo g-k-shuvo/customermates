@@ -877,6 +877,11 @@
       "thisMonth": "This month",
       "today": "Today"
     },
+    "dealStatuses": {
+      "lost": "Lost",
+      "open": "Open",
+      "won": "Won"
+    },
     "default": "Default",
     "defaultData": {
       "contact": {
@@ -1176,12 +1181,14 @@
         "calendarId": "Calendar",
         "connectedAccountId": "Channel",
         "createdAt": "Created at",
+        "dealStatus": "Status",
         "event": "Event",
         "isPlatformOperator": "Platform operator",
         "lastActiveAt": "Last active",
         "participants": "Participants",
         "plan": "Plan",
         "provider": "Provider",
+        "rotting": "Rotting",
         "startsAt": "Starts at",
         "state": "State",
         "status": "Status",
@@ -1217,6 +1224,10 @@
         "label": "Preset",
         "namePlaceholder": "Preset name",
         "none": "No preset"
+      },
+      "rottingValues": {
+        "healthy": "Not rotting",
+        "rotting": "Rotting"
       },
       "searchLabel": "Search",
       "selectionLimit": "You can select up to {count} values.",
@@ -1381,6 +1392,7 @@
         "provider": "Provider",
         "reason": "Reason",
         "role": "Role",
+        "rottingAt": "Rotting",
         "secret": "Secret",
         "services": "Services",
         "source": "Source",
@@ -1760,6 +1772,19 @@
     "selectRow": "Select row {id}"
   },
   "DealModal": {
+    "close": {
+      "lostDescription": "Pick why it was lost so the reason shows up in reporting.",
+      "lostNotesLabel": "Notes",
+      "lostNotesPlaceholder": "Anything worth remembering about this loss",
+      "lostReasonLabel": "Lost reason",
+      "lostReasonPlaceholder": "Select a reason",
+      "lostTitle": "Close as lost",
+      "markLost": "Mark lost",
+      "markWon": "Mark won",
+      "menuLabel": "Status actions",
+      "noLostReasons": "No lost reasons are set up yet. Add one in the workspace settings first.",
+      "reopen": "Reopen"
+    },
     "noServicesAdded": "No {entity} added yet",
     "quantityLabel": "Quantity",
     "title": "Deal",
@@ -2842,6 +2867,8 @@
     "probabilityLabel": "Win probability of the {name} stage",
     "reorderPipelineLabel": "Reorder the {name} pipeline",
     "reorderStageLabel": "Reorder the {name} stage",
+    "rottingDaysLabel": "Rotting window of the {name} stage in days",
+    "rottingDaysPlaceholder": "Off",
     "setDefault": "Make default",
     "showArchived": "Show archived pipelines",
     "stageKindLabel": "Type of the {name} stage",

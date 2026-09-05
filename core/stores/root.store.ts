@@ -56,6 +56,7 @@ import { LostReasonsStore } from "@/app/[locale]/(protected)/company/components/
 import { CustomColumnModalStore } from "@/components/data-view/custom-columns/custom-column-modal.store";
 import { EditFiltersModalStore } from "@/components/data-view/filter-modal/edit-filters-modal.store";
 import { DeleteConfirmationModalStore } from "@/components/modal/delete-confirmation-modal.store";
+import { DealCloseStore } from "@/app/[locale]/(protected)/deals/components/deal-close.store";
 import { DealDetailStore } from "@/app/[locale]/(protected)/deals/components/deal-detail.store";
 import { DealsStore } from "@/app/[locale]/(protected)/deals/components/deals.store";
 import { ResetPasswordStore } from "@/app/[locale]/(public)/auth/reset-password/reset-password.store";
@@ -137,6 +138,7 @@ export class RootStore {
   private _companyInviteModalStore?: CompanyInviteModalStore;
   private _contactDetailStore?: ContactDetailStore;
   private _createApiKeyModalStore?: ApiKeyModalStore;
+  private _dealCloseStore?: DealCloseStore;
   private _dealDetailStore?: DealDetailStore;
   private _deleteConfirmationModalStore?: DeleteConfirmationModalStore;
   private _globalSearchModalStore?: GlobalSearchModalStore;
@@ -367,6 +369,10 @@ export class RootStore {
 
   get organizationDetailStore() {
     return (this._organizationDetailStore ??= new OrganizationDetailStore(this));
+  }
+
+  get dealCloseStore() {
+    return (this._dealCloseStore ??= new DealCloseStore(this));
   }
 
   get dealDetailStore() {

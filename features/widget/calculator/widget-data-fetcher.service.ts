@@ -50,7 +50,7 @@ export class WidgetDataFetcher extends BaseRepository {
   private async boundedDealWhere(widget: WidgetForCalculation): Promise<Prisma.DealWhereInput> {
     const { companyId } = this;
     const dealWhere = (await getDealRepo().buildQueryArgs({ filters: widget.dealFilters }, this.accessWhere("deal")))
-      .where as Prisma.DealWhereInput;
+      .where;
     const entityWhere = await this.entityWhere(widget.entityType, widget.entityFilters);
 
     switch (widget.entityType) {

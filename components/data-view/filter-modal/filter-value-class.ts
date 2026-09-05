@@ -27,6 +27,8 @@ const RELATION_FILTER_FIELDS = [
   FilterFieldKey.taskIds,
   FilterFieldKey.event,
   FilterFieldKey.status,
+  FilterFieldKey.dealStatus,
+  FilterFieldKey.rotting,
   FilterFieldKey.provider,
   FilterFieldKey.state,
   FilterFieldKey.timelineKind,

@@ -59,6 +59,7 @@ function deal(): DealDto {
     expectedCloseDate: null,
     probability: null,
     stageEnteredAt: null,
+    isRotting: false,
     lostReasonId: null,
     lostNotes: null,
     wonAt: null,

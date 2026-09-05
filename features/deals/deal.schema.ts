@@ -29,6 +29,12 @@ export const DealDtoSchema = z.object({
   expectedCloseDate: z.date().nullable(),
   probability: z.number().min(0).max(100).nullable(),
   stageEnteredAt: z.date().nullable(),
+  isRotting: z
+    .boolean()
+    .default(false)
+    .describe(
+      "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
+    ),
   lostReasonId: z.uuid().nullable(),
   lostNotes: z.string().nullable(),
   wonAt: z.date().nullable(),

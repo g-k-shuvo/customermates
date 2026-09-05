@@ -55,6 +55,7 @@ type Props<E extends HasCustomFieldValues> = {
   columns: ColumnDef<E>[];
   onCardClick?: (item: E) => void;
   cardHref?: (item: E) => string | undefined;
+  cardActions?: (item: E) => ReactNode;
   className?: string;
 };
 
@@ -284,6 +285,7 @@ export const DataKanbanView = observer(function DataKanbanView<E extends HasCust
   columns,
   onCardClick,
   cardHref,
+  cardActions,
   className,
 }: Props<E>) {
   const t = useTranslations();
@@ -409,6 +411,7 @@ export const DataKanbanView = observer(function DataKanbanView<E extends HasCust
               >
                 {items.map((item) => {
                   const row = rowsById.get(item.id);
+                  const actions = cardActions?.(item);
                   return (
                     <KanbanCard
                       key={item.id}
@@ -416,7 +419,11 @@ export const DataKanbanView = observer(function DataKanbanView<E extends HasCust
                       itemId={item.id}
                       onClick={onCardClick ? () => onCardClick(item) : undefined}
                     >
-                      <CardContent className="px-3">{row ? <DataCardBody row={row} /> : null}</CardContent>
+                      <CardContent className="px-3">
+                        {row ? <DataCardBody row={row} /> : null}
+
+                        {actions ? <div className="relative z-10 mt-2 flex justify-end">{actions}</div> : null}
+                      </CardContent>
                     </KanbanCard>
                   );
                 })}

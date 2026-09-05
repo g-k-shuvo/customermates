@@ -8,6 +8,7 @@ export type DealClosingWrite = {
   closedAt: Date | null;
   lostReasonId: string | null;
   lostNotes: string | null;
+  rottingAt: Date | null;
 };
 
 export type DealStageMove = { stageId: string; stageEnteredAt: Date } | Record<string, never>;
@@ -21,6 +22,7 @@ export function wonTransition(closedAt: Date): DealClosingWrite {
     closedAt,
     lostReasonId: null,
     lostNotes: null,
+    rottingAt: null,
   };
 }
 
@@ -33,10 +35,11 @@ export function lostTransition(closedAt: Date, lostReasonId: string, lostNotes: 
     closedAt,
     lostReasonId,
     lostNotes,
+    rottingAt: null,
   };
 }
 
-export function reopenTransition(): DealClosingWrite {
+export function reopenTransition(rottingAt: Date | null): DealClosingWrite {
   return {
     status: DealStatus.open,
     probability: null,
@@ -45,6 +48,7 @@ export function reopenTransition(): DealClosingWrite {
     closedAt: null,
     lostReasonId: null,
     lostNotes: null,
+    rottingAt,
   };
 }
 

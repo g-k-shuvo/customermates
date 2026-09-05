@@ -416,6 +416,7 @@ describe("closing transitions", () => {
       closedAt,
       lostReasonId: null,
       lostNotes: null,
+      rottingAt: null,
     });
   });
 
@@ -428,11 +429,13 @@ describe("closing transitions", () => {
       closedAt,
       lostReasonId: LOST_REASON_ID,
       lostNotes: "Undercut on price",
+      rottingAt: null,
     });
   });
 
   it("resets a reopened deal to a null probability rather than zero", () => {
-    const transition = reopenTransition();
+    const rottingAt = new Date("2026-02-15T10:00:00Z");
+    const transition = reopenTransition(rottingAt);
 
     expect(transition.probability).toBeNull();
     expect(transition.probability).not.toBe(0);
@@ -444,7 +447,12 @@ describe("closing transitions", () => {
       closedAt: null,
       lostReasonId: null,
       lostNotes: null,
+      rottingAt,
     });
+  });
+
+  it("carries the recomputed rotting deadline of the stage the deal reopens into", () => {
+    expect(reopenTransition(null).rottingAt).toBeNull();
   });
 
   it("moves to a terminal stage and stamps stageEnteredAt", () => {

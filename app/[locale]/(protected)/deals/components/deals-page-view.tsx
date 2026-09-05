@@ -24,6 +24,9 @@ import { PageState } from "@/components/page-state/page-state";
 import { Button } from "@/components/ui/button";
 import { useRootStore } from "@/core/stores/root-store.provider";
 
+import { DealCloseActions } from "./deal-close-actions";
+import { hasActiveDealQuery } from "./deal-board-filters";
+import { DealRottingFilterChip } from "./deal-rotting-filter-chip";
 import { DealsPageSkeleton } from "./deals-page-skeleton";
 import { useDealColumns } from "./use-deal-columns";
 
@@ -36,6 +39,7 @@ export const DealsPageView = observer(function DealsPageView({ deals, forecastsB
 
   useEffect(() => {
     dealsStore.setStages(stages);
+    dealsStore.seedDefaultStatusFilter();
   }, [dealsStore, stages]);
   const openEntity = useOpenEntity();
   const entityHref = useEntityHref();
@@ -46,7 +50,7 @@ export const DealsPageView = observer(function DealsPageView({ deals, forecastsB
   const view = resolveDataViewView(dealsStore.viewMode, dealsStore.groupingColumnId);
   const pageState = resolveDataViewPageState({
     explicitlyUnpaginated: false,
-    hasActiveQuery: Boolean(dealsStore.searchTerm?.trim()) || (dealsStore.filters?.length ?? 0) > 0,
+    hasActiveQuery: hasActiveDealQuery({ filters: dealsStore.filters, searchTerm: dealsStore.searchTerm }),
     itemCount: dealsStore.items.length,
     request: dealsStore.dataRequest,
     total: dealsStore.pagination?.total,
@@ -59,16 +63,21 @@ export const DealsPageView = observer(function DealsPageView({ deals, forecastsB
     () => importWizardStore.openForEntity(EntityType.deal, () => dealsStore.refresh()),
     [importWizardStore, dealsStore],
   );
+  const cardActions = useCallback((deal: DealDto) => <DealCloseActions deal={deal} layout="menu" />, []);
   const topBarNode = useMemo(
     () => (
-      <DataViewToolbar
-        addLabel={pageState === "true-empty" ? emptyActionLabel : undefined}
-        anchorScope="deals"
-        store={dealsStore}
-        onAdd={handleAdd}
-        onExport={handleExport}
-        onImport={handleImport}
-      />
+      <div className="flex items-center gap-1">
+        <DealRottingFilterChip />
+
+        <DataViewToolbar
+          addLabel={pageState === "true-empty" ? emptyActionLabel : undefined}
+          anchorScope="deals"
+          store={dealsStore}
+          onAdd={handleAdd}
+          onExport={handleExport}
+          onImport={handleImport}
+        />
+      </div>
     ),
     [dealsStore, emptyActionLabel, handleAdd, handleExport, handleImport, pageState],
   );
@@ -110,7 +119,9 @@ export const DealsPageView = observer(function DealsPageView({ deals, forecastsB
       );
       break;
     case "content":
-      body = <DataViewContent columns={columns} rowHref={rowHref} store={dealsStore} view={view} />;
+      body = (
+        <DataViewContent cardActions={cardActions} columns={columns} rowHref={rowHref} store={dealsStore} view={view} />
+      );
       break;
     default: {
       const exhaustive: never = pageState;

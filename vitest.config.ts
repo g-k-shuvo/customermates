@@ -18,6 +18,8 @@ const domTestFiles = [
   "app/**/company/components/pipelines/__tests__/pipeline-stages-list.test.ts",
   "app/**/company/components/pipelines/__tests__/delete-stage-modal.test.ts",
   "app/**/company/components/lost-reasons/__tests__/lost-reasons-section.test.ts",
+  "app/**/deals/components/__tests__/deal-close-actions.test.ts",
+  "app/**/deals/components/__tests__/deal-status-badges.test.ts",
   "app/**/dashboard/components/__tests__/widget-chart.test.ts",
   "app/[locale]/(protected)/__tests__/protected-layout.test.ts",
   "app/components/agent-chat/__tests__/use-activity-group-state.test.ts",

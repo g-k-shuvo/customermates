@@ -38,6 +38,8 @@ export const FILTER_FIELD_DEFAULT_OPERATORS: Record<FilterFieldKey, FilterOperat
   [FilterFieldKey.event]: scalarSelectOperators,
   [FilterFieldKey.url]: stringOperators,
   [FilterFieldKey.status]: scalarSelectOperators,
+  [FilterFieldKey.dealStatus]: scalarSelectOperators,
+  [FilterFieldKey.rotting]: scalarSelectOperators,
   [FilterFieldKey.provider]: scalarSelectOperators,
   [FilterFieldKey.state]: scalarSelectOperators,
   [FilterFieldKey.connectedAccountId]: scalarSelectOperators,

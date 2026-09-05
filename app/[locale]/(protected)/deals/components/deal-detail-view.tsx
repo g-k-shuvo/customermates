@@ -1,8 +1,9 @@
 "use client";
 
 import { observer } from "mobx-react-lite";
+import { useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { EntityType } from "@/generated/prisma";
+import { DealStatus, EntityType } from "@/generated/prisma";
 
 import { CustomFieldInputs } from "@/components/data-view/custom-columns/custom-field-inputs";
 import { EntityDetailBody } from "@/components/entity-detail/entity-detail-body";
@@ -17,9 +18,13 @@ import { useEntityTerminology } from "@/components/entity-terminology/use-entity
 import { FormInput } from "@/components/forms/form-input";
 import { useRootStore } from "@/core/stores/root-store.provider";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
+import { reportApplicationError } from "@/core/errors/report-application-error";
 
 import { DEAL_DETAIL_FIELD, DEAL_DETAIL_SECTION } from "./deal-detail-personalization";
+import { DealCloseActions } from "./deal-close-actions";
 import { DealServicesSelection } from "./deal-services-selection";
+import { DealStatusBadge } from "./deal-status-badges";
+import { useDealLostReasonName } from "./use-deal-lost-reason-name";
 import { useDealComputedFieldHelp } from "./use-deal-computed-field-help";
 
 type Props = {
@@ -31,7 +36,7 @@ export const DealDetailView = observer(({ layout = "drawer" }: Props) => {
   const { plural } = useEntityTerminology();
   const columnLabel = useColumnLabel();
   const intlStore = useHydratedIntlStore();
-  const { dealDetailStore } = useRootStore();
+  const { dealCloseStore, dealDetailStore } = useRootStore();
   const {
     canManage,
     isEditingCustomField,
@@ -42,6 +47,14 @@ export const DealDetailView = observer(({ layout = "drawer" }: Props) => {
     weightedValueBreakdown,
   } = dealDetailStore;
   const computedFieldHelp = useDealComputedFieldHelp(weightedValueBreakdown);
+  const lostReasonName = useDealLostReasonName(fetchedEntity);
+  const isLost = fetchedEntity?.status === DealStatus.lost;
+
+  useEffect(() => {
+    if (!isLost) return;
+
+    void dealCloseStore.ensureLostReasonsLoaded().catch(reportApplicationError);
+  }, [dealCloseStore, isLost]);
 
   const content =
     layout === "drawer" ? (
@@ -49,6 +62,26 @@ export const DealDetailView = observer(({ layout = "drawer" }: Props) => {
         <EntityDetailField fieldId={DEAL_DETAIL_FIELD.name}>
           <FormInput autoFocus required id="name" />
         </EntityDetailField>
+
+        <EntityDetailStaticField
+          fieldId={DEAL_DETAIL_FIELD.status}
+          label={columnLabel("status")}
+          value={
+            fetchedEntity ? (
+              <DealStatusBadge lostReasonName={lostReasonName} status={fetchedEntity.status} />
+            ) : undefined
+          }
+        />
+
+        {isLost && (
+          <EntityDetailStaticField
+            fieldId={DEAL_DETAIL_FIELD.lostReason}
+            label={t("DealModal.close.lostReasonLabel")}
+            value={lostReasonName}
+          />
+        )}
+
+        <DealCloseActions deal={fetchedEntity} />
 
         <EntityRelationField
           currentEntityId={fetchedEntity?.id}
@@ -95,6 +128,26 @@ export const DealDetailView = observer(({ layout = "drawer" }: Props) => {
           </EntityDetailField>
 
           <AssignedUsersField items={fetchedEntity?.users} personalization={{ fieldId: DEAL_DETAIL_FIELD.userIds }} />
+
+          <EntityDetailStaticField
+            fieldId={DEAL_DETAIL_FIELD.status}
+            label={columnLabel("status")}
+            value={
+              fetchedEntity ? (
+                <DealStatusBadge lostReasonName={lostReasonName} status={fetchedEntity.status} />
+              ) : undefined
+            }
+          />
+
+          {isLost && (
+            <EntityDetailStaticField
+              fieldId={DEAL_DETAIL_FIELD.lostReason}
+              label={t("DealModal.close.lostReasonLabel")}
+              value={lostReasonName}
+            />
+          )}
+
+          <DealCloseActions deal={fetchedEntity} />
 
           <EntityDetailStaticField
             fieldId={DEAL_DETAIL_FIELD.totalValue}

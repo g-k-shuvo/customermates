@@ -473,6 +473,7 @@ model Deal {
   expectedCloseDate DateTime?
   probability       Float?
   stageEnteredAt    DateTime?
+  rottingAt         DateTime?
   lostReasonId      String?
   lostNotes         String?
   wonAt             DateTime?
@@ -500,6 +501,7 @@ model Deal {
   @@index([weightedValue])
   @@index([companyId, pipelineId, stageId])
   @@index([companyId, status, closedAt])
+  @@index([companyId, status, rottingAt])
   @@index([expectedCloseDate])
   @@index([pipelineId])
   @@index([stageId])

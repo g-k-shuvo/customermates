@@ -14,6 +14,8 @@ export enum FilterFieldKey {
   event = "event",
   url = "url",
   status = "status",
+  dealStatus = "dealStatus",
+  rotting = "rotting",
   provider = "provider",
   state = "state",
   connectedAccountId = "connectedAccountId",
