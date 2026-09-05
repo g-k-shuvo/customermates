@@ -7,10 +7,13 @@ import type { GetDealsRepo } from "./get/get-deals.interactor";
 import type { GetConfigurationRepo } from "@/core/base/base-get-configuration.interactor";
 import type { GetDealByIdRepo } from "./get/get-deal-by-id.interactor";
 import type { DeleteDealRepo } from "./delete/delete-deal.repo";
+import type { MarkDealWonRepo } from "./close/mark-deal-won.repo";
+import type { MarkDealLostRepo } from "./close/mark-deal-lost.repo";
+import type { ReopenDealRepo } from "./close/reopen-deal.repo";
 import type { FindDealsByIdsRepo } from "./find-deals-by-ids.repo";
 import type { ModifyRelationDealRepo } from "@/features/relations/modify-entity-relation.interactor";
 
-import { EntityType, Resource } from "@/generated/prisma";
+import { DealStatus, EntityType, Resource, StageKind } from "@/generated/prisma";
 
 import type { Prisma } from "@/generated/prisma";
 import type { ExportPageParams, ExportRecordsRepo } from "@/core/base/base-export-records-page.interactor";
@@ -25,6 +28,7 @@ import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operat
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { getCustomColumnRepo, getPipelineRepo } from "@/core/di";
 import { computeWeightedValue, effectiveProbability } from "./deal-weighting";
+import { dealStageMove, lostTransition, reopenTransition, wonTransition } from "./close/closing-transition";
 
 const PIPELINE_PLACEMENT_FILTER_OPERATORS = [
   FilterOperatorKey.equals,
@@ -43,6 +47,9 @@ export class PrismaDealRepo
     GetConfigurationRepo,
     GetDealByIdRepo,
     DeleteDealRepo,
+    MarkDealWonRepo,
+    MarkDealLostRepo,
+    ReopenDealRepo,
     GetWidgetFilterableFieldsDealRepo,
     FindDealsByIdsRepo,
     GetCompanyWideDealRepo,
@@ -634,6 +641,103 @@ export class PrismaDealRepo
     await this.prisma.deal.deleteMany({ where: { id, ...this.accessWhere("deal") } });
 
     return dealDto;
+  }
+
+  private async findTerminalStageId(pipelineId: string | null, kind: StageKind) {
+    if (!pipelineId) return null;
+
+    return getPipelineRepo().findStageIdByKind(pipelineId, kind);
+  }
+
+  private async applyClosingWrite(
+    id: string,
+    expectedStatus: DealStatus | { not: DealStatus },
+    data: Prisma.DealUncheckedUpdateManyInput,
+  ) {
+    const { count } = await this.prisma.deal.updateMany({
+      where: { id, status: expectedStatus, ...this.accessWhere("deal") },
+      data,
+    });
+
+    if (count === 0) return null;
+
+    await this.recalculateTotals([id]);
+
+    const updatedDeal = await this.prisma.deal.findFirstOrThrow({
+      where: { id, ...this.accessWhere("deal") },
+      select: this.userScopedSelect,
+    });
+
+    return this.toDto(updatedDeal);
+  }
+
+  @Transaction
+  async markDealWonOrThrow(id: string) {
+    const { companyId } = this.user;
+
+    const existing = await this.prisma.deal.findFirstOrThrow({
+      where: { id, ...this.accessWhere("deal") },
+      select: { pipelineId: true, stageId: true },
+    });
+
+    const closedAt = new Date();
+    const wonStageId = await this.findTerminalStageId(existing.pipelineId, StageKind.won);
+
+    return this.applyClosingWrite(id, DealStatus.open, {
+      companyId,
+      ...wonTransition(closedAt),
+      ...dealStageMove(wonStageId, existing.stageId, closedAt),
+    });
+  }
+
+  @Transaction
+  async markDealLostOrThrow(args: RepoArgs<MarkDealLostRepo, "markDealLostOrThrow">) {
+    const { companyId } = this.user;
+    const { id, lostReasonId, lostNotes } = args;
+
+    const existing = await this.prisma.deal.findFirstOrThrow({
+      where: { id, ...this.accessWhere("deal") },
+      select: { pipelineId: true, stageId: true },
+    });
+
+    const closedAt = new Date();
+    const lostStageId = await this.findTerminalStageId(existing.pipelineId, StageKind.lost);
+
+    return this.applyClosingWrite(id, DealStatus.open, {
+      companyId,
+      ...lostTransition(closedAt, lostReasonId, lostNotes ?? null),
+      ...dealStageMove(lostStageId, existing.stageId, closedAt),
+    });
+  }
+
+  @Transaction
+  async reopenDealOrThrow(args: RepoArgs<ReopenDealRepo, "reopenDealOrThrow">) {
+    const { companyId } = this.user;
+    const { id, stageId } = args;
+
+    const existing = await this.prisma.deal.findFirstOrThrow({
+      where: { id, ...this.accessWhere("deal") },
+      select: { pipelineId: true, stageId: true },
+    });
+
+    const reopenedAt = new Date();
+    const targetStageId =
+      stageId ?? (existing.pipelineId ? await getPipelineRepo().getFirstStageOfPipeline(existing.pipelineId) : null);
+    const stageMove = dealStageMove(targetStageId, existing.stageId, reopenedAt);
+    const movedPipelineIds = stageMove.stageId
+      ? await getPipelineRepo().findPipelineIdsByStageIds(new Set([stageMove.stageId]))
+      : null;
+
+    return this.applyClosingWrite(
+      id,
+      { not: DealStatus.open },
+      {
+        companyId,
+        ...reopenTransition(),
+        ...stageMove,
+        ...(stageMove.stageId ? { pipelineId: movedPipelineIds?.get(stageMove.stageId) ?? existing.pipelineId } : {}),
+      },
+    );
   }
 
   async recalculateTotals(dealIds: string[]) {

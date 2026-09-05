@@ -33,6 +33,9 @@ import { createDealOperation } from "@/features/deals/upsert/create-deal.openapi
 import { createManyDealsOperation } from "@/features/deals/upsert/create-many-deals.openapi";
 import { updateDealOperation } from "@/features/deals/upsert/update-deal.openapi";
 import { updateManyDealsOperation } from "@/features/deals/upsert/update-many-deals.openapi";
+import { markDealWonOperation } from "@/features/deals/close/mark-deal-won.openapi";
+import { markDealLostOperation } from "@/features/deals/close/mark-deal-lost.openapi";
+import { reopenDealOperation } from "@/features/deals/close/reopen-deal.openapi";
 import { webhookDealCreatedOperation } from "@/features/deals/upsert/deal-created.openapi";
 import { webhookDealUpdatedOperation } from "@/features/deals/upsert/deal-updated.openapi";
 import { webhookDealDeletedOperation } from "@/features/deals/delete/deal-deleted.openapi";
@@ -270,6 +273,15 @@ export function generateOpenApiSpec() {
         get: getDealByIdOperation,
         put: updateDealOperation,
         delete: deleteDealOperation,
+      },
+      "/v1/deals/{id}/won": {
+        post: markDealWonOperation,
+      },
+      "/v1/deals/{id}/lost": {
+        post: markDealLostOperation,
+      },
+      "/v1/deals/{id}/reopen": {
+        post: reopenDealOperation,
       },
       "/v1/pipelines": {
         get: getPipelinesOperation,

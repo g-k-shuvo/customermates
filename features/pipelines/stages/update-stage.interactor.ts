@@ -1,4 +1,6 @@
 import type { UpdateStageRepo } from "./update-stage.repo";
+import type { FindStagePipelineRepo } from "../find-stage-pipeline.repo";
+import type { FindTerminalStageRepo } from "../find-terminal-stage.repo";
 import type { Data, Validated } from "@/core/validation/validation.utils";
 import type { ValidatePipelineStageIdsInteractor } from "@/core/validation/validators/validate-pipeline-stage-ids.interactor";
 
@@ -11,6 +13,8 @@ import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator"
 import { Write } from "@/core/decorators/write.decorator";
 import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
 import { zx } from "@/core/validation/validation.utils";
+import { failConflict, failNotFound } from "@/core/validation/interactor-failure-server";
+import { CustomErrorCode } from "@/core/validation/validation.types";
 
 export const UpdateStageSchema = z.object({
   id: z.uuid(),
@@ -29,6 +33,8 @@ export type UpdateStageData = Data<typeof UpdateStageSchema>;
 export class UpdateStageInteractor extends AuthenticatedInteractor<UpdateStageData, PipelineStageDto> {
   constructor(
     private repo: UpdateStageRepo,
+    private stagePipelineRepo: FindStagePipelineRepo,
+    private terminalStageRepo: FindTerminalStageRepo,
     private validator: ValidatePipelineStageIdsInteractor,
   ) {
     super();
@@ -40,6 +46,19 @@ export class UpdateStageInteractor extends AuthenticatedInteractor<UpdateStageDa
     precheck: (self, data, ctx) => self.validator.invoke([{ ids: data.id, path: ["id"] }], ctx),
   })
   async invoke(data: UpdateStageData): Validated<PipelineStageDto> {
+    const kind = data.kind;
+
+    if (kind !== undefined && kind !== StageKind.open) {
+      const pipelineIdsByStageId = await this.stagePipelineRepo.findPipelineIdsByStageIds(new Set([data.id]));
+      const pipelineId = pipelineIdsByStageId.get(data.id);
+
+      if (!pipelineId) return failNotFound(CustomErrorCode.pipelineStageNotFound, ["id"]);
+
+      const claimant = await this.terminalStageRepo.findStageIdByKind(pipelineId, kind);
+
+      if (claimant && claimant !== data.id) return failConflict(CustomErrorCode.pipelineStageKindDuplicate, ["kind"]);
+    }
+
     const stage = await this.repo.updateStageOrThrow(data);
 
     return { ok: true as const, data: stage };

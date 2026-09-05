@@ -4,6 +4,7 @@ import type { ValidateAssigneeGuardInteractor } from "@/core/validation/validato
 import type { ValidateContactIdsInteractor } from "@/core/validation/validators/validate-contact-ids.interactor";
 import type { ValidateCustomFieldValuesInteractor } from "@/core/validation/validators/validate-custom-field-values.interactor";
 import type { ValidateDealIdsInteractor } from "@/core/validation/validators/validate-deal-ids.interactor";
+import type { ValidateLostReasonIdsInteractor } from "@/core/validation/validators/validate-lost-reason-ids.interactor";
 import type { ValidateOrganizationIdsInteractor } from "@/core/validation/validators/validate-organization-ids.interactor";
 import type { ValidatePipelineIdsInteractor } from "@/core/validation/validators/validate-pipeline-ids.interactor";
 import type { ValidatePipelineStageIdsInteractor } from "@/core/validation/validators/validate-pipeline-stage-ids.interactor";
@@ -17,6 +18,9 @@ import type { CreateManyDealsData } from "./create-many-deals.interactor";
 import type { UpdateManyDealsData } from "./update-many-deals.interactor";
 import type { DeleteDealData } from "../delete/delete-deal.interactor";
 import type { DeleteManyDealsData } from "../delete/delete-many-deals.interactor";
+import type { MarkDealWonData } from "../close/mark-deal-won.interactor";
+import type { MarkDealLostData } from "../close/mark-deal-lost.interactor";
+import type { ReopenDealData } from "../close/reopen-deal.interactor";
 
 import { Resource, EntityType } from "@/generated/prisma";
 
@@ -42,6 +46,7 @@ export class DealWritePrecheckInteractor {
     private pipelineValidator: ValidatePipelineIdsInteractor,
     private stageValidator: ValidatePipelineStageIdsInteractor,
     private stagePipelineRepo: FindStagePipelineRepo,
+    private lostReasonValidator: ValidateLostReasonIdsInteractor,
   ) {}
 
   async create(data: CreateDealData, ctx: z.RefinementCtx) {
@@ -197,6 +202,24 @@ export class DealWritePrecheckInteractor {
 
   async deleteMany(data: DeleteManyDealsData, ctx: z.RefinementCtx) {
     await this.dealValidator.invoke([{ ids: data.ids, path: ["ids"] }], ctx);
+  }
+
+  async markWon(data: MarkDealWonData, ctx: z.RefinementCtx) {
+    await this.dealValidator.invoke([{ ids: data.id, path: ["id"] }], ctx);
+  }
+
+  async markLost(data: MarkDealLostData, ctx: z.RefinementCtx) {
+    await Promise.all([
+      this.dealValidator.invoke([{ ids: data.id, path: ["id"] }], ctx),
+      this.lostReasonValidator.invoke([{ ids: data.lostReasonId, path: ["lostReasonId"] }], ctx),
+    ]);
+  }
+
+  async reopen(data: ReopenDealData, ctx: z.RefinementCtx) {
+    await Promise.all([
+      this.dealValidator.invoke([{ ids: data.id, path: ["id"] }], ctx),
+      this.stageValidator.invoke([{ ids: data.stageId, path: ["stageId"] }], ctx),
+    ]);
   }
 
   private async checkStagePlacement(entries: StagePlacementEntry[], ctx: z.RefinementCtx) {

@@ -138,6 +138,9 @@ import { UpdateDealInteractor } from "@/features/deals/upsert/update-deal.intera
 import { UpdateManyDealsInteractor } from "@/features/deals/upsert/update-many-deals.interactor";
 import { DeleteDealInteractor } from "@/features/deals/delete/delete-deal.interactor";
 import { DeleteManyDealsInteractor } from "@/features/deals/delete/delete-many-deals.interactor";
+import { MarkDealWonInteractor } from "@/features/deals/close/mark-deal-won.interactor";
+import { MarkDealLostInteractor } from "@/features/deals/close/mark-deal-lost.interactor";
+import { ReopenDealInteractor } from "@/features/deals/close/reopen-deal.interactor";
 // Pipelines interactors
 import { GetPipelinesInteractor } from "@/features/pipelines/get/get-pipelines.interactor";
 import { GetPipelineByIdInteractor } from "@/features/pipelines/get/get-pipeline-by-id.interactor";
@@ -559,6 +562,7 @@ export const getDealWritePrecheck = () =>
     getPipelineIdsValidator(),
     getPipelineStageIdsValidator(),
     getPipelineRepo(),
+    getLostReasonIdsValidator(),
   );
 
 export const getServiceWritePrecheck = () =>
@@ -786,6 +790,15 @@ export const getDeleteManyDealsInteractor = () =>
     getDealWritePrecheck(),
   );
 
+export const getMarkDealWonInteractor = () =>
+  new MarkDealWonInteractor(getDealRepo(), getEventService(), getDealWritePrecheck());
+
+export const getMarkDealLostInteractor = () =>
+  new MarkDealLostInteractor(getDealRepo(), getEventService(), getDealWritePrecheck());
+
+export const getReopenDealInteractor = () =>
+  new ReopenDealInteractor(getDealRepo(), getEventService(), getDealWritePrecheck());
+
 // --- Pipelines ---
 
 export const getGetPipelinesInteractor = () => new GetPipelinesInteractor(getPipelineRepo());
@@ -803,10 +816,11 @@ export const getReorderStagesInteractor = () =>
 export const getDeletePipelineInteractor = () =>
   new DeletePipelineInteractor(getPipelineRepo(), getPipelineIdsValidator());
 
-export const getCreateStageInteractor = () => new CreateStageInteractor(getPipelineRepo(), getPipelineIdsValidator());
+export const getCreateStageInteractor = () =>
+  new CreateStageInteractor(getPipelineRepo(), getPipelineRepo(), getPipelineIdsValidator());
 
 export const getUpdateStageInteractor = () =>
-  new UpdateStageInteractor(getPipelineRepo(), getPipelineStageIdsValidator());
+  new UpdateStageInteractor(getPipelineRepo(), getPipelineRepo(), getPipelineRepo(), getPipelineStageIdsValidator());
 
 export const getDeleteStageInteractor = () =>
   new DeleteStageInteractor(getPipelineRepo(), getPipelineRepo(), getPipelineStageIdsValidator());

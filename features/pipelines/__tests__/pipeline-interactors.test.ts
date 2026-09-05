@@ -21,6 +21,8 @@ vi.mock("next-intl/server", () => ({
   getLocale: () => Promise.resolve("en"),
 }));
 
+import { CreateStageInteractor } from "../stages/create-stage.interactor";
+import { UpdateStageInteractor } from "../stages/update-stage.interactor";
 import { DeleteStageInteractor } from "../stages/delete-stage.interactor";
 import { DeletePipelineInteractor } from "../delete/delete-pipeline.interactor";
 import { CreatePipelineInteractor } from "../upsert/create-pipeline.interactor";
@@ -187,6 +189,167 @@ describe("DeleteStageInteractor", () => {
   });
 });
 
+describe("CreateStageInteractor", () => {
+  let mockRepo: any;
+  let mockTerminalStageRepo: any;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockRepo = { createStageOrThrow: vi.fn().mockResolvedValue(makeStageDto()) };
+    mockTerminalStageRepo = { findStageIdByKind: vi.fn().mockResolvedValue(null) };
+  });
+
+  function createInteractor() {
+    return new CreateStageInteractor(
+      mockRepo,
+      mockTerminalStageRepo,
+      new ValidatePipelineIdsInteractor(getPipelineRepo()),
+    );
+  }
+
+  it("creates an open stage without asking which stage holds a terminal kind", async () => {
+    const result: any = await createInteractor().invoke({
+      pipelineId: PIPELINE_ID,
+      name: "Lead In",
+      probability: 0,
+      kind: StageKind.open,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(mockTerminalStageRepo.findStageIdByKind).not.toHaveBeenCalled();
+    expect(mockRepo.createStageOrThrow).toHaveBeenCalled();
+  });
+
+  it("creates a won stage when the pipeline has none", async () => {
+    mockRepo.createStageOrThrow.mockResolvedValue(makeStageDto({ kind: StageKind.won, probability: 100 }));
+
+    const result: any = await createInteractor().invoke({
+      pipelineId: PIPELINE_ID,
+      name: "Won",
+      probability: 100,
+      kind: StageKind.won,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(mockTerminalStageRepo.findStageIdByKind).toHaveBeenCalledWith(PIPELINE_ID, StageKind.won);
+  });
+
+  it("refuses a second won stage in the same pipeline", async () => {
+    mockTerminalStageRepo.findStageIdByKind.mockResolvedValue(STAGE_ID);
+
+    const result: any = await createInteractor().invoke({
+      pipelineId: PIPELINE_ID,
+      name: "Also won",
+      probability: 100,
+      kind: StageKind.won,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(issueCodes(result)).toContain(CustomErrorCode.pipelineStageKindDuplicate);
+    expect(issueFor(result, CustomErrorCode.pipelineStageKindDuplicate).path).toEqual(["kind"]);
+    expect(issueFor(result, CustomErrorCode.pipelineStageKindDuplicate).params.kind).toBe("conflict");
+    expect(mockRepo.createStageOrThrow).not.toHaveBeenCalled();
+  });
+
+  it("refuses a second lost stage in the same pipeline", async () => {
+    mockTerminalStageRepo.findStageIdByKind.mockResolvedValue(STAGE_ID);
+
+    const result: any = await createInteractor().invoke({
+      pipelineId: PIPELINE_ID,
+      name: "Also lost",
+      probability: 0,
+      kind: StageKind.lost,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(mockTerminalStageRepo.findStageIdByKind).toHaveBeenCalledWith(PIPELINE_ID, StageKind.lost);
+    expect(issueCodes(result)).toContain(CustomErrorCode.pipelineStageKindDuplicate);
+    expect(mockRepo.createStageOrThrow).not.toHaveBeenCalled();
+  });
+});
+
+describe("UpdateStageInteractor", () => {
+  let mockRepo: any;
+  let mockStagePipelineRepo: any;
+  let mockTerminalStageRepo: any;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockRepo = { updateStageOrThrow: vi.fn().mockResolvedValue(makeStageDto()) };
+    mockStagePipelineRepo = {
+      findPipelineIdsByStageIds: vi.fn().mockResolvedValue(new Map([[STAGE_ID, PIPELINE_ID]])),
+    };
+    mockTerminalStageRepo = { findStageIdByKind: vi.fn().mockResolvedValue(null) };
+  });
+
+  function createInteractor() {
+    return new UpdateStageInteractor(
+      mockRepo,
+      mockStagePipelineRepo,
+      mockTerminalStageRepo,
+      new ValidatePipelineStageIdsInteractor(getPipelineStageIdsRepo()),
+    );
+  }
+
+  it("renames a stage without asking which stage holds a terminal kind", async () => {
+    const result: any = await createInteractor().invoke({ id: STAGE_ID, name: "Renamed" });
+
+    expect(result.ok).toBe(true);
+    expect(mockTerminalStageRepo.findStageIdByKind).not.toHaveBeenCalled();
+    expect(mockRepo.updateStageOrThrow).toHaveBeenCalled();
+  });
+
+  it("leaves a stage demoted to open unchecked", async () => {
+    const result: any = await createInteractor().invoke({ id: STAGE_ID, kind: StageKind.open });
+
+    expect(result.ok).toBe(true);
+    expect(mockTerminalStageRepo.findStageIdByKind).not.toHaveBeenCalled();
+  });
+
+  it("promotes a stage to won when no other stage holds that kind", async () => {
+    mockRepo.updateStageOrThrow.mockResolvedValue(makeStageDto({ kind: StageKind.won }));
+
+    const result: any = await createInteractor().invoke({ id: STAGE_ID, kind: StageKind.won });
+
+    expect(result.ok).toBe(true);
+    expect(mockTerminalStageRepo.findStageIdByKind).toHaveBeenCalledWith(PIPELINE_ID, StageKind.won);
+    expect(mockRepo.updateStageOrThrow).toHaveBeenCalled();
+  });
+
+  it("refuses to promote a stage to a kind another stage in the pipeline already holds", async () => {
+    mockTerminalStageRepo.findStageIdByKind.mockResolvedValue(MOVE_TO_STAGE_ID);
+
+    const result: any = await createInteractor().invoke({ id: STAGE_ID, kind: StageKind.won });
+
+    expect(result.ok).toBe(false);
+    expect(issueCodes(result)).toContain(CustomErrorCode.pipelineStageKindDuplicate);
+    expect(issueFor(result, CustomErrorCode.pipelineStageKindDuplicate).path).toEqual(["kind"]);
+    expect(mockRepo.updateStageOrThrow).not.toHaveBeenCalled();
+  });
+
+  it("lets the stage that already holds the kind keep it", async () => {
+    mockTerminalStageRepo.findStageIdByKind.mockResolvedValue(STAGE_ID);
+    mockRepo.updateStageOrThrow.mockResolvedValue(makeStageDto({ kind: StageKind.won, name: "Renamed" }));
+
+    const result: any = await createInteractor().invoke({ id: STAGE_ID, kind: StageKind.won, name: "Renamed" });
+
+    expect(result.ok).toBe(true);
+    expect(mockRepo.updateStageOrThrow).toHaveBeenCalled();
+  });
+
+  it("reports a stage that resolves to no pipeline as not found", async () => {
+    mockStagePipelineRepo.findPipelineIdsByStageIds.mockResolvedValue(new Map());
+
+    const result: any = await createInteractor().invoke({ id: STAGE_ID, kind: StageKind.lost });
+
+    expect(result.ok).toBe(false);
+    expect(issueCodes(result)).toContain(CustomErrorCode.pipelineStageNotFound);
+    expect(mockRepo.updateStageOrThrow).not.toHaveBeenCalled();
+  });
+});
+
 describe("CreatePipelineInteractor", () => {
   let mockRepo: any;
 
@@ -217,6 +380,57 @@ describe("CreatePipelineInteractor", () => {
     expect(mockRepo.demoteDefaultPipelinesExcept.mock.invocationCallOrder[0]).toBeLessThan(
       mockRepo.createPipelineOrThrow.mock.invocationCallOrder[0],
     );
+  });
+
+  it("refuses a pipeline that declares two won stages", async () => {
+    const result: any = await createInteractor().invoke({
+      name: "Sales",
+      position: 0,
+      isDefault: false,
+      stages: [
+        { name: "Open", probability: 0, rottingDays: null, kind: StageKind.open },
+        { name: "Won", probability: 100, rottingDays: null, kind: StageKind.won },
+        { name: "Also won", probability: 100, rottingDays: null, kind: StageKind.won },
+      ],
+    });
+
+    expect(result.ok).toBe(false);
+    expect(issueCodes(result)).toContain(CustomErrorCode.pipelineStageKindDuplicate);
+    expect(issueFor(result, CustomErrorCode.pipelineStageKindDuplicate).path).toEqual(["stages", 2, "kind"]);
+    expect(mockRepo.createPipelineOrThrow).not.toHaveBeenCalled();
+    expect(mockRepo.demoteDefaultPipelinesExcept).not.toHaveBeenCalled();
+  });
+
+  it("refuses a pipeline that declares two lost stages", async () => {
+    const result: any = await createInteractor().invoke({
+      name: "Sales",
+      position: 0,
+      isDefault: false,
+      stages: [
+        { name: "Lost", probability: 0, rottingDays: null, kind: StageKind.lost },
+        { name: "Also lost", probability: 0, rottingDays: null, kind: StageKind.lost },
+      ],
+    });
+
+    expect(result.ok).toBe(false);
+    expect(issueFor(result, CustomErrorCode.pipelineStageKindDuplicate).path).toEqual(["stages", 1, "kind"]);
+    expect(mockRepo.createPipelineOrThrow).not.toHaveBeenCalled();
+  });
+
+  it("accepts a pipeline with one open, one won and one lost stage", async () => {
+    const result: any = await createInteractor().invoke({
+      name: "Sales",
+      position: 0,
+      isDefault: false,
+      stages: [
+        { name: "Open", probability: 0, rottingDays: null, kind: StageKind.open },
+        { name: "Won", probability: 100, rottingDays: null, kind: StageKind.won },
+        { name: "Lost", probability: 0, rottingDays: null, kind: StageKind.lost },
+      ],
+    });
+
+    expect(result.ok).toBe(true);
+    expect(mockRepo.createPipelineOrThrow).toHaveBeenCalled();
   });
 
   it("leaves the existing default alone when the new pipeline is not the default", async () => {

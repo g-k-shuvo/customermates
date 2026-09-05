@@ -4,11 +4,12 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-type TestStage = { id: string; name: string; position: number; probability: number };
+type TestStage = { id: string; name: string; position: number; probability: number; kind: StageKind };
 
 const harness = vi.hoisted(() => ({
   numberInputs: [] as Array<{ id: string; value?: number; "aria-label"?: string }>,
   translationCalls: [] as Array<{ key: string; values?: Record<string, unknown> }>,
+  selects: [] as Array<{ value: string; items: string[] }>,
 }));
 
 const store = vi.hoisted(() => ({
@@ -18,6 +19,7 @@ const store = vi.hoisted(() => ({
   createStage: vi.fn(),
   renameStage: vi.fn(),
   setStageProbability: vi.fn(),
+  setStageKind: vi.fn(),
   reorderStages: vi.fn(),
   deleteStage: vi.fn(),
 }));
@@ -60,6 +62,22 @@ vi.mock("@/components/forms/form-number-input", () => ({
   },
 }));
 
+vi.mock("@/components/ui/select", () => ({
+  Select: ({ value, children }: { value: string; children: ReactNode }) => {
+    harness.selects.push({ value, items: [] });
+    return createElement("div", { "data-select": value }, children);
+  },
+  SelectContent: ({ children }: { children: ReactNode }) => createElement("div", null, children),
+  SelectItem: ({ value, children }: { value: string; children: ReactNode }) => {
+    const current = harness.selects.at(-1);
+    if (current) current.items.push(value);
+    return createElement("div", { "data-select-item": value }, children);
+  },
+  SelectTrigger: ({ children, ...props }: { children: ReactNode; "aria-label"?: string; id?: string }) =>
+    createElement("button", { "aria-label": props["aria-label"], id: props.id, type: "button" }, children),
+  SelectValue: () => createElement("span", null),
+}));
+
 vi.mock("@/components/modal/hooks/use-delete-confirmation", () => ({
   useDeleteConfirmation: () => ({ showDeleteConfirmation: vi.fn(), showConfirmation: vi.fn() }),
 }));
@@ -68,15 +86,18 @@ vi.mock("@/core/stores/root-store.provider", () => ({
   useRootStore: () => ({ pipelinesStore: store, deleteConfirmationModalStore: { close: vi.fn() } }),
 }));
 
-import { PipelineStagesList, clampProbability } from "../pipeline-stages-list";
+import { StageKind } from "@/generated/prisma";
+
+import { PipelineStagesList, clampProbability, selectableStageKinds } from "../pipeline-stages-list";
 
 beforeEach(() => {
   harness.numberInputs.length = 0;
   harness.translationCalls.length = 0;
+  harness.selects.length = 0;
   store.selectedPipeline = { id: "sales", name: "Sales" };
   store.selectedStages = [
-    { id: "stage-lead", name: "Lead", position: 0, probability: 10 },
-    { id: "stage-won", name: "Won", position: 1, probability: 100 },
+    { id: "stage-lead", name: "Lead", position: 0, probability: 10, kind: StageKind.open },
+    { id: "stage-won", name: "Won", position: 1, probability: 100, kind: StageKind.won },
   ];
   store.isSaving = false;
 });
@@ -91,6 +112,24 @@ describe("clampProbability", () => {
   it("falls back to the stored probability when the field is cleared", () => {
     expect(clampProbability(undefined, 30)).toBe(30);
     expect(clampProbability(Number.NaN, 30)).toBe(30);
+  });
+});
+
+describe("selectableStageKinds", () => {
+  const lead = { id: "stage-lead", kind: StageKind.open } as never;
+  const won = { id: "stage-won", kind: StageKind.won } as never;
+  const lost = { id: "stage-lost", kind: StageKind.lost } as never;
+
+  it("offers every kind while no stage holds a terminal one", () => {
+    expect(selectableStageKinds([lead], "stage-lead")).toEqual([StageKind.open, StageKind.won, StageKind.lost]);
+  });
+
+  it("drops a terminal kind another stage already holds", () => {
+    expect(selectableStageKinds([lead, won, lost], "stage-lead")).toEqual([StageKind.open]);
+  });
+
+  it("keeps the kind the stage itself holds", () => {
+    expect(selectableStageKinds([lead, won, lost], "stage-won")).toEqual([StageKind.open, StageKind.won]);
   });
 });
 
@@ -124,6 +163,23 @@ describe("PipelineStagesList", () => {
       values: { name: "Sales" },
     });
     expect(markup).toContain("Pipelines.addStage");
+  });
+
+  it("gives every stage a kind control showing the kind it currently holds", () => {
+    renderToStaticMarkup(createElement(PipelineStagesList));
+
+    expect(harness.selects.map(({ value }) => value)).toEqual([StageKind.open, StageKind.won]);
+    expect(harness.translationCalls).toContainEqual({
+      key: "Pipelines.stageKindLabel",
+      values: { name: "Won" },
+    });
+  });
+
+  it("hides a terminal kind another stage already holds", () => {
+    renderToStaticMarkup(createElement(PipelineStagesList));
+
+    expect(harness.selects[0].items).toEqual([StageKind.open, StageKind.lost]);
+    expect(harness.selects[1].items).toEqual([StageKind.open, StageKind.won, StageKind.lost]);
   });
 
   it("explains an empty pipeline instead of rendering an empty list", () => {

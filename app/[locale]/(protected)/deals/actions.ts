@@ -5,6 +5,9 @@ import type { DeleteDealData } from "@/features/deals/delete/delete-deal.interac
 import type { GetDealByIdData } from "@/features/deals/get/get-deal-by-id.interactor";
 import type { CreateDealData } from "@/features/deals/upsert/create-deal.interactor";
 import type { UpdateDealData } from "@/features/deals/upsert/update-deal.interactor";
+import type { MarkDealWonData } from "@/features/deals/close/mark-deal-won.interactor";
+import type { MarkDealLostData } from "@/features/deals/close/mark-deal-lost.interactor";
+import type { ReopenDealData } from "@/features/deals/close/reopen-deal.interactor";
 
 import {
   getGetDealsInteractor,
@@ -12,6 +15,9 @@ import {
   getCreateDealInteractor,
   getUpdateDealInteractor,
   getDeleteDealInteractor,
+  getMarkDealWonInteractor,
+  getMarkDealLostInteractor,
+  getReopenDealInteractor,
 } from "@/core/di";
 import { serializeResult } from "@/core/utils/action-result";
 import { unwrapValidated } from "@/core/validation/validation.utils";
@@ -30,6 +36,18 @@ export async function updateDealAction(data: UpdateDealData) {
 
 export async function deleteDealAction(data: DeleteDealData) {
   return serializeResult(getDeleteDealInteractor().invoke(data));
+}
+
+export async function markDealWonAction(data: MarkDealWonData) {
+  return serializeResult(getMarkDealWonInteractor().invoke(data));
+}
+
+export async function markDealLostAction(data: MarkDealLostData) {
+  return serializeResult(getMarkDealLostInteractor().invoke(data));
+}
+
+export async function reopenDealAction(data: ReopenDealData) {
+  return serializeResult(getReopenDealInteractor().invoke(data));
 }
 
 export async function getDealByIdAction(data: GetDealByIdData) {

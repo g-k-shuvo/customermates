@@ -5,9 +5,36 @@ import { StageKind } from "@/generated/prisma";
 import { PipelineDtoSchema, PipelineStageDtoSchema } from "../pipeline.schema";
 import { BaseCreatePipelineSchema, CreatePipelineStageInputSchema } from "../upsert/create-pipeline-base.schema";
 import { BaseUpdatePipelineSchema } from "../upsert/update-pipeline-base.schema";
+import { duplicateStageKindIndex } from "../stage-kind-uniqueness";
 
 const VALID_UUID = "00000000-0000-4000-8000-000000000001";
 const STAGE_UUID = "00000000-0000-4000-8000-000000000002";
+
+describe("duplicateStageKindIndex", () => {
+  it("accepts any number of open stages", () => {
+    const stages = [{ kind: StageKind.open }, { kind: StageKind.open }, { kind: StageKind.open }];
+
+    expect(duplicateStageKindIndex(stages)).toBeNull();
+  });
+
+  it("accepts one open, one won and one lost stage", () => {
+    const stages = [{ kind: StageKind.open }, { kind: StageKind.won }, { kind: StageKind.lost }];
+
+    expect(duplicateStageKindIndex(stages)).toBeNull();
+  });
+
+  it("reports the index of the second won stage", () => {
+    const stages = [{ kind: StageKind.won }, { kind: StageKind.open }, { kind: StageKind.won }];
+
+    expect(duplicateStageKindIndex(stages)).toBe(2);
+  });
+
+  it("reports the index of the second lost stage", () => {
+    const stages = [{ kind: StageKind.lost }, { kind: StageKind.lost }];
+
+    expect(duplicateStageKindIndex(stages)).toBe(1);
+  });
+});
 
 describe("CreatePipelineStageInputSchema", () => {
   it("accepts a stage with probability at the lower bound", () => {

@@ -240,6 +240,10 @@ export class PipelinesStore extends BaseStore {
     return this.commit(updateStageAction({ id: stageId, probability }));
   };
 
+  setStageKind = async (stageId: string, kind: StageKind): Promise<boolean> => {
+    return this.commit(updateStageAction({ id: stageId, kind }));
+  };
+
   setStageRottingDays = async (stageId: string, rottingDays: number | null): Promise<boolean> => {
     return this.commit(updateStageAction({ id: stageId, rottingDays }));
   };

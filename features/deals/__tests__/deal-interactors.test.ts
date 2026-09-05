@@ -29,6 +29,7 @@ import { ValidatePipelineStageIdsInteractor } from "@/core/validation/validators
 import { ValidateContactIdsInteractor } from "@/core/validation/validators/validate-contact-ids.interactor";
 import { ValidateCustomFieldValuesInteractor } from "@/core/validation/validators/validate-custom-field-values.interactor";
 import { ValidateDealIdsInteractor } from "@/core/validation/validators/validate-deal-ids.interactor";
+import { ValidateLostReasonIdsInteractor } from "@/core/validation/validators/validate-lost-reason-ids.interactor";
 import { ValidateOrganizationIdsInteractor } from "@/core/validation/validators/validate-organization-ids.interactor";
 import { ValidateServiceIdsInteractor } from "@/core/validation/validators/validate-service-ids.interactor";
 import { ValidateTaskIdsInteractor } from "@/core/validation/validators/validate-task-ids.interactor";
@@ -44,6 +45,7 @@ import {
   getUserService,
   getPipelineRepo,
   getPipelineStageIdsRepo,
+  getLostReasonRepo,
 } from "@/core/di";
 import type { UserService } from "@/features/user/user.service";
 
@@ -60,6 +62,7 @@ function makeDealWritePrecheck(): DealWritePrecheckInteractor {
     new ValidatePipelineIdsInteractor(getPipelineRepo()),
     new ValidatePipelineStageIdsInteractor(getPipelineStageIdsRepo()),
     getPipelineRepo(),
+    new ValidateLostReasonIdsInteractor(getLostReasonRepo()),
   );
 }
 

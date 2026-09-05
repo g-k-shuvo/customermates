@@ -17,14 +17,27 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+import { StageKind } from "@/generated/prisma";
+
 import { FormNumberInput } from "@/components/forms/form-number-input";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/shared/icon";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDeleteConfirmation } from "@/components/modal/hooks/use-delete-confirmation";
 import { useRootStore } from "@/core/stores/root-store.provider";
 import { runUserAction } from "@/core/errors/report-application-error";
 import { cn } from "@/core/utils/cn";
+
+const STAGE_KINDS: StageKind[] = [StageKind.open, StageKind.won, StageKind.lost];
+
+export function selectableStageKinds(stages: PipelineStageDto[], stageId: string): StageKind[] {
+  const claimed = new Set(
+    stages.filter((stage) => stage.id !== stageId && stage.kind !== StageKind.open).map((stage) => stage.kind),
+  );
+
+  return STAGE_KINDS.filter((kind) => kind === StageKind.open || !claimed.has(kind));
+}
 
 export function clampProbability(value: number | undefined, fallback: number): number {
   if (value === undefined || Number.isNaN(value)) return fallback;
@@ -36,13 +49,15 @@ type StageRowProps = {
   stage: PipelineStageDto;
   index: number;
   isDisabled: boolean;
+  kinds: StageKind[];
   onRename: (name: string) => void;
   onProbabilityChange: (probability: number) => void;
+  onKindChange: (kind: StageKind) => void;
   onDelete: () => void;
 };
 
 const SortableStageRow = observer(
-  ({ stage, index, isDisabled, onRename, onProbabilityChange, onDelete }: StageRowProps) => {
+  ({ stage, index, isDisabled, kinds, onRename, onProbabilityChange, onKindChange, onDelete }: StageRowProps) => {
     const t = useTranslations();
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
       id: stage.id,
@@ -75,6 +90,13 @@ const SortableStageRow = observer(
       if (next !== stage.probability) onProbabilityChange(next);
     }
 
+    function kindLabel(kind: StageKind): string {
+      if (kind === StageKind.won) return t("Pipelines.stageKinds.won");
+      if (kind === StageKind.lost) return t("Pipelines.stageKinds.lost");
+
+      return t("Pipelines.stageKinds.open");
+    }
+
     return (
       <li
         ref={setNodeRef}
@@ -105,6 +127,24 @@ const SortableStageRow = observer(
             if (event.key === "Enter") event.currentTarget.blur();
           }}
         />
+
+        <Select disabled={isDisabled} value={stage.kind} onValueChange={(next) => onKindChange(next as StageKind)}>
+          <SelectTrigger
+            aria-label={t("Pipelines.stageKindLabel", { name: stage.name })}
+            className="h-9 w-32 shrink-0"
+            id={`pipelineStages[${index}].kind`}
+          >
+            <SelectValue />
+          </SelectTrigger>
+
+          <SelectContent>
+            {kinds.map((kind) => (
+              <SelectItem key={kind} value={kind}>
+                {kindLabel(kind)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <FormNumberInput
           aria-label={t("Pipelines.probabilityLabel", { name: stage.name })}
@@ -196,8 +236,10 @@ export const PipelineStagesList = observer(() => {
                   key={stage.id}
                   index={index}
                   isDisabled={isDisabled}
+                  kinds={selectableStageKinds(stages, stage.id)}
                   stage={stage}
                   onDelete={() => confirmStageDelete(stage)}
+                  onKindChange={(kind) => runUserAction(() => store.setStageKind(stage.id, kind))}
                   onProbabilityChange={(probability) =>
                     runUserAction(() => store.setStageProbability(stage.id, probability))
                   }

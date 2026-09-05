@@ -2,6 +2,7 @@ import type { RepoArgs } from "@/core/utils/types";
 import type { FindPipelinesByIdsRepo } from "./find-pipelines-by-ids.repo";
 import type { FindPipelineStagesByIdsRepo } from "./find-pipeline-stages-by-ids.repo";
 import type { FindStagePipelineRepo } from "./find-stage-pipeline.repo";
+import type { FindTerminalStageRepo } from "./find-terminal-stage.repo";
 import type { GetCompanyWidePipelineRepo } from "./get-company-wide-pipeline.repo";
 import type { GetDefaultPipelineRepo } from "./get-default-pipeline.repo";
 import type { GetPipelinesRepo } from "./get/get-pipelines.interactor";
@@ -14,7 +15,7 @@ import type { CreateStageRepo } from "./stages/create-stage.repo";
 import type { UpdateStageRepo } from "./stages/update-stage.repo";
 import type { DeleteStageRepo } from "./stages/delete-stage.repo";
 
-import type { Prisma } from "@/generated/prisma";
+import type { Prisma, StageKind } from "@/generated/prisma";
 
 import { BaseRepository } from "@/core/base/base-repository";
 import { Transaction } from "@/core/decorators/transaction.decorator";
@@ -25,6 +26,7 @@ export class PrismaPipelineRepo
   implements
     FindPipelinesByIdsRepo,
     FindStagePipelineRepo,
+    FindTerminalStageRepo,
     GetCompanyWidePipelineRepo,
     GetDefaultPipelineRepo,
     GetPipelinesRepo,
@@ -160,6 +162,18 @@ export class PrismaPipelineRepo
     });
 
     return new Map(stages.map((stage) => [stage.id, stage.pipelineId]));
+  }
+
+  async findStageIdByKind(pipelineId: string, kind: StageKind) {
+    const { companyId } = this.user;
+
+    const stage = await this.prisma.pipelineStage.findFirst({
+      where: { companyId, pipelineId, kind },
+      select: { id: true },
+      orderBy: { position: "asc" },
+    });
+
+    return stage?.id ?? null;
   }
 
   async demoteDefaultPipelinesExcept(pipelineId: string | null) {
