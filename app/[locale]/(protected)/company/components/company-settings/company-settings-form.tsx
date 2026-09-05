@@ -18,6 +18,7 @@ import { reportApplicationError } from "@/core/errors/report-application-error";
 
 import { CompanyForecastingSection } from "./company-forecasting-section";
 import { PipelinesSection } from "../pipelines/pipelines-section";
+import { LostReasonsSection } from "../lost-reasons/lost-reasons-section";
 
 type Props = {
   currency: Currency;
@@ -83,6 +84,10 @@ export const CompanySettingsForm = observer(({ currency }: Props) => {
         <div className="border-t border-border" />
 
         <PipelinesSection />
+
+        <div className="border-t border-border" />
+
+        <LostReasonsSection />
 
         <div className="border-t border-border" />
 

@@ -220,6 +220,7 @@ model Company {
   deals                       Deal[]
   pipelines                   Pipeline[]
   pipelineStages              PipelineStage[]
+  lostReasons                 LostReason[]
   services                    Service[]
   CustomColumn                CustomColumn[]
   auditLogs                   AuditLog[]
@@ -470,6 +471,11 @@ model Deal {
   expectedCloseDate DateTime?
   probability       Float?
   stageEnteredAt    DateTime?
+  lostReasonId      String?
+  lostNotes         String?
+  wonAt             DateTime?
+  lostAt            DateTime?
+  closedAt          DateTime?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   company           Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -481,6 +487,7 @@ model Deal {
   customFieldValues CustomFieldValue[]
   pipeline          Pipeline?          @relation(fields: [pipelineId], references: [id], onDelete: SetNull)
   stage             PipelineStage?     @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  lostReason        LostReason?        @relation(fields: [lostReasonId], references: [id], onDelete: SetNull)
 
   @@index([companyId])
   @@index([name])
@@ -489,10 +496,11 @@ model Deal {
   @@index([totalQuantity])
   @@index([weightedValue])
   @@index([companyId, pipelineId, stageId])
-  @@index([companyId, status])
+  @@index([companyId, status, closedAt])
   @@index([expectedCloseDate])
   @@index([pipelineId])
   @@index([stageId])
+  @@index([lostReasonId])
 }
 
 model Service {
@@ -1984,4 +1992,18 @@ model PipelineStage {
 
   @@index([companyId])
   @@index([pipelineId, position])
+}
+
+model LostReason {
+  id         String    @id @default(uuid())
+  companyId  String
+  name       String
+  position   Int       @default(0)
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  company    Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  deals      Deal[]
+
+  @@index([companyId, position])
 }

@@ -902,6 +902,15 @@
           "won": "Gagnée"
         }
       },
+      "lostReason": {
+        "options": {
+          "budget": "Pas de budget",
+          "competitor": "Perdue face à un concurrent",
+          "decision": "Pas de décision",
+          "price": "Prix",
+          "timing": "Mauvais moment"
+        }
+      },
       "task": {
         "columnLabel": "Statut",
         "options": {
@@ -993,6 +1002,8 @@
       "linkedinInboxUnavailable": "Ce compte LinkedIn n'a pas de boîte de réception {product}. Connectez le compte avec {product} associé pour l'utiliser.",
       "linkedinProductRequiresLinkedin": "Les options InMail et produit LinkedIn nécessitent un compte LinkedIn.",
       "linkedinProductUnavailable": "Ce compte LinkedIn n'a pas ce produit connecté.",
+      "lostReasonHasDeals": "Ce motif est encore associé à {count} affaires clôturées. Archivez-le au lieu de le supprimer.",
+      "lostReasonNotFound": "ID de motif de perte introuvable ou inaccessible.",
       "messageContentRequired": "Ajoutez un message ou une pièce jointe.",
       "mustNotBeBlank": "Ne doit pas être vide.",
       "mustNotContainNullChars": "Ne doit pas contenir de caractères nuls.",
@@ -2315,6 +2326,24 @@
   },
   "Loading": {
     "text": "Chargement..."
+  },
+  "LostReasons": {
+    "archive": "Archiver",
+    "archivedBadge": "Archivé",
+    "createLostReason": "Ajouter un motif",
+    "deleteLostReasonLabel": "Supprimer le motif {name}",
+    "description": "Les motifs de perte indiquent pourquoi {deals} n'ont pas abouti. Faites glisser un motif pour changer son ordre d'affichage.",
+    "emptyDescription": "Ajoutez un motif pour commencer à enregistrer pourquoi {deals} sont perdus.",
+    "emptyTitle": "Aucun motif de perte pour l'instant",
+    "hideArchived": "Masquer les motifs archivés",
+    "loadErrorDescription": "Actualisez pour réessayer de charger les motifs de perte.",
+    "loadErrorTitle": "Les motifs de perte n'ont pas pu être chargés",
+    "lostReasonNameLabel": "Nom du motif {name}",
+    "newLostReasonName": "Nom du motif",
+    "reorderLostReasonLabel": "Réordonner le motif {name}",
+    "showArchived": "Afficher les motifs archivés",
+    "title": "Motifs de perte",
+    "unarchive": "Restaurer"
   },
   "MassActions": {
     "apply": "Appliquer à la sélection",

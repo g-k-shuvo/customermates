@@ -94,6 +94,8 @@ const DEFAULT_PIPELINE_STAGE_KINDS: Record<string, StageKind> = {
 const DEFAULT_PIPELINE_STAGES =
   DEFAULT_SELECT_COLUMNS.find((column) => column.entityType === EntityType.deal)?.options ?? [];
 
+const DEFAULT_LOST_REASON_KEYS = ["price", "competitor", "budget", "decision", "timing"] as const;
+
 export class PrismaUserRepo
   extends BaseRepository
   implements
@@ -361,6 +363,18 @@ export class PrismaUserRepo
     });
   }
 
+  private async createDefaultLostReasons(companyId: string) {
+    const t = await getTranslations();
+
+    await this.prisma.lostReason.createMany({
+      data: DEFAULT_LOST_REASON_KEYS.map((key, index) => ({
+        companyId,
+        name: t(`Common.defaultData.lostReason.options.${key}`),
+        position: index,
+      })),
+    });
+  }
+
   @Transaction
   async createCompanyAndUser(args: RepoArgs<RegisterUserRepo, "createCompanyAndUser">) {
     if (await this.prisma.user.findFirst({ where: { email: args.email } })) throw new Error("User already exists.");
@@ -373,6 +387,8 @@ export class PrismaUserRepo
       await this.prisma.company.update({ where: { id: company.id }, data: { dealWeightingColumnId } });
 
     await this.createDefaultPipeline(company.id);
+
+    await this.createDefaultLostReasons(company.id);
 
     const adminRole = await this.prisma.userRole.create({
       data: {

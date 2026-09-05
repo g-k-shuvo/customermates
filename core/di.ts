@@ -24,6 +24,7 @@ import { PrismaContactRepo } from "@/features/contacts/prisma-contact.repository
 import { PrismaOrganizationRepo } from "@/features/organizations/prisma-organization.repository";
 import { PrismaDealRepo } from "@/features/deals/prisma-deal.repository";
 import { PrismaPipelineRepo, PrismaPipelineStageRepo } from "@/features/pipelines/prisma-pipeline.repository";
+import { PrismaLostReasonRepo } from "@/features/lost-reasons/prisma-lost-reason.repository";
 import { PrismaServiceRepo } from "@/features/services/prisma-service.repository";
 import { PrismaTaskRepo } from "@/features/tasks/prisma-task.repository";
 import { PrismaUserRepo } from "@/features/user/prisma-user.repository";
@@ -100,6 +101,7 @@ import { ValidateDealIdsInteractor } from "@/core/validation/validators/validate
 import { ValidateOrganizationIdsInteractor } from "@/core/validation/validators/validate-organization-ids.interactor";
 import { ValidatePipelineIdsInteractor } from "@/core/validation/validators/validate-pipeline-ids.interactor";
 import { ValidatePipelineStageIdsInteractor } from "@/core/validation/validators/validate-pipeline-stage-ids.interactor";
+import { ValidateLostReasonIdsInteractor } from "@/core/validation/validators/validate-lost-reason-ids.interactor";
 import { ValidateRoleIdsInteractor } from "@/core/validation/validators/validate-role-ids.interactor";
 import { ValidateServiceIdsInteractor } from "@/core/validation/validators/validate-service-ids.interactor";
 import { ValidateTaskIdsInteractor } from "@/core/validation/validators/validate-task-ids.interactor";
@@ -146,6 +148,12 @@ import { DeletePipelineInteractor } from "@/features/pipelines/delete/delete-pip
 import { CreateStageInteractor } from "@/features/pipelines/stages/create-stage.interactor";
 import { UpdateStageInteractor } from "@/features/pipelines/stages/update-stage.interactor";
 import { DeleteStageInteractor } from "@/features/pipelines/stages/delete-stage.interactor";
+// Lost reasons interactors
+import { GetLostReasonsInteractor } from "@/features/lost-reasons/get/get-lost-reasons.interactor";
+import { GetLostReasonByIdInteractor } from "@/features/lost-reasons/get/get-lost-reason-by-id.interactor";
+import { CreateLostReasonInteractor } from "@/features/lost-reasons/upsert/create-lost-reason.interactor";
+import { UpdateLostReasonInteractor } from "@/features/lost-reasons/upsert/update-lost-reason.interactor";
+import { DeleteLostReasonInteractor } from "@/features/lost-reasons/delete/delete-lost-reason.interactor";
 // Services interactors
 import { GetServicesInteractor } from "@/features/services/get/get-services.interactor";
 import { GetServicesConfigurationInteractor } from "@/features/services/get/get-services-configuration.interactor";
@@ -377,6 +385,7 @@ export const getOrganizationRepo = () => new PrismaOrganizationRepo();
 export const getDealRepo = () => new PrismaDealRepo();
 export const getPipelineRepo = () => new PrismaPipelineRepo();
 export const getPipelineStageIdsRepo = () => new PrismaPipelineStageRepo();
+export const getLostReasonRepo = () => new PrismaLostReasonRepo();
 export const getServiceRepo = () => new PrismaServiceRepo();
 export const getTaskRepo = () => new PrismaTaskRepo();
 export const getUserRepo = () => new PrismaUserRepo();
@@ -470,6 +479,7 @@ export const getUserIdsValidator = () => new ValidateUserIdsInteractor(getUserRe
 export const getDealIdsValidator = () => new ValidateDealIdsInteractor(getDealRepo());
 export const getPipelineIdsValidator = () => new ValidatePipelineIdsInteractor(getPipelineRepo());
 export const getPipelineStageIdsValidator = () => new ValidatePipelineStageIdsInteractor(getPipelineStageIdsRepo());
+export const getLostReasonIdsValidator = () => new ValidateLostReasonIdsInteractor(getLostReasonRepo());
 export const getTaskIdsValidator = () => new ValidateTaskIdsInteractor(getTaskRepo());
 export const getCustomFieldValuesValidator = () => new ValidateCustomFieldValuesInteractor(getCustomColumnRepo());
 export const getAssigneeGuardValidator = () => new ValidateAssigneeGuardInteractor(getUserService());
@@ -800,6 +810,20 @@ export const getUpdateStageInteractor = () =>
 
 export const getDeleteStageInteractor = () =>
   new DeleteStageInteractor(getPipelineRepo(), getPipelineRepo(), getPipelineStageIdsValidator());
+
+// --- Lost reasons ---
+
+export const getGetLostReasonsInteractor = () => new GetLostReasonsInteractor(getLostReasonRepo());
+
+export const getGetLostReasonByIdInteractor = () => new GetLostReasonByIdInteractor(getLostReasonRepo());
+
+export const getCreateLostReasonInteractor = () => new CreateLostReasonInteractor(getLostReasonRepo());
+
+export const getUpdateLostReasonInteractor = () =>
+  new UpdateLostReasonInteractor(getLostReasonRepo(), getLostReasonIdsValidator());
+
+export const getDeleteLostReasonInteractor = () =>
+  new DeleteLostReasonInteractor(getLostReasonRepo(), getLostReasonIdsValidator());
 
 // --- Services ---
 

@@ -52,6 +52,7 @@ import { WidgetModalStore } from "@/app/[locale]/(protected)/dashboard/component
 import { RolesStore } from "@/app/[locale]/(protected)/company/components/role/roles.store";
 import { PipelinesStore } from "@/app/[locale]/(protected)/company/components/pipelines/pipelines.store";
 import { DeleteStageModalStore } from "@/app/[locale]/(protected)/company/components/pipelines/delete-stage-modal.store";
+import { LostReasonsStore } from "@/app/[locale]/(protected)/company/components/lost-reasons/lost-reasons.store";
 import { CustomColumnModalStore } from "@/components/data-view/custom-columns/custom-column-modal.store";
 import { EditFiltersModalStore } from "@/components/data-view/filter-modal/edit-filters-modal.store";
 import { DeleteConfirmationModalStore } from "@/components/modal/delete-confirmation-modal.store";
@@ -109,6 +110,7 @@ export class RootStore {
   private _widgetsGridStore?: WidgetsStore;
   private _pipelinesStore?: PipelinesStore;
   private _deleteStageModalStore?: DeleteStageModalStore;
+  private _lostReasonsStore?: LostReasonsStore;
   private _auditLogsStore?: AuditLogsStore;
   private _operatorUsersStore?: OperatorUsersStore;
   private _operatorAuditStore?: OperatorAuditStore;
@@ -429,6 +431,10 @@ export class RootStore {
 
   get deleteStageModalStore() {
     return (this._deleteStageModalStore ??= new DeleteStageModalStore(this));
+  }
+
+  get lostReasonsStore() {
+    return (this._lostReasonsStore ??= new LostReasonsStore(this));
   }
 
   get auditLogsStore() {

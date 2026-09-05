@@ -38,6 +38,9 @@ vi.mock("../company-forecasting-section", () => ({
 vi.mock("../../pipelines/pipelines-section", () => ({
   PipelinesSection: () => createElement("div", { "data-pipelines": true }),
 }));
+vi.mock("../../lost-reasons/lost-reasons-section", () => ({
+  LostReasonsSection: () => createElement("div", { "data-lost-reasons": true }),
+}));
 vi.mock("@/components/entity-terminology/terminology-relationship-diagram", () => ({
   TerminologyRelationshipDiagram: ({ readOnly, onPreset }: { readOnly: boolean; onPreset?: unknown }) =>
     createElement("div", {

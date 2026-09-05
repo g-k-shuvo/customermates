@@ -9,6 +9,7 @@ import { createMockUser } from "@/tests/helpers/mock-user";
 
 const customColumnCreate = vi.fn().mockResolvedValue({ id: "column-1" });
 const pipelineCreate = vi.fn().mockResolvedValue({ id: "pipeline-1" });
+const lostReasonCreateMany = vi.fn().mockResolvedValue({ count: 5 });
 
 const prismaMock = {
   user: {
@@ -31,6 +32,7 @@ const prismaMock = {
   subscription: { create: vi.fn().mockResolvedValue({ id: "subscription-1" }) },
   customColumn: { create: customColumnCreate },
   pipeline: { create: pipelineCreate },
+  lostReason: { createMany: lostReasonCreateMany },
 };
 
 vi.mock("@/prisma/db", () => ({ prisma: prismaMock }));
@@ -139,6 +141,19 @@ describe("PrismaUserRepo.createCompanyAndUser", () => {
     expect(prismaMock.userRole.create).toHaveBeenCalledTimes(1);
     expect(prismaMock.user.create).toHaveBeenCalledTimes(1);
     expect(customColumnCreate).toHaveBeenCalledTimes(3);
+  });
+
+  it("seeds the starter lost reasons a new workspace closes deals with", async () => {
+    await new PrismaUserRepo().createCompanyAndUser(registerArgs);
+
+    expect(lostReasonCreateMany).toHaveBeenCalledTimes(1);
+    expect(lostReasonCreateMany.mock.calls[0][0].data).toEqual([
+      { companyId: "company-1", name: "Common.defaultData.lostReason.options.price", position: 0 },
+      { companyId: "company-1", name: "Common.defaultData.lostReason.options.competitor", position: 1 },
+      { companyId: "company-1", name: "Common.defaultData.lostReason.options.budget", position: 2 },
+      { companyId: "company-1", name: "Common.defaultData.lostReason.options.decision", position: 3 },
+      { companyId: "company-1", name: "Common.defaultData.lostReason.options.timing", position: 4 },
+    ]);
   });
 
   it("stores one consented ad attribution row per provider on the initial owner", async () => {

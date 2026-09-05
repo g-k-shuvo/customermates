@@ -902,6 +902,15 @@
           "won": "Ganada"
         }
       },
+      "lostReason": {
+        "options": {
+          "budget": "Sin presupuesto",
+          "competitor": "Perdida ante la competencia",
+          "decision": "Sin decisión",
+          "price": "Precio",
+          "timing": "Momento inoportuno"
+        }
+      },
       "task": {
         "columnLabel": "Estado",
         "options": {
@@ -993,6 +1002,8 @@
       "linkedinInboxUnavailable": "Esta cuenta de LinkedIn no tiene bandeja de entrada {product}. Conecta la cuenta con {product} asociado para usarla.",
       "linkedinProductRequiresLinkedin": "Las opciones de InMail y producto de LinkedIn requieren una cuenta de LinkedIn.",
       "linkedinProductUnavailable": "Esta cuenta de LinkedIn no tiene ese producto conectado.",
+      "lostReasonHasDeals": "Este motivo sigue asignado a {count} oportunidades cerradas. Archívalo en lugar de eliminarlo.",
+      "lostReasonNotFound": "ID de motivo de pérdida no encontrado o no accesible.",
       "messageContentRequired": "Añade un mensaje o un archivo adjunto.",
       "mustNotBeBlank": "No debe estar vacío.",
       "mustNotContainNullChars": "No debe contener caracteres nulos.",
@@ -2315,6 +2326,24 @@
   },
   "Loading": {
     "text": "Cargando..."
+  },
+  "LostReasons": {
+    "archive": "Archivar",
+    "archivedBadge": "Archivado",
+    "createLostReason": "Añadir motivo",
+    "deleteLostReasonLabel": "Eliminar el motivo {name}",
+    "description": "Los motivos de pérdida registran por qué {deals} no se cerraron. Arrastra un motivo para cambiar el orden en que aparece.",
+    "emptyDescription": "Añade un motivo para empezar a registrar por qué se pierden {deals}.",
+    "emptyTitle": "Aún no hay motivos de pérdida",
+    "hideArchived": "Ocultar motivos archivados",
+    "loadErrorDescription": "Actualiza para intentar cargar de nuevo los motivos de pérdida.",
+    "loadErrorTitle": "No se pudieron cargar los motivos de pérdida",
+    "lostReasonNameLabel": "Nombre del motivo {name}",
+    "newLostReasonName": "Nombre del motivo",
+    "reorderLostReasonLabel": "Reordenar el motivo {name}",
+    "showArchived": "Mostrar motivos archivados",
+    "title": "Motivos de pérdida",
+    "unarchive": "Restaurar"
   },
   "MassActions": {
     "apply": "Aplicar a la selección",

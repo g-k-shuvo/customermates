@@ -902,6 +902,15 @@
           "won": "Gewonnen"
         }
       },
+      "lostReason": {
+        "options": {
+          "budget": "Kein Budget",
+          "competitor": "An Wettbewerber verloren",
+          "decision": "Keine Entscheidung",
+          "price": "Preis",
+          "timing": "Ungünstiger Zeitpunkt"
+        }
+      },
       "task": {
         "columnLabel": "Status",
         "options": {
@@ -993,6 +1002,8 @@
       "linkedinInboxUnavailable": "Dieses LinkedIn-Konto hat keinen {product}-Posteingang. Verbinde das Konto mit {product}, um ihn zu nutzen.",
       "linkedinProductRequiresLinkedin": "InMail- und LinkedIn-Produktoptionen brauchen ein LinkedIn-Konto.",
       "linkedinProductUnavailable": "Dieses LinkedIn-Konto hat dieses Produkt nicht verbunden.",
+      "lostReasonHasDeals": "Dieser Grund ist noch bei {count} abgeschlossenen Deals gesetzt. Archivieren Sie ihn, statt ihn zu löschen.",
+      "lostReasonNotFound": "Verlustgrund-ID nicht gefunden oder nicht zugänglich.",
       "messageContentRequired": "Bitte eine Nachricht oder einen Anhang hinzufügen.",
       "mustNotBeBlank": "Darf nicht leer sein.",
       "mustNotContainNullChars": "Darf keine Null-Zeichen enthalten.",
@@ -2315,6 +2326,24 @@
   },
   "Loading": {
     "text": "Laden..."
+  },
+  "LostReasons": {
+    "archive": "Archivieren",
+    "archivedBadge": "Archiviert",
+    "createLostReason": "Grund hinzufügen",
+    "deleteLostReasonLabel": "Grund {name} löschen",
+    "description": "Verlustgründe halten fest, warum {deals} nicht abgeschlossen wurden. Ziehe einen Grund, um die Reihenfolge zu ändern.",
+    "emptyDescription": "Füge einen Grund hinzu, um festzuhalten, warum {deals} verloren gehen.",
+    "emptyTitle": "Noch keine Verlustgründe",
+    "hideArchived": "Archivierte Gründe ausblenden",
+    "loadErrorDescription": "Aktualisiere die Seite, um die Verlustgründe erneut zu laden.",
+    "loadErrorTitle": "Verlustgründe konnten nicht geladen werden",
+    "lostReasonNameLabel": "Name des Grunds {name}",
+    "newLostReasonName": "Name des Grunds",
+    "reorderLostReasonLabel": "Grund {name} neu anordnen",
+    "showArchived": "Archivierte Gründe anzeigen",
+    "title": "Verlustgründe",
+    "unarchive": "Wiederherstellen"
   },
   "MassActions": {
     "apply": "Auf Auswahl anwenden",

@@ -19,6 +19,9 @@ import type { CreatePipelineData } from "@/features/pipelines/upsert/create-pipe
 import type { UpdatePipelineData } from "@/features/pipelines/upsert/update-pipeline.interactor";
 import type { ReorderStagesData } from "@/features/pipelines/upsert/reorder-stages.interactor";
 import type { DeletePipelineData } from "@/features/pipelines/delete/delete-pipeline.interactor";
+import type { CreateLostReasonData } from "@/features/lost-reasons/upsert/create-lost-reason.interactor";
+import type { UpdateLostReasonData } from "@/features/lost-reasons/upsert/update-lost-reason.interactor";
+import type { DeleteLostReasonData } from "@/features/lost-reasons/delete/delete-lost-reason.interactor";
 
 import { z } from "zod";
 
@@ -34,6 +37,10 @@ import {
   getCreateStageInteractor,
   getUpdateStageInteractor,
   getDeleteStageInteractor,
+  getGetLostReasonsInteractor,
+  getCreateLostReasonInteractor,
+  getUpdateLostReasonInteractor,
+  getDeleteLostReasonInteractor,
   getGetUsersInteractor,
   getGetUserByIdInteractor,
   getAdminUpdateUserDetailsInteractor,
@@ -103,6 +110,22 @@ export async function updatePipelineAction(data: UpdatePipelineData) {
 
 export async function deletePipelineAction(data: DeletePipelineData) {
   return serializeResult(getDeletePipelineInteractor().invoke(data));
+}
+
+export async function getLostReasonsAction() {
+  return unwrapValidated(getGetLostReasonsInteractor().invoke());
+}
+
+export async function createLostReasonAction(data: CreateLostReasonData) {
+  return serializeResult(getCreateLostReasonInteractor().invoke(data));
+}
+
+export async function updateLostReasonAction(data: UpdateLostReasonData) {
+  return serializeResult(getUpdateLostReasonInteractor().invoke(data));
+}
+
+export async function deleteLostReasonAction(data: DeleteLostReasonData) {
+  return serializeResult(getDeleteLostReasonInteractor().invoke(data));
 }
 
 export async function reorderStagesAction(data: ReorderStagesData) {

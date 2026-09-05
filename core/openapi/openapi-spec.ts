@@ -45,6 +45,11 @@ import { deletePipelineOperation } from "@/features/pipelines/delete/delete-pipe
 import { createPipelineStageOperation } from "@/features/pipelines/stages/create-stage.openapi";
 import { updatePipelineStageOperation } from "@/features/pipelines/stages/update-stage.openapi";
 import { deletePipelineStageOperation } from "@/features/pipelines/stages/delete-stage.openapi";
+import { getLostReasonsOperation } from "@/features/lost-reasons/get/get-lost-reasons.openapi";
+import { getLostReasonByIdOperation } from "@/features/lost-reasons/get/get-lost-reason-by-id.openapi";
+import { createLostReasonOperation } from "@/features/lost-reasons/upsert/create-lost-reason.openapi";
+import { updateLostReasonOperation } from "@/features/lost-reasons/upsert/update-lost-reason.openapi";
+import { deleteLostReasonOperation } from "@/features/lost-reasons/delete/delete-lost-reason.openapi";
 import { getServicesOperation } from "@/features/services/get/get-services.openapi";
 import { getServicesConfigurationOperation } from "@/features/services/get/get-services-configuration.openapi";
 import { getServiceByIdOperation } from "@/features/services/get/get-service-by-id.openapi";
@@ -147,6 +152,10 @@ import { GetPipelineByIdSchema } from "@/features/pipelines/get/get-pipeline-by-
 import { CreateStageSchema } from "@/features/pipelines/stages/create-stage.interactor";
 import { UpdateStageSchema } from "@/features/pipelines/stages/update-stage.interactor";
 import { DeleteStageSchema } from "@/features/pipelines/stages/delete-stage.interactor";
+import { CreateLostReasonSchema } from "@/features/lost-reasons/upsert/create-lost-reason.interactor";
+import { UpdateLostReasonSchema } from "@/features/lost-reasons/upsert/update-lost-reason.interactor";
+import { DeleteLostReasonSchema } from "@/features/lost-reasons/delete/delete-lost-reason.interactor";
+import { GetLostReasonByIdSchema } from "@/features/lost-reasons/get/get-lost-reason-by-id.interactor";
 import { CreateServiceSchema } from "@/features/services/upsert/create-service.interactor";
 import { CreateManyServicesSchema } from "@/features/services/upsert/create-many-services.interactor";
 import { UpdateServiceSchema } from "@/features/services/upsert/update-service.interactor";
@@ -280,6 +289,15 @@ export function generateOpenApiSpec() {
       "/v1/pipeline-stages/{id}": {
         put: updatePipelineStageOperation,
         delete: deletePipelineStageOperation,
+      },
+      "/v1/lost-reasons": {
+        get: getLostReasonsOperation,
+        post: createLostReasonOperation,
+      },
+      "/v1/lost-reasons/{id}": {
+        get: getLostReasonByIdOperation,
+        put: updateLostReasonOperation,
+        delete: deleteLostReasonOperation,
       },
       "/v1/services": {
         post: createServiceOperation,
@@ -525,6 +543,10 @@ export function generateOpenApiSpec() {
         CreateStageSchema,
         UpdateStageSchema,
         DeleteStageSchema,
+        DeleteLostReasonSchema,
+        CreateLostReasonSchema,
+        UpdateLostReasonSchema,
+        GetLostReasonByIdSchema,
         DeleteServiceSchema,
         DeleteManyServicesSchema,
         CreateServiceSchema,

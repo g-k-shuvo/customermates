@@ -63,6 +63,11 @@ export class PrismaDealRepo
       expectedCloseDate: true,
       probability: true,
       stageEnteredAt: true,
+      lostReasonId: true,
+      lostNotes: true,
+      wonAt: true,
+      lostAt: true,
+      closedAt: true,
       createdAt: true,
       updatedAt: true,
       organizations: {

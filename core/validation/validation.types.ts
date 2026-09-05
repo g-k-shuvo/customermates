@@ -71,6 +71,8 @@ export enum CustomErrorCode {
   pipelineStageMismatch = "pipelineStageMismatch",
   pipelineHasDeals = "pipelineHasDeals",
   pipelineDefaultRequired = "pipelineDefaultRequired",
+  lostReasonNotFound = "lostReasonNotFound",
+  lostReasonHasDeals = "lostReasonHasDeals",
   serviceNotFound = "serviceNotFound",
   contactNotFound = "contactNotFound",
   taskNotFound = "taskNotFound",

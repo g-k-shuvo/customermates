@@ -902,6 +902,15 @@
           "won": "Won"
         }
       },
+      "lostReason": {
+        "options": {
+          "budget": "No budget",
+          "competitor": "Lost to competitor",
+          "decision": "No decision",
+          "price": "Price",
+          "timing": "Bad timing"
+        }
+      },
       "task": {
         "columnLabel": "Status",
         "options": {
@@ -993,6 +1002,8 @@
       "linkedinInboxUnavailable": "This LinkedIn account has no {product} inbox. Connect the account with {product} linked to use it.",
       "linkedinProductRequiresLinkedin": "InMail and LinkedIn product options require a LinkedIn account.",
       "linkedinProductUnavailable": "This LinkedIn account does not have that product connected.",
+      "lostReasonHasDeals": "This reason is still set on {count} closed deals. Archive it instead of deleting it.",
+      "lostReasonNotFound": "Lost reason ID not found or not accessible.",
       "messageContentRequired": "Add a message or an attachment.",
       "mustNotBeBlank": "Must not be blank.",
       "mustNotContainNullChars": "Must not contain null characters.",
@@ -2315,6 +2326,24 @@
   },
   "Loading": {
     "text": "Loading..."
+  },
+  "LostReasons": {
+    "archive": "Archive",
+    "archivedBadge": "Archived",
+    "createLostReason": "Add reason",
+    "deleteLostReasonLabel": "Delete the {name} reason",
+    "description": "Lost reasons record why {deals} did not close. Drag a reason to change the order it appears in.",
+    "emptyDescription": "Add a reason to start recording why {deals} are lost.",
+    "emptyTitle": "No lost reasons yet",
+    "hideArchived": "Hide archived reasons",
+    "loadErrorDescription": "Refresh to try loading the lost reasons again.",
+    "loadErrorTitle": "Lost reasons could not be loaded",
+    "lostReasonNameLabel": "Name of the {name} reason",
+    "newLostReasonName": "Reason name",
+    "reorderLostReasonLabel": "Reorder the {name} reason",
+    "showArchived": "Show archived reasons",
+    "title": "Lost reasons",
+    "unarchive": "Restore"
   },
   "MassActions": {
     "apply": "Apply to selected",
