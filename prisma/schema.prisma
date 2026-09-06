@@ -248,6 +248,7 @@ model Company {
   webhooks                    Webhook[]
   webhookDeliveries           WebhookDelivery[]
   connectedAccounts           ConnectedAccount[]
+  mailboxCredentials       MailboxCredential[]
   messagingThreads            MessagingThread[]
   messagingMessages           MessagingMessage[]
   messagingThreadParticipants MessagingThreadParticipant[]
@@ -1448,10 +1449,29 @@ model ConnectedAccount {
   calendarEvents     CalendarEvent[]
   inboundEvents      MessagingInboundEvent[]
   accountActivities  AccountActivity[]
+  mailboxCredential  MailboxCredential?
 
   @@index([companyId])
   @@index([userId])
   @@index([companyId, provider])
+}
+
+model MailboxCredential {
+  id                 String           @id @default(uuid())
+  companyId          String
+  company            Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  connectedAccountId String           @unique
+  connectedAccount   ConnectedAccount @relation(fields: [connectedAccountId], references: [id], onDelete: Cascade)
+  imapHost           String
+  imapPort           Int
+  imapSecure         Boolean          @default(true)
+  username           String
+  sealedSecret       String
+  lastVerifiedAt     DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([companyId])
 }
 
 model MessagingThread {
