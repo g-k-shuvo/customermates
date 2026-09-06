@@ -1,7 +1,6 @@
 "use client";
 
 import type { WidgetModalForm } from "./widget-modal.store";
-import { isCurrencyAggregation } from "@/features/widget/widget-aggregation";
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
 import type { Filter } from "@/core/base/base-get.schema";
 import type { ReactNode } from "react";
@@ -13,14 +12,18 @@ import { WidgetKind } from "@/generated/prisma";
 
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { DisplayType } from "@/features/widget/widget.schema";
 import { ActivitiesList } from "@/features/messaging/activities/activities-list";
 import { useOwnedActivitiesStore } from "@/features/messaging/activities/use-owned-activities-store";
 
+import { buildFunnelPreviewStages, funnelPreviewSummary } from "./funnel-preview-data";
+import { FunnelChart } from "./funnel-chart";
 import { useAggregationTypeLabel } from "./use-aggregation-type-label";
+import { useFunnelCopy } from "./use-funnel-copy";
 import { WidgetChart } from "./widget-chart";
-import { buildChartPreviewData, getChartPreviewTotal } from "./widget-preview-data";
+import { buildChartPreviewData, getChartPreviewSummary, getChartPreviewTotal } from "./widget-preview-data";
+import { useWidgetMetricCopy } from "./use-widget-metric-copy";
+import { widgetMetricNote } from "./widget-metric-note";
 import { widgetSubheader } from "./widget-subheader";
 import { resolveResourcePageState } from "@/components/page-state/resource-page-state";
 import { useDebouncedValue } from "@/core/utils/use-debounced-value";
@@ -132,9 +135,29 @@ const ActivityPreviewFeed = observer(({ filters }: { filters: Filter[] }) => {
 export const WidgetPreview = observer(({ activeFilterCount, activityFilters, customColumns, form }: Props) => {
   const t = useTranslations();
   const aggregationTypeLabel = useAggregationTypeLabel();
-  const intlStore = useHydratedIntlStore();
+  const { formatHeadline, noteText } = useWidgetMetricCopy();
+  const { summaryLabel } = useFunnelCopy();
   const title = form.name.trim() || t("Dashboard.widgetEditor.preview.untitled");
   const showSummary = form.displayOptions?.showFilters !== false;
+
+  if (form.kind === WidgetKind.funnel) {
+    const previewStages = buildFunnelPreviewStages(
+      [1, 2, 3, 4].map((number) => t("Dashboard.widgetEditor.preview.stageLabel", { number })),
+    );
+    const funnelSummary = summaryLabel(funnelPreviewSummary()) ?? "";
+
+    return (
+      <WidgetPreviewFrame
+        screenReaderSummary={t("Dashboard.widgetEditor.preview.funnelSummary", { summary: funnelSummary, title })}
+        summary={showSummary ? <p className="text-xs text-muted-foreground">{funnelSummary}</p> : undefined}
+        title={title}
+      >
+        <div aria-hidden inert className="pointer-events-none mt-4 min-h-0 overflow-hidden">
+          <FunnelChart stages={previewStages} />
+        </div>
+      </WidgetPreviewFrame>
+    );
+  }
 
   if (form.kind === WidgetKind.chart) {
     const displayType = form.displayOptions?.displayType ?? DisplayType.verticalBarChart;
@@ -149,14 +172,15 @@ export const WidgetPreview = observer(({ activeFilterCount, activityFilters, cus
       groupByCustomColumnId: form.groupByCustomColumnId,
       groupByType: form.groupByType,
     });
-    const previewTotal = getChartPreviewTotal(form.aggregationType);
-    const formattedTotal = isCurrencyAggregation(form.aggregationType)
-      ? intlStore.formatCurrency(previewTotal, undefined, {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0,
-        })
-      : intlStore.formatNumber(previewTotal);
-    const previewSummary = widgetSubheader(previewData.length, formattedTotal, t("Diagrams.groups")) ?? formattedTotal;
+    const previewSummaryData = getChartPreviewSummary(form.aggregationType);
+    const formattedTotal = formatHeadline(form.aggregationType, getChartPreviewTotal(form.aggregationType));
+    const previewSummary =
+      widgetSubheader(
+        previewData.length,
+        formattedTotal,
+        t("Diagrams.groups"),
+        noteText(widgetMetricNote(form.aggregationType, previewSummaryData)),
+      ) ?? formattedTotal;
     const metric = aggregationTypeLabel(form.aggregationType, form.entityType);
 
     return (

@@ -6,6 +6,8 @@ export const DEAL_DETAIL_FIELD = {
   lostReason: "lostReason",
   pipelineId: "pipelineId",
   stageId: "stageId",
+  nextActivity: "nextActivity",
+  activities: "activities",
   totalValue: "totalValue",
   totalQuantity: "totalQuantity",
   weightedValue: "weightedValue",

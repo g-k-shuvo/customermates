@@ -8,12 +8,17 @@ import {
   ChartWidgetDtoSchema,
   DiagramDataPointSchema,
   DisplayType,
+  FunnelWidgetDtoSchema,
   WidgetDtoSchema,
+  isActivityWidget,
+  isChartWidget,
+  isFunnelWidget,
 } from "../widget.schema";
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 
 const VALID_UUID = "00000000-0000-4000-8000-000000000001";
+const PIPELINE_UUID = "00000000-0000-4000-8000-000000000002";
 
 function widgetRow(overrides: Record<string, unknown> = {}) {
   return {
@@ -29,8 +34,10 @@ function widgetRow(overrides: Record<string, unknown> = {}) {
     groupByType: WidgetGroupByType.none,
     groupByCustomColumnId: null,
     aggregationType: AggregationType.dealValue,
+    periodDays: null,
     layout: null,
     data: [],
+    dataSummary: null,
     isTemplate: false,
     createdAt: new Date(0),
     updatedAt: new Date(0),
@@ -177,7 +184,107 @@ function activityRow(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function funnelRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: VALID_UUID,
+    userId: "user-1",
+    companyId: "company-1",
+    name: "Sales funnel",
+    kind: WidgetKind.funnel,
+    pipelineId: PIPELINE_UUID,
+    pipelineName: "Sales",
+    periodDays: 90,
+    displayOptions: null,
+    stages: [],
+    summary: null,
+    layout: null,
+    isTemplate: false,
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
+    ...overrides,
+  };
+}
+
+const FUNNEL_STAGE = {
+  stageId: "stage-1",
+  label: "Lead in",
+  position: 0,
+  enteredCount: 12,
+  advancedCount: 9,
+  conversionToNextPercent: 75,
+  nextStageLabel: "Demo",
+};
+
+describe("FunnelWidgetDtoSchema", () => {
+  it("accepts the shape the repository mapper produces for a configured funnel", () => {
+    const result = FunnelWidgetDtoSchema.safeParse(
+      funnelRow({
+        stages: [FUNNEL_STAGE],
+        summary: { dealsEntered: 12, wonCount: 3, openToWonPercent: 25 },
+      }),
+    );
+
+    expect(result.success).toBe(true);
+  });
+
+  it("keeps a terminal stage that converts to nothing", () => {
+    const result = FunnelWidgetDtoSchema.safeParse(
+      funnelRow({
+        stages: [{ ...FUNNEL_STAGE, conversionToNextPercent: null, nextStageLabel: null }],
+      }),
+    );
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a stage point carrying an unknown field instead of widening the funnel", () => {
+    const result = FunnelWidgetDtoSchema.safeParse(funnelRow({ stages: [{ ...FUNNEL_STAGE, enteredValue: 1000 }] }));
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a funnel whose stage list is missing rather than rendering nothing silently", () => {
+    expect(FunnelWidgetDtoSchema.safeParse(funnelRow({ stages: undefined })).success).toBe(false);
+  });
+});
+
+describe("WidgetDtoSchema arms", () => {
+  it("has exactly one arm per widget kind, so a new kind cannot parse as a chart and vanish", () => {
+    const arms = WidgetDtoSchema.options.map((option) => option.shape.kind.value).sort();
+
+    expect(arms).toEqual([...Object.values(WidgetKind)].sort());
+  });
+
+  it("routes every widget kind to exactly one card predicate", () => {
+    const rows = [widgetRow(), activityRow(), funnelRow()].map((row) => WidgetDtoSchema.parse(row));
+
+    for (const row of rows) {
+      const matches = [isChartWidget(row), isActivityWidget(row), isFunnelWidget(row)].filter(Boolean);
+
+      expect(matches).toHaveLength(1);
+    }
+  });
+});
+
 describe("WidgetDtoSchema discrimination", () => {
+  it("routes a funnel row to the funnel arm rather than parsing it as a chart", () => {
+    const parsed = WidgetDtoSchema.parse(funnelRow());
+
+    expect(parsed.kind).toBe(WidgetKind.funnel);
+    expect(parsed).toHaveProperty("stages");
+    expect(parsed).not.toHaveProperty("data");
+  });
+
+  it("strips chart configuration smuggled onto a funnel widget", () => {
+    const parsed = WidgetDtoSchema.parse(
+      funnelRow({ entityType: EntityType.deal, aggregationType: AggregationType.count, data: [] }),
+    );
+
+    expect(parsed).not.toHaveProperty("entityType");
+    expect(parsed).not.toHaveProperty("aggregationType");
+    expect(parsed).not.toHaveProperty("data");
+  });
+
   it("accepts an activity widget carrying no chart configuration", () => {
     expect(WidgetDtoSchema.safeParse(activityRow()).success).toBe(true);
   });

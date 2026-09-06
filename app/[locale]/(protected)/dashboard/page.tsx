@@ -1,3 +1,4 @@
+import { ActivitySummaryCards } from "./components/activity-summary-cards";
 import { DashboardPageView } from "./components/dashboard-page-view";
 
 import { PageContainer } from "@/components/shared/page-container";
@@ -20,10 +21,13 @@ export default async function DashboardPage() {
   return (
     <PageContainer>
       <div className="relative flex min-h-0 w-full flex-1 flex-col gap-4 md:gap-6">
+        <ActivitySummaryCards />
+
         <DashboardPageView
           activityFilterableFields={filterableFieldsResult.data.activityTimeline}
           customColumns={customColumnsResult.data}
           filterableFields={filterableFieldsResult.data.chart}
+          funnelPipelines={filterableFieldsResult.data.funnel}
           widgets={widgetsResult.data}
         />
       </div>

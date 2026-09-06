@@ -1,7 +1,6 @@
 "use client";
 
 import type { ChartWidgetDto } from "@/features/widget/widget.schema";
-import { isCurrencyAggregation } from "@/features/widget/widget-aggregation";
 import type { Filter } from "@/core/base/base-get.schema";
 
 import { Fragment } from "react";
@@ -11,7 +10,8 @@ import { useTranslations } from "next-intl";
 import { EntityType } from "@/generated/prisma";
 
 import { useRootStore } from "@/core/stores/root-store.provider";
-import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
+import { useWidgetMetricCopy } from "./use-widget-metric-copy";
+import { widgetHeadlineValue, widgetMetricNote } from "./widget-metric-note";
 import { AppCard } from "@/components/card/app-card";
 import { AppCardHeader } from "@/components/card/app-card-header";
 import { AppCardBody } from "@/components/card/app-card-body";
@@ -30,7 +30,7 @@ export const ChartWidgetCard = observer(({ widget }: Props) => {
   const t = useTranslations();
   const filterFieldLabel = useFilterFieldLabel();
   const { widgetModalStore, widgetsStore } = useRootStore();
-  const intlStore = useHydratedIntlStore();
+  const { formatHeadline, noteText, periodText } = useWidgetMetricCopy();
   const customColumns = widgetsStore.customColumns;
   const dealCustomColumns = customColumns.filter((c) => c.entityType === EntityType.deal);
   const entityCustomColumns = customColumns.filter((c) => c.entityType === widget.entityType);
@@ -41,11 +41,21 @@ export const ChartWidgetCard = observer(({ widget }: Props) => {
     : [];
 
   const data = widget.data ?? [];
-  const total = data.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
-  const formattedTotal = isCurrencyAggregation(widget.aggregationType)
-    ? intlStore.formatCurrency(total, undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-    : intlStore.formatNumber(total);
-  const subheader = widgetSubheader(data.length, formattedTotal, t("Diagrams.groups"));
+  const summedValue = data.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
+  const formattedTotal = formatHeadline(
+    widget.aggregationType,
+    widgetHeadlineValue(widget.aggregationType, widget.dataSummary, summedValue),
+  );
+  const subheaderNotes = [
+    periodText(widget.aggregationType, widget.periodDays),
+    noteText(widgetMetricNote(widget.aggregationType, widget.dataSummary)),
+  ].filter((note): note is string => Boolean(note));
+  const subheader = widgetSubheader(
+    data.length,
+    formattedTotal,
+    t("Diagrams.groups"),
+    subheaderNotes.length > 0 ? subheaderNotes.join(" · ") : null,
+  );
 
   const cardContent =
     widget.data.length === 0 ? (

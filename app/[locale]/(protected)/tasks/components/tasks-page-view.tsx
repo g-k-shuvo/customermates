@@ -23,7 +23,9 @@ import { PageState } from "@/components/page-state/page-state";
 import { Button } from "@/components/ui/button";
 import { useRootStore } from "@/core/stores/root-store.provider";
 
+import { TaskAgendaView } from "./task-agenda-view";
 import { TasksPageSkeleton } from "./tasks-page-skeleton";
+import { TasksViewTabs } from "./tasks-view-tabs";
 import { useTaskColumns } from "./use-task-columns";
 
 type Props = { tasks: GetResult<TaskDto> };
@@ -56,14 +58,18 @@ export const TasksPageView = observer(function TasksPageView({ tasks }: Props) {
   );
   const topBarNode = useMemo(
     () => (
-      <DataViewToolbar
-        addLabel={pageState === "true-empty" ? emptyActionLabel : undefined}
-        anchorScope="tasks"
-        store={tasksStore}
-        onAdd={handleAdd}
-        onExport={handleExport}
-        onImport={handleImport}
-      />
+      <div className="flex items-center gap-1">
+        <TasksViewTabs />
+
+        <DataViewToolbar
+          addLabel={pageState === "true-empty" ? emptyActionLabel : undefined}
+          anchorScope="tasks"
+          store={tasksStore}
+          onAdd={handleAdd}
+          onExport={handleExport}
+          onImport={handleImport}
+        />
+      </div>
     ),
     [emptyActionLabel, handleAdd, handleExport, handleImport, pageState, tasksStore],
   );
@@ -105,7 +111,12 @@ export const TasksPageView = observer(function TasksPageView({ tasks }: Props) {
       );
       break;
     case "content":
-      body = <DataViewContent columns={columns} rowHref={rowHref} store={tasksStore} view={view} />;
+      body =
+        tasksStore.activeTab === "agenda" ? (
+          <TaskAgendaView />
+        ) : (
+          <DataViewContent columns={columns} rowHref={rowHref} store={tasksStore} view={view} />
+        );
       break;
     default: {
       const exhaustive: never = pageState;
@@ -114,7 +125,10 @@ export const TasksPageView = observer(function TasksPageView({ tasks }: Props) {
   }
 
   return (
-    <DataViewLayout showPagination={pageState === "content" && view !== "board"} store={tasksStore}>
+    <DataViewLayout
+      showPagination={pageState === "content" && view !== "board" && tasksStore.activeTab === "list"}
+      store={tasksStore}
+    >
       {body}
     </DataViewLayout>
   );

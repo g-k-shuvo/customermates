@@ -18,10 +18,10 @@ vi.mock("@/core/di", () => ({
 vi.mock("@/core/validation/zod-error-map-server", () => MOCK_ZOD_MODULE);
 vi.mock("@/prisma/db", () => MOCK_PRISMA_DB_MODULE);
 
-import type { ActivityWidgetDto, ChartWidgetDto } from "../widget.schema";
+import type { ActivityWidgetDto, ChartWidgetDto, FunnelWidgetDto } from "../widget.schema";
 import type { UpsertWidgetData } from "../upsert-widget.interactor";
 
-import { WidgetKind } from "@/generated/prisma";
+import { AggregationType, EntityType, WidgetGroupByType, WidgetKind } from "@/generated/prisma";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { QueryParamsPrecheckInteractor } from "@/core/base/query-params-precheck.interactor";
@@ -36,6 +36,7 @@ const WIDGET_ID = "00000000-0000-4000-8000-000000000001";
 const STALE_CONTACT_ID = "16000000-0000-4000-8000-000000000001";
 const NEW_INACCESSIBLE_CONTACT_ID = "16000000-0000-4000-8000-000000000002";
 const NEW_ACCESSIBLE_CONTACT_ID = "16000000-0000-4000-8000-000000000003";
+const FUNNEL_PIPELINE_ID = "26000000-0000-4000-8000-000000000001";
 
 function activityDto(data: Extract<UpsertWidgetData, { kind: typeof WidgetKind.activityTimeline }>): ActivityWidgetDto {
   return {
@@ -46,6 +47,26 @@ function activityDto(data: Extract<UpsertWidgetData, { kind: typeof WidgetKind.a
     name: data.name,
     timelineFilters: data.timelineFilters ?? [],
     displayOptions: data.displayOptions ?? null,
+    layout: null,
+    isTemplate: data.isTemplate,
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
+  };
+}
+
+function funnelDto(data: Extract<UpsertWidgetData, { kind: typeof WidgetKind.funnel }>): FunnelWidgetDto {
+  return {
+    id: data.id ?? WIDGET_ID,
+    userId: mockUser.id,
+    companyId: mockUser.companyId,
+    kind: WidgetKind.funnel,
+    name: data.name,
+    pipelineId: data.pipelineId,
+    pipelineName: "Sales",
+    periodDays: data.periodDays ?? null,
+    displayOptions: data.displayOptions ?? null,
+    stages: [],
+    summary: null,
     layout: null,
     isTemplate: data.isTemplate,
     createdAt: new Date(0),
@@ -67,7 +88,9 @@ function chartDto(data: Extract<UpsertWidgetData, { kind: typeof WidgetKind.char
     groupByType: data.groupByType,
     groupByCustomColumnId: data.groupByCustomColumnId ?? null,
     aggregationType: data.aggregationType,
+    periodDays: data.periodDays ?? null,
     data: [],
+    dataSummary: null,
     layout: null,
     isTemplate: data.isTemplate,
     createdAt: new Date(0),
@@ -77,6 +100,8 @@ function chartDto(data: Extract<UpsertWidgetData, { kind: typeof WidgetKind.char
 
 class MockUpsertWidgetRepo extends UpsertWidgetRepo {
   canReadMessagingSources = vi.fn(() => true);
+  canReadPipelines = vi.fn(() => true);
+  getFunnelPipelines = vi.fn(() => Promise.resolve([{ id: FUNNEL_PIPELINE_ID, name: "Sales", openStageCount: 3 }]));
   getActivityFilterableFields = vi.fn(() =>
     Promise.resolve([
       {
@@ -86,10 +111,12 @@ class MockUpsertWidgetRepo extends UpsertWidgetRepo {
     ]),
   );
   getWidgetKind = vi.fn<(id: string) => Promise<WidgetKind | null>>();
-  getWidgetById = vi.fn<(id: string) => Promise<ActivityWidgetDto | ChartWidgetDto | null>>();
+  getWidgetById = vi.fn<(id: string) => Promise<ActivityWidgetDto | ChartWidgetDto | FunnelWidgetDto | null>>();
   setMessagingSourcesEnabled = vi.fn();
   upsertWidget = vi.fn(({ data }: { data: UpsertWidgetData }) => {
-    return Promise.resolve(data.kind === WidgetKind.activityTimeline ? activityDto(data) : chartDto(data));
+    if (data.kind === WidgetKind.activityTimeline) return Promise.resolve(activityDto(data));
+    if (data.kind === WidgetKind.funnel) return Promise.resolve(funnelDto(data));
+    return Promise.resolve(chartDto(data));
   });
 }
 
@@ -128,6 +155,7 @@ function makeInteractor(repo: MockUpsertWidgetRepo, entitlementDenied = false) {
     repo,
     new ValidateWidgetIdsInteractor(getWidgetRepo()),
     new ValidateCustomColumnIdsInteractor(getCustomColumnRepo()),
+    { invoke: vi.fn().mockResolvedValue(undefined) } as never,
     queryParamsPrecheck as never,
     {
       require: vi.fn().mockResolvedValue(entitlementDenied ? { ok: false } : null),
@@ -171,6 +199,7 @@ function makeRelationshipInteractor(repo: MockUpsertWidgetRepo) {
       repo,
       new ValidateWidgetIdsInteractor(getWidgetRepo()),
       new ValidateCustomColumnIdsInteractor(getCustomColumnRepo()),
+      { invoke: vi.fn().mockResolvedValue(undefined) } as never,
       queryParamsPrecheck,
       { require: vi.fn().mockResolvedValue(null) } as never,
     ),
@@ -204,6 +233,138 @@ function activityInput(id?: string): Extract<UpsertWidgetData, { kind: typeof Wi
     isTemplate: false,
   };
 }
+
+function funnelInput(id?: string): Extract<UpsertWidgetData, { kind: typeof WidgetKind.funnel }> {
+  return {
+    id,
+    kind: WidgetKind.funnel,
+    name: "Sales funnel",
+    pipelineId: FUNNEL_PIPELINE_ID,
+    periodDays: 90,
+    displayOptions: { showFilters: true },
+    isTemplate: false,
+  };
+}
+
+function chartInput(
+  aggregationType: AggregationType,
+  groupByType: WidgetGroupByType,
+): Extract<UpsertWidgetData, { kind: typeof WidgetKind.chart }> {
+  return {
+    kind: WidgetKind.chart,
+    name: "Deal metric",
+    entityType: EntityType.deal,
+    entityFilters: [],
+    dealFilters: [],
+    groupByType,
+    aggregationType,
+    periodDays: 90,
+    isTemplate: false,
+  };
+}
+
+describe("UpsertWidgetInteractor closed-deal metrics grouped by stage", () => {
+  let repo: MockUpsertWidgetRepo;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    repo = new MockUpsertWidgetRepo();
+  });
+
+  it.each([AggregationType.winRate, AggregationType.salesCycleDays])(
+    "refuses to group %s by the deal stage, because every closed deal sits in the won or lost stage",
+    async (aggregationType) => {
+      const result = await makeInteractor(repo).invoke(chartInput(aggregationType, WidgetGroupByType.dealStage));
+
+      expect(result.ok).toBe(false);
+      expect(JSON.stringify(result)).toContain(CustomErrorCode.widgetClosedDealAggregationCannotGroupByStage);
+      expect(repo.upsertWidget).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([AggregationType.winRate, AggregationType.salesCycleDays])(
+    "still groups %s by pipeline, where the closing transition does not move the deal",
+    async (aggregationType) => {
+      const result = await makeInteractor(repo).invoke(chartInput(aggregationType, WidgetGroupByType.dealPipeline));
+
+      expect(result.ok).toBe(true);
+      expect(repo.upsertWidget).toHaveBeenCalled();
+    },
+  );
+
+  it("keeps time in stage groupable by stage, which it reads from the stage history", async () => {
+    const result = await makeInteractor(repo).invoke(
+      chartInput(AggregationType.stageDurationDays, WidgetGroupByType.dealStage),
+    );
+
+    expect(result.ok).toBe(true);
+    expect(repo.upsertWidget).toHaveBeenCalled();
+  });
+});
+
+describe("UpsertWidgetInteractor funnel widgets", () => {
+  let repo: MockUpsertWidgetRepo;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    repo = new MockUpsertWidgetRepo();
+  });
+
+  it("creates a funnel widget over a pipeline with open stages", async () => {
+    const input = funnelInput();
+    const result = await makeInteractor(repo).invoke(input);
+
+    expect(result.ok).toBe(true);
+    expect(repo.upsertWidget).toHaveBeenCalledWith({ data: input });
+  });
+
+  it("refuses a funnel widget when the viewer cannot read pipelines", async () => {
+    repo.canReadPipelines.mockReturnValue(false);
+
+    const result = await makeInteractor(repo).invoke(funnelInput());
+
+    expect(result.ok).toBe(false);
+    expect(JSON.stringify(result)).toContain(CustomErrorCode.widgetFunnelRequiresPipelineAccess);
+    expect(repo.upsertWidget).not.toHaveBeenCalled();
+  });
+
+  it("refuses a pipeline that has no open stages to funnel", async () => {
+    repo.getFunnelPipelines.mockResolvedValue([{ id: FUNNEL_PIPELINE_ID, name: "Sales", openStageCount: 0 }]);
+
+    const result = await makeInteractor(repo).invoke(funnelInput());
+
+    expect(result.ok).toBe(false);
+    expect(JSON.stringify(result)).toContain(CustomErrorCode.widgetFunnelPipelineHasNoOpenStages);
+    expect(repo.upsertWidget).not.toHaveBeenCalled();
+  });
+
+  it("refuses a funnel widget with no pipeline at all", async () => {
+    const result = await makeInteractor(repo).invoke({
+      ...funnelInput(),
+      pipelineId: "",
+    } as never);
+
+    expect(result.ok).toBe(false);
+    expect(repo.upsertWidget).not.toHaveBeenCalled();
+  });
+
+  it("refuses to turn an existing chart widget into a funnel", async () => {
+    widgetFindIds.mockResolvedValue(new Set([WIDGET_ID]));
+    repo.getWidgetKind.mockResolvedValue(WidgetKind.chart);
+
+    const result = await makeInteractor(repo).invoke(funnelInput(WIDGET_ID));
+
+    expect(result.ok).toBe(false);
+    expect(JSON.stringify(result)).toContain(CustomErrorCode.widgetKindImmutable);
+    expect(repo.upsertWidget).not.toHaveBeenCalled();
+  });
+
+  it("never asks the activity filter machinery about a funnel widget", async () => {
+    await makeInteractor(repo).invoke(funnelInput());
+
+    expect(repo.getActivityFilterableFields).not.toHaveBeenCalled();
+  });
+});
 
 describe("UpsertWidgetInteractor", () => {
   let repo: MockUpsertWidgetRepo;

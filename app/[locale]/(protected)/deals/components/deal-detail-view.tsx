@@ -21,6 +21,7 @@ import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { reportApplicationError } from "@/core/errors/report-application-error";
 
 import { DEAL_DETAIL_FIELD, DEAL_DETAIL_SECTION } from "./deal-detail-personalization";
+import { DealActivitiesList } from "./deal-activities-list";
 import { DealCloseActions } from "./deal-close-actions";
 import { DealPipelineFields } from "./deal-pipeline-fields";
 import { DealServicesSelection } from "./deal-services-selection";
@@ -109,6 +110,8 @@ export const DealDetailView = observer(({ layout = "drawer" }: Props) => {
           target="task"
           visibilityFieldId={DEAL_DETAIL_FIELD.taskIds}
         />
+
+        <DealActivitiesList activities={fetchedEntity?.tasks} />
 
         <CustomFieldInputs columns={customColumns} isEditing={isEditingCustomField} />
 
@@ -221,6 +224,8 @@ export const DealDetailView = observer(({ layout = "drawer" }: Props) => {
             }}
             target="task"
           />
+
+          <DealActivitiesList showFieldActions activities={fetchedEntity?.tasks} />
 
           <DealServicesSelection
             personalization={{

@@ -33,6 +33,7 @@ const domTestFiles = [
   "features/data-transfer/__tests__/export-action-stability.test.ts",
   "features/data-transfer/__tests__/export-requested-columns.test.ts",
   "core/utils/__tests__/use-is-truncated.test.ts",
+  "components/chart/__tests__/chart-tooltip.test.ts",
   "components/data-view/__tests__/is-interactive-click.test.ts",
   "components/data-view/__tests__/data-view-url-sync.test.ts",
   "components/data-view/__tests__/use-data-view-sync.test.ts",

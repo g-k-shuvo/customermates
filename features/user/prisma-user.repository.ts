@@ -19,6 +19,7 @@ import type { WebhookUserRepo } from "@/ee/messaging/webhooks/account/account-we
 import type { SendLegalDocumentNoticesRepo } from "@/ee/lifecycle/send-legal-document-notices.interactor";
 import type { ExpireAdAttributionRepo } from "@/ee/lifecycle/expire-ad-attribution.interactor";
 import type { WithdrawAdAttributionRepo } from "@/features/acquisition/withdraw-ad-attribution.interactor";
+import type { DefaultDashboardWidgetKey } from "@/features/widget/default-dashboard";
 
 import { randomUUID } from "node:crypto";
 
@@ -40,6 +41,7 @@ import { BypassTenantGuard } from "@/core/decorators/bypass-tenant.decorator";
 import { type GetQueryParams } from "@/core/base/base-get.schema";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
+import { defaultDashboardWidgetRows } from "@/features/widget/default-dashboard";
 import { env } from "@/env";
 
 type DefaultSelectColumn = {
@@ -344,7 +346,7 @@ export class PrismaUserRepo
   private async createDefaultPipeline(companyId: string) {
     const t = await getTranslations();
 
-    await this.prisma.pipeline.create({
+    const pipeline = await this.prisma.pipeline.create({
       data: {
         companyId,
         name: DEFAULT_PIPELINE_NAME,
@@ -360,6 +362,23 @@ export class PrismaUserRepo
           })),
         },
       },
+    });
+
+    return pipeline.id;
+  }
+
+  private async createDefaultDashboard(args: { companyId: string; userId: string; pipelineId: string }) {
+    const t = await getTranslations();
+
+    const names: Record<DefaultDashboardWidgetKey, string> = {
+      openPipelineValueByStage: t("Common.defaultData.dashboard.openPipelineValueByStage"),
+      pipelineFunnel: t("Common.defaultData.dashboard.pipelineFunnel"),
+      salesCycle: t("Common.defaultData.dashboard.salesCycle"),
+      winRate: t("Common.defaultData.dashboard.winRate"),
+    };
+
+    await this.prisma.widget.createMany({
+      data: defaultDashboardWidgetRows({ ...args, names, newId: randomUUID }),
     });
   }
 
@@ -386,7 +405,7 @@ export class PrismaUserRepo
     if (dealWeightingColumnId)
       await this.prisma.company.update({ where: { id: company.id }, data: { dealWeightingColumnId } });
 
-    await this.createDefaultPipeline(company.id);
+    const defaultPipelineId = await this.createDefaultPipeline(company.id);
 
     await this.createDefaultLostReasons(company.id);
 
@@ -435,6 +454,8 @@ export class PrismaUserRepo
         agentCreditActivatedAt: new Date(),
       },
     });
+
+    await this.createDefaultDashboard({ companyId: company.id, userId: user.id, pipelineId: defaultPipelineId });
 
     const attributions = args.adAttribution ?? [];
 

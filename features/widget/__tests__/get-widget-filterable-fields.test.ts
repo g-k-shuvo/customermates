@@ -48,9 +48,14 @@ function makeInteractor(args: { canReadMessaging: boolean; entitlementDenied: bo
   const entitlements = {
     require: vi.fn().mockResolvedValue(args.entitlementDenied ? { ok: false } : null),
   };
+  const funnelRepo = {
+    canReadPipelines: vi.fn(() => true),
+    getFunnelPipelines: vi.fn(() => Promise.resolve([])),
+  };
 
   return {
     activityRepo,
+    funnelRepo,
     entitlements,
     interactor: new GetWidgetFilterableFieldsInteractor(
       chartRepos[0],
@@ -59,6 +64,7 @@ function makeInteractor(args: { canReadMessaging: boolean; entitlementDenied: bo
       chartRepos[3],
       chartRepos[4],
       activityRepo,
+      funnelRepo,
       entitlements as never,
     ),
   };

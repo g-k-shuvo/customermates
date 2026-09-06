@@ -1,7 +1,7 @@
 import type { Data } from "@/core/validation/validation.utils";
 
 import { z } from "zod";
-import { TaskType } from "@/generated/prisma";
+import { ActivityKind, TaskType } from "@/generated/prisma";
 
 import {
   CustomFieldValueSchema,
@@ -24,6 +24,17 @@ export const TaskDtoSchema = z.object({
   name: z.string(),
   type: z.enum(TaskType),
   notes: NotesSchema,
+  activityKind: z.enum(ActivityKind).nullable(),
+  dueAt: z.date().nullable(),
+  durationMinutes: z.number().int().nullable(),
+  completedAt: z.date().nullable(),
+  completedById: z.uuid().nullable(),
+  isOverdue: z
+    .boolean()
+    .default(false)
+    .describe(
+      "Whether the task is past its due date and still incomplete. Derived from dueAt and completedAt at read time, so it is absent from stored snapshots taken before the due date existed.",
+    ),
   createdAt: z.date(),
   updatedAt: z.date(),
   users: z.array(UserReferenceSchema),
@@ -39,6 +50,16 @@ export const TaskDtoSchema = z.object({
 });
 
 export type TaskDto = Data<typeof TaskDtoSchema>;
+
+export const NextActivityDtoSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  activityKind: z.enum(ActivityKind).nullable(),
+  dueAt: z.date(),
+  isOverdue: z.boolean(),
+});
+
+export type NextActivityDto = Data<typeof NextActivityDtoSchema>;
 
 export const TaskByIdResponseSchema = z.object({
   task: TaskDtoSchema.nullable(),

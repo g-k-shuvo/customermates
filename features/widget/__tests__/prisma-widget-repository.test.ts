@@ -8,17 +8,19 @@ import {
 } from "@/tests/helpers/interactor-test-setup";
 
 const mockUser = createMockUser();
-const { widgetFindMany, widgetFindFirst, widgetUpsert, calculateWidgetData } = vi.hoisted(() => ({
+const { widgetFindMany, widgetFindFirst, widgetUpsert, calculateWidgetData, calculateFunnelData } = vi.hoisted(() => ({
   widgetFindMany: vi.fn(),
   widgetFindFirst: vi.fn(),
   widgetUpsert: vi.fn(),
   calculateWidgetData: vi.fn(),
+  calculateFunnelData: vi.fn(),
 }));
 
 vi.mock("@/env", () => MOCK_ENV_MODULE);
 vi.mock("@/core/di", () => ({
   ...createMockDiModule(() => mockUser),
   getWidgetCalculatorRepo: () => ({ calculateWidgetData }),
+  getWidgetFunnelRepo: () => ({ calculateFunnelData }),
 }));
 vi.mock("@/core/validation/zod-error-map-server", () => MOCK_ZOD_MODULE);
 vi.mock("@/prisma/db", () => ({
@@ -45,7 +47,7 @@ vi.mock("@/prisma/db", () => ({
   },
 }));
 
-import type { ActivityWidgetDto, ChartWidgetDto, WidgetDto } from "../widget.schema";
+import type { ActivityWidgetDto, ChartWidgetDto, FunnelWidgetDto, WidgetDto } from "../widget.schema";
 
 import { PrismaWidgetRepo } from "../prisma-widget.repository";
 import { runWithTenant } from "@/core/decorators/tenant-context";
@@ -54,6 +56,7 @@ import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 
 const WIDGET_ID = "00000000-0000-4000-8000-000000000001";
+const PIPELINE_ID = "00000000-0000-4000-8000-000000000009";
 
 function legacyRow(overrides: Record<string, unknown> = {}) {
   return {
@@ -69,6 +72,8 @@ function legacyRow(overrides: Record<string, unknown> = {}) {
     groupByType: WidgetGroupByType.none,
     groupByCustomColumnId: null,
     aggregationType: AggregationType.count,
+    periodDays: null,
+    pipelineId: null,
     timelineFilters: null,
     layout: null,
     isTemplate: false,
@@ -96,6 +101,25 @@ function asChart(widget: WidgetDto | null | undefined): ChartWidgetDto {
   return widget;
 }
 
+function funnelRow(overrides: Record<string, unknown> = {}) {
+  return legacyRow({
+    name: "Sales funnel",
+    kind: WidgetKind.funnel,
+    entityType: null,
+    groupByType: null,
+    aggregationType: null,
+    pipelineId: PIPELINE_ID,
+    periodDays: 90,
+    ...overrides,
+  });
+}
+
+function asFunnel(widget: WidgetDto | null | undefined): FunnelWidgetDto {
+  if (!widget || widget.kind !== WidgetKind.funnel) throw new Error("expected a funnel widget");
+
+  return widget;
+}
+
 function asActivity(widget: WidgetDto | null | undefined): ActivityWidgetDto {
   if (!widget || widget.kind !== WidgetKind.activityTimeline) throw new Error("expected an activity widget");
 
@@ -105,7 +129,15 @@ function asActivity(widget: WidgetDto | null | undefined): ActivityWidgetDto {
 describe("PrismaWidgetRepo.toDto", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    calculateWidgetData.mockResolvedValue([{ labelKind: "system", systemLabelKey: "total", value: 3 }]);
+    calculateWidgetData.mockResolvedValue({
+      data: [{ labelKind: "system", systemLabelKey: "total", value: 3 }],
+      dataSummary: null,
+    });
+    calculateFunnelData.mockResolvedValue({
+      pipelineName: "Sales",
+      stages: [],
+      summary: { dealsEntered: 0, wonCount: 0, openToWonPercent: null },
+    });
   });
 
   it("normalizes null filter columns to empty arrays so the DTO gate cannot throw", async () => {
@@ -246,6 +278,89 @@ describe("PrismaWidgetRepo.toDto", () => {
     expect(asChart(widget).entityFilters).toEqual([]);
     expect(asChart(widget).displayOptions).toBeNull();
     expect(asChart(widget).data).toEqual([{ labelKind: "system", systemLabelKey: "total", value: 3 }]);
+  });
+
+  it("never sends a funnel widget through the chart calculator", async () => {
+    widgetFindMany.mockResolvedValue([funnelRow()]);
+
+    await runWithTenant(mockUser, () => new PrismaWidgetRepo().getWidgets());
+
+    expect(calculateWidgetData).not.toHaveBeenCalled();
+    expect(calculateFunnelData).toHaveBeenCalledWith({ pipelineId: PIPELINE_ID, periodDays: 90 });
+  });
+
+  it("keeps a funnel widget on the dashboard instead of dropping it at the DTO gate", async () => {
+    widgetFindMany.mockResolvedValue([funnelRow()]);
+
+    const widgets = await runWithTenant(mockUser, () => new PrismaWidgetRepo().getWidgets());
+
+    expect(widgets).toHaveLength(1);
+    expect(asFunnel(widgets[0]).pipelineName).toBe("Sales");
+    expect(widgets[0]).not.toHaveProperty("data");
+    expect(widgets[0]).not.toHaveProperty("entityType");
+  });
+
+  it("routes each kind of a mixed dashboard to its own calculator", async () => {
+    widgetFindMany.mockResolvedValue([
+      activityRow({ id: "00000000-0000-4000-8000-000000000002" }),
+      funnelRow({ id: "00000000-0000-4000-8000-000000000003" }),
+      legacyRow(),
+    ]);
+
+    const widgets = await runWithTenant(mockUser, () => new PrismaWidgetRepo().getWidgets());
+
+    expect(calculateWidgetData).toHaveBeenCalledTimes(1);
+    expect(calculateFunnelData).toHaveBeenCalledTimes(1);
+    expect(widgets.map((widget) => widget.kind)).toEqual([
+      WidgetKind.activityTimeline,
+      WidgetKind.funnel,
+      WidgetKind.chart,
+    ]);
+  });
+
+  it("writes null chart columns for a funnel widget and keeps the pipeline it was built over", async () => {
+    widgetUpsert.mockResolvedValue(funnelRow());
+
+    await runWithTenant(mockUser, () =>
+      new PrismaWidgetRepo().upsertWidget({
+        data: {
+          kind: WidgetKind.funnel,
+          name: "Sales funnel",
+          pipelineId: PIPELINE_ID,
+          periodDays: 90,
+          isTemplate: false,
+        },
+      }),
+    );
+
+    const created = widgetUpsert.mock.calls[0][0].create;
+
+    expect(created.pipelineId).toBe(PIPELINE_ID);
+    expect(created.periodDays).toBe(90);
+    expect(created.entityType).toBeNull();
+    expect(created.groupByType).toBeNull();
+    expect(created.aggregationType).toBeNull();
+    expect(created).not.toHaveProperty("entityFilters");
+    expect(created).not.toHaveProperty("timelineFilters");
+  });
+
+  it("clears the pipeline on a chart widget so no rollback can read it as a funnel", async () => {
+    widgetUpsert.mockResolvedValue(legacyRow());
+
+    await runWithTenant(mockUser, () =>
+      new PrismaWidgetRepo().upsertWidget({
+        data: {
+          kind: WidgetKind.chart,
+          name: "New",
+          entityType: EntityType.contact,
+          groupByType: WidgetGroupByType.none,
+          aggregationType: AggregationType.count,
+          isTemplate: false,
+        },
+      }),
+    );
+
+    expect(widgetUpsert.mock.calls[0][0].create.pipelineId).toBeNull();
   });
 
   it("never sends an activity widget through the chart calculator", async () => {

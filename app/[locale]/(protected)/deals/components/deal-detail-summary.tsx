@@ -19,6 +19,7 @@ import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { runUserAction } from "@/core/errors/report-application-error";
 
 import { DEAL_DETAIL_FIELD } from "./deal-detail-personalization";
+import { DealNextActivity } from "./deal-next-activity";
 import { DealStatusBadge } from "./deal-status-badges";
 import { useDealLostReasonName } from "./use-deal-lost-reason-name";
 
@@ -66,6 +67,11 @@ export const DealDetailSummary = observer(function DealDetailSummary() {
       id: DEAL_DETAIL_FIELD.stageId,
       label: t("DealModal.pipeline.stageLabel"),
       value: dealDetailStore.stageOptions.find((stage) => stage.id === form.stageId)?.name,
+    },
+    {
+      id: DEAL_DETAIL_FIELD.nextActivity,
+      label: t("Activities.nextActivity.label"),
+      value: <DealNextActivity showName activities={fetchedEntity.tasks} status={fetchedEntity.status} />,
     },
     {
       id: DEAL_DETAIL_FIELD.totalValue,

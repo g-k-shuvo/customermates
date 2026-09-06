@@ -40,6 +40,7 @@ import { AddChannelStore } from "@/app/[locale]/(protected)/contacts/components/
 import { UserStore } from "@/app/[locale]/(protected)/profile/components/user.store";
 import { TasksStore } from "@/app/[locale]/(protected)/tasks/components/tasks.store";
 import { TaskDetailStore } from "@/app/[locale]/(protected)/tasks/components/task-detail.store";
+import { ActivityCompletionStore } from "@/app/[locale]/(protected)/tasks/components/activity-completion.store";
 import { LayoutStore } from "@/components/layout/layout.store";
 import { LoadingOverlayStore } from "@/components/shared/loading-overlay.store";
 import { ServicesStore } from "@/app/[locale]/(protected)/services/components/services.store";
@@ -146,6 +147,7 @@ export class RootStore {
   private _roleModalStore?: RoleModalStore;
   private _serviceDetailStore?: ServiceDetailStore;
   private _taskDetailStore?: TaskDetailStore;
+  private _activityCompletionStore?: ActivityCompletionStore;
   private _userModalStore?: UserModalStore;
   private _webhookDeliveryModalStore?: WebhookDeliveryModalStore;
   private _webhookModalStore?: WebhookModalStore;
@@ -385,6 +387,10 @@ export class RootStore {
 
   get taskDetailStore() {
     return (this._taskDetailStore ??= new TaskDetailStore(this));
+  }
+
+  get activityCompletionStore() {
+    return (this._activityCompletionStore ??= new ActivityCompletionStore(this));
   }
 
   get deleteConfirmationModalStore() {

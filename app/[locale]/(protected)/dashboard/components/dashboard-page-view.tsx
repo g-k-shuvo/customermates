@@ -4,7 +4,7 @@ import type { ComponentType, ReactNode } from "react";
 import type { Layout, ResponsiveLayouts } from "react-grid-layout/legacy";
 import type { FilterableField } from "@/core/base/base-get.schema";
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
-import type { WidgetDto } from "@/features/widget/widget.schema";
+import type { FunnelPipelineOption, WidgetDto } from "@/features/widget/widget.schema";
 import type { EntityType } from "@/generated/prisma";
 
 import dynamic from "next/dynamic";
@@ -46,6 +46,7 @@ const ResponsiveGridLayout = dynamic(
 type Props = {
   customColumns: CustomColumnDto[];
   filterableFields: Record<EntityType, FilterableField[]>;
+  funnelPipelines: FunnelPipelineOption[];
   widgets: WidgetDto[];
   activityFilterableFields: FilterableField[];
 };
@@ -54,6 +55,7 @@ export const DashboardPageView = observer(function DashboardPageView({
   activityFilterableFields,
   customColumns,
   filterableFields,
+  funnelPipelines,
   widgets,
 }: Props) {
   const { widgetModalStore, widgetsStore } = useRootStore();
@@ -221,6 +223,7 @@ export const DashboardPageView = observer(function DashboardPageView({
         activityFilterableFields={activityFilterableFields}
         customColumns={customColumns}
         filterableFields={filterableFields}
+        funnelPipelines={funnelPipelines}
       />
     </>
   );

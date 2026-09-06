@@ -172,6 +172,8 @@ export const ENTITY_DETAIL: Record<EntityType, EntityDetailConfig> = {
           [DEAL_DETAIL_FIELD.contactIds]: Resource.contacts,
           [DEAL_DETAIL_FIELD.organizationIds]: Resource.organizations,
           [DEAL_DETAIL_FIELD.taskIds]: Resource.tasks,
+          [DEAL_DETAIL_FIELD.nextActivity]: Resource.tasks,
+          [DEAL_DETAIL_FIELD.activities]: Resource.tasks,
           [DEAL_DETAIL_FIELD.serviceIds]: Resource.services,
           [DEAL_DETAIL_FIELD.userIds]: Resource.users,
         },

@@ -16,8 +16,12 @@ import type { CreateManyTasksData } from "./create-many-tasks.interactor";
 import type { UpdateManyTasksData } from "./update-many-tasks.interactor";
 import type { DeleteTaskData } from "../delete/delete-task.interactor";
 import type { DeleteManyTasksData } from "../delete/delete-many-tasks.interactor";
+import type { CompleteTaskData } from "../complete/complete-task.interactor";
+import type { UncompleteTaskData } from "../complete/uncomplete-task.interactor";
 
 import { Resource, EntityType } from "@/generated/prisma";
+
+import { CustomErrorCode } from "@/core/validation/validation.types";
 
 export class TaskWritePrecheckInteractor {
   constructor(
@@ -143,6 +147,21 @@ export class TaskWritePrecheckInteractor {
         ctx,
       ),
     ]);
+  }
+
+  async complete(data: CompleteTaskData, ctx: z.RefinementCtx) {
+    await Promise.all([
+      this.taskValidator.invoke([{ ids: data.id, path: ["id"] }], ctx),
+      this.systemTaskIdsValidator.invoke(
+        [{ ids: data.id, path: ["id"] }],
+        ctx,
+        CustomErrorCode.taskOnlyCustomTasksCanBeCompleted,
+      ),
+    ]);
+  }
+
+  async uncomplete(data: UncompleteTaskData, ctx: z.RefinementCtx) {
+    await this.taskValidator.invoke([{ ids: data.id, path: ["id"] }], ctx);
   }
 
   async delete(data: DeleteTaskData, ctx: z.RefinementCtx) {

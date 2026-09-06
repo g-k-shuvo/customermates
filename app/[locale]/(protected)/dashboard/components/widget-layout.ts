@@ -23,7 +23,7 @@ export function widgetLayoutGeometry(
     };
   }
 
-  const minW = Math.min(2, cols);
+  const minW = Math.min(kind === WidgetKind.funnel ? 3 : 2, cols);
   const minH = 3;
   const defaultW = Math.min(cols >= 12 ? 6 : 4, cols);
 

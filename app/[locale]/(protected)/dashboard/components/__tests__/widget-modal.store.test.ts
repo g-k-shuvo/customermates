@@ -1,5 +1,10 @@
 import type { RootStore } from "@/core/stores/root.store";
-import type { ActivityWidgetDto, ChartWidgetDto, CompanyWidget } from "@/features/widget/widget.schema";
+import type {
+  ActivityWidgetDto,
+  ChartWidgetDto,
+  CompanyWidget,
+  FunnelWidgetDto,
+} from "@/features/widget/widget.schema";
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
 import type { Filter } from "@/core/base/base-get.schema";
 
@@ -47,7 +52,9 @@ function chartWidget(id: string, name: string): ChartWidgetDto {
     groupByType: WidgetGroupByType.none,
     groupByCustomColumnId: null,
     aggregationType: AggregationType.count,
+    periodDays: null,
     data: [],
+    dataSummary: null,
   };
 }
 
@@ -70,6 +77,28 @@ function activityWidget(id: string, name: string): ActivityWidgetDto {
       },
     ],
     displayOptions: { showFilters: false },
+  };
+}
+
+const FUNNEL_PIPELINE_ID = "22222222-2222-4222-8222-222222222222";
+
+function funnelWidget(id: string, name: string): FunnelWidgetDto {
+  return {
+    id,
+    userId: "user-1",
+    companyId: "company-1",
+    name,
+    layout: null,
+    isTemplate: false,
+    createdAt: new Date("2026-08-05T00:00:00.000Z"),
+    updatedAt: new Date("2026-08-05T00:00:00.000Z"),
+    kind: WidgetKind.funnel,
+    pipelineId: FUNNEL_PIPELINE_ID,
+    pipelineName: "Sales",
+    periodDays: 180,
+    displayOptions: { showFilters: false },
+    stages: [],
+    summary: null,
   };
 }
 
@@ -178,6 +207,13 @@ function enableActivity(store: WidgetModalStore) {
   ]);
 }
 
+function enableFunnel(store: WidgetModalStore) {
+  store.setFunnelPipelines([
+    { id: FUNNEL_PIPELINE_ID, name: "Sales", openStageCount: 4 },
+    { id: "33333333-3333-4333-8333-333333333333", name: "Empty", openStageCount: 0 },
+  ]);
+}
+
 function startChart(store: WidgetModalStore) {
   store.add();
   store.startFromKind(WidgetKind.chart);
@@ -262,7 +298,17 @@ describe("WidgetModalStore chart combinations", () => {
   it.each([
     [EntityType.contact, [AggregationType.count, AggregationType.dealValue, AggregationType.dealWeightedValue]],
     [EntityType.organization, [AggregationType.count, AggregationType.dealValue, AggregationType.dealWeightedValue]],
-    [EntityType.deal, [AggregationType.count, AggregationType.dealValue, AggregationType.dealWeightedValue]],
+    [
+      EntityType.deal,
+      [
+        AggregationType.count,
+        AggregationType.dealValue,
+        AggregationType.dealWeightedValue,
+        AggregationType.winRate,
+        AggregationType.salesCycleDays,
+        AggregationType.stageDurationDays,
+      ],
+    ],
     [EntityType.service, [AggregationType.count, AggregationType.dealValue, AggregationType.dealQuantity]],
     [EntityType.task, [AggregationType.count]],
   ])("offers only compatible metrics for %s", (entityType, expected) => {
@@ -283,6 +329,9 @@ describe("WidgetModalStore chart combinations", () => {
       expect(store.aggregationTypeOptions.map(({ key }) => key)).toEqual([
         AggregationType.count,
         AggregationType.dealValue,
+        ...(entityType === EntityType.deal
+          ? [AggregationType.winRate, AggregationType.salesCycleDays, AggregationType.stageDurationDays]
+          : []),
       ]);
     },
   );
@@ -303,9 +352,13 @@ describe("WidgetModalStore chart combinations", () => {
     startChart(store);
 
     for (const entityType of Object.values(EntityType)) {
+      const pipelineGrouping =
+        entityType === EntityType.deal ? [WidgetGroupByType.dealStage, WidgetGroupByType.dealPipeline] : [];
+
       store.onChange("entityType", entityType);
       expect(store.groupBySelectOptions.map(({ key }) => key)).toEqual([
         WidgetGroupByType.none,
+        ...pipelineGrouping,
         `custom:${columns.find((column) => column.entityType === entityType)?.id}`,
       ]);
 
@@ -317,9 +370,70 @@ describe("WidgetModalStore chart combinations", () => {
       expect(store.groupBySelectOptions.map(({ key }) => key)).toEqual([
         WidgetGroupByType.none,
         entityType,
+        ...pipelineGrouping,
         `custom:${columns.find((column) => column.entityType === entityType)?.id}`,
       ]);
     }
+  });
+
+  it.each([[AggregationType.winRate], [AggregationType.salesCycleDays]])(
+    "never offers stage grouping for %s, whose closed deals all sit in the won or lost stage",
+    (aggregationType) => {
+      const store = createStore();
+      startChart(store);
+      store.onChange("entityType", EntityType.deal);
+      store.onChange("aggregationType", aggregationType);
+
+      expect(store.groupBySelectOptions.map(({ key }) => key)).toEqual([
+        WidgetGroupByType.none,
+        WidgetGroupByType.dealPipeline,
+      ]);
+    },
+  );
+
+  it("still offers stage grouping for time in stage, which reads the stage history", () => {
+    const store = createStore();
+    startChart(store);
+    store.onChange("entityType", EntityType.deal);
+    store.onChange("aggregationType", AggregationType.stageDurationDays);
+
+    expect(store.groupBySelectOptions.map(({ key }) => key)).toEqual([
+      WidgetGroupByType.none,
+      WidgetGroupByType.dealStage,
+      WidgetGroupByType.dealPipeline,
+    ]);
+  });
+
+  it.each([[AggregationType.winRate], [AggregationType.salesCycleDays]])(
+    "clears a stage grouping already chosen when the metric becomes %s",
+    async (aggregationType) => {
+      const store = createStore();
+      startChart(store);
+      store.onChange("entityType", EntityType.deal);
+      store.onChange("aggregationType", AggregationType.stageDurationDays);
+      store.onGroupByChange(WidgetGroupByType.dealStage);
+
+      await vi.waitFor(() => expect(currentChartForm(store).groupByType).toBe(WidgetGroupByType.dealStage));
+
+      store.onChange("aggregationType", aggregationType);
+
+      await vi.waitFor(() => expect(currentChartForm(store).groupByType).toBe(WidgetGroupByType.none));
+      expect(store.groupBySelectValue).toBe(WidgetGroupByType.none);
+    },
+  );
+
+  it("keeps a pipeline grouping when the metric becomes win rate", async () => {
+    const store = createStore();
+    startChart(store);
+    store.onChange("entityType", EntityType.deal);
+    store.onChange("aggregationType", AggregationType.stageDurationDays);
+    store.onGroupByChange(WidgetGroupByType.dealPipeline);
+
+    await vi.waitFor(() => expect(currentChartForm(store).groupByType).toBe(WidgetGroupByType.dealPipeline));
+
+    store.onChange("aggregationType", AggregationType.winRate);
+
+    expect(currentChartForm(store).groupByType).toBe(WidgetGroupByType.dealPipeline);
   });
 
   it("drops relation grouping for Count while retaining valid custom grouping", async () => {
@@ -978,5 +1092,74 @@ describe("WidgetModalStore loads", () => {
     expect(store.expandedSection).toBe("filters");
     expect(store.expandedFilterField).toBe("status");
     expect(store.creationStep).toBe("configure");
+  });
+});
+
+describe("WidgetModalStore funnel widgets", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("offers the funnel kind only once a pipeline with open stages exists", () => {
+    const store = createStore();
+
+    expect(store.availableKinds).not.toContain(WidgetKind.funnel);
+
+    enableFunnel(store);
+
+    expect(store.availableKinds).toContain(WidgetKind.funnel);
+  });
+
+  it("hides a pipeline that has no open stages from the picker", () => {
+    const store = createStore();
+    enableFunnel(store);
+
+    expect(store.funnelPipelineOptions.map((pipeline) => pipeline.id)).toEqual([FUNNEL_PIPELINE_ID]);
+  });
+
+  it("starts a new funnel on the first usable pipeline and a bounded default period", () => {
+    const store = createStore();
+    enableFunnel(store);
+    store.add();
+    store.startFromKind(WidgetKind.funnel);
+
+    expect(store.funnelPipelineValue).toBe(FUNNEL_PIPELINE_ID);
+    expect(store.showPeriodPicker).toBe(true);
+    expect(store.periodDaysValue).toBe("90");
+  });
+
+  it("saves the chosen pipeline and period without any chart configuration", async () => {
+    const store = createStore();
+    enableFunnel(store);
+    store.add();
+    store.startFromKind(WidgetKind.funnel);
+    store.onChange("name", "Sales funnel");
+    store.onPeriodDaysChange("180");
+    actionMocks.upsertWidgetAction.mockResolvedValue({ ok: true, data: { id: "new-funnel" } });
+
+    await store.onSubmit();
+
+    expect(actionMocks.upsertWidgetAction).toHaveBeenCalledWith({
+      id: undefined,
+      kind: WidgetKind.funnel,
+      name: "Sales funnel",
+      pipelineId: FUNNEL_PIPELINE_ID,
+      periodDays: 180,
+      displayOptions: { showFilters: true },
+      isTemplate: false,
+    });
+  });
+
+  it("hydrates an existing funnel with its stored pipeline and period", async () => {
+    const store = createStore();
+    enableFunnel(store);
+    actionMocks.getWidgetByIdAction.mockResolvedValue(funnelWidget("44444444-4444-4444-8444-444444444444", "Sales"));
+
+    await store.loadById("44444444-4444-4444-8444-444444444444");
+
+    await vi.waitFor(() => expect(store.form.kind).toBe(WidgetKind.funnel));
+    expect(store.funnelPipelineValue).toBe(FUNNEL_PIPELINE_ID);
+    expect(store.periodDaysValue).toBe("180");
+    expect(toJS(store.form)).not.toHaveProperty("aggregationType");
   });
 });

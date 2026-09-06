@@ -25,7 +25,13 @@ vi.mock("@/core/di", () => ({
 import { AggregationType, EntityType, WidgetGroupByType, WidgetKind } from "@/generated/prisma";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
-import { ChartColor, DisplayType, type ActivityWidgetDto, type ChartWidgetDto } from "@/features/widget/widget.schema";
+import {
+  ChartColor,
+  DisplayType,
+  type ActivityWidgetDto,
+  type ChartWidgetDto,
+  type FunnelWidgetDto,
+} from "@/features/widget/widget.schema";
 
 import { manageWidgetsTool } from "../widget.mcp-tools";
 import { mcpToolResultText } from "../mcp-tool";
@@ -33,6 +39,7 @@ import { formatDatesInResponse } from "../utils";
 
 const WIDGET_ID = "16000000-0000-4000-8000-000000000001";
 const RECORD_ID = "16000000-0000-4000-8000-000000000002";
+const PIPELINE_ID = "16000000-0000-4000-8000-000000000003";
 const relationshipFilter: ActivityWidgetDto["timelineFilters"][number] = {
   field: FilterFieldKey.contactIds,
   operator: FilterOperatorKey.in,
@@ -58,7 +65,9 @@ function chartWidget(overrides: Partial<ChartWidgetDto> = {}): ChartWidgetDto {
     groupByType: WidgetGroupByType.none,
     groupByCustomColumnId: null,
     aggregationType: AggregationType.count,
+    periodDays: null,
     data: [],
+    dataSummary: null,
     layout: null,
     isTemplate: false,
     createdAt: new Date(0),
@@ -76,6 +85,27 @@ function activityWidget(overrides: Partial<ActivityWidgetDto> = {}): ActivityWid
     name: "Recent activity",
     timelineFilters: [relationshipFilter],
     displayOptions: { showFilters: false },
+    layout: null,
+    isTemplate: false,
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
+    ...overrides,
+  };
+}
+
+function funnelWidget(overrides: Partial<FunnelWidgetDto> = {}): FunnelWidgetDto {
+  return {
+    id: WIDGET_ID,
+    userId: mockUser.id,
+    companyId: mockUser.companyId,
+    kind: WidgetKind.funnel,
+    name: "Sales funnel",
+    pipelineId: PIPELINE_ID,
+    pipelineName: "Sales",
+    periodDays: 90,
+    displayOptions: { showFilters: true },
+    stages: [],
+    summary: null,
     layout: null,
     isTemplate: false,
     createdAt: new Date(0),
@@ -359,6 +389,69 @@ describe("manage_widgets update", () => {
     spies.getWidgetById.mockResolvedValue({ ok: true, data: chartWidget() });
 
     expect(await run({ action: "update", id: WIDGET_ID, timelineFilters: [] })).toContain("Validation error:");
+    expect(spies.upsertWidget).not.toHaveBeenCalled();
+  });
+});
+
+describe("manage_widgets funnel widgets", () => {
+  it("creates a funnel over a pipeline instead of falling through to the chart arm", async () => {
+    spies.upsertWidget.mockResolvedValue({ ok: true, data: funnelWidget() });
+
+    const result = await run({
+      action: "create",
+      kind: WidgetKind.funnel,
+      name: "Sales funnel",
+      pipelineId: PIPELINE_ID,
+      periodDays: 90,
+    });
+
+    expect(spies.upsertWidget).toHaveBeenCalledWith({
+      kind: WidgetKind.funnel,
+      name: "Sales funnel",
+      pipelineId: PIPELINE_ID,
+      periodDays: 90,
+      displayOptions: { showFilters: true },
+      isTemplate: false,
+    });
+    expect(decode(result)).toMatchObject({ kind: WidgetKind.funnel });
+  });
+
+  it("rejects chart fields on a funnel creation rather than silently ignoring them", async () => {
+    const result = await run({
+      action: "create",
+      kind: WidgetKind.funnel,
+      name: "Sales funnel",
+      pipelineId: PIPELINE_ID,
+      aggregationType: AggregationType.count,
+    });
+
+    expect(result).toContain("aggregationType");
+    expect(spies.upsertWidget).not.toHaveBeenCalled();
+  });
+
+  it("infers the stored funnel kind on update and preserves omitted fields", async () => {
+    spies.getWidgetById.mockResolvedValue({ ok: true, data: funnelWidget() });
+    spies.upsertWidget.mockResolvedValue({ ok: true, data: funnelWidget({ periodDays: 365 }) });
+
+    await run({ action: "update", id: WIDGET_ID, periodDays: 365 });
+
+    expect(spies.upsertWidget).toHaveBeenCalledWith({
+      id: WIDGET_ID,
+      kind: WidgetKind.funnel,
+      name: "Sales funnel",
+      pipelineId: PIPELINE_ID,
+      periodDays: 365,
+      displayOptions: { showFilters: true },
+      isTemplate: false,
+    });
+  });
+
+  it("rejects chart-only fields on a stored funnel", async () => {
+    spies.getWidgetById.mockResolvedValue({ ok: true, data: funnelWidget() });
+
+    const result = await run({ action: "update", id: WIDGET_ID, displayType: DisplayType.doughnutChart });
+
+    expect(result).toContain("displayType");
     expect(spies.upsertWidget).not.toHaveBeenCalled();
   });
 });

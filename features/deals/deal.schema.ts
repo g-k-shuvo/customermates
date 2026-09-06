@@ -1,7 +1,7 @@
 import type { Data } from "@/core/validation/validation.utils";
 
 import { z } from "zod";
-import { DealStatus } from "@/generated/prisma";
+import { ActivityKind, DealStatus } from "@/generated/prisma";
 
 import {
   CustomFieldValueSchema,
@@ -15,6 +15,14 @@ import {
 import { GetConfigurationSchema } from "@/core/base/base-get.schema";
 import { CustomColumnDtoSchema } from "@/features/custom-column/custom-column.schema";
 import { PipelineDtoSchema } from "@/features/pipelines/pipeline.schema";
+
+export const DealActivityReferenceSchema = TaskReferenceSchema.extend({
+  activityKind: z.enum(ActivityKind).nullable().default(null),
+  dueAt: z.date().nullable().default(null),
+  completedAt: z.date().nullable().default(null),
+});
+
+export type DealActivityReference = Data<typeof DealActivityReferenceSchema>;
 
 export const DealDtoSchema = z.object({
   id: z.uuid(),
@@ -46,7 +54,7 @@ export const DealDtoSchema = z.object({
   users: z.array(UserReferenceSchema),
   contacts: z.array(ContactReferenceSchema),
   services: z.array(ServiceReferenceSchema),
-  tasks: z.array(TaskReferenceSchema),
+  tasks: z.array(DealActivityReferenceSchema),
   customFieldValues: z
     .array(CustomFieldValueSchema)
     .describe(

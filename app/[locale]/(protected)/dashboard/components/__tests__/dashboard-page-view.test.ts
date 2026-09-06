@@ -104,6 +104,7 @@ function renderDashboard(
       activityFilterableFields: [],
       customColumns: [],
       filterableFields: {} as never,
+      funnelPipelines: [],
       widgets: items,
     }),
   );

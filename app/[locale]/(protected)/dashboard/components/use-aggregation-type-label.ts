@@ -32,6 +32,12 @@ export function useAggregationTypeLabel(): (aggregationType: AggregationType, en
               deal: singular(EntityType.deal),
               entity: singular(entityType),
             });
+      case AggregationType.winRate:
+        return t("Dashboard.aggregationTypes.winRate", { deals: plural(EntityType.deal) });
+      case AggregationType.salesCycleDays:
+        return t("Dashboard.aggregationTypes.salesCycleDays", { deal: singular(EntityType.deal) });
+      case AggregationType.stageDurationDays:
+        return t("Dashboard.aggregationTypes.stageDurationDays");
     }
   };
 }

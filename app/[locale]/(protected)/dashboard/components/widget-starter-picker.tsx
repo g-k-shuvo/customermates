@@ -3,7 +3,7 @@
 import type { CompanyWidget } from "@/features/widget/widget.schema";
 
 import { useTranslations } from "next-intl";
-import { Activity, ChartNoAxesColumnIncreasing } from "lucide-react";
+import { Activity, ChartNoAxesColumnIncreasing, Filter } from "lucide-react";
 import { WidgetKind } from "@/generated/prisma";
 
 import { IconContainer } from "@/components/shared/icon-container";
@@ -19,9 +19,10 @@ type Props = {
   onSelectTemplate: (id: string) => void;
 };
 
-const KIND_ICON = {
+const KIND_ICON: Record<WidgetKind, typeof Activity> = {
   [WidgetKind.chart]: ChartNoAxesColumnIncreasing,
   [WidgetKind.activityTimeline]: Activity,
+  [WidgetKind.funnel]: Filter,
 };
 
 export function WidgetStarterPicker({ availableKinds, disabled, templates, onSelectKind, onSelectTemplate }: Props) {

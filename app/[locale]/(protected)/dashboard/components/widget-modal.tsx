@@ -1,6 +1,7 @@
 "use client";
 
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
+import type { FunnelPipelineOption } from "@/features/widget/widget.schema";
 import type { FilterableField } from "@/core/base/base-get.schema";
 
 import { useEffect } from "react";
@@ -35,6 +36,7 @@ import {
 import { useRootStore } from "@/core/stores/root-store.provider";
 import type { ChartColor } from "@/features/widget/widget.schema";
 import { DisplayType } from "@/features/widget/widget.schema";
+import { WIDGET_PERIOD_DAY_OPTIONS } from "@/features/widget/widget-aggregation";
 import { useDeleteConfirmation } from "@/components/modal/hooks/use-delete-confirmation";
 import { FilterAccordion } from "@/components/data-view/filter-modal/filter-accordion";
 import { getChartColors } from "@/constants/chart-colors";
@@ -54,6 +56,7 @@ type Props = {
   customColumns: CustomColumnDto[];
   filterableFields: Record<EntityType, FilterableField[]>;
   activityFilterableFields: FilterableField[];
+  funnelPipelines: FunnelPipelineOption[];
 };
 
 type EditorTab = "data" | "filters" | "appearance";
@@ -87,7 +90,8 @@ function tabForSection(section: string, kind: WidgetKind): EditorTab {
   return "data";
 }
 
-export const WidgetModal = observer(({ customColumns, filterableFields, activityFilterableFields }: Props) => {
+export const WidgetModal = observer((props: Props) => {
+  const { customColumns, filterableFields, activityFilterableFields, funnelPipelines } = props;
   const t = useTranslations();
   const aggregationTypeLabel = useAggregationTypeLabel();
   const { plural, singular } = useEntityTerminology();
@@ -120,7 +124,8 @@ export const WidgetModal = observer(({ customColumns, filterableFields, activity
     widgetModalStore.setCustomColumns(customColumns);
     widgetModalStore.setFilterableFields(filterableFields);
     widgetModalStore.setActivityFilterableFields(activityFilterableFields);
-  }, [activityFilterableFields, customColumns, filterableFields, widgetModalStore]);
+    widgetModalStore.setFunnelPipelines(funnelPipelines);
+  }, [activityFilterableFields, customColumns, filterableFields, funnelPipelines, widgetModalStore]);
 
   function setActiveTab(next: string) {
     if (next === "filters") {
@@ -134,6 +139,15 @@ export const WidgetModal = observer(({ customColumns, filterableFields, activity
     const selectedKind = form.kind;
     widgetModalStore.setCreationStep("choose");
     requestAnimationFrame(() => document.getElementById(`widget-kind-${selectedKind}`)?.focus());
+  }
+
+  function groupByOptionLabel(option: { key: string; label?: string }) {
+    if (Object.values(EntityType).includes(option.key as EntityType)) return singular(option.key as EntityType);
+    if (option.key.startsWith("custom:") && option.label) return option.label;
+    if (option.key === WidgetGroupByType.dealStage) return t("Dashboard.groupBys.dealStage");
+    if (option.key === WidgetGroupByType.dealPipeline) return t("Dashboard.groupBys.dealPipeline");
+
+    return t("Dashboard.groupBys.none");
   }
 
   function renderChartData() {
@@ -174,22 +188,80 @@ export const WidgetModal = observer(({ customColumns, filterableFields, activity
             </SelectTrigger>
 
             <SelectContent>
-              {widgetModalStore.groupBySelectOptions.map((option) => {
-                const isEntityGrouping = Object.values(EntityType).includes(option.key as EntityType);
-                const label = isEntityGrouping
-                  ? singular(option.key as EntityType)
-                  : option.key.startsWith("custom:") && option.label
-                    ? option.label
-                    : t("Dashboard.groupBys.none");
-                return (
-                  <SelectItem key={option.key} value={option.key}>
-                    {label}
-                  </SelectItem>
-                );
-              })}
+              {widgetModalStore.groupBySelectOptions.map((option) => (
+                <SelectItem key={option.key} value={option.key}>
+                  {groupByOptionLabel(option)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
+
+        {renderPeriodPicker("sm:col-span-2")}
+      </div>
+    );
+  }
+
+  function renderPeriodPicker(className?: string) {
+    if (!widgetModalStore.showPeriodPicker) return null;
+
+    return (
+      <div className={className ? `space-y-1.5 ${className}` : "space-y-1.5"}>
+        <FormLabel htmlFor="periodDays">{t("Common.inputs.periodDays")}</FormLabel>
+
+        <Select
+          disabled={isDisabled}
+          value={widgetModalStore.periodDaysValue}
+          onValueChange={widgetModalStore.onPeriodDaysChange}
+        >
+          <SelectTrigger className="w-full" id="periodDays">
+            <SelectValue placeholder=" " />
+          </SelectTrigger>
+
+          <SelectContent>
+            {WIDGET_PERIOD_DAY_OPTIONS.map((days) => (
+              <SelectItem key={days} value={String(days)}>
+                {t("Dashboard.periods.lastDays", { days })}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  }
+
+  function renderFunnelData() {
+    if (form.kind !== WidgetKind.funnel) return null;
+
+    return (
+      <div className="grid gap-4">
+        <div className="space-y-1.5">
+          <FormLabel htmlFor="pipelineId">{t("Common.inputs.pipelineId")}</FormLabel>
+
+          <Select
+            disabled={isDisabled}
+            value={widgetModalStore.funnelPipelineValue}
+            onValueChange={widgetModalStore.onFunnelPipelineChange}
+          >
+            <SelectTrigger className="w-full" id="pipelineId">
+              <SelectValue placeholder=" " />
+            </SelectTrigger>
+
+            <SelectContent>
+              {widgetModalStore.funnelPipelineOptions.map((pipeline) => (
+                <SelectItem key={pipeline.id} value={pipeline.id}>
+                  {pipeline.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {renderPeriodPicker()}
+
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          {t("Dashboard.funnelWidget.definition", { deals: plural(EntityType.deal) })}
+        </p>
       </div>
     );
   }
@@ -201,6 +273,8 @@ export const WidgetModal = observer(({ customColumns, filterableFields, activity
 
         {form.kind === WidgetKind.chart ? (
           renderChartData()
+        ) : form.kind === WidgetKind.funnel ? (
+          renderFunnelData()
         ) : (
           <ActivityQueryProvider filters={form.timelineFilters}>
             <ActivityFilterFields
@@ -395,7 +469,9 @@ export const WidgetModal = observer(({ customColumns, filterableFields, activity
           label={
             form.kind === WidgetKind.chart
               ? t("Dashboard.widgetEditor.appearance.showMetricAndFilters")
-              : t("Dashboard.widgetEditor.appearance.showFilters")
+              : form.kind === WidgetKind.funnel
+                ? t("Dashboard.widgetEditor.appearance.showSummary")
+                : t("Dashboard.widgetEditor.appearance.showFilters")
           }
         />
 

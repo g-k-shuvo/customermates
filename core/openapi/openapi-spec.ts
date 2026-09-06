@@ -77,6 +77,8 @@ import { updateManyTasksOperation } from "@/features/tasks/upsert/update-many-ta
 import { webhookTaskCreatedOperation } from "@/features/tasks/upsert/task-created.openapi";
 import { webhookTaskUpdatedOperation } from "@/features/tasks/upsert/task-updated.openapi";
 import { webhookTaskDeletedOperation } from "@/features/tasks/delete/task-deleted.openapi";
+import { completeTaskOperation } from "@/features/tasks/complete/complete-task.openapi";
+import { uncompleteTaskOperation } from "@/features/tasks/complete/uncomplete-task.openapi";
 import { getUsersOperation } from "@/features/user/get/get-users.openapi";
 import { getUserDetailsOperation } from "@/features/user/get/get-user-details.openapi";
 import { createWebhookOperation } from "@/features/webhook/create-webhook.openapi";
@@ -348,6 +350,12 @@ export function generateOpenApiSpec() {
         get: getTaskByIdOperation,
         put: updateTaskOperation,
         delete: deleteTaskOperation,
+      },
+      "/v1/tasks/{id}/complete": {
+        post: completeTaskOperation,
+      },
+      "/v1/tasks/{id}/uncomplete": {
+        post: uncompleteTaskOperation,
       },
       "/v1/users/search": {
         post: getUsersOperation,

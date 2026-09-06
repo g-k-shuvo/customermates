@@ -9,7 +9,11 @@ export type SystemTaskIdEntry = { ids: string | string[]; path: (string | number
 export class ValidateSystemTaskIdsInteractor {
   constructor(private repo: FindTasksByIdsRepo) {}
 
-  async invoke(entries: SystemTaskIdEntry[], ctx: z.RefinementCtx) {
+  async invoke(
+    entries: SystemTaskIdEntry[],
+    ctx: z.RefinementCtx,
+    error: CustomErrorCode = CustomErrorCode.taskOnlyCustomTasksCanBeDeleted,
+  ) {
     const all = new Set<string>();
     for (const { ids } of entries) {
       if (Array.isArray(ids)) ids.forEach((id) => all.add(id));
@@ -24,7 +28,7 @@ export class ValidateSystemTaskIdsInteractor {
         if (systemTaskIds.has(list[i])) {
           ctx.addIssue({
             code: "custom",
-            params: { error: CustomErrorCode.taskOnlyCustomTasksCanBeDeleted },
+            params: { error },
             path: isArray ? [...path, i] : path,
           });
         }

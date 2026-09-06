@@ -11114,12 +11114,56 @@
                               "userPendingAuthorization",
                               "custom"
                             ]
+                          },
+                          "activityKind": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "call",
+                                  "meeting",
+                                  "email",
+                                  "task",
+                                  "deadline",
+                                  "lunch"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "dueAt": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "completedAt": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
                           "id",
                           "name",
-                          "type"
+                          "type",
+                          "activityKind",
+                          "dueAt",
+                          "completedAt"
                         ],
                         "additionalProperties": false
                       }
@@ -11568,12 +11612,56 @@
                                 "userPendingAuthorization",
                                 "custom"
                               ]
+                            },
+                            "activityKind": {
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "call",
+                                    "meeting",
+                                    "email",
+                                    "task",
+                                    "deadline",
+                                    "lunch"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "dueAt": {
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "completedAt": {
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             }
                           },
                           "required": [
                             "id",
                             "name",
-                            "type"
+                            "type",
+                            "activityKind",
+                            "dueAt",
+                            "completedAt"
                           ],
                           "additionalProperties": false
                         }
@@ -12021,12 +12109,56 @@
                                 "userPendingAuthorization",
                                 "custom"
                               ]
+                            },
+                            "activityKind": {
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "call",
+                                    "meeting",
+                                    "email",
+                                    "task",
+                                    "deadline",
+                                    "lunch"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "dueAt": {
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "completedAt": {
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             }
                           },
                           "required": [
                             "id",
                             "name",
-                            "type"
+                            "type",
+                            "activityKind",
+                            "dueAt",
+                            "completedAt"
                           ],
                           "additionalProperties": false
                         }
@@ -14117,12 +14249,56 @@
                                     "userPendingAuthorization",
                                     "custom"
                                   ]
+                                },
+                                "activityKind": {
+                                  "default": null,
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "call",
+                                        "meeting",
+                                        "email",
+                                        "task",
+                                        "deadline",
+                                        "lunch"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "dueAt": {
+                                  "default": null,
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "completedAt": {
+                                  "default": null,
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
                                 }
                               },
                               "required": [
                                 "id",
                                 "name",
-                                "type"
+                                "type",
+                                "activityKind",
+                                "dueAt",
+                                "completedAt"
                               ],
                               "additionalProperties": false
                             }
@@ -15594,12 +15770,56 @@
                                       "userPendingAuthorization",
                                       "custom"
                                     ]
+                                  },
+                                  "activityKind": {
+                                    "default": null,
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "call",
+                                          "meeting",
+                                          "email",
+                                          "task",
+                                          "deadline",
+                                          "lunch"
+                                        ]
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "dueAt": {
+                                    "default": null,
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "completedAt": {
+                                    "default": null,
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
                                   }
                                 },
                                 "required": [
                                   "id",
                                   "name",
-                                  "type"
+                                  "type",
+                                  "activityKind",
+                                  "dueAt",
+                                  "completedAt"
                                 ],
                                 "additionalProperties": false
                               }
@@ -17012,12 +17232,56 @@
                               "userPendingAuthorization",
                               "custom"
                             ]
+                          },
+                          "activityKind": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "call",
+                                  "meeting",
+                                  "email",
+                                  "task",
+                                  "deadline",
+                                  "lunch"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "dueAt": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "completedAt": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
                           "id",
                           "name",
-                          "type"
+                          "type",
+                          "activityKind",
+                          "dueAt",
+                          "completedAt"
                         ],
                         "additionalProperties": false
                       }
@@ -17548,12 +17812,56 @@
                               "userPendingAuthorization",
                               "custom"
                             ]
+                          },
+                          "activityKind": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "call",
+                                  "meeting",
+                                  "email",
+                                  "task",
+                                  "deadline",
+                                  "lunch"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "dueAt": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "completedAt": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
                           "id",
                           "name",
-                          "type"
+                          "type",
+                          "activityKind",
+                          "dueAt",
+                          "completedAt"
                         ],
                         "additionalProperties": false
                       }
@@ -18033,12 +18341,56 @@
                               "userPendingAuthorization",
                               "custom"
                             ]
+                          },
+                          "activityKind": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "call",
+                                  "meeting",
+                                  "email",
+                                  "task",
+                                  "deadline",
+                                  "lunch"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "dueAt": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "completedAt": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
                           "id",
                           "name",
-                          "type"
+                          "type",
+                          "activityKind",
+                          "dueAt",
+                          "completedAt"
                         ],
                         "additionalProperties": false
                       }
@@ -18492,12 +18844,56 @@
                               "userPendingAuthorization",
                               "custom"
                             ]
+                          },
+                          "activityKind": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "call",
+                                  "meeting",
+                                  "email",
+                                  "task",
+                                  "deadline",
+                                  "lunch"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "dueAt": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "completedAt": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
                           "id",
                           "name",
-                          "type"
+                          "type",
+                          "activityKind",
+                          "dueAt",
+                          "completedAt"
                         ],
                         "additionalProperties": false
                       }
@@ -25663,6 +26059,73 @@
                         }
                       ]
                     },
+                    "activityKind": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "call",
+                            "meeting",
+                            "email",
+                            "task",
+                            "deadline",
+                            "lunch"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "dueAt": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "durationMinutes": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "completedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "completedById": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "isOverdue": {
+                      "default": false,
+                      "description": "Whether the task is past its due date and still incomplete. Derived from dueAt and completedAt at read time, so it is absent from stored snapshots taken before the due date existed.",
+                      "type": "boolean"
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -25847,6 +26310,12 @@
                     "id",
                     "name",
                     "type",
+                    "activityKind",
+                    "dueAt",
+                    "durationMinutes",
+                    "completedAt",
+                    "completedById",
+                    "isOverdue",
                     "createdAt",
                     "updatedAt",
                     "users",
@@ -25961,6 +26430,73 @@
                           }
                         ]
                       },
+                      "activityKind": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "call",
+                              "meeting",
+                              "email",
+                              "task",
+                              "deadline",
+                              "lunch"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "dueAt": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "durationMinutes": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "completedAt": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "completedById": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "isOverdue": {
+                        "default": false,
+                        "description": "Whether the task is past its due date and still incomplete. Derived from dueAt and completedAt at read time, so it is absent from stored snapshots taken before the due date existed.",
+                        "type": "boolean"
+                      },
                       "createdAt": {
                         "type": "string"
                       },
@@ -26145,6 +26681,12 @@
                       "id",
                       "name",
                       "type",
+                      "activityKind",
+                      "dueAt",
+                      "durationMinutes",
+                      "completedAt",
+                      "completedById",
+                      "isOverdue",
                       "createdAt",
                       "updatedAt",
                       "users",
@@ -26258,6 +26800,73 @@
                           }
                         ]
                       },
+                      "activityKind": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "call",
+                              "meeting",
+                              "email",
+                              "task",
+                              "deadline",
+                              "lunch"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "dueAt": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "durationMinutes": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "completedAt": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "completedById": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "isOverdue": {
+                        "default": false,
+                        "description": "Whether the task is past its due date and still incomplete. Derived from dueAt and completedAt at read time, so it is absent from stored snapshots taken before the due date existed.",
+                        "type": "boolean"
+                      },
                       "createdAt": {
                         "type": "string"
                       },
@@ -26442,6 +27051,12 @@
                       "id",
                       "name",
                       "type",
+                      "activityKind",
+                      "dueAt",
+                      "durationMinutes",
+                      "completedAt",
+                      "completedById",
+                      "isOverdue",
                       "createdAt",
                       "updatedAt",
                       "users",
@@ -28198,6 +28813,73 @@
                               }
                             ]
                           },
+                          "activityKind": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "call",
+                                  "meeting",
+                                  "email",
+                                  "task",
+                                  "deadline",
+                                  "lunch"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "dueAt": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "durationMinutes": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "completedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "completedById": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "isOverdue": {
+                            "default": false,
+                            "description": "Whether the task is past its due date and still incomplete. Derived from dueAt and completedAt at read time, so it is absent from stored snapshots taken before the due date existed.",
+                            "type": "boolean"
+                          },
                           "createdAt": {
                             "type": "string"
                           },
@@ -28382,6 +29064,12 @@
                           "id",
                           "name",
                           "type",
+                          "activityKind",
+                          "dueAt",
+                          "durationMinutes",
+                          "completedAt",
+                          "completedById",
+                          "isOverdue",
                           "createdAt",
                           "updatedAt",
                           "users",
@@ -29408,6 +30096,73 @@
                                 }
                               ]
                             },
+                            "activityKind": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "call",
+                                    "meeting",
+                                    "email",
+                                    "task",
+                                    "deadline",
+                                    "lunch"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "dueAt": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "durationMinutes": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "completedAt": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "completedById": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "isOverdue": {
+                              "default": false,
+                              "description": "Whether the task is past its due date and still incomplete. Derived from dueAt and completedAt at read time, so it is absent from stored snapshots taken before the due date existed.",
+                              "type": "boolean"
+                            },
                             "createdAt": {
                               "type": "string"
                             },
@@ -29592,6 +30347,12 @@
                             "id",
                             "name",
                             "type",
+                            "activityKind",
+                            "dueAt",
+                            "durationMinutes",
+                            "completedAt",
+                            "completedById",
+                            "isOverdue",
                             "createdAt",
                             "updatedAt",
                             "users",
@@ -30465,6 +31226,46 @@
                       }
                     ]
                   },
+                  "activityKind": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "call",
+                          "meeting",
+                          "email",
+                          "task",
+                          "deadline",
+                          "lunch"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "dueAt": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "durationMinutes": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "userIds": {
                     "anyOf": [
                       {
@@ -30610,6 +31411,73 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "activityKind": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "call",
+                            "meeting",
+                            "email",
+                            "task",
+                            "deadline",
+                            "lunch"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "dueAt": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "durationMinutes": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "completedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "completedById": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "isOverdue": {
+                      "default": false,
+                      "description": "Whether the task is past its due date and still incomplete. Derived from dueAt and completedAt at read time, so it is absent from stored snapshots taken before the due date existed.",
+                      "type": "boolean"
                     },
                     "createdAt": {
                       "type": "string"
@@ -30795,6 +31663,12 @@
                     "id",
                     "name",
                     "type",
+                    "activityKind",
+                    "dueAt",
+                    "durationMinutes",
+                    "completedAt",
+                    "completedById",
+                    "isOverdue",
                     "createdAt",
                     "updatedAt",
                     "users",
@@ -30882,6 +31756,1116 @@
               "application/json": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tasks/{id}/complete": {
+      "post": {
+        "operationId": "completeTask",
+        "summary": "Complete a task",
+        "description": "Marks a task complete, stamping completedAt and completedById with the calling user. A task that is already complete answers 409. Pass followUp to schedule the next activity in the same request: it is created against the same contacts, organizations, deals, services and assignees as the task just completed, and both writes share one transaction.",
+        "tags": [
+          "tasks"
+        ],
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "followUp": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "maxLength": 255
+                          },
+                          "activityKind": {
+                            "type": "string",
+                            "enum": [
+                              "call",
+                              "meeting",
+                              "email",
+                              "task",
+                              "deadline",
+                              "lunch"
+                            ]
+                          },
+                          "dueAt": {
+                            "type": "string"
+                          },
+                          "durationMinutes": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "dueAt"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The task was completed successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "task": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "userPendingAuthorization",
+                            "custom"
+                          ]
+                        },
+                        "notes": {
+                          "description": "Markdown content",
+                          "anyOf": [
+                            {},
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "activityKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "call",
+                                "meeting",
+                                "email",
+                                "task",
+                                "deadline",
+                                "lunch"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "dueAt": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "durationMinutes": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "completedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "completedById": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "isOverdue": {
+                          "default": false,
+                          "description": "Whether the task is past its due date and still incomplete. Derived from dueAt and completedAt at read time, so it is absent from stored snapshots taken before the due date existed.",
+                          "type": "boolean"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "type": "string"
+                        },
+                        "users": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "firstName": {
+                                "type": "string"
+                              },
+                              "lastName": {
+                                "type": "string"
+                              },
+                              "avatarUrl": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "email": {
+                                "type": "string",
+                                "format": "email",
+                                "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "firstName",
+                              "lastName",
+                              "avatarUrl",
+                              "email"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "contacts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "firstName": {
+                                "type": "string"
+                              },
+                              "lastName": {
+                                "type": "string"
+                              },
+                              "avatarUrl": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "firstName",
+                              "lastName",
+                              "avatarUrl"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "organizations": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "deals": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "services": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "amount": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name",
+                              "amount"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "customFieldValues": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "columnId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "value": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "columnId"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "description": "Custom field values for this task. Query available custom field configurations via GET /v1/tasks/configuration, which returns customColumns with their definitions."
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "type",
+                        "activityKind",
+                        "dueAt",
+                        "durationMinutes",
+                        "completedAt",
+                        "completedById",
+                        "isOverdue",
+                        "createdAt",
+                        "updatedAt",
+                        "users",
+                        "contacts",
+                        "organizations",
+                        "deals",
+                        "services",
+                        "customFieldValues"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "followUpTask": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "userPendingAuthorization",
+                                "custom"
+                              ]
+                            },
+                            "notes": {
+                              "description": "Markdown content",
+                              "anyOf": [
+                                {},
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "activityKind": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "call",
+                                    "meeting",
+                                    "email",
+                                    "task",
+                                    "deadline",
+                                    "lunch"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "dueAt": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "durationMinutes": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "completedAt": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "completedById": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "isOverdue": {
+                              "default": false,
+                              "description": "Whether the task is past its due date and still incomplete. Derived from dueAt and completedAt at read time, so it is absent from stored snapshots taken before the due date existed.",
+                              "type": "boolean"
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            },
+                            "updatedAt": {
+                              "type": "string"
+                            },
+                            "users": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                  },
+                                  "firstName": {
+                                    "type": "string"
+                                  },
+                                  "lastName": {
+                                    "type": "string"
+                                  },
+                                  "avatarUrl": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "email": {
+                                    "type": "string",
+                                    "format": "email",
+                                    "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "firstName",
+                                  "lastName",
+                                  "avatarUrl",
+                                  "email"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "contacts": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                  },
+                                  "firstName": {
+                                    "type": "string"
+                                  },
+                                  "lastName": {
+                                    "type": "string"
+                                  },
+                                  "avatarUrl": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "firstName",
+                                  "lastName",
+                                  "avatarUrl"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "organizations": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "deals": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "services": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "amount": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "amount"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "customFieldValues": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "columnId": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                  },
+                                  "value": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "columnId"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "description": "Custom field values for this task. Query available custom field configurations via GET /v1/tasks/configuration, which returns customColumns with their definitions."
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name",
+                            "type",
+                            "activityKind",
+                            "dueAt",
+                            "durationMinutes",
+                            "completedAt",
+                            "completedById",
+                            "isOverdue",
+                            "createdAt",
+                            "updatedAt",
+                            "users",
+                            "contacts",
+                            "organizations",
+                            "deals",
+                            "services",
+                            "customFieldValues"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "task",
+                    "followUpTask"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tasks/{id}/uncomplete": {
+      "post": {
+        "operationId": "uncompleteTask",
+        "summary": "Reopen a completed task",
+        "description": "Clears completedAt and completedById, returning the task to its incomplete state. A task that is not complete answers 409.",
+        "tags": [
+          "tasks"
+        ],
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "description": "This action takes no request body; the task is identified by the path.",
+          "content": {}
+        },
+        "responses": {
+          "200": {
+            "description": "The task was reopened successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "userPendingAuthorization",
+                        "custom"
+                      ]
+                    },
+                    "notes": {
+                      "description": "Markdown content",
+                      "anyOf": [
+                        {},
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "activityKind": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "call",
+                            "meeting",
+                            "email",
+                            "task",
+                            "deadline",
+                            "lunch"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "dueAt": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "durationMinutes": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "completedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "completedById": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "isOverdue": {
+                      "default": false,
+                      "description": "Whether the task is past its due date and still incomplete. Derived from dueAt and completedAt at read time, so it is absent from stored snapshots taken before the due date existed.",
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    },
+                    "users": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "firstName": {
+                            "type": "string"
+                          },
+                          "lastName": {
+                            "type": "string"
+                          },
+                          "avatarUrl": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email",
+                            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "firstName",
+                          "lastName",
+                          "avatarUrl",
+                          "email"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "contacts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "firstName": {
+                            "type": "string"
+                          },
+                          "lastName": {
+                            "type": "string"
+                          },
+                          "avatarUrl": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "firstName",
+                          "lastName",
+                          "avatarUrl"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "organizations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "deals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "services": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "amount": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "amount"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "customFieldValues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "columnId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "columnId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Custom field values for this task. Query available custom field configurations via GET /v1/tasks/configuration, which returns customColumns with their definitions."
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "type",
+                    "activityKind",
+                    "dueAt",
+                    "durationMinutes",
+                    "completedAt",
+                    "completedById",
+                    "isOverdue",
+                    "createdAt",
+                    "updatedAt",
+                    "users",
+                    "contacts",
+                    "organizations",
+                    "deals",
+                    "services",
+                    "customFieldValues"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
@@ -48067,6 +50051,25 @@
               }
             ]
           },
+          "activityKind": {
+            "type": "string",
+            "enum": [
+              "call",
+              "meeting",
+              "email",
+              "task",
+              "deadline",
+              "lunch"
+            ]
+          },
+          "dueAt": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
           "userIds": {
             "default": [],
             "type": "array",
@@ -48167,6 +50170,25 @@
                       "type": "null"
                     }
                   ]
+                },
+                "activityKind": {
+                  "type": "string",
+                  "enum": [
+                    "call",
+                    "meeting",
+                    "email",
+                    "task",
+                    "deadline",
+                    "lunch"
+                  ]
+                },
+                "dueAt": {
+                  "type": "string"
+                },
+                "durationMinutes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
                 },
                 "userIds": {
                   "default": [],
@@ -48275,6 +50297,46 @@
                   "description": "Markdown content",
                   "anyOf": [
                     {},
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "activityKind": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "call",
+                        "meeting",
+                        "email",
+                        "task",
+                        "deadline",
+                        "lunch"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "dueAt": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "durationMinutes": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    },
                     {
                       "type": "null"
                     }
@@ -51295,6 +53357,47 @@
                             "userPendingAuthorization",
                             "custom"
                           ]
+                        },
+                        "activityKind": {
+                          "default": null,
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "call",
+                                "meeting",
+                                "email",
+                                "task",
+                                "deadline",
+                                "lunch"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "dueAt": {
+                          "default": null,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "completedAt": {
+                          "default": null,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -51712,6 +53815,47 @@
                               "enum": [
                                 "userPendingAuthorization",
                                 "custom"
+                              ]
+                            },
+                            "activityKind": {
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "call",
+                                    "meeting",
+                                    "email",
+                                    "task",
+                                    "deadline",
+                                    "lunch"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "dueAt": {
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "completedAt": {
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
                               ]
                             }
                           },
@@ -52529,6 +54673,47 @@
                                     "userPendingAuthorization",
                                     "custom"
                                   ]
+                                },
+                                "activityKind": {
+                                  "default": null,
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "call",
+                                        "meeting",
+                                        "email",
+                                        "task",
+                                        "deadline",
+                                        "lunch"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "dueAt": {
+                                  "default": null,
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "completedAt": {
+                                  "default": null,
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
                                 }
                               },
                               "required": [
@@ -52556,6 +54741,47 @@
                                   "enum": [
                                     "userPendingAuthorization",
                                     "custom"
+                                  ]
+                                },
+                                "activityKind": {
+                                  "default": null,
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "call",
+                                        "meeting",
+                                        "email",
+                                        "task",
+                                        "deadline",
+                                        "lunch"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "dueAt": {
+                                  "default": null,
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "completedAt": {
+                                  "default": null,
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
                                   ]
                                 }
                               },
@@ -52993,6 +55219,47 @@
                           "enum": [
                             "userPendingAuthorization",
                             "custom"
+                          ]
+                        },
+                        "activityKind": {
+                          "default": null,
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "call",
+                                "meeting",
+                                "email",
+                                "task",
+                                "deadline",
+                                "lunch"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "dueAt": {
+                          "default": null,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "completedAt": {
+                          "default": null,
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
                           ]
                         }
                       },
@@ -54074,6 +56341,73 @@
                       }
                     ]
                   },
+                  "activityKind": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "call",
+                          "meeting",
+                          "email",
+                          "task",
+                          "deadline",
+                          "lunch"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "dueAt": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "durationMinutes": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "completedAt": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "completedById": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "isOverdue": {
+                    "default": false,
+                    "description": "Whether the task is past its due date and still incomplete. Derived from dueAt and completedAt at read time, so it is absent from stored snapshots taken before the due date existed.",
+                    "type": "boolean"
+                  },
                   "createdAt": {
                     "type": "string"
                   },
@@ -54252,6 +56586,11 @@
                   "id",
                   "name",
                   "type",
+                  "activityKind",
+                  "dueAt",
+                  "durationMinutes",
+                  "completedAt",
+                  "completedById",
                   "createdAt",
                   "updatedAt",
                   "users",
@@ -54336,6 +56675,73 @@
                             "type": "null"
                           }
                         ]
+                      },
+                      "activityKind": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "call",
+                              "meeting",
+                              "email",
+                              "task",
+                              "deadline",
+                              "lunch"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "dueAt": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "durationMinutes": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "completedAt": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "completedById": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "isOverdue": {
+                        "default": false,
+                        "description": "Whether the task is past its due date and still incomplete. Derived from dueAt and completedAt at read time, so it is absent from stored snapshots taken before the due date existed.",
+                        "type": "boolean"
                       },
                       "createdAt": {
                         "type": "string"
@@ -54515,6 +56921,11 @@
                       "id",
                       "name",
                       "type",
+                      "activityKind",
+                      "dueAt",
+                      "durationMinutes",
+                      "completedAt",
+                      "completedById",
                       "createdAt",
                       "updatedAt",
                       "users",
@@ -54586,6 +56997,190 @@
                                 "type": "null"
                               }
                             ]
+                          }
+                        }
+                      },
+                      "activityKind": {
+                        "type": "object",
+                        "properties": {
+                          "previous": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "call",
+                                  "meeting",
+                                  "email",
+                                  "task",
+                                  "deadline",
+                                  "lunch"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "current": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "call",
+                                  "meeting",
+                                  "email",
+                                  "task",
+                                  "deadline",
+                                  "lunch"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "previous",
+                          "current"
+                        ]
+                      },
+                      "dueAt": {
+                        "type": "object",
+                        "properties": {
+                          "previous": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "current": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "previous",
+                          "current"
+                        ]
+                      },
+                      "durationMinutes": {
+                        "type": "object",
+                        "properties": {
+                          "previous": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "current": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "previous",
+                          "current"
+                        ]
+                      },
+                      "completedAt": {
+                        "type": "object",
+                        "properties": {
+                          "previous": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "current": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "previous",
+                          "current"
+                        ]
+                      },
+                      "completedById": {
+                        "type": "object",
+                        "properties": {
+                          "previous": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "current": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "previous",
+                          "current"
+                        ]
+                      },
+                      "isOverdue": {
+                        "type": "object",
+                        "properties": {
+                          "previous": {
+                            "default": false,
+                            "description": "Whether the task is past its due date and still incomplete. Derived from dueAt and completedAt at read time, so it is absent from stored snapshots taken before the due date existed.",
+                            "type": "boolean"
+                          },
+                          "current": {
+                            "default": false,
+                            "description": "Whether the task is past its due date and still incomplete. Derived from dueAt and completedAt at read time, so it is absent from stored snapshots taken before the due date existed.",
+                            "type": "boolean"
                           }
                         }
                       },
@@ -55057,6 +57652,73 @@
                       }
                     ]
                   },
+                  "activityKind": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "call",
+                          "meeting",
+                          "email",
+                          "task",
+                          "deadline",
+                          "lunch"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "dueAt": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "durationMinutes": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "completedAt": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "completedById": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "isOverdue": {
+                    "default": false,
+                    "description": "Whether the task is past its due date and still incomplete. Derived from dueAt and completedAt at read time, so it is absent from stored snapshots taken before the due date existed.",
+                    "type": "boolean"
+                  },
                   "createdAt": {
                     "type": "string"
                   },
@@ -55235,6 +57897,11 @@
                   "id",
                   "name",
                   "type",
+                  "activityKind",
+                  "dueAt",
+                  "durationMinutes",
+                  "completedAt",
+                  "completedById",
                   "createdAt",
                   "updatedAt",
                   "users",
@@ -62135,6 +64802,46 @@
             "description": "Markdown content",
             "anyOf": [
               {},
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "activityKind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "call",
+                  "meeting",
+                  "email",
+                  "task",
+                  "deadline",
+                  "lunch"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dueAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "durationMinutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
               {
                 "type": "null"
               }

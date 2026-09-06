@@ -189,6 +189,7 @@ model User {
   services                        ServiceUser[]
   tasks                           TaskUser[]
   relatedTasks                    Task[]                  @relation("TaskRelatedUser")
+  completedTasks                  Task[]                  @relation("TaskCompletedBy")
   widgets                         Widget[]
   p13n                            P13n[]
   connectedAccounts               ConnectedAccount[]
@@ -314,10 +315,16 @@ model Task {
   name              String
   relatedUserId     String?
   notes             Json?
+  activityKind      ActivityKind?
+  dueAt             DateTime?
+  durationMinutes   Int?
+  completedAt       DateTime?
+  completedById     String?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   company           Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
   relatedUser       User?              @relation("TaskRelatedUser", fields: [relatedUserId], references: [id])
+  completedBy       User?              @relation("TaskCompletedBy", fields: [completedById], references: [id], onDelete: SetNull)
   users             TaskUser[]
   contacts          TaskContact[]
   organizations     TaskOrganization[]
@@ -328,6 +335,9 @@ model Task {
   @@index([companyId])
   @@index([type, companyId])
   @@index([relatedUserId])
+  @@index([companyId, completedAt, dueAt])
+  @@index([companyId, dueAt])
+  @@index([completedById])
 }
 
 model InviteToken {
@@ -761,6 +771,8 @@ model Widget {
   groupByType           WidgetGroupByType?
   groupByCustomColumnId String?            @db.Uuid
   aggregationType       AggregationType?
+  periodDays            Int?
+  pipelineId            String?
   timelineFilters       Json?
   layout                Json?
   isTemplate            Boolean            @default(false)
@@ -1161,6 +1173,15 @@ enum TaskType {
   custom
 }
 
+enum ActivityKind {
+  call
+  meeting
+  email
+  task
+  deadline
+  lunch
+}
+
 enum CustomColumnType {
   currency
   date
@@ -1355,6 +1376,7 @@ enum Currency {
 enum WidgetKind {
   chart
   activityTimeline
+  funnel
 }
 
 enum WidgetGroupByType {
@@ -1362,6 +1384,8 @@ enum WidgetGroupByType {
   organization
   deal
   service
+  dealStage
+  dealPipeline
   customColumn
   none
 }
@@ -1371,6 +1395,9 @@ enum AggregationType {
   dealValue
   dealQuantity
   dealWeightedValue
+  winRate
+  salesCycleDays
+  stageDurationDays
 }
 
 enum SubscriptionStatus {

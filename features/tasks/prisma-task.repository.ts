@@ -11,23 +11,75 @@ import type { GetTaskByIdRepo } from "@/features/tasks/get/get-task-by-id.intera
 import type { FindTasksByIdsRepo } from "@/features/tasks/find-tasks-by-ids.repo";
 import type { GetCompanyWideTaskRepo } from "@/features/tasks/get-company-wide-task.repo";
 import type { ModifyRelationTaskRepo } from "@/features/relations/modify-entity-relation.interactor";
+import type { CompleteTaskRepo } from "@/features/tasks/complete/complete-task.repo";
+import type { UncompleteTaskRepo } from "@/features/tasks/complete/uncomplete-task.repo";
+import type { FindNextActivitiesRepo } from "@/features/tasks/find-next-activities.repo";
+import type { ActivityCountsRepo } from "@/features/tasks/get/get-activity-counts.interactor";
 
 import { EntityType, TaskType, Resource, Action } from "@/generated/prisma";
 
 import type { Prisma } from "@/generated/prisma";
 import type { ExportPageParams, ExportRecordsRepo } from "@/core/base/base-export-records-page.interactor";
 
-import { type TaskDto } from "@/features/tasks/task.schema";
+import { type NextActivityDto, type TaskDto } from "@/features/tasks/task.schema";
 import { BaseRepository } from "@/core/base/base-repository";
 import { Transaction } from "@/core/decorators/transaction.decorator";
-import { type GetQueryParams } from "@/core/base/base-get.schema";
+import { type Filter, type GetQueryParams } from "@/core/base/base-get.schema";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
+import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { getCustomColumnRepo } from "@/core/di";
 import { type RepoArgs } from "@/core/utils/types";
+import { isOverdue, notOverdueWhere, overdueWhere } from "@/features/tasks/task-overdue";
+import { selectNextActivities } from "@/features/tasks/task-next-activity";
+import { completeTransition, uncompleteTransition } from "@/features/tasks/complete/completion-transition";
+
+const SELECTION_OPERATORS = [FilterOperatorKey.in, FilterOperatorKey.notIn];
+
+const OVERDUE_FILTER_FIELD: string = FilterFieldKey.overdue;
+
+const BOOLEAN_FILTER_VALUES = new Set(["true", "false"]);
+
+function partitionTaskFilters(filters: Filter[] | undefined) {
+  const overdue: Filter[] = [];
+  const rest: Filter[] = [];
+
+  for (const filter of filters ?? []) {
+    if (filter.field === OVERDUE_FILTER_FIELD) overdue.push(filter);
+    else rest.push(filter);
+  }
+
+  return { overdue, rest };
+}
+
+function selectedFilterValues(filter: Filter): string[] {
+  const raw: unknown = "value" in filter ? filter.value : undefined;
+
+  return (Array.isArray(raw) ? (raw as unknown[]) : [raw]).flatMap((value) =>
+    typeof value === "string" ? [value] : [],
+  );
+}
+
+function overdueClause(filter: Filter, now: Date): Prisma.TaskWhereInput | null {
+  if (!SELECTION_OPERATORS.includes(filter.operator)) return null;
+
+  const selected = new Set(selectedFilterValues(filter).filter((value) => BOOLEAN_FILTER_VALUES.has(value)));
+
+  if (selected.size !== 1) return null;
+
+  const wantsOverdue = (filter.operator === FilterOperatorKey.in) === selected.has("true");
+
+  return wantsOverdue ? overdueWhere(now) : notOverdueWhere(now);
+}
+
+function existingAndClauses(where: Prisma.TaskWhereInput): Prisma.TaskWhereInput[] {
+  if (!where.AND) return [];
+
+  return Array.isArray(where.AND) ? where.AND : [where.AND];
+}
 
 export class PrismaTaskRepo
-  extends BaseRepository
+  extends BaseRepository<Prisma.TaskWhereInput>
   implements
     TaskWorkerRepo,
     GetTasksRepo,
@@ -42,6 +94,10 @@ export class PrismaTaskRepo
     FindTasksByIdsRepo,
     GetCompanyWideTaskRepo,
     ModifyRelationTaskRepo,
+    CompleteTaskRepo,
+    UncompleteTaskRepo,
+    FindNextActivitiesRepo,
+    ActivityCountsRepo,
     ExportRecordsRepo<TaskDto>
 {
   private get userScopedSelect() {
@@ -50,6 +106,11 @@ export class PrismaTaskRepo
       name: true,
       type: true,
       notes: true,
+      activityKind: true,
+      dueAt: true,
+      durationMinutes: true,
+      completedAt: true,
+      completedById: true,
       createdAt: true,
       updatedAt: true,
       users: {
@@ -107,9 +168,26 @@ export class PrismaTaskRepo
 
   getSortableFields() {
     return [
+      { field: "dueAt", resolvedFields: ["dueAt"] },
+      { field: "completedAt", resolvedFields: ["completedAt"] },
       { field: "createdAt", resolvedFields: ["createdAt"] },
       { field: "updatedAt", resolvedFields: ["updatedAt"] },
     ];
+  }
+
+  override async buildQueryArgs(params: GetQueryParams, baseWhere: Prisma.TaskWhereInput = {}) {
+    const { overdue, rest } = partitionTaskFilters(params.filters);
+    const args = await super.buildQueryArgs({ ...params, filters: rest }, baseWhere);
+    const now = new Date();
+    const clauses = overdue.flatMap((filter) => {
+      const clause = overdueClause(filter, now);
+
+      return clause ? [clause] : [];
+    });
+
+    if (clauses.length === 0) return args;
+
+    return { ...args, where: { ...args.where, AND: [...existingAndClauses(args.where), ...clauses] } };
   }
 
   async getCustomColumns() {
@@ -163,12 +241,14 @@ export class PrismaTaskRepo
       },
       { field: FilterFieldKey.updatedAt, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.updatedAt] },
       { field: FilterFieldKey.createdAt, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.createdAt] },
+      { field: FilterFieldKey.overdue, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.overdue] },
     ];
   }
 
   private toDto(task: Prisma.TaskGetPayload<{ select: PrismaTaskRepo["userScopedSelect"] }>): TaskDto {
     return {
       ...task,
+      isOverdue: isOverdue(task.dueAt, task.completedAt, new Date()),
       users: task.users.map((it) => it.user),
       contacts: task.contacts.map((it) => it.contact),
       organizations: task.organizations.map((it) => it.organization),
@@ -213,6 +293,21 @@ export class PrismaTaskRepo
     const { where } = await this.buildQueryArgs(params, this.exportWhere(params.selectedIds));
 
     return this.prisma.task.count({ where });
+  }
+
+  async countAssignedActivities(args: { now: Date; dayEndsAt: Date }) {
+    const assigned = {
+      ...this.accessWhere("task"),
+      users: { some: { userId: this.userId } },
+      completedAt: null,
+    };
+
+    const [overdue, dueToday] = await Promise.all([
+      this.prisma.task.count({ where: { ...assigned, dueAt: { lte: args.now } } }),
+      this.prisma.task.count({ where: { ...assigned, dueAt: { gt: args.now, lte: args.dayEndsAt } } }),
+    ]);
+
+    return { overdue, dueToday };
   }
 
   async getSystemTasksCount() {
@@ -279,13 +374,17 @@ export class PrismaTaskRepo
   @Transaction
   async createTaskOrThrow(args: RepoArgs<CreateTaskRepo, "createTaskOrThrow">) {
     const { companyId } = this.user;
-    const { userIds, contactIds, organizationIds, dealIds, serviceIds, customFieldValues, name, notes } = args;
+    const { userIds, contactIds, organizationIds, dealIds, serviceIds, customFieldValues } = args;
+    const { name, notes, activityKind, dueAt, durationMinutes } = args;
 
     const data = {
       name,
       notes: notes,
       companyId,
       type: TaskType.custom,
+      activityKind: activityKind ?? null,
+      dueAt: dueAt ?? null,
+      durationMinutes: durationMinutes ?? null,
     };
 
     const task = await this.prisma.task.create({
@@ -370,6 +469,9 @@ export class PrismaTaskRepo
     }
 
     if (taskData.notes !== undefined) data.notes = taskData.notes;
+    if (taskData.activityKind !== undefined) data.activityKind = taskData.activityKind;
+    if (taskData.dueAt !== undefined) data.dueAt = taskData.dueAt;
+    if (taskData.durationMinutes !== undefined) data.durationMinutes = taskData.durationMinutes;
 
     await this.prisma.task.updateMany({
       where: { id, ...this.accessWhere("task") },
@@ -492,6 +594,83 @@ export class PrismaTaskRepo
     await this.prisma.task.deleteMany({ where: { id, ...this.accessWhere("task") } });
 
     return taskDto;
+  }
+
+  private async applyCompletionWrite(
+    id: string,
+    expectedCompletedAt: Prisma.TaskWhereInput["completedAt"],
+    data: Prisma.TaskUncheckedUpdateManyInput,
+  ) {
+    const { count } = await this.prisma.task.updateMany({
+      where: { id, completedAt: expectedCompletedAt, ...this.accessWhere("task") },
+      data,
+    });
+
+    if (count === 0) return null;
+
+    const updatedTask = await this.prisma.task.findFirstOrThrow({
+      where: { id, ...this.accessWhere("task") },
+      select: this.userScopedSelect,
+    });
+
+    return this.toDto(updatedTask);
+  }
+
+  @Transaction
+  async completeTaskOrThrow(id: string) {
+    const { companyId, id: completedById } = this.user;
+
+    return this.applyCompletionWrite(id, null, { companyId, ...completeTransition(new Date(), completedById) });
+  }
+
+  @Transaction
+  async uncompleteTaskOrThrow(id: string) {
+    const { companyId } = this.user;
+
+    return this.applyCompletionWrite(id, { not: null }, { companyId, ...uncompleteTransition() });
+  }
+
+  async findNextActivitiesByDealIds(dealIds: Set<string>): Promise<Map<string, NextActivityDto>> {
+    if (dealIds.size === 0) return new Map();
+
+    const ids = Array.from(dealIds);
+    const dealScope = { dealId: { in: ids }, deal: this.accessWhere("deal") };
+
+    const tasks = await this.prisma.task.findMany({
+      where: {
+        ...this.accessWhere("task"),
+        completedAt: null,
+        dueAt: { not: null },
+        deals: { some: dealScope },
+      },
+      select: {
+        id: true,
+        name: true,
+        activityKind: true,
+        dueAt: true,
+        createdAt: true,
+        deals: { where: dealScope, select: { dealId: true } },
+      },
+      orderBy: [{ dueAt: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+    });
+
+    return selectNextActivities(
+      tasks.flatMap((task) =>
+        task.dueAt
+          ? [
+              {
+                id: task.id,
+                name: task.name,
+                activityKind: task.activityKind,
+                dueAt: task.dueAt,
+                createdAt: task.createdAt,
+                dealIds: task.deals.map((it) => it.dealId),
+              },
+            ]
+          : [],
+      ),
+      new Date(),
+    );
   }
 
   async findIds(ids: Set<string>) {

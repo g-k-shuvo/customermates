@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { useRootStore } from "@/core/stores/root-store.provider";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 
+import { TaskActivityFields } from "./task-activity-fields";
 import { TASK_DETAIL_FIELD, TASK_DETAIL_SECTION } from "./task-detail-personalization";
 
 type Props = {
@@ -94,6 +95,8 @@ export const TaskDetailView = observer(({ layout = "drawer" }: Props) => {
 
         <EntityDetailField fieldId={TASK_DETAIL_FIELD.name}>{drawerNameField}</EntityDetailField>
 
+        <TaskActivityFields />
+
         <EntityRelationField
           currentEntityId={fetchedEntity?.id}
           currentEntityType="task"
@@ -136,6 +139,8 @@ export const TaskDetailView = observer(({ layout = "drawer" }: Props) => {
           {systemTaskAlert}
 
           <EntityDetailField fieldId={TASK_DETAIL_FIELD.name}>{pageNameField}</EntityDetailField>
+
+          <TaskActivityFields showFieldActions />
 
           <AssignedUsersField
             items={fetchedEntity?.users}

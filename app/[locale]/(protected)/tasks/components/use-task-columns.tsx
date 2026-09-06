@@ -8,6 +8,8 @@ import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { EntityType, TaskType } from "@/generated/prisma";
 
+import { ActivityDueBadge } from "@/components/activity/activity-due-badge";
+import { ActivityKindIcon, useActivityKindLabel } from "@/components/activity/activity-kind-icon";
 import { AppChipStack } from "@/components/chip/app-chip-stack";
 import { standardTailColumns } from "@/components/data-view/standard-columns";
 import { useEntityHref } from "@/components/entity-detail/hooks/use-entity-drawer-stack";
@@ -17,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useRootStore } from "@/core/stores/root-store.provider";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 
+import { ActivityCompleteToggle } from "./activity-complete-toggle";
 import { getSystemTaskNameTranslationKey } from "./system-task.config";
 
 export function useTaskColumns(): ColumnDef<TaskDto>[] {
@@ -25,6 +28,7 @@ export function useTaskColumns(): ColumnDef<TaskDto>[] {
   const entityHref = useEntityHref();
   const { singular } = useEntityTerminology();
   const taskLabel = singular(EntityType.task);
+  const activityKindLabel = useActivityKindLabel();
   const t = useTranslations();
 
   return useMemo<ColumnDef<TaskDto>[]>(
@@ -53,6 +57,44 @@ export function useTaskColumns(): ColumnDef<TaskDto>[] {
             </div>
           );
         },
+      },
+      {
+        id: "activityKind",
+        cell: ({ row }) => (
+          <span className="flex items-center gap-1.5 text-sm">
+            <ActivityKindIcon className="text-muted-foreground" kind={row.original.activityKind} size="sm" />
+
+            <span className="truncate">{activityKindLabel(row.original.activityKind)}</span>
+          </span>
+        ),
+      },
+      {
+        id: "dueAt",
+        cell: ({ row }) => (
+          <ActivityDueBadge
+            activityKind={row.original.activityKind}
+            dueAt={row.original.dueAt}
+            isCompleted={row.original.completedAt !== null}
+            isOverdue={row.original.isOverdue}
+          />
+        ),
+      },
+      {
+        id: "completedAt",
+        cell: ({ row }) =>
+          row.original.type === TaskType.custom ? (
+            <ActivityCompleteToggle
+              activity={{
+                id: row.original.id,
+                name: row.original.name,
+                activityKind: row.original.activityKind,
+                dueAt: row.original.dueAt,
+                completedAt: row.original.completedAt,
+                hasLinkedRecords:
+                  row.original.contacts.length + row.original.organizations.length + row.original.deals.length > 0,
+              }}
+            />
+          ) : null,
       },
       {
         id: "contacts",
@@ -108,6 +150,6 @@ export function useTaskColumns(): ColumnDef<TaskDto>[] {
       },
       ...standardTailColumns({ store: tasksStore, intlStore, userModalStore }),
     ],
-    [entityHref, intlStore, taskLabel, tasksStore, tasksStore.customColumns, t, userModalStore],
+    [activityKindLabel, entityHref, intlStore, taskLabel, tasksStore, tasksStore.customColumns, t, userModalStore],
   );
 }

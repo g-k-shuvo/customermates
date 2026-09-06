@@ -66,6 +66,9 @@ vi.mock("../profile/components/connect-upsell-modal", () => ({
 vi.mock("../deals/components/mark-deal-lost-modal", () => ({
   MarkDealLostModal: () => "mark-deal-lost-modal",
 }));
+vi.mock("../tasks/components/schedule-follow-up-modal", () => ({
+  ScheduleFollowUpModal: () => "schedule-follow-up-modal",
+}));
 vi.mock("@/components/ui/sonner", () => ({ Toaster: () => "toaster" }));
 vi.mock("@/app/components/global-search-modal", () => ({
   GlobalSearchModal: () => "global-search-modal",

@@ -105,6 +105,21 @@ describe("dashboard widget UI", () => {
     expect(modal).toContain("form.kind === WidgetKind.chart && (");
   });
 
+  it("shows the per-group median beside every per-group mean it plots", () => {
+    const chart = dashboardComponent("widget-chart.tsx");
+    const tooltip = read("components/chart/chart-tooltip.tsx");
+
+    expect(chart).toContain("metricsNote: noteText(widgetPointMetricNote(aggregationType, item.metrics))");
+    expect(tooltip).toContain("entry.payload?.metricsNote");
+
+    for (const name of ["vertical-bar-chart-with-labels.tsx", "horizontal-bar-chart-with-labels.tsx"]) {
+      const labelled = dashboardComponent(name);
+      const valueLabel = labelled.slice(labelled.lastIndexOf("<LabelList"));
+
+      expect(valueLabel).toContain("entry.metricsNote");
+    }
+  });
+
   it("groups each chart filter family inside one bordered accordion surface", () => {
     const accordion = read("components/data-view/filter-modal/filter-accordion.tsx");
     const filterPopover = read("components/data-view/header/filter-popover.tsx");

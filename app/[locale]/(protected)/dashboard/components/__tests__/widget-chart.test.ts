@@ -27,7 +27,21 @@ vi.mock("next/dynamic", () => ({
 }));
 
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => (key === "Diagrams.noGroup" ? "No group" : key),
+  useTranslations: () => (key: string, values?: Record<string, unknown>) => {
+    if (key === "Diagrams.noGroup") return "No group";
+    return values ? `${key}(${JSON.stringify(values)})` : key;
+  },
+}));
+
+vi.mock("@/core/stores/use-hydrated-intl-store", () => ({
+  useHydratedIntlStore: () => ({
+    formatNumber: (value: number) => String(value),
+    formatCurrency: (value: number) => `$${value}`,
+  }),
+}));
+
+vi.mock("@/components/entity-terminology/use-entity-terminology", () => ({
+  useEntityTerminology: () => ({ plural: () => "deals" }),
 }));
 
 vi.mock("next-themes", () => ({
@@ -191,6 +205,43 @@ describe("WidgetChart", () => {
       "fill-primary1",
     ]);
     expect(call.props.colors).toEqual(["fill-success1", "fill-primary1"]);
+  });
+
+  it("carries the per-group median through to the chart instead of dropping it", () => {
+    const call = renderChart(DisplayType.verticalBarChart, {
+      aggregationType: AggregationType.salesCycleDays,
+      data: [
+        { labelKind: "literal", label: "Enterprise", value: 21, metrics: { mean: 21, median: 14, sampleSize: 9 } },
+        { labelKind: "literal", label: "SMB", value: 8 },
+      ],
+    });
+    const notes = (call.props.chartData as Array<{ metricsNote?: string }>).map((point) => point.metricsNote);
+
+    expect(notes[0]).toBe('Dashboard.widgetMetrics.median({"value":"14"})');
+    expect(notes[1]).toBeUndefined();
+  });
+
+  it("carries the per-group closed-deal count through for a win rate", () => {
+    const call = renderChart(DisplayType.horizontalBarChartWithLabels, {
+      aggregationType: AggregationType.winRate,
+      data: [
+        {
+          labelKind: "literal",
+          label: "Enterprise",
+          value: 75,
+          metrics: { wonCount: 3, lostCount: 1, sampleSize: 4 },
+        },
+      ],
+    });
+    const notes = (call.props.chartData as Array<{ metricsNote?: string }>).map((point) => point.metricsNote);
+
+    expect(notes[0]).toBe('Dashboard.widgetMetrics.winRateDenominator({"closed":"4","deals":"deals"})');
+  });
+
+  it("leaves the sum aggregations without a per-group note", () => {
+    const call = renderChart(DisplayType.verticalBarChart);
+
+    expect((call.props.chartData as Array<{ metricsNote?: string }>).every((point) => !point.metricsNote)).toBe(true);
   });
 
   it("passes the legend choice only to the doughnut chart", () => {

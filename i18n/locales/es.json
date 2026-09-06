@@ -15,6 +15,54 @@
     "privacyLink": "Detalles de privacidad",
     "title": "Ayúdanos a saber qué funciona"
   },
+  "Activities": {
+    "agenda": {
+      "emptyBody": "Aún no hay {plural} programadas.",
+      "emptyTitle": "Nada programado",
+      "later": "Más adelante ({count})",
+      "overdue": "Vencidas ({count})",
+      "thisWeek": "Esta semana ({count})",
+      "today": "Hoy ({count})",
+      "tomorrow": "Mañana ({count})",
+      "undated": "Sin fecha ({count})"
+    },
+    "completion": {
+      "complete": "Marcar como hecha",
+      "completedAt": "Hecha {date}",
+      "open": "Pendiente",
+      "reopen": "Reabrir"
+    },
+    "fields": {
+      "activityKind": "Tipo de actividad",
+      "completion": "Progreso",
+      "dueAt": "Vence",
+      "durationMinutes": "Duración (min)"
+    },
+    "followUp": {
+      "description": "Has terminado «{name}». Programa el siguiente paso.",
+      "durationPlaceholder": "30",
+      "nameLabel": "¿Qué sigue?",
+      "schedule": "Programar",
+      "skip": "Ahora no",
+      "title": "Planificar el siguiente paso"
+    },
+    "list": {
+      "empty": "Nada planificado todavía",
+      "label": "Trabajo planificado"
+    },
+    "nextActivity": {
+      "label": "Próxima actividad",
+      "none": "Sin próxima actividad"
+    },
+    "summary": {
+      "dueToday": "Vence hoy",
+      "overdue": "Mis actividades vencidas"
+    },
+    "tabs": {
+      "agenda": "Agenda",
+      "list": "Vista de lista"
+    }
+  },
   "AgentChat": {
     "activity": {
       "cancelled": "Detenido",
@@ -823,6 +871,15 @@
       "save": "Guardar",
       "signIn": "Iniciar sesión"
     },
+    "activityKinds": {
+      "call": "Llamada",
+      "deadline": "Fecha límite",
+      "email": "Correo electrónico",
+      "lunch": "Comida",
+      "meeting": "Reunión",
+      "task": "Pendiente",
+      "unspecified": "Sin tipo"
+    },
     "ariaLabels": {
       "breadcrumb": "Ruta de navegación",
       "collapseSearch": "Contraer la búsqueda",
@@ -894,6 +951,12 @@
           "qualified": "Cualificado",
           "won": "Ganado"
         }
+      },
+      "dashboard": {
+        "openPipelineValueByStage": "Valor del pipeline abierto por etapa",
+        "pipelineFunnel": "Embudo de ventas",
+        "salesCycle": "Ciclo de ventas medio",
+        "winRate": "Tasa de éxito"
       },
       "deal": {
         "columnLabel": "Etapa",
@@ -1050,8 +1113,11 @@
       "socialActionRequiresSocialAccount": "Esta acción requiere una cuenta de LinkedIn o Instagram conectada, pero esta cuenta es {provider}.",
       "socialPostsRequireSocialAccount": "Las publicaciones sociales requieren una cuenta de LinkedIn o Instagram conectada, pero esta cuenta es {provider}.",
       "subjectRequired": "Añade un asunto.",
+      "taskAlreadyCompleted": "Esta tarea ya está completada. Vuélvela a abrir antes de completarla de nuevo.",
       "taskNameCannotBeChangedForSystemTasks": "El nombre de las tareas del sistema no se puede cambiar.",
+      "taskNotCompleted": "Esta tarea no está completada, así que no hay nada que reabrir.",
       "taskNotFound": "ID de tarea no encontrado o no accesible.",
+      "taskOnlyCustomTasksCanBeCompleted": "Solo se pueden completar las tareas personalizadas.",
       "taskOnlyCustomTasksCanBeDeleted": "Solo se pueden eliminar las tareas personalizadas.",
       "terminologyInvalidPreset": "Elige una de las plantillas de nombre disponibles.",
       "termsNotAgreed": "Debes aceptar los términos y condiciones.",
@@ -1072,14 +1138,21 @@
       "webhookDeliveryNotFound": "ID de entrega de webhook no encontrado o no accesible.",
       "webhookEventsRequired": "Selecciona al menos un evento.",
       "webhookNotFound": "ID de webhook no encontrado o no accesible.",
+      "widgetClosedDealAggregationCannotGroupByStage": "La tasa de éxito y el ciclo de venta solo cuentan las oportunidades cerradas, que están todas en la etapa ganada o perdida. Agrúpalas por embudo en su lugar.",
       "widgetDealAggregationNotAllowedForTask": "Los tipos de agregación de oportunidades no están permitidos para el tipo de elemento Tarea.",
       "widgetDealFiltersNotAllowedForDealEntityType": "Los filtros de oportunidad no están permitidos cuando el tipo de elemento es Oportunidad.",
       "widgetDealQuantityOnlyForService": "La agregación de cantidad de oportunidades solo está permitida para el tipo de elemento Servicio.",
+      "widgetDurationAggregationFiltersNotSupported": "El ciclo de venta y el tiempo en la etapa se calculan a partir del historial de etapas y no admiten filtros.",
+      "widgetFunnelPipelineHasNoOpenStages": "Este pipeline no tiene etapas abiertas, así que no hay nada que embudar.",
+      "widgetFunnelRequiresPipelineAccess": "Un widget de embudo necesita acceso a los pipelines.",
       "widgetGroupByCustomColumnIdRequired": "El ID de columna personalizada es obligatorio al agrupar por columna personalizada.",
       "widgetGroupByEntityTypeNotAllowedForCount": "No se permite agrupar por tipo de elemento cuando el tipo de agregación es el recuento.",
       "widgetGroupByTypeMustMatchEntityType": "El tipo de agrupación debe coincidir con el tipo de elemento del gráfico.",
       "widgetKindImmutable": "El tipo de un widget no se puede cambiar después de crearlo.",
       "widgetNotFound": "ID de widget no encontrado o no accesible.",
+      "widgetPeriodAggregationGroupingLimited": "La tasa de éxito, el ciclo de venta y el tiempo en la etapa solo pueden agruparse por embudo o etapa.",
+      "widgetPeriodAggregationRequiresDeal": "La tasa de éxito, el ciclo de venta y el tiempo en la etapa solo están disponibles cuando el tipo de elemento es Deal.",
+      "widgetPipelineGroupingRequiresDeal": "La agrupación por embudo o etapa solo está disponible cuando el tipo de elemento es Deal.",
       "widgetTaskCanOnlyGroupByCustomColumn": "Las tareas solo se pueden agrupar por columnas personalizadas, no por tipos de elemento.",
       "widgetWeightedValueNotAllowedForService": "La agregación de valor ponderado no está permitida para el tipo de elemento Servicio."
     },
@@ -1187,6 +1260,7 @@
         "event": "Evento",
         "isPlatformOperator": "Operador de plataforma",
         "lastActiveAt": "Última actividad",
+        "overdue": "Vencida",
         "participants": "Participantes",
         "pipelineId": "Embudo",
         "plan": "Plan",
@@ -1222,6 +1296,10 @@
         "lt": "<",
         "lte": "≤",
         "notIn": "no es uno de"
+      },
+      "overdueValues": {
+        "onTrack": "No vencida",
+        "overdue": "Vencida"
       },
       "presets": {
         "add": "Guardar como preajuste…",
@@ -1286,6 +1364,8 @@
         "lastOption": "Una selección única necesita al menos una opción"
       },
       "password": "Contraseña",
+      "periodDays": "Periodo",
+      "pipelineId": "Pipeline",
       "roleId": "Rol",
       "secret": "Secreto",
       "status": "Estado",
@@ -1354,12 +1434,14 @@
       "columns": {
         "action": "Acción",
         "actions": "Acciones",
+        "activityKind": "Tipo de actividad",
         "actor": "Actor",
         "adProvider": "Proveedor de anuncios",
         "allowance": "Asignación",
         "amount": "Importe",
         "avatarUrl": "Avatar",
         "channels": "Canales",
+        "completedAt": "Completada",
         "contacts": "Contactos",
         "createdAt": "Creado el",
         "credits": "Créditos",
@@ -1367,6 +1449,7 @@
         "deals": "Oportunidades",
         "description": "Descripción",
         "displayName": "Nombre para mostrar",
+        "dueAt": "Fecha de vencimiento",
         "email": "Correo electrónico",
         "emailAddress": "Dirección de correo",
         "enabled": "Activado",
@@ -1386,6 +1469,7 @@
         "lastRequest": "Último uso",
         "members": "Miembros",
         "name": "Nombre",
+        "nextActivity": "Próxima actividad",
         "notes": "Notas",
         "operator": "Operador",
         "options": "Opciones",
@@ -1618,7 +1702,10 @@
       "dealValue": "Valor de {deal}",
       "dealValueRelated": "Valor de {deal} relacionado con {entity}",
       "dealWeightedValue": "Valor ponderado de {deal}",
-      "dealWeightedValueRelated": "Valor ponderado de {deal} relacionado con {entity}"
+      "dealWeightedValueRelated": "Valor ponderado de {deal} relacionado con {entity}",
+      "salesCycleDays": "Duración del ciclo de {deal} en días",
+      "stageDurationDays": "Tiempo en la etapa en días",
+      "winRate": "Tasa de éxito de {deals}"
     },
     "displayTypes": {
       "doughnutChart": "Gráfico de anillo",
@@ -1628,8 +1715,25 @@
       "verticalBarChart": "Gráfico de barras vertical",
       "verticalBarChartWithLabels": "Gráfico de barras vertical con etiquetas"
     },
+    "funnelWidget": {
+      "advanced": "{count} avanzaron",
+      "conversionToNext": "{value}% llegaron a {stage} o más allá",
+      "dealsEntered": "{count} {deals} entraron",
+      "definition": "Entraron cuenta {deals} distintos que pasaron a una etapa durante el periodo. La conversión es la proporción que después alcanzó una etapa posterior; las etapas ganada y perdida son resultados, nunca una etapa siguiente.",
+      "entered": "{count} entraron",
+      "noConversion": "Aún sin conversión",
+      "noData": "Ningún {deals} entró en este pipeline en los últimos {days} días.",
+      "noPipeline": "Selecciona un pipeline para este embudo.",
+      "noStages": "Este pipeline no tiene etapas abiertas para el embudo.",
+      "openToWon": "{value}% de abierto a ganado"
+    },
     "groupBys": {
+      "dealPipeline": "Embudo",
+      "dealStage": "Etapa",
       "none": "Sin agrupación"
+    },
+    "periods": {
+      "lastDays": "Últimos {days} días"
     },
     "tabs": {
       "dealFilters": "Filtros para {deals}",
@@ -1642,7 +1746,8 @@
         "colorOption": "Color {number}",
         "colors": "Colores",
         "showFilters": "Mostrar el número de actividades y los filtros",
-        "showMetricAndFilters": "Mostrar la métrica y los filtros"
+        "showMetricAndFilters": "Mostrar la métrica y los filtros",
+        "showSummary": "Mostrar el resumen del embudo"
       },
       "create": "Crear widget",
       "danger": {
@@ -1673,13 +1778,16 @@
       "kind": {
         "activityTimelineDescription": "Sigue en orden cronológico los cambios en registros, los mensajes y la actividad de cuentas y calendario.",
         "chartDescription": "Compara los datos del CRM en un gráfico.",
+        "funnelDescription": "Sigue un pipeline etapa por etapa y observa dónde se estancan los registros.",
         "title": "Elegir un widget"
       },
       "preview": {
         "activitySummary": "{title}. Filtros: {filters, plural, =0 {ninguno} =1 {1 activo} other {# activos}}.",
         "chartSummary": "{title}. {summary}. Métrica: {metric}. Estilo del gráfico: {chart}.",
         "filterSummary": "{count, plural, =1 {1 filtro} other {# filtros}}",
+        "funnelSummary": "{title}. Resumen del embudo: {summary}.",
         "groupLabel": "Grupo {number}",
+        "stageLabel": "Etapa {number}",
         "title": "Vista previa",
         "untitled": "Widget sin título"
       },
@@ -1708,7 +1816,14 @@
     },
     "widgetKinds": {
       "activityTimeline": "Cronología de actividad",
-      "chart": "Gráfico"
+      "chart": "Gráfico",
+      "funnel": "Embudo"
+    },
+    "widgetMetrics": {
+      "days": "{value} días",
+      "median": "Mediana {value} días",
+      "percent": "{value} %",
+      "winRateDenominator": "{closed} {deals} cerrados, {deals} abiertos excluidos"
     }
   },
   "DataTransfer": {

@@ -47,6 +47,7 @@ export const FILTER_FIELD_DEFAULT_OPERATORS: Record<FilterFieldKey, FilterOperat
   [FilterFieldKey.status]: scalarSelectOperators,
   [FilterFieldKey.dealStatus]: scalarSelectOperators,
   [FilterFieldKey.rotting]: scalarSelectOperators,
+  [FilterFieldKey.overdue]: scalarSelectOperators,
   [FilterFieldKey.pipelineId]: PIPELINE_PLACEMENT_OPERATORS,
   [FilterFieldKey.stageId]: PIPELINE_PLACEMENT_OPERATORS,
   [FilterFieldKey.provider]: scalarSelectOperators,

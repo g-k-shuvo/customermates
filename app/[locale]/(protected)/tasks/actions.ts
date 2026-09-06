@@ -5,6 +5,9 @@ import type { DeleteTaskData } from "@/features/tasks/delete/delete-task.interac
 import type { GetTaskByIdData } from "@/features/tasks/get/get-task-by-id.interactor";
 import type { CreateTaskData } from "@/features/tasks/upsert/create-task.interactor";
 import type { UpdateTaskData } from "@/features/tasks/upsert/update-task.interactor";
+import type { CompleteTaskData } from "@/features/tasks/complete/complete-task.interactor";
+import type { UncompleteTaskData } from "@/features/tasks/complete/uncomplete-task.interactor";
+import type { GetActivityCountsData } from "@/features/tasks/get/get-activity-counts.interactor";
 
 import {
   getGetTasksInteractor,
@@ -13,6 +16,9 @@ import {
   getCreateTaskInteractor,
   getUpdateTaskInteractor,
   getDeleteTaskInteractor,
+  getCompleteTaskInteractor,
+  getUncompleteTaskInteractor,
+  getGetActivityCountsInteractor,
 } from "@/core/di";
 import { serializeResult } from "@/core/utils/action-result";
 import { unwrapValidated } from "@/core/validation/validation.utils";
@@ -50,6 +56,20 @@ export async function updateTaskAction(data: UpdateTaskData) {
 
 export async function deleteTaskAction(data: DeleteTaskData) {
   return serializeResult(getDeleteTaskInteractor().invoke(data));
+}
+
+export async function completeTaskAction(data: CompleteTaskData) {
+  return serializeResult(getCompleteTaskInteractor().invoke(data));
+}
+
+export async function uncompleteTaskAction(data: UncompleteTaskData) {
+  return serializeResult(getUncompleteTaskInteractor().invoke(data));
+}
+
+export async function getActivityCountsAction(data: GetActivityCountsData) {
+  const result = await getGetActivityCountsInteractor().invoke(data);
+
+  return result.ok ? result.data : { overdue: 0, dueToday: 0 };
 }
 
 export async function getTaskByIdAction(data: GetTaskByIdData) {

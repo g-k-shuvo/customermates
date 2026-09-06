@@ -5,4 +5,5 @@ export type ChartDataPoint = {
   color: string;
   labelColor: string;
   strokeColor: string;
+  metricsNote?: string;
 };

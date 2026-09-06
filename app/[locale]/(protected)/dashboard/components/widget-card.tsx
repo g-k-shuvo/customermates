@@ -7,9 +7,10 @@ import { useTranslations } from "next-intl";
 
 import { ActivityWidgetCard } from "./activity-widget-card";
 import { ChartWidgetCard } from "./chart-widget-card";
+import { FunnelWidgetCard } from "./funnel-widget-card";
 import { openWidgetEditor } from "./widget-interaction";
 
-import { isChartWidget } from "@/features/widget/widget.schema";
+import { isChartWidget, isFunnelWidget } from "@/features/widget/widget.schema";
 import { useRootStore } from "@/core/stores/root-store.provider";
 import { runUserAction } from "@/core/errors/report-application-error";
 
@@ -20,7 +21,13 @@ type Props = {
 export const WidgetCard = observer(({ widget }: Props) => {
   const t = useTranslations();
   const { widgetModalStore } = useRootStore();
-  const card = isChartWidget(widget) ? <ChartWidgetCard widget={widget} /> : <ActivityWidgetCard widget={widget} />;
+  const card = isChartWidget(widget) ? (
+    <ChartWidgetCard widget={widget} />
+  ) : isFunnelWidget(widget) ? (
+    <FunnelWidgetCard widget={widget} />
+  ) : (
+    <ActivityWidgetCard widget={widget} />
+  );
 
   return (
     <div className="relative h-full">

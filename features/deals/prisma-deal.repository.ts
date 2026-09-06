@@ -193,7 +193,18 @@ export class PrismaDealRepo
       },
       tasks: {
         where: { task: this.accessWhere("task") },
-        select: { task: { select: { id: true, name: true, type: true } } },
+        select: {
+          task: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+              activityKind: true,
+              dueAt: true,
+              completedAt: true,
+            },
+          },
+        },
       },
       customFieldValues: {
         select: {

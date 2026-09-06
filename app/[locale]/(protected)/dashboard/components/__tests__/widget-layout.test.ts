@@ -44,6 +44,11 @@ describe("widgetLayoutGeometry", () => {
     });
   });
 
+  it("gives a funnel room for its stage rows and a wider minimum than a timeline", () => {
+    expect(widgetLayoutGeometry(WidgetKind.funnel, 12)).toEqual({ w: 6, h: 4, minW: 3, minH: 3 });
+    expect(widgetLayoutGeometry(WidgetKind.funnel, 2)).toEqual({ w: 2, h: 4, minW: 2, minH: 3 });
+  });
+
   it.each([
     [12, 6, 2],
     [8, 4, 2],

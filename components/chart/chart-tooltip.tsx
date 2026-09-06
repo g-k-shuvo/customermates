@@ -16,14 +16,14 @@ type TooltipContentProps = {
   label?: string | number;
   payload?: ReadonlyArray<{
     name?: string;
-    payload?: { color?: string; fill?: string; label?: string };
+    payload?: { color?: string; fill?: string; label?: string; metricsNote?: string };
     value?: number;
   }>;
 };
 
 const BASE_CLASS = "rounded-md border border-border bg-popover px-3 py-2 text-popover-foreground shadow-lg";
 
-const TooltipContent = observer((props: TooltipContentProps) => {
+export const TooltipContent = observer((props: TooltipContentProps) => {
   const { active, aggregationType, label, payload } = props;
   const intlStore = useHydratedIntlStore();
   const t = useTranslations();
@@ -39,6 +39,7 @@ const TooltipContent = observer((props: TooltipContentProps) => {
     const value = typeof entry.value === "number" ? entry.value : 0;
     const color = entry.payload?.color || entry.payload?.fill;
     const title = isPieChart ? entry.name || entry.payload?.label : (label ?? entry.payload?.label);
+    const metricsNote = entry.payload?.metricsNote;
 
     return (
       <div className={BASE_CLASS}>
@@ -51,6 +52,8 @@ const TooltipContent = observer((props: TooltipContentProps) => {
 
           <span className="font-medium tabular-nums whitespace-nowrap">{format(value)}</span>
         </div>
+
+        {metricsNote && <div className="mt-1 text-xs text-muted-foreground">{metricsNote}</div>}
       </div>
     );
   }
@@ -66,16 +69,21 @@ const TooltipContent = observer((props: TooltipContentProps) => {
           const value = typeof entry.value === "number" ? entry.value : 0;
           const color = entry.payload?.color || entry.payload?.fill;
           const name = isPieChart ? entry.name || entry.payload?.label : entry.payload?.label;
+          const metricsNote = entry.payload?.metricsNote;
 
           return (
-            <div key={index} className="flex items-center justify-between gap-4 text-sm">
-              <div className="flex items-center gap-2 min-w-0">
-                {color && <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: color }} />}
+            <div key={index} className="flex flex-col gap-0.5">
+              <div className="flex items-center justify-between gap-4 text-sm">
+                <div className="flex items-center gap-2 min-w-0">
+                  {color && <div className="size-2 rounded-full shrink-0" style={{ backgroundColor: color }} />}
 
-                {name && <span className="text-muted-foreground truncate">{String(name)}</span>}
+                  {name && <span className="text-muted-foreground truncate">{String(name)}</span>}
+                </div>
+
+                <span className="font-medium tabular-nums whitespace-nowrap">{format(value)}</span>
               </div>
 
-              <span className="font-medium tabular-nums whitespace-nowrap">{format(value)}</span>
+              {metricsNote && <div className="pl-4 text-xs text-muted-foreground">{metricsNote}</div>}
             </div>
           );
         })}

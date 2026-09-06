@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { REPO_ROOT, walkFiles } from "./walk";
 
 import {
+  ActivityKind,
   AggregationType,
   ConnectedAccountStatus,
   CustomColumnType,
@@ -27,6 +28,7 @@ import { IMPORT_ISSUE_CODES } from "@/features/data-transfer/import/import-plan"
 import { ALL_LEGAL_DOCUMENTS } from "@/constants/legal-documents";
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
+import { AGENDA_BUCKETS } from "@/features/tasks/activity-agenda";
 import { CustomErrorCode } from "@/core/validation/validation.types";
 import { AGENT_ACTIVITY_KINDS } from "@/ee/agent-chat/agent-activity";
 import { OPERATOR_AUDIT_ACTION } from "@/ee/operator/operator.schema";
@@ -139,6 +141,10 @@ const AUDIT_FIELD_KEYS = [
 
 const TABLE_COLUMN_KEYS = [
   "Common.table.columns.actions",
+  "Common.table.columns.activityKind",
+  "Common.table.columns.completedAt",
+  "Common.table.columns.dueAt",
+  "Common.table.columns.nextActivity",
   "Common.table.columns.trialEnd",
   "Common.table.columns.amount",
   "Common.table.columns.weightedValue",
@@ -229,6 +235,8 @@ const SELECTABLE_SUBSCRIPTION_PLANS = Object.values(SubscriptionPlan).filter(
 const SUBSCRIPTION_FEATURE_KEYS = [...loadCatalogPaths().leafPaths].filter((key) =>
   SELECTABLE_SUBSCRIPTION_PLANS.some((plan) => key.startsWith(`Subscription.picker.features.${plan}.`)),
 );
+const ACTIVITY_KIND_LABEL_KEYS = Object.values(ActivityKind).map((kind) => `Common.activityKinds.${kind}`);
+const AGENDA_BUCKET_KEYS = AGENDA_BUCKETS.map((bucket) => `Activities.agenda.${bucket}`);
 const ENTITY_TIMELINE_TYPE_KEYS = [
   "EntityTimeline.types.activities",
   "EntityTimeline.types.changes",
@@ -654,6 +662,7 @@ const NONLITERAL_T_CALL_SITES = new Map<string, number>([
   ["app/[locale]/(protected)/operator/components/operator-value-labels.tsx :: t :: key", 1],
   ["app/[locale]/(protected)/contacts/components/add-channel-popover.tsx :: t :: SOURCE_HINT_KEYS[source]", 1],
   ["app/[locale]/(protected)/contacts/components/use-contact-columns.tsx :: t :: nameKey", 1],
+  ["app/[locale]/(protected)/deals/components/deal-activities-list.tsx :: t :: nameKey", 1],
   ["app/[locale]/(protected)/deals/components/use-deal-columns.tsx :: t :: nameKey", 1],
   ["app/[locale]/(protected)/inbox/components/attachment-classify.ts :: t :: typeLabelKey", 2],
   ["app/[locale]/(protected)/inbox/components/message-item.tsx :: t :: labelKey", 1],
@@ -671,7 +680,12 @@ const NONLITERAL_T_CALL_SITES = new Map<string, number>([
     "app/[locale]/(protected)/tasks/components/task-detail-view.tsx :: t.rich :: systemTaskAlertConfig.translationKey",
     1,
   ],
+  ["app/[locale]/(protected)/tasks/components/schedule-follow-up-modal.tsx :: t :: activityKindLabelKey(kind)", 1],
+  ["app/[locale]/(protected)/tasks/components/task-activity-fields.tsx :: t :: activityKindLabelKey(kind)", 1],
+  ["app/[locale]/(protected)/tasks/components/task-agenda-view.tsx :: t :: BUCKET_LABEL_KEY[group.bucket]", 1],
+  ["app/[locale]/(protected)/tasks/components/task-agenda-view.tsx :: t :: nameKey", 1],
   ["app/[locale]/(protected)/tasks/components/task-detail.store.ts :: this.t :: nameTranslationKey", 1],
+  ["components/activity/activity-kind-icon.tsx :: t :: activityKindLabelKey(kind)", 1],
   ["app/[locale]/(protected)/tasks/components/use-task-columns.tsx :: t :: nameKey", 1],
   ["app/[locale]/(static)/docs/[slug]/page.tsx :: t :: navKey", 1],
   ["app/[locale]/(static)/docs/openapi/page.tsx :: t :: navKey", 1],
@@ -763,6 +777,20 @@ const INDIRECT_KEY_CONSUMERS: readonly IndirectKeyConsumer[] = [
   {
     file: "features/event/entity-name.utils.ts",
     keys: ["Common.company"],
+  },
+  {
+    file: "components/activity/activity-kind.config.ts",
+    keys: ACTIVITY_KIND_LABEL_KEYS,
+    evidence: Object.fromEntries(
+      ACTIVITY_KIND_LABEL_KEYS.map((key) => [
+        key,
+        [{ kind: "template" as const, value: "`Common.activityKinds.${kind}`" }],
+      ]),
+    ),
+  },
+  {
+    file: "app/[locale]/(protected)/tasks/components/task-agenda-view.tsx",
+    keys: AGENDA_BUCKET_KEYS,
   },
   {
     file: "app/[locale]/(protected)/dashboard/components/widget-label.ts",

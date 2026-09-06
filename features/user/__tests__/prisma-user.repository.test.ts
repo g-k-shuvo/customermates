@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { CustomColumnType, EntityType, Status } from "@/generated/prisma";
+import {
+  AggregationType,
+  CustomColumnType,
+  EntityType,
+  Status,
+  WidgetGroupByType,
+  WidgetKind,
+} from "@/generated/prisma";
 
 import { CHIP_COLORS } from "@/constants/chip-colors";
 import { CLOUD_TRIAL } from "@/core/commercial/plan-catalog";
@@ -10,6 +17,7 @@ import { createMockUser } from "@/tests/helpers/mock-user";
 const customColumnCreate = vi.fn().mockResolvedValue({ id: "column-1" });
 const pipelineCreate = vi.fn().mockResolvedValue({ id: "pipeline-1" });
 const lostReasonCreateMany = vi.fn().mockResolvedValue({ count: 5 });
+const widgetCreateMany = vi.fn().mockResolvedValue({ count: 4 });
 
 const prismaMock = {
   user: {
@@ -33,6 +41,7 @@ const prismaMock = {
   customColumn: { create: customColumnCreate },
   pipeline: { create: pipelineCreate },
   lostReason: { createMany: lostReasonCreateMany },
+  widget: { createMany: widgetCreateMany },
 };
 
 vi.mock("@/prisma/db", () => ({ prisma: prismaMock }));
@@ -154,6 +163,67 @@ describe("PrismaUserRepo.createCompanyAndUser", () => {
       { companyId: "company-1", name: "Common.defaultData.lostReason.options.decision", position: 3 },
       { companyId: "company-1", name: "Common.defaultData.lostReason.options.timing", position: 4 },
     ]);
+  });
+
+  it("seeds the default dashboard onto the founding admin, as company-wide templates", async () => {
+    await new PrismaUserRepo().createCompanyAndUser(registerArgs);
+
+    expect(widgetCreateMany).toHaveBeenCalledTimes(1);
+
+    const seeded = widgetCreateMany.mock.calls[0][0].data as Array<Record<string, unknown>>;
+
+    expect(seeded.map((widget) => widget.name)).toEqual([
+      "Common.defaultData.dashboard.openPipelineValueByStage",
+      "Common.defaultData.dashboard.pipelineFunnel",
+      "Common.defaultData.dashboard.winRate",
+      "Common.defaultData.dashboard.salesCycle",
+    ]);
+    expect(
+      seeded.every(
+        (widget) => widget.companyId === "company-1" && widget.userId === "user-1" && widget.isTemplate === true,
+      ),
+    ).toBe(true);
+  });
+
+  it("points the seeded funnel at the pipeline the same registration just created", async () => {
+    await new PrismaUserRepo().createCompanyAndUser(registerArgs);
+
+    const seeded = widgetCreateMany.mock.calls[0][0].data as Array<Record<string, unknown>>;
+    const funnel = seeded.find((widget) => widget.kind === WidgetKind.funnel);
+
+    expect(funnel?.pipelineId).toBe("pipeline-1");
+    expect(funnel?.periodDays).toBe(90);
+  });
+
+  it("seeds a stage-grouped value chart and a period-bounded win rate, not an all-time one", async () => {
+    await new PrismaUserRepo().createCompanyAndUser(registerArgs);
+
+    const seeded = widgetCreateMany.mock.calls[0][0].data as Array<Record<string, unknown>>;
+    const byName = new Map(seeded.map((widget) => [widget.name, widget]));
+
+    expect(byName.get("Common.defaultData.dashboard.openPipelineValueByStage")).toMatchObject({
+      groupByType: WidgetGroupByType.dealStage,
+      aggregationType: AggregationType.dealValue,
+      entityType: EntityType.deal,
+      entityFilters: [{ field: "dealStatus", operator: "in", value: ["open"] }],
+    });
+    expect(byName.get("Common.defaultData.dashboard.winRate")).toMatchObject({
+      aggregationType: AggregationType.winRate,
+      periodDays: 90,
+    });
+    expect(byName.get("Common.defaultData.dashboard.salesCycle")).toMatchObject({
+      aggregationType: AggregationType.salesCycleDays,
+      periodDays: 365,
+    });
+  });
+
+  it("writes the dashboard only after the owning user row exists", async () => {
+    await new PrismaUserRepo().createCompanyAndUser(registerArgs);
+
+    expect(widgetCreateMany.mock.invocationCallOrder[0]).toBeGreaterThan(
+      prismaMock.user.create.mock.invocationCallOrder[0],
+    );
+    expect(widgetCreateMany.mock.invocationCallOrder[0]).toBeGreaterThan(pipelineCreate.mock.invocationCallOrder[0]);
   });
 
   it("stores one consented ad attribution row per provider on the initial owner", async () => {

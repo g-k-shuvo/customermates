@@ -1,6 +1,7 @@
 import type { RootStore } from "@/core/stores/root.store";
 import type { TaskDto } from "@/features/tasks/task.schema";
 import type { CreateTaskData } from "@/features/tasks/upsert/create-task.interactor";
+import type { UpdateTaskData } from "@/features/tasks/upsert/update-task.interactor";
 
 import { computed, makeObservable } from "mobx";
 import { Resource, TaskType } from "@/generated/prisma";
@@ -11,7 +12,27 @@ import { getSystemTaskAlertConfig, getSystemTaskNameTranslationKey } from "./sys
 
 import { BaseCustomColumnEntityModalStore } from "@/core/base/base-custom-column-entity-modal.store";
 
-type TaskFormData = Omit<CreateTaskData, "name"> & { name?: string; id?: string };
+type TaskFormData = Omit<CreateTaskData, "name" | "dueAt"> & { name?: string; id?: string; dueAt?: string };
+
+function toCreateTaskData(data: TaskFormData): CreateTaskData {
+  return {
+    ...data,
+    name: data.name ?? "",
+    activityKind: data.activityKind || undefined,
+    dueAt: data.dueAt ? new Date(data.dueAt) : undefined,
+    durationMinutes: data.durationMinutes ?? undefined,
+  };
+}
+
+function toUpdateTaskData(data: TaskFormData & { id: string }): UpdateTaskData {
+  return {
+    ...data,
+    id: data.id,
+    activityKind: data.activityKind || null,
+    dueAt: data.dueAt ? new Date(data.dueAt) : null,
+    durationMinutes: data.durationMinutes ?? null,
+  };
+}
 
 export class TaskDetailStore extends BaseCustomColumnEntityModalStore<TaskFormData, TaskDto> {
   constructor(rootStore: RootStore) {
@@ -31,8 +52,8 @@ export class TaskDetailStore extends BaseCustomColumnEntityModalStore<TaskFormDa
       rootStore.tasksStore,
       {
         getById: getTaskByIdAction,
-        create: (data: TaskFormData) => createTaskAction({ ...data, name: data.name ?? "" }),
-        update: updateTaskAction,
+        create: (data: TaskFormData) => createTaskAction(toCreateTaskData(data)),
+        update: (data: TaskFormData & { id: string }) => updateTaskAction(toUpdateTaskData(data)),
         delete: deleteTaskAction,
       },
     );
@@ -65,6 +86,9 @@ export class TaskDetailStore extends BaseCustomColumnEntityModalStore<TaskFormDa
       return {
         ...entity,
         ...baseData,
+        activityKind: entity.activityKind ?? undefined,
+        dueAt: entity.dueAt ? entity.dueAt.toISOString() : undefined,
+        durationMinutes: entity.durationMinutes ?? undefined,
         userIds: entity.users.map((user) => user.id),
         contactIds: entity.contacts.map((contact) => contact.id),
         organizationIds: entity.organizations.map((organization) => organization.id),

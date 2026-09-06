@@ -1,10 +1,12 @@
 import type { FilterableField } from "@/core/base/base-get.schema";
+import type { FunnelPipelineOption } from "./widget.schema";
 import type { EntitlementService } from "@/ee/subscription/entitlement.service";
 
 import { z } from "zod";
 import { EntityType } from "@/generated/prisma";
 
 import { FilterableFieldSchema } from "@/core/base/base-get.schema";
+import { FunnelPipelineOptionSchema } from "./widget.schema";
 
 import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
@@ -37,14 +39,21 @@ export abstract class GetWidgetActivityFilterableFieldsRepo {
   abstract setMessagingSourcesEnabled(enabled: boolean): void;
 }
 
+export abstract class GetWidgetFunnelPipelinesRepo {
+  abstract canReadPipelines(): boolean;
+  abstract getFunnelPipelines(): Promise<FunnelPipelineOption[]>;
+}
+
 export type WidgetFilterableFields = {
   chart: Record<EntityType, FilterableField[]>;
   activityTimeline: FilterableField[];
+  funnel: FunnelPipelineOption[];
 };
 
 const WidgetFilterableFieldsSchema = z.object({
   activityTimeline: z.array(FilterableFieldSchema),
   chart: z.record(z.enum(EntityType), z.array(FilterableFieldSchema)),
+  funnel: z.array(FunnelPipelineOptionSchema),
 });
 
 @AllowInDemoMode
@@ -57,6 +66,7 @@ export class GetWidgetFilterableFieldsInteractor extends AuthenticatedInteractor
     private serviceRepo: GetWidgetFilterableFieldsServiceRepo,
     private taskRepo: GetWidgetFilterableFieldsTaskRepo,
     private activityRepo: GetWidgetActivityFilterableFieldsRepo,
+    private funnelRepo: GetWidgetFunnelPipelinesRepo,
     private entitlements: EntitlementService,
   ) {
     super();
@@ -68,7 +78,7 @@ export class GetWidgetFilterableFieldsInteractor extends AuthenticatedInteractor
     const entitlementDenied = canReadMessagingSources ? await this.entitlements.require("messaging") : null;
     this.activityRepo.setMessagingSourcesEnabled(canReadMessagingSources && !entitlementDenied);
 
-    const [contactFields, organizationFields, dealFields, serviceFields, taskFields, activityTimeline] =
+    const [contactFields, organizationFields, dealFields, serviceFields, taskFields, activityTimeline, funnel] =
       await Promise.all([
         this.contactRepo.getFilterableFields(),
         this.organizationRepo.getFilterableFields(),
@@ -76,12 +86,14 @@ export class GetWidgetFilterableFieldsInteractor extends AuthenticatedInteractor
         this.serviceRepo.getFilterableFields(),
         this.taskRepo.getFilterableFields(),
         this.activityRepo.getFilterableFields(),
+        this.funnelRepo.getFunnelPipelines(),
       ]);
 
     return {
       ok: true,
       data: {
         activityTimeline,
+        funnel,
         chart: {
           [EntityType.contact]: contactFields,
           [EntityType.organization]: organizationFields,

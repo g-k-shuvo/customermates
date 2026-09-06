@@ -15,6 +15,54 @@
     "privacyLink": "Datenschutzdetails",
     "title": "Hilf uns zu verstehen, was funktioniert"
   },
+  "Activities": {
+    "agenda": {
+      "emptyBody": "Es sind noch keine {plural} geplant.",
+      "emptyTitle": "Nichts geplant",
+      "later": "Später ({count})",
+      "overdue": "Überfällig ({count})",
+      "thisWeek": "Diese Woche ({count})",
+      "today": "Heute ({count})",
+      "tomorrow": "Morgen ({count})",
+      "undated": "Ohne Datum ({count})"
+    },
+    "completion": {
+      "complete": "Als erledigt markieren",
+      "completedAt": "Erledigt {date}",
+      "open": "Offen",
+      "reopen": "Wieder öffnen"
+    },
+    "fields": {
+      "activityKind": "Aktivitätstyp",
+      "completion": "Fortschritt",
+      "dueAt": "Fällig",
+      "durationMinutes": "Dauer (Min.)"
+    },
+    "followUp": {
+      "description": "„{name}“ ist erledigt. Plane den nächsten Schritt.",
+      "durationPlaceholder": "30",
+      "nameLabel": "Was kommt als Nächstes?",
+      "schedule": "Planen",
+      "skip": "Nicht jetzt",
+      "title": "Nächsten Schritt planen"
+    },
+    "list": {
+      "empty": "Noch nichts geplant",
+      "label": "Geplante Arbeit"
+    },
+    "nextActivity": {
+      "label": "Nächste Aktivität",
+      "none": "Keine nächste Aktivität"
+    },
+    "summary": {
+      "dueToday": "Heute fällig",
+      "overdue": "Meine überfälligen Aktivitäten"
+    },
+    "tabs": {
+      "agenda": "Agenda",
+      "list": "Listenansicht"
+    }
+  },
   "AgentChat": {
     "activity": {
       "cancelled": "Gestoppt",
@@ -823,6 +871,15 @@
       "save": "Speichern",
       "signIn": "Login"
     },
+    "activityKinds": {
+      "call": "Anruf",
+      "deadline": "Frist",
+      "email": "E-Mail",
+      "lunch": "Mittagessen",
+      "meeting": "Termin",
+      "task": "To-do",
+      "unspecified": "Ohne Typ"
+    },
     "ariaLabels": {
       "breadcrumb": "Brotkrümelnavigation",
       "collapseSearch": "Suche einklappen",
@@ -894,6 +951,12 @@
           "qualified": "Qualifiziert",
           "won": "Gewonnen"
         }
+      },
+      "dashboard": {
+        "openPipelineValueByStage": "Offener Pipeline-Wert nach Phase",
+        "pipelineFunnel": "Vertriebstrichter",
+        "salesCycle": "Durchschnittliche Verkaufsdauer",
+        "winRate": "Gewinnrate"
       },
       "deal": {
         "columnLabel": "Phase",
@@ -1050,8 +1113,11 @@
       "socialActionRequiresSocialAccount": "Diese Aktion braucht ein verbundenes LinkedIn- oder Instagram-Konto, dieses Konto ist aber {provider}.",
       "socialPostsRequireSocialAccount": "Für Social-Posts brauchst du ein verbundenes LinkedIn- oder Instagram-Konto, dieses Konto ist aber {provider}.",
       "subjectRequired": "Bitte einen Betreff hinzufügen.",
+      "taskAlreadyCompleted": "Diese Aufgabe ist bereits erledigt. Öffnen Sie sie erneut, bevor Sie sie wieder abschließen.",
       "taskNameCannotBeChangedForSystemTasks": "Der Name kann für Systemaufgaben nicht geändert werden.",
+      "taskNotCompleted": "Diese Aufgabe ist nicht erledigt, es gibt also nichts wieder zu eröffnen.",
       "taskNotFound": "Aufgaben-ID nicht gefunden oder nicht zugänglich.",
+      "taskOnlyCustomTasksCanBeCompleted": "Nur benutzerdefinierte Aufgaben können abgeschlossen werden.",
       "taskOnlyCustomTasksCanBeDeleted": "Nur benutzerdefinierte Aufgaben können gelöscht werden.",
       "terminologyInvalidPreset": "Wähle eine der verfügbaren Namensvorlagen.",
       "termsNotAgreed": "Du musst den Allgemeinen Geschäftsbedingungen zustimmen.",
@@ -1072,14 +1138,21 @@
       "webhookDeliveryNotFound": "Webhook-Zustellungs-ID nicht gefunden oder nicht zugänglich.",
       "webhookEventsRequired": "Wähle mindestens ein Ereignis aus.",
       "webhookNotFound": "Webhook-ID nicht gefunden oder nicht zugänglich.",
+      "widgetClosedDealAggregationCannotGroupByStage": "Gewinnrate und Verkaufszyklus zählen nur abgeschlossene Deals, die alle in der Gewonnen- oder Verloren-Phase liegen. Gruppieren Sie stattdessen nach Pipeline.",
       "widgetDealAggregationNotAllowedForTask": "Deal-Aggregationstypen sind für den Elementtyp Aufgabe nicht erlaubt.",
       "widgetDealFiltersNotAllowedForDealEntityType": "Deal-Filter sind nicht erlaubt, wenn der Elementtyp Deal ist.",
       "widgetDealQuantityOnlyForService": "Deal-Mengen-Aggregation ist nur für den Elementtyp Service erlaubt.",
+      "widgetDurationAggregationFiltersNotSupported": "Verkaufszyklus und Verweildauer in der Phase werden aus dem Phasenverlauf berechnet und unterstützen keine Filter.",
+      "widgetFunnelPipelineHasNoOpenStages": "Diese Pipeline hat keine offenen Phasen, daher gibt es nichts zu trichtern.",
+      "widgetFunnelRequiresPipelineAccess": "Ein Funnel-Widget benötigt Zugriff auf Pipelines.",
       "widgetGroupByCustomColumnIdRequired": "Benutzerdefinierte Spalten-ID ist erforderlich, wenn nach benutzerdefinierter Spalte gruppiert wird.",
       "widgetGroupByEntityTypeNotAllowedForCount": "Gruppierung nach dem Elementtyp selbst ist nicht erlaubt, wenn der Aggregationstyp Anzahl ist.",
       "widgetGroupByTypeMustMatchEntityType": "Gruppierungstyp muss mit dem Elementtyp des Diagramms übereinstimmen.",
       "widgetKindImmutable": "Der Typ eines Widgets kann nach dem Erstellen nicht geändert werden.",
       "widgetNotFound": "Widget-ID nicht gefunden oder nicht zugänglich.",
+      "widgetPeriodAggregationGroupingLimited": "Gewinnrate, Verkaufszyklus und Verweildauer in der Phase können nur nach Pipeline oder Phase gruppiert werden.",
+      "widgetPeriodAggregationRequiresDeal": "Gewinnrate, Verkaufszyklus und Verweildauer in der Phase sind nur für den Elementtyp Deal verfügbar.",
+      "widgetPipelineGroupingRequiresDeal": "Gruppierung nach Pipeline oder Phase ist nur für den Elementtyp Deal verfügbar.",
       "widgetTaskCanOnlyGroupByCustomColumn": "Aufgaben können nur nach benutzerdefinierten Spalten gruppiert werden, nicht nach Elementtypen.",
       "widgetWeightedValueNotAllowedForService": "Gewichtete Wert-Aggregation ist für den Elementtyp Service nicht erlaubt."
     },
@@ -1187,6 +1260,7 @@
         "event": "Ereignis",
         "isPlatformOperator": "Plattform-Operator",
         "lastActiveAt": "Zuletzt aktiv",
+        "overdue": "Überfällig",
         "participants": "Teilnehmer",
         "pipelineId": "Pipeline",
         "plan": "Tarif",
@@ -1222,6 +1296,10 @@
         "lt": "<",
         "lte": "≤",
         "notIn": "ist nicht in"
+      },
+      "overdueValues": {
+        "onTrack": "Nicht überfällig",
+        "overdue": "Überfällig"
       },
       "presets": {
         "add": "Als Preset speichern…",
@@ -1286,6 +1364,8 @@
         "lastOption": "Eine Einfachauswahl benötigt mindestens eine Option"
       },
       "password": "Passwort",
+      "periodDays": "Zeitraum",
+      "pipelineId": "Pipeline",
       "roleId": "Rolle",
       "secret": "Secret",
       "status": "Status",
@@ -1354,12 +1434,14 @@
       "columns": {
         "action": "Aktion",
         "actions": "Aktionen",
+        "activityKind": "Aktivitätstyp",
         "actor": "Akteur",
         "adProvider": "Anzeigen-Anbieter",
         "allowance": "Kontingent",
         "amount": "Betrag",
         "avatarUrl": "Avatar",
         "channels": "Kanäle",
+        "completedAt": "Abgeschlossen",
         "contacts": "Kontakte",
         "createdAt": "Erstellt am",
         "credits": "Guthaben",
@@ -1367,6 +1449,7 @@
         "deals": "Deals",
         "description": "Beschreibung",
         "displayName": "Anzeigename",
+        "dueAt": "Fälligkeitsdatum",
         "email": "E-Mail",
         "emailAddress": "E-Mail-Adresse",
         "enabled": "Aktiviert",
@@ -1386,6 +1469,7 @@
         "lastRequest": "Zuletzt verwendet",
         "members": "Mitglieder",
         "name": "Name",
+        "nextActivity": "Nächste Aktivität",
         "notes": "Notizen",
         "operator": "Operator",
         "options": "Optionen",
@@ -1618,7 +1702,10 @@
       "dealValue": "{deal}-Wert",
       "dealValueRelated": "{deal}-Wert bezogen auf {entity}",
       "dealWeightedValue": "Gewichteter {deal}-Wert",
-      "dealWeightedValueRelated": "Gewichteter {deal}-Wert bezogen auf {entity}"
+      "dealWeightedValueRelated": "Gewichteter {deal}-Wert bezogen auf {entity}",
+      "salesCycleDays": "{deal}-Zykluslänge in Tagen",
+      "stageDurationDays": "Verweildauer in der Phase in Tagen",
+      "winRate": "Gewinnrate für {deals}"
     },
     "displayTypes": {
       "doughnutChart": "Ringdiagramm",
@@ -1628,8 +1715,25 @@
       "verticalBarChart": "Vertikales Balkendiagramm",
       "verticalBarChartWithLabels": "Vertikales Balkendiagramm mit Beschriftungen"
     },
+    "funnelWidget": {
+      "advanced": "{count} weitergekommen",
+      "conversionToNext": "{value}% erreichten {stage} oder später",
+      "dealsEntered": "{count} {deals} eingetreten",
+      "definition": "Eingetreten zählt eindeutige {deals}, die im Zeitraum in eine Phase gewechselt sind. Die Konversion ist der Anteil, der danach eine weiter hinten liegende Phase erreicht hat; Gewonnen- und Verloren-Phasen sind Ergebnisse und nie eine nächste Phase.",
+      "entered": "{count} eingetreten",
+      "noConversion": "Noch keine Konversion",
+      "noData": "In den letzten {days} Tagen sind keine {deals} in diese Pipeline eingetreten.",
+      "noPipeline": "Wähle eine Pipeline für diesen Funnel.",
+      "noStages": "Diese Pipeline hat keine offenen Phasen für einen Funnel.",
+      "openToWon": "{value}% von offen zu gewonnen"
+    },
     "groupBys": {
+      "dealPipeline": "Pipeline",
+      "dealStage": "Phase",
       "none": "Keine Gruppierung"
+    },
+    "periods": {
+      "lastDays": "Letzte {days} Tage"
     },
     "tabs": {
       "dealFilters": "Filter für {deals}",
@@ -1642,7 +1746,8 @@
         "colorOption": "Farbe {number}",
         "colors": "Farben",
         "showFilters": "Aktivitätsanzahl und Filter anzeigen",
-        "showMetricAndFilters": "Kennzahl und Filter anzeigen"
+        "showMetricAndFilters": "Kennzahl und Filter anzeigen",
+        "showSummary": "Funnel-Zusammenfassung anzeigen"
       },
       "create": "Widget erstellen",
       "danger": {
@@ -1673,13 +1778,16 @@
       "kind": {
         "activityTimelineDescription": "Verfolge Datensatzänderungen, Nachrichten sowie Konto- und Kalenderaktivitäten chronologisch.",
         "chartDescription": "Vergleiche CRM-Daten in einem Diagramm.",
+        "funnelDescription": "Verfolge eine Pipeline Phase für Phase und sieh, wo Datensätze hängen bleiben.",
         "title": "Widget auswählen"
       },
       "preview": {
         "activitySummary": "{title}. Filter: {filters, plural, =0 {keine} =1 {1 aktiv} other {# aktiv}}.",
         "chartSummary": "{title}. {summary}. Kennzahl: {metric}. Diagrammstil: {chart}.",
         "filterSummary": "{count, plural, =1 {1 Filter} other {# Filter}}",
+        "funnelSummary": "{title}. Funnel-Zusammenfassung: {summary}.",
         "groupLabel": "Gruppe {number}",
+        "stageLabel": "Phase {number}",
         "title": "Vorschau",
         "untitled": "Widget ohne Titel"
       },
@@ -1708,7 +1816,14 @@
     },
     "widgetKinds": {
       "activityTimeline": "Aktivitätsverlauf",
-      "chart": "Diagramm"
+      "chart": "Diagramm",
+      "funnel": "Funnel"
+    },
+    "widgetMetrics": {
+      "days": "{value} Tage",
+      "median": "Median {value} Tage",
+      "percent": "{value} %",
+      "winRateDenominator": "{closed} abgeschlossene {deals}, offene {deals} ausgeschlossen"
     }
   },
   "DataTransfer": {

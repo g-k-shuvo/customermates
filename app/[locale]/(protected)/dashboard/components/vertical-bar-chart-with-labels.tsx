@@ -25,8 +25,12 @@ export const VerticalBarChartWithLabels = observer(
   ({ aggregationType, chartData, colors, textColor, reverseXAxis, reverseYAxis }: Props) => {
     const intlStore = useHydratedIntlStore();
 
-    const top = reverseYAxis ? 0 : 20;
-    const bottom = reverseYAxis ? 20 : 0;
+    const formatValue = (value: number) =>
+      isCurrencyAggregation(aggregationType) ? intlStore.formatCurrency(value) : intlStore.formatNumber(value);
+
+    const valueLabelHeight = chartData.some((point) => point.metricsNote) ? 34 : 20;
+    const top = reverseYAxis ? 0 : valueLabelHeight;
+    const bottom = reverseYAxis ? valueLabelHeight : 0;
 
     return (
       <DashboardChartContainer>
@@ -70,15 +74,34 @@ export const VerticalBarChartWithLabels = observer(
             />
 
             <LabelList
-              dataKey="value"
-              formatter={(value) => {
+              content={(props) => {
+                const { x, width, y, value, index } = props;
+                const entry = chartData[index as number];
+                if (!entry) return null;
+                const center = Number(x) + Number(width) / 2;
                 const numValue = typeof value === "number" ? value : Number(value) || 0;
-                return isCurrencyAggregation(aggregationType)
-                  ? intlStore.formatCurrency(numValue)
-                  : intlStore.formatNumber(numValue);
+                return (
+                  <text
+                    dominantBaseline="auto"
+                    fill={textColor}
+                    fontSize={12}
+                    textAnchor="middle"
+                    x={center}
+                    y={Number(y) - 6}
+                  >
+                    {entry.metricsNote && (
+                      <tspan dy={-13} fontSize={10} x={center}>
+                        {entry.metricsNote}
+                      </tspan>
+                    )}
+
+                    <tspan dy={entry.metricsNote ? 13 : 0} x={center}>
+                      {formatValue(numValue)}
+                    </tspan>
+                  </text>
+                );
               }}
-              position="top"
-              style={{ fill: textColor, fontSize: 12 }}
+              dataKey="value"
             />
           </Bar>
         </BarChart>

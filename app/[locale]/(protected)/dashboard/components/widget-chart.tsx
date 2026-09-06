@@ -12,6 +12,8 @@ import type { AggregationType } from "@/generated/prisma";
 
 import { ChartColor, DisplayType } from "@/features/widget/widget.schema";
 import { getChartColors, getChartStrokeColors, getChartTextColors } from "@/constants/chart-colors";
+import { useWidgetMetricCopy } from "./use-widget-metric-copy";
+import { widgetPointMetricNote } from "./widget-metric-note";
 import { widgetDataPointLabel } from "./widget-label";
 
 const CHIP_TO_CHART_COLOR: Record<ChipColor, ChartColor> = {
@@ -70,6 +72,7 @@ type Props = {
 
 export const WidgetChart = observer(({ aggregationType, data, displayOptions }: Props) => {
   const t = useTranslations();
+  const { noteText } = useWidgetMetricCopy();
   const { resolvedTheme } = useTheme();
   const configuredBarColors = displayOptions?.barColors?.length ? displayOptions.barColors : [ChartColor.primary1];
   const useGroupColors = displayOptions?.useGroupColors !== false;
@@ -87,6 +90,7 @@ export const WidgetChart = observer(({ aggregationType, data, displayOptions }: 
       color: chartColors[colorKey],
       labelColor: chartTextColors[colorKey],
       strokeColor: chartStrokeColors[colorKey],
+      metricsNote: noteText(widgetPointMetricNote(aggregationType, item.metrics)) ?? undefined,
     };
   });
   const colors = useGroupColors

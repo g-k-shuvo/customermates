@@ -447,6 +447,13 @@ export function useFilterSelectItems(
         ];
       }
 
+      case FilterFieldKey.overdue: {
+        return [
+          { key: "true", value: "true", textValue: t("Common.filters.overdueValues.overdue") },
+          { key: "false", value: "false", textValue: t("Common.filters.overdueValues.onTrack") },
+        ];
+      }
+
       case FilterFieldKey.plan: {
         return Object.values(SubscriptionPlan).map((plan) => ({
           key: plan,

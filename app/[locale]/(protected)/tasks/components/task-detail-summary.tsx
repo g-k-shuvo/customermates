@@ -16,6 +16,8 @@ import { useRootStore } from "@/core/stores/root-store.provider";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { runUserAction } from "@/core/errors/report-application-error";
 
+import { ActivityDueBadge } from "@/components/activity/activity-due-badge";
+
 import { TASK_DETAIL_FIELD } from "./task-detail-personalization";
 
 export const TaskDetailSummary = observer(function TaskDetailSummary() {
@@ -48,6 +50,18 @@ export const TaskDetailSummary = observer(function TaskDetailSummary() {
           id: TASK_DETAIL_FIELD.name,
           label: t("Common.inputs.name"),
           value: isCustomTask ? form.name : systemTaskDisplayName,
+        },
+        {
+          id: TASK_DETAIL_FIELD.dueAt,
+          label: t("Activities.fields.dueAt"),
+          value: (
+            <ActivityDueBadge
+              activityKind={fetchedEntity.activityKind}
+              dueAt={fetchedEntity.dueAt}
+              isCompleted={fetchedEntity.completedAt !== null}
+              isOverdue={fetchedEntity.isOverdue}
+            />
+          ),
         },
         {
           id: TASK_DETAIL_FIELD.contactIds,

@@ -145,6 +145,7 @@ export class DealsStore extends BaseDataViewStore<DealDto> {
       { uid: "name", sortable: true },
       { uid: "status" },
       { uid: "rottingAt", sortable: true },
+      this.canAccessTasks && { uid: "nextActivity" },
       { uid: "totalValue", sortable: true },
       { uid: "weightedValue", sortable: true },
       { uid: "totalQuantity", sortable: true },

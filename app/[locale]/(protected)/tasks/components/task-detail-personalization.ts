@@ -2,6 +2,10 @@ export const TASK_DETAIL_P13N_ID = "task-detail";
 
 export const TASK_DETAIL_FIELD = {
   name: "name",
+  activityKind: "activityKind",
+  dueAt: "dueAt",
+  durationMinutes: "durationMinutes",
+  completedAt: "completedAt",
   contactIds: "contactIds",
   organizationIds: "organizationIds",
   dealIds: "dealIds",

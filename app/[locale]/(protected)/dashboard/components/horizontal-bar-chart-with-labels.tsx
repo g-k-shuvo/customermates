@@ -23,6 +23,8 @@ type Props = {
 const CHAR_WIDTH = 7;
 const LABEL_PADDING_LEFT = 4;
 const LABEL_PADDING_RIGHT = 4;
+const VALUE_MARGIN_MIN = 56;
+const VALUE_MARGIN_MAX = 140;
 
 function truncateToWidth(text: string, maxWidth: number) {
   if (maxWidth <= CHAR_WIDTH) return "…";
@@ -38,10 +40,12 @@ export const HorizontalBarChartWithLabels = observer(
     const formatValue = (value: number) =>
       isCurrencyAggregation(aggregationType) ? intlStore.formatCurrency(value) : intlStore.formatNumber(value);
 
-    const maxValue = chartData[0].value;
-    const formattedMaxValue = formatValue(maxValue);
+    const widestValueLabel = chartData.reduce((widest, point) => {
+      const noteWidth = point.metricsNote ? point.metricsNote.length * CHAR_WIDTH : 0;
+      return Math.max(widest, formatValue(point.value).length * CHAR_WIDTH, noteWidth);
+    }, 0);
 
-    const valueMargin = Math.max(formattedMaxValue.length * CHAR_WIDTH + 12, 56);
+    const valueMargin = Math.min(Math.max(widestValueLabel + 12, VALUE_MARGIN_MIN), VALUE_MARGIN_MAX);
     const right = reverseXAxis ? 0 : valueMargin;
     const left = reverseXAxis ? valueMargin : 0;
 
@@ -92,16 +96,33 @@ export const HorizontalBarChartWithLabels = observer(
             />
 
             <LabelList
-              dataKey="value"
-              formatter={(value) => {
+              content={(props) => {
+                const { x, y, width, height, value, index } = props;
+                const entry = chartData[index as number];
+                if (!entry) return null;
+                const start = Number(x) + Number(width) + LABEL_PADDING_LEFT;
+                const middle = Number(y) + Number(height) / 2 + 1;
                 const numValue = typeof value === "number" ? value : Number(value) || 0;
-                return formatValue(numValue);
+                return (
+                  <text
+                    dominantBaseline="middle"
+                    fill={textColor}
+                    fontSize={12}
+                    textAnchor="start"
+                    x={start}
+                    y={entry.metricsNote ? middle - 7 : middle}
+                  >
+                    <tspan x={start}>{formatValue(numValue)}</tspan>
+
+                    {entry.metricsNote && (
+                      <tspan dy={13} fontSize={10} x={start}>
+                        {entry.metricsNote}
+                      </tspan>
+                    )}
+                  </text>
+                );
               }}
-              position="right"
-              style={{
-                fill: textColor,
-                fontSize: 12,
-              }}
+              dataKey="value"
             />
           </Bar>
         </BarChart>

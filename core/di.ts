@@ -34,6 +34,7 @@ import { PrismaCustomColumnRepo } from "@/features/custom-column/prisma-custom-c
 import { PrismaP13nRepo } from "@/features/p13n/prisma-p13n.repository";
 import { PrismaWidgetRepo } from "@/features/widget/prisma-widget.repository";
 import { PrismaWidgetCalculatorRepo } from "@/features/widget/calculator/prisma-widget-calculator.repository";
+import { PrismaWidgetFunnelRepo } from "@/features/widget/calculator/prisma-widget-funnel.repository";
 import { PrismaWebhookRepo } from "@/features/webhook/prisma-webhook.repository";
 import { PrismaWebhookDeliveryRepo } from "@/features/webhook/prisma-webhook-delivery.repository";
 import { PrismaAuditLogRepo } from "@/features/audit-log/prisma-audit-log.repository";
@@ -176,6 +177,7 @@ import { GetTasksInteractor } from "@/features/tasks/get/get-tasks.interactor";
 import { GetTasksConfigurationInteractor } from "@/features/tasks/get/get-tasks-configuration.interactor";
 import { GetTaskByIdInteractor } from "@/features/tasks/get/get-task-by-id.interactor";
 import { CountUserTasksInteractor } from "@/features/tasks/count-user-tasks.interactor";
+import { GetActivityCountsInteractor } from "@/features/tasks/get/get-activity-counts.interactor";
 import { CountSystemTasksInteractor } from "@/features/tasks/count-system-tasks.interactor";
 import { CreateTaskInteractor } from "@/features/tasks/upsert/create-task.interactor";
 import { CreateManyTasksInteractor } from "@/features/tasks/upsert/create-many-tasks.interactor";
@@ -183,6 +185,8 @@ import { UpdateTaskInteractor } from "@/features/tasks/upsert/update-task.intera
 import { UpdateManyTasksInteractor } from "@/features/tasks/upsert/update-many-tasks.interactor";
 import { DeleteTaskInteractor } from "@/features/tasks/delete/delete-task.interactor";
 import { DeleteManyTasksInteractor } from "@/features/tasks/delete/delete-many-tasks.interactor";
+import { CompleteTaskInteractor } from "@/features/tasks/complete/complete-task.interactor";
+import { UncompleteTaskInteractor } from "@/features/tasks/complete/uncomplete-task.interactor";
 // User interactors
 import { RegisterUserInteractor } from "@/features/user/register/register-user.interactor";
 import { UpdateUserDetailsInteractor } from "@/features/user/upsert/update-user-details.interactor";
@@ -404,6 +408,7 @@ export const getWidgetRepo = () => new PrismaWidgetRepo();
 
 export const getActivitiesRepo = () => new PrismaActivitiesRepo();
 export const getWidgetCalculatorRepo = () => new PrismaWidgetCalculatorRepo();
+export const getWidgetFunnelRepo = () => new PrismaWidgetFunnelRepo();
 export const getWebhookRepo = () => new PrismaWebhookRepo();
 export const getWebhookDeliveryRepo = () => new PrismaWebhookDeliveryRepo();
 export const getAuditLogRepo = () => new PrismaAuditLogRepo();
@@ -930,6 +935,8 @@ export const getGetTaskByIdInteractor = () => new GetTaskByIdInteractor(getTaskR
 
 export const getCountUserTasksInteractor = () => new CountUserTasksInteractor(getTaskRepo());
 
+export const getGetActivityCountsInteractor = () => new GetActivityCountsInteractor(getTaskRepo());
+
 export const getCountSystemTasksInteractor = () => new CountSystemTasksInteractor(getTaskRepo());
 
 export const getCreateTaskInteractor = () =>
@@ -986,6 +993,12 @@ export const getDeleteTaskInteractor = () =>
     getEventService(),
     getTaskWritePrecheck(),
   );
+
+export const getCompleteTaskInteractor = () =>
+  new CompleteTaskInteractor(getTaskRepo(), getEventService(), getTaskWritePrecheck(), getCreateTaskInteractor());
+
+export const getUncompleteTaskInteractor = () =>
+  new UncompleteTaskInteractor(getTaskRepo(), getEventService(), getTaskWritePrecheck());
 
 export const getDeleteManyTasksInteractor = () =>
   new DeleteManyTasksInteractor(
@@ -1096,6 +1109,7 @@ export const getUpsertWidgetInteractor = () =>
     getWidgetRepo(),
     getWidgetIdsValidator(),
     getCustomColumnIdsValidator(),
+    getPipelineIdsValidator(),
     getQueryParamsPrecheck(),
     getEntitlementService(),
   );
@@ -1116,6 +1130,7 @@ export const getGetWidgetFilterableFieldsInteractor = () =>
     getServiceRepo(),
     getTaskRepo(),
     getActivitiesRepo(),
+    getWidgetRepo(),
     getEntitlementService(),
   );
 

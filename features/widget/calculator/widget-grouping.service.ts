@@ -1,11 +1,35 @@
 import type { DiagramDataPoint } from "../widget.schema";
-import type { WidgetForCalculation, DealRecord, GroupAccumulator, EntityForGrouping } from "./widget-calculator.types";
+import type {
+  WidgetForCalculation,
+  DealRecord,
+  GroupAccumulator,
+  EntityForGrouping,
+  GroupedDealAggregate,
+  PipelinePosition,
+  WinRateRow,
+  DurationRow,
+} from "./widget-calculator.types";
 import type { ChipColor } from "@/constants/chip-colors";
 
 import { AggregationType, EntityType, WidgetGroupByType } from "@/generated/prisma";
 
 import { getCustomColumnRepo } from "@/core/di";
 import { BaseRepository } from "@/core/base/base-repository";
+import { winRatePercent } from "../widget-metrics";
+
+function winRateMetrics(row: WinRateRow) {
+  return {
+    wonCount: row.wonCount,
+    lostCount: row.lostCount,
+    wonValue: row.wonValue,
+    lostValue: row.lostValue,
+    sampleSize: row.wonCount + row.lostCount,
+  };
+}
+
+function durationMetrics(row: DurationRow) {
+  return { mean: row.meanDays, median: row.medianDays, sampleSize: row.sampleSize };
+}
 
 export class WidgetGroupingService extends BaseRepository {
   groupDealsByEntityType(widget: WidgetForCalculation, deals: DealRecord[]): DiagramDataPoint[] {
@@ -84,8 +108,16 @@ export class WidgetGroupingService extends BaseRepository {
         }
         break;
 
-      default:
+      case WidgetGroupByType.dealStage:
+      case WidgetGroupByType.dealPipeline:
+      case WidgetGroupByType.customColumn:
+      case WidgetGroupByType.none:
         break;
+
+      default: {
+        const exhaustive: never = groupByType;
+        return exhaustive;
+      }
     }
 
     return Array.from(acc.values());
@@ -102,8 +134,15 @@ export class WidgetGroupingService extends BaseRepository {
         return deal.totalQuantity;
       case AggregationType.dealWeightedValue:
         return deal.weightedValue ?? 0;
-      default:
+      case AggregationType.count:
+      case AggregationType.winRate:
+      case AggregationType.salesCycleDays:
+      case AggregationType.stageDurationDays:
         return 0;
+      default: {
+        const exhaustive: never = aggregationType;
+        return exhaustive;
+      }
     }
   }
 
@@ -116,9 +155,138 @@ export class WidgetGroupingService extends BaseRepository {
         return service.service.amount * service.quantity;
       case AggregationType.dealQuantity:
         return service.quantity;
-      default:
+      case AggregationType.count:
+      case AggregationType.dealWeightedValue:
+      case AggregationType.winRate:
+      case AggregationType.salesCycleDays:
+      case AggregationType.stageDurationDays:
         return 0;
+      default: {
+        const exhaustive: never = aggregationType;
+        return exhaustive;
+      }
     }
+  }
+
+  buildPipelinePositionPoints(
+    aggregates: GroupedDealAggregate[],
+    positions: PipelinePosition[],
+    aggregationType: AggregationType,
+  ): DiagramDataPoint[] {
+    const byKey = new Map(aggregates.map((aggregate) => [aggregate.key ?? "", aggregate]));
+    const points: DiagramDataPoint[] = [];
+
+    for (const position of positions) {
+      const aggregate = byKey.get(position.id);
+      if (!aggregate) continue;
+
+      points.push({
+        labelKind: "literal",
+        label: position.name || position.id,
+        value: this.getAggregateValue(aggregate, aggregationType),
+      });
+    }
+
+    const ungrouped = aggregates.filter(
+      (aggregate) => !aggregate.key || !positions.some((p) => p.id === aggregate.key),
+    );
+    const ungroupedValue = ungrouped.reduce(
+      (sum, aggregate) => sum + this.getAggregateValue(aggregate, aggregationType),
+      0,
+    );
+
+    if (ungrouped.length > 0) points.push({ labelKind: "system", systemLabelKey: "noGroup", value: ungroupedValue });
+
+    return points;
+  }
+
+  private getAggregateValue(aggregate: GroupedDealAggregate, aggregationType: AggregationType): number {
+    switch (aggregationType) {
+      case AggregationType.count:
+        return aggregate.count;
+      case AggregationType.dealValue:
+        return aggregate.totalValue;
+      case AggregationType.dealQuantity:
+        return aggregate.totalQuantity;
+      case AggregationType.dealWeightedValue:
+        return aggregate.weightedValue;
+      case AggregationType.winRate:
+      case AggregationType.salesCycleDays:
+      case AggregationType.stageDurationDays:
+        return 0;
+      default: {
+        const exhaustive: never = aggregationType;
+        return exhaustive;
+      }
+    }
+  }
+
+  buildWinRatePoints(rows: WinRateRow[], positions: PipelinePosition[], grouped: boolean): DiagramDataPoint[] {
+    if (!grouped) {
+      const row = rows[0];
+      if (!row) return [];
+
+      return [
+        {
+          labelKind: "system",
+          systemLabelKey: "total",
+          value: winRatePercent(row.wonCount, row.lostCount) ?? 0,
+          metrics: winRateMetrics(row),
+        },
+      ];
+    }
+
+    const byKey = new Map(rows.map((row) => [row.key ?? "", row]));
+    const points: DiagramDataPoint[] = [];
+
+    for (const position of positions) {
+      const row = byKey.get(position.id);
+      if (!row) continue;
+
+      points.push({
+        labelKind: "literal",
+        label: position.name || position.id,
+        value: winRatePercent(row.wonCount, row.lostCount) ?? 0,
+        metrics: winRateMetrics(row),
+      });
+    }
+
+    return points;
+  }
+
+  buildDurationPoints(rows: DurationRow[], positions: PipelinePosition[], grouped: boolean): DiagramDataPoint[] {
+    const groupRows = rows.filter((row) => !row.isTotal);
+
+    if (!grouped) {
+      const row = rows.find((candidate) => candidate.isTotal) ?? groupRows[0];
+      if (!row || row.sampleSize === 0) return [];
+
+      return [
+        {
+          labelKind: "system",
+          systemLabelKey: "total",
+          value: row.meanDays ?? 0,
+          metrics: durationMetrics(row),
+        },
+      ];
+    }
+
+    const byKey = new Map(groupRows.map((row) => [row.key ?? "", row]));
+    const points: DiagramDataPoint[] = [];
+
+    for (const position of positions) {
+      const row = byKey.get(position.id);
+      if (!row || row.sampleSize === 0) continue;
+
+      points.push({
+        labelKind: "literal",
+        label: position.name || position.id,
+        value: row.meanDays ?? 0,
+        metrics: durationMetrics(row),
+      });
+    }
+
+    return points;
   }
 
   async groupDealsByCustomColumn(widget: WidgetForCalculation, deals: DealRecord[]): Promise<DiagramDataPoint[]> {

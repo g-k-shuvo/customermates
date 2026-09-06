@@ -21,9 +21,14 @@ import {
   getGetWidgetByIdInteractor,
   getDeleteWidgetInteractor,
 } from "@/core/di";
-import type { UpsertActivityWidgetData, UpsertChartWidgetData } from "@/features/widget/upsert-widget.interactor";
+import type {
+  UpsertActivityWidgetData,
+  UpsertChartWidgetData,
+  UpsertFunnelWidgetData,
+} from "@/features/widget/upsert-widget.interactor";
 import { CustomErrorCode } from "@/core/validation/validation.types";
 import { ChartColor, DisplayType } from "@/features/widget/widget.schema";
+import { WIDGET_PERIOD_DAYS_MAX } from "@/features/widget/widget-aggregation";
 import { FilterSchema } from "@/core/base/base-get.schema";
 import { ActivityFiltersSchema } from "@/ee/messaging/activities/activities.schema";
 
@@ -59,8 +64,17 @@ const ChartCreateWidgetSchema = z
       .enum(AggregationType)
       .describe(
         `Aggregation to compute. ${enumHint(aggregationValues)}. ` +
-          "count = number of entities; dealValue = sum of related deal values; dealQuantity = sum of related deal quantities.",
+          "count = number of entities; dealValue = sum of related deal values; dealQuantity = sum of related deal quantities; " +
+          "winRate = won / (won + lost) over deals closed in the period; salesCycleDays = days from creation to won; " +
+          "stageDurationDays = days spent in a stage.",
       ),
+    periodDays: z
+      .number()
+      .int()
+      .positive()
+      .max(WIDGET_PERIOD_DAYS_MAX)
+      .optional()
+      .describe("Rolling period, in days, for winRate, salesCycleDays and stageDurationDays."),
   })
   .strict();
 
@@ -71,6 +85,34 @@ const ActivityCreateWidgetSchema = z
     name: z.string().min(1).describe("Human-readable widget title shown on the dashboard"),
     timelineFilters: ActivityFiltersSchema.optional(),
     showFilters: z.boolean().optional().describe("Show the activity count and active filters below the title"),
+  })
+  .strict();
+
+const FunnelCreateWidgetSchema = z
+  .object({
+    action: z.literal("create"),
+    kind: z.literal(WidgetKind.funnel),
+    name: z.string().min(1).describe("Human-readable widget title shown on the dashboard"),
+    pipelineId: z.uuid().describe("Pipeline the funnel is built over. Required for a funnel widget."),
+    periodDays: z
+      .number()
+      .int()
+      .positive()
+      .max(WIDGET_PERIOD_DAYS_MAX)
+      .optional()
+      .describe("Rolling period, in days, over which stage entries are counted. Defaults to 90."),
+    showFilters: z.boolean().optional().describe("Show the funnel summary below the title"),
+  })
+  .strict();
+
+const FunnelUpdateWidgetSchema = z
+  .object({
+    action: z.literal("update"),
+    id: z.uuid().describe("Widget id"),
+    name: z.string().min(1).optional(),
+    pipelineId: z.uuid().optional(),
+    periodDays: z.number().int().positive().max(WIDGET_PERIOD_DAYS_MAX).optional(),
+    showFilters: z.boolean().optional(),
   })
   .strict();
 
@@ -88,6 +130,7 @@ const ChartUpdateWidgetSchema = z
       .enum(AggregationType)
       .optional()
       .describe(`${enumHint(aggregationValues)}`),
+    periodDays: z.number().int().positive().max(WIDGET_PERIOD_DAYS_MAX).optional(),
     entityFilters: z.array(FilterSchema).optional().describe(`REPLACES entity filters. ${FILTER_FIELD_DESCRIPTION}`),
     dealFilters: z.array(FilterSchema).optional().describe(`REPLACES deal filters. ${FILTER_FIELD_DESCRIPTION}`),
     displayType: z
@@ -132,7 +175,13 @@ const ManageWidgetsSchema = z.object({
   kind: z
     .enum(WidgetKind)
     .optional()
-    .describe("create only. Omit for a chart; use activityTimeline for an activity widget."),
+    .describe(
+      "create only. Omit for a chart; use activityTimeline for an activity widget, or funnel for a pipeline funnel.",
+    ),
+  pipelineId: z
+    .uuid()
+    .optional()
+    .describe("funnel create/update only. Pipeline the funnel is built over. Required when creating a funnel."),
   id: z.uuid().optional().describe("Widget id. Required for update and delete."),
   ids: z.array(z.uuid()).min(1).max(100).optional().describe("get only. Widget ids to fetch."),
   name: z
@@ -177,6 +226,13 @@ const ManageWidgetsSchema = z.object({
       `Aggregation to compute ${enumHint(aggregationValues)}. Required for create. ` +
         "count = number of entities; dealValue = sum of related deal values; dealQuantity = sum of related deal quantities.",
     ),
+  periodDays: z
+    .number()
+    .int()
+    .positive()
+    .max(WIDGET_PERIOD_DAYS_MAX)
+    .optional()
+    .describe("create and update. Rolling period, in days, for winRate, salesCycleDays and stageDurationDays."),
   reverseXAxis: z.boolean().optional().describe("update only."),
   reverseYAxis: z.boolean().optional().describe("update only."),
   barColors: z
@@ -214,6 +270,8 @@ export const manageWidgetsTool = {
     "Each chart data point has value and either { labelKind: literal, label } or { labelKind: system, systemLabelKey }, so it answers questions like total pipeline value by stage in one call. " +
     "For chart creation omit kind and provide name, entityType, displayType, groupByType, aggregationType. " +
     "For activityTimeline creation provide kind, name, and optional timelineFilters/showFilters. " +
+    "For funnel creation provide kind funnel, name, pipelineId and optional periodDays; the result reports, per open stage, " +
+    "the distinct deals that entered it in the period, how many went on to a later stage, and the conversion between them. " +
     "Updates infer the immutable stored kind; only provided fields change and filter arrays replace their previous values. " +
     "Create rejects inaccessible relationship UUIDs; update may retain or remove an unavailable UUID only when that same UUID is already stored. " +
     "action delete is IRREVERSIBLE.",
@@ -264,7 +322,9 @@ export const manageWidgetsTool = {
       const parsed =
         kind === WidgetKind.activityTimeline
           ? ActivityCreateWidgetSchema.safeParse(params)
-          : ChartCreateWidgetSchema.safeParse(params);
+          : kind === WidgetKind.funnel
+            ? FunnelCreateWidgetSchema.safeParse(params)
+            : ChartCreateWidgetSchema.safeParse(params);
       if (!parsed.success) return mcpValidationFailure(parsed.error);
       const payload =
         parsed.data.kind === WidgetKind.activityTimeline
@@ -275,23 +335,33 @@ export const manageWidgetsTool = {
               displayOptions: { showFilters: parsed.data.showFilters ?? true },
               isTemplate: false,
             } satisfies UpsertActivityWidgetData)
-          : ({
-              kind: WidgetKind.chart,
-              name: parsed.data.name,
-              entityType: parsed.data.entityType,
-              groupByType: parsed.data.groupByType,
-              groupByCustomColumnId: parsed.data.groupByCustomColumnId,
-              aggregationType: parsed.data.aggregationType,
-              entityFilters: parsed.data.entityFilters ?? [],
-              dealFilters: parsed.data.dealFilters ?? [],
-              displayOptions: {
-                displayType: parsed.data.displayType,
-                reverseXAxis: false,
-                reverseYAxis: false,
-                barColors: [ChartColor.primary1, ChartColor.primary2],
-              },
-              isTemplate: false,
-            } satisfies UpsertChartWidgetData);
+          : parsed.data.kind === WidgetKind.funnel
+            ? ({
+                kind: WidgetKind.funnel,
+                name: parsed.data.name,
+                pipelineId: parsed.data.pipelineId,
+                periodDays: parsed.data.periodDays,
+                displayOptions: { showFilters: parsed.data.showFilters ?? true },
+                isTemplate: false,
+              } satisfies UpsertFunnelWidgetData)
+            : ({
+                kind: WidgetKind.chart,
+                name: parsed.data.name,
+                entityType: parsed.data.entityType,
+                groupByType: parsed.data.groupByType,
+                groupByCustomColumnId: parsed.data.groupByCustomColumnId,
+                aggregationType: parsed.data.aggregationType,
+                periodDays: parsed.data.periodDays,
+                entityFilters: parsed.data.entityFilters ?? [],
+                dealFilters: parsed.data.dealFilters ?? [],
+                displayOptions: {
+                  displayType: parsed.data.displayType,
+                  reverseXAxis: false,
+                  reverseYAxis: false,
+                  barColors: [ChartColor.primary1, ChartColor.primary2],
+                },
+                isTemplate: false,
+              } satisfies UpsertChartWidgetData);
       return runInteractor(getUpsertWidgetInteractor().invoke(payload), (data) =>
         toonResult({
           id: data.id,
@@ -340,6 +410,32 @@ export const manageWidgetsTool = {
         });
       }
 
+      if (widget.kind === WidgetKind.funnel) {
+        const parsed = FunnelUpdateWidgetSchema.safeParse(params);
+        if (!parsed.success) return mcpValidationFailure(parsed.error);
+        const updateParams = parsed.data;
+        const result = await getUpsertWidgetInteractor().invoke({
+          id: widget.id,
+          kind: WidgetKind.funnel,
+          name: updateParams.name ?? widget.name,
+          pipelineId: updateParams.pipelineId ?? widget.pipelineId ?? "",
+          periodDays: updateParams.periodDays ?? widget.periodDays ?? undefined,
+          displayOptions:
+            updateParams.showFilters === undefined
+              ? (widget.displayOptions ?? undefined)
+              : { ...(widget.displayOptions ?? {}), showFilters: updateParams.showFilters },
+          isTemplate: widget.isTemplate,
+        });
+        if (!result.ok) return mcpInteractorFailure(result.error);
+
+        return toonResult({
+          id: result.data.id,
+          kind: result.data.kind,
+          name: result.data.name,
+          message: `Widget "${result.data.name}" updated`,
+        });
+      }
+
       const parsed = ChartUpdateWidgetSchema.safeParse(params);
       if (!parsed.success) return mcpValidationFailure(parsed.error);
       const updateParams = parsed.data;
@@ -356,6 +452,7 @@ export const manageWidgetsTool = {
       if (updateParams.groupByCustomColumnId !== undefined)
         updates.groupByCustomColumnId = updateParams.groupByCustomColumnId;
       if (updateParams.aggregationType !== undefined) updates.aggregationType = updateParams.aggregationType;
+      if (updateParams.periodDays !== undefined) updates.periodDays = updateParams.periodDays;
       if (Array.isArray(updateParams.entityFilters)) updates.entityFilters = updateParams.entityFilters;
       if (Array.isArray(updateParams.dealFilters)) updates.dealFilters = updateParams.dealFilters;
       if (displayOptionsChanged) {
@@ -376,6 +473,7 @@ export const manageWidgetsTool = {
         groupByType: widget.groupByType,
         groupByCustomColumnId: widget.groupByCustomColumnId ?? undefined,
         aggregationType: widget.aggregationType,
+        periodDays: widget.periodDays ?? undefined,
         entityFilters: widget.entityFilters,
         dealFilters: widget.dealFilters,
         displayOptions: widget.displayOptions ?? undefined,

@@ -2,10 +2,11 @@ import type { FormEvent } from "react";
 import type {
   UpsertActivityWidgetData,
   UpsertChartWidgetData,
+  UpsertFunnelWidgetData,
   UpsertWidgetData,
 } from "@/features/widget/upsert-widget.interactor";
 import type { RootStore } from "@/core/stores/root.store";
-import type { CompanyWidget, WidgetDto } from "@/features/widget/widget.schema";
+import type { CompanyWidget, FunnelPipelineOption, WidgetDto } from "@/features/widget/widget.schema";
 import type { Filter, FilterableField } from "@/core/base/base-get.schema";
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
 
@@ -17,6 +18,13 @@ import { EntityType, WidgetGroupByType, AggregationType, Resource, WidgetKind } 
 import { upsertWidgetAction, deleteWidgetAction, getWidgetByIdAction, getCompanyWidgetsAction } from "../actions";
 
 import { ChartColor, DisplayType, supportsDealFilters } from "@/features/widget/widget.schema";
+import {
+  groupsClosedDealsByCurrentStage,
+  isPeriodAggregation,
+  isPipelinePositionGrouping,
+  resolveFunnelPeriodDays,
+  resolvePeriodDays,
+} from "@/features/widget/widget-aggregation";
 import { toastZodErrorTree } from "@/core/utils/toast-zod-error-tree";
 import { BaseModalStore } from "@/core/base/base-modal.store";
 import { reportApplicationError } from "@/core/errors/report-application-error";
@@ -28,7 +36,10 @@ import { FilterOperatorKey } from "@/core/base/base-query-builder";
 type WidgetModalSection = "config" | "filters" | "dealFilters" | "activityFilters" | "display";
 type WidgetCreationStep = "choose" | "configure";
 type ActivityWidgetModalForm = Omit<UpsertActivityWidgetData, "timelineFilters"> & { timelineFilters?: Filter[] };
-export type WidgetModalForm = UpsertChartWidgetData | ActivityWidgetModalForm;
+type FunnelWidgetModalForm = Omit<UpsertFunnelWidgetData, "pipelineId"> & {
+  pipelineId: string;
+};
+export type WidgetModalForm = UpsertChartWidgetData | ActivityWidgetModalForm | FunnelWidgetModalForm;
 
 type WidgetFormCommon = { id?: string; name: string; isTemplate: boolean };
 
@@ -61,6 +72,22 @@ function activityDisplayDefaults(): NonNullable<ActivityWidgetModalForm["display
   return { showFilters: true };
 }
 
+function funnelDisplayDefaults(): NonNullable<FunnelWidgetModalForm["displayOptions"]> {
+  return { showFilters: true };
+}
+
+function funnelFormDefaults(pipelineId: string, common?: Partial<WidgetFormCommon>): FunnelWidgetModalForm {
+  return {
+    id: common?.id,
+    kind: WidgetKind.funnel,
+    name: common?.name ?? "",
+    pipelineId,
+    periodDays: undefined,
+    displayOptions: funnelDisplayDefaults(),
+    isTemplate: common?.isTemplate ?? false,
+  };
+}
+
 function chartFormDefaults(entityType: EntityType, common?: Partial<WidgetFormCommon>): UpsertChartWidgetData {
   return {
     id: common?.id,
@@ -73,6 +100,7 @@ function chartFormDefaults(entityType: EntityType, common?: Partial<WidgetFormCo
     groupByType: WidgetGroupByType.none,
     groupByCustomColumnId: undefined,
     aggregationType: AggregationType.count,
+    periodDays: undefined,
     isTemplate: common?.isTemplate ?? false,
   };
 }
@@ -105,6 +133,7 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
   public creationStep: WidgetCreationStep = "choose";
   public isHydrating = false;
   public activityFilterableFields: FilterableField[] = [];
+  public funnelPipelines: FunnelPipelineOption[] = [];
   private skipReactions = false;
   private loadGeneration = 0;
   private sessionGeneration = 0;
@@ -146,6 +175,8 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
     [WidgetGroupByType.organization]: Resource.organizations,
     [WidgetGroupByType.deal]: Resource.deals,
     [WidgetGroupByType.service]: Resource.services,
+    [WidgetGroupByType.dealStage]: Resource.pipelines,
+    [WidgetGroupByType.dealPipeline]: Resource.pipelines,
     [WidgetGroupByType.customColumn]: null,
   };
 
@@ -160,6 +191,7 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
       creationStep: observable,
       isHydrating: observable,
       activityFilterableFields: observable,
+      funnelPipelines: observable,
       filterableFieldsByEntityType: observable,
       customColumnsByEntityType: observable,
 
@@ -172,6 +204,8 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
       onGroupByChange: action,
       setFilterableFields: action,
       setActivityFilterableFields: action,
+      setFunnelPipelines: action,
+      onFunnelPipelineChange: action,
       clearActivityThreadFilter: action,
       setCustomColumns: action,
       setExpandedSection: action,
@@ -179,10 +213,15 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
       setCreationStep: action,
       startFromKind: action,
       openWithFilter: action,
+      onPeriodDaysChange: action,
 
       groupBySelectOptions: computed,
       groupBySelectValue: computed,
       aggregationTypeOptions: computed,
+      showPeriodPicker: computed,
+      periodDaysValue: computed,
+      funnelPipelineOptions: computed,
+      funnelPipelineValue: computed,
       filterableFields: computed,
       dealFilterableFields: computed,
       customColumns: computed,
@@ -198,6 +237,7 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
 
     this.resetFormDefaultsOnEntityTypeChange();
     this.preventEntityTypeGroupingWhenCounting();
+    this.limitGroupingForPeriodAggregations();
     this.updateFormStateWhenGroupByValueChanges();
     this.updateGroupByValueWhenFormStateChanges();
     reaction(
@@ -211,6 +251,28 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
   private get chartForm(): UpsertChartWidgetData | undefined {
     return this.form.kind === WidgetKind.chart ? this.form : undefined;
   }
+
+  private get funnelForm(): FunnelWidgetModalForm | undefined {
+    return this.form.kind === WidgetKind.funnel ? this.form : undefined;
+  }
+
+  get funnelPipelineOptions() {
+    return this.funnelPipelines.filter((pipeline) => pipeline.openStageCount > 0);
+  }
+
+  get funnelPipelineValue() {
+    return this.funnelForm?.pipelineId ?? "";
+  }
+
+  setFunnelPipelines = (pipelines: FunnelPipelineOption[]) => {
+    this.funnelPipelines = pipelines;
+  };
+
+  onFunnelPipelineChange = (value: string) => {
+    const form = this.funnelForm;
+    if (!form || !value) return;
+    form.pipelineId = value;
+  };
 
   get customColumns() {
     const form = this.chartForm;
@@ -271,6 +333,8 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
 
     if (this.activityFilterableFields.length) kinds.push(WidgetKind.activityTimeline);
 
+    if (this.funnelPipelineOptions.length) kinds.push(WidgetKind.funnel);
+
     return kinds;
   }
 
@@ -294,8 +358,37 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
       ...base,
       { key: AggregationType.dealValue },
       ...(hasWeighting ? [{ key: AggregationType.dealWeightedValue }] : []),
+      ...(form.entityType === EntityType.deal
+        ? [
+            { key: AggregationType.winRate },
+            { key: AggregationType.salesCycleDays },
+            { key: AggregationType.stageDurationDays },
+          ]
+        : []),
     ];
   }
+
+  get showPeriodPicker() {
+    const form = this.chartForm;
+    if (this.funnelForm) return true;
+    return Boolean(form && isPeriodAggregation(form.aggregationType));
+  }
+
+  get periodDaysValue() {
+    const funnelForm = this.funnelForm;
+    if (funnelForm) return String(funnelForm.periodDays ?? resolveFunnelPeriodDays(funnelForm.periodDays));
+
+    const form = this.chartForm;
+    if (!form) return "";
+    return String(form.periodDays ?? resolvePeriodDays(form.aggregationType, form.periodDays));
+  }
+
+  onPeriodDaysChange = (value: string) => {
+    const form = this.chartForm ?? this.funnelForm;
+    const parsed = Number(value);
+    if (!form || !Number.isFinite(parsed) || parsed <= 0) return;
+    form.periodDays = parsed;
+  };
 
   get groupBySelectOptions() {
     const form = this.chartForm;
@@ -314,6 +407,16 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
         if (resource && this.rootStore.userStore.canAccess(resource)) options.push({ key: groupByType });
       }
     }
+
+    if (form.entityType === EntityType.deal && this.rootStore.userStore.canAccess(Resource.pipelines)) {
+      if (!groupsClosedDealsByCurrentStage(form.aggregationType, WidgetGroupByType.dealStage))
+        options.push({ key: WidgetGroupByType.dealStage });
+
+      options.push({ key: WidgetGroupByType.dealPipeline });
+    }
+
+    if (isPeriodAggregation(form.aggregationType))
+      return options.filter((option) => option.key !== WidgetGroupByType.deal);
 
     const custom = this.customColumns
       .filter((c) => {
@@ -534,34 +637,45 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
     const form = toJS(this.form);
     const savedForm = toJS(this.savedState);
     const payload: UpsertWidgetData =
-      form.kind === WidgetKind.chart
+      form.kind === WidgetKind.funnel
         ? {
             id: form.id,
-            kind: WidgetKind.chart,
+            kind: WidgetKind.funnel,
             name: form.name,
-            entityType: form.entityType,
-            entityFilters: form.entityFilters?.filter(hasValidFilterConfiguration),
-            dealFilters: this.showDealFiltersTab ? form.dealFilters?.filter(hasValidFilterConfiguration) : undefined,
+            pipelineId: form.pipelineId,
+            periodDays: form.periodDays,
             displayOptions: form.displayOptions,
-            groupByType: form.groupByType,
-            groupByCustomColumnId: form.groupByCustomColumnId,
-            aggregationType: form.aggregationType,
             isTemplate: form.isTemplate,
           }
-        : {
-            id: form.id,
-            kind: WidgetKind.activityTimeline,
-            name: form.name,
-            ...(!form.id ||
-            savedForm.kind !== WidgetKind.activityTimeline ||
-            !equal(activityFiltersForSave(form.timelineFilters), activityFiltersForSave(savedForm.timelineFilters))
-              ? {
-                  timelineFilters: activityFiltersForSave(form.timelineFilters),
-                }
-              : {}),
-            displayOptions: form.displayOptions,
-            isTemplate: form.isTemplate,
-          };
+        : form.kind === WidgetKind.chart
+          ? {
+              id: form.id,
+              kind: WidgetKind.chart,
+              name: form.name,
+              entityType: form.entityType,
+              entityFilters: form.entityFilters?.filter(hasValidFilterConfiguration),
+              dealFilters: this.showDealFiltersTab ? form.dealFilters?.filter(hasValidFilterConfiguration) : undefined,
+              displayOptions: form.displayOptions,
+              groupByType: form.groupByType,
+              groupByCustomColumnId: form.groupByCustomColumnId,
+              aggregationType: form.aggregationType,
+              periodDays: isPeriodAggregation(form.aggregationType) ? form.periodDays : undefined,
+              isTemplate: form.isTemplate,
+            }
+          : {
+              id: form.id,
+              kind: WidgetKind.activityTimeline,
+              name: form.name,
+              ...(!form.id ||
+              savedForm.kind !== WidgetKind.activityTimeline ||
+              !equal(activityFiltersForSave(form.timelineFilters), activityFiltersForSave(savedForm.timelineFilters))
+                ? {
+                    timelineFilters: activityFiltersForSave(form.timelineFilters),
+                  }
+                : {}),
+              displayOptions: form.displayOptions,
+              isTemplate: form.isTemplate,
+            };
 
     try {
       const res = await upsertWidgetAction(payload);
@@ -588,6 +702,8 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
         timelineFilters: this.mergeActivityFilters(),
       };
     }
+
+    if (kind === WidgetKind.funnel) return funnelFormDefaults(this.funnelPipelineOptions[0]?.id ?? "");
 
     const entityType = this.availableEntityTypes[0] ?? EntityType.deal;
     return {
@@ -618,6 +734,17 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
       };
     }
 
+    if (widget.kind === WidgetKind.funnel) {
+      return {
+        form: {
+          ...funnelFormDefaults(widget.pipelineId ?? this.funnelPipelineOptions[0]?.id ?? "", common),
+          periodDays: widget.periodDays ?? undefined,
+          displayOptions: mergeDisplayOptions(funnelDisplayDefaults(), widget.displayOptions),
+        },
+        groupByValue: WidgetGroupByType.none,
+      };
+    }
+
     const groupByType = widget.groupByType ?? WidgetGroupByType.none;
     const groupByCustomColumnId = widget.groupByCustomColumnId ?? undefined;
     return {
@@ -627,6 +754,7 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
         groupByType,
         groupByCustomColumnId,
         aggregationType: widget.aggregationType,
+        periodDays: widget.periodDays ?? undefined,
         entityFilters: this.mergeFiltersWithFilterableFields(widget.entityType, widget.entityFilters),
         dealFilters: this.mergeFiltersWithFilterableFields(EntityType.deal, widget.dealFilters),
       },
@@ -756,6 +884,29 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
             });
           }
         }
+      },
+    );
+  };
+
+  private limitGroupingForPeriodAggregations = () => {
+    reaction(
+      () => this.chartForm?.aggregationType,
+      (aggregationType) => {
+        if (this.skipReactions || !aggregationType || !isPeriodAggregation(aggregationType)) return;
+
+        runInAction(() => {
+          const form = this.chartForm;
+          if (!form) return;
+
+          const keepsGrouping =
+            isPipelinePositionGrouping(form.groupByType) &&
+            !groupsClosedDealsByCurrentStage(aggregationType, form.groupByType);
+          if (keepsGrouping) return;
+
+          form.groupByType = WidgetGroupByType.none;
+          form.groupByCustomColumnId = undefined;
+          this.groupByValue = WidgetGroupByType.none;
+        });
       },
     );
   };

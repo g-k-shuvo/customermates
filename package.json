@@ -201,6 +201,7 @@
     "lint:check": "yarn lint",
     "marketing:visual-catalog": "tsx scripts/list-marketing-visual-fixtures.ts",
     "marketing:visual-review": "tsx scripts/render-marketing-visual-review.ts",
+    "migrate:pipedrive": "tsx scripts/migrate-pipedrive/index.ts",
     "openapi:generate": "tsx scripts/generate-openapi.ts",
     "postinstall": "prisma generate",
     "prepare": "husky",

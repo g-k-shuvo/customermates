@@ -6,19 +6,31 @@ import type { GetCompanyWidgetsRepo } from "./get-company-widgets.interactor";
 import type { GetWidgetByIdRepo } from "./get-widget-by-id.interactor";
 import type { UpdateWidgetLayoutsRepo } from "./update-widget-layouts.interactor";
 import type { FindWidgetsByIdsRepo } from "./find-widgets-by-ids.repo";
-import type { WidgetDisplayOptions, WidgetDto, WidgetLayout } from "./widget.schema";
+import type { GetWidgetFunnelPipelinesRepo } from "./get-widget-filterable-fields.interactor";
+import type { FunnelWidgetDisplayOptions, WidgetDisplayOptions, WidgetDto, WidgetLayout } from "./widget.schema";
 import type { Filter } from "@/core/base/base-get.schema";
 import type { AggregationType, Prisma, WidgetGroupByType, EntityType } from "@/generated/prisma";
 
-import { Action, Resource, WidgetKind } from "@/generated/prisma";
+import { Action, Resource, StageKind, WidgetKind } from "@/generated/prisma";
 
 import { BaseRepository } from "@/core/base/base-repository";
 import { Transaction } from "@/core/decorators/transaction.decorator";
 import { BREAKPOINTS } from "@/constants/breakpoints";
-import { getWidgetCalculatorRepo } from "@/core/di";
-import { ActivityWidgetDtoSchema } from "./widget.schema";
+import { getWidgetCalculatorRepo, getWidgetFunnelRepo } from "@/core/di";
+import { ActivityWidgetDtoSchema, FunnelWidgetDtoSchema } from "./widget.schema";
 import { activityFilterableFieldsForViewer } from "@/ee/messaging/activities/activity-filterable-fields";
 import { normalizeFilters } from "@/core/base/filter-compat";
+
+type WidgetDtoBase = {
+  id: string;
+  userId: string;
+  companyId: string;
+  name: string;
+  layout: WidgetLayout | null;
+  isTemplate: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 export class PrismaWidgetRepo
   extends BaseRepository
@@ -29,9 +41,30 @@ export class PrismaWidgetRepo
     GetCompanyWidgetsRepo,
     GetWidgetByIdRepo,
     UpdateWidgetLayoutsRepo,
-    FindWidgetsByIdsRepo
+    FindWidgetsByIdsRepo,
+    GetWidgetFunnelPipelinesRepo
 {
   private messagingSourcesEnabled = false;
+
+  canReadPipelines() {
+    return this.canAccess(Resource.pipelines);
+  }
+
+  async getFunnelPipelines() {
+    if (!this.canReadPipelines()) return [];
+
+    const pipelines = await this.prisma.pipeline.findMany({
+      where: { companyId: this.companyId, archivedAt: null },
+      select: { id: true, name: true, stages: { where: { kind: StageKind.open }, select: { id: true } } },
+      orderBy: [{ position: "asc" }, { name: "asc" }],
+    });
+
+    return pipelines.map((pipeline) => ({
+      id: pipeline.id,
+      name: pipeline.name,
+      openStageCount: pipeline.stages.length,
+    }));
+  }
 
   canReadMessagingSources() {
     return (
@@ -68,6 +101,8 @@ export class PrismaWidgetRepo
       groupByType: true,
       groupByCustomColumnId: true,
       aggregationType: true,
+      periodDays: true,
+      pipelineId: true,
       timelineFilters: true,
       layout: true,
       isTemplate: true,
@@ -90,20 +125,60 @@ export class PrismaWidgetRepo
       updatedAt: row.updatedAt,
     };
 
-    if (row.kind === WidgetKind.activityTimeline) {
-      const timelineFilters = Array.isArray(row.timelineFilters)
-        ? normalizeFilters(row.timelineFilters as unknown as Filter[])
-        : (row.timelineFilters ?? []);
-      const parsed = ActivityWidgetDtoSchema.safeParse({
-        ...base,
-        kind: WidgetKind.activityTimeline,
-        timelineFilters,
-        displayOptions: row.displayOptions ?? null,
-      });
-
-      return parsed.success ? parsed.data : null;
+    switch (row.kind) {
+      case WidgetKind.activityTimeline:
+        return this.toActivityDto(row, base);
+      case WidgetKind.funnel:
+        return await this.toFunnelDto(row, base);
+      case WidgetKind.chart:
+        return await this.toChartDto(row, base);
+      default: {
+        const exhaustive: never = row.kind;
+        return exhaustive;
+      }
     }
+  }
 
+  private toActivityDto(
+    row: Prisma.WidgetGetPayload<{ select: PrismaWidgetRepo["dtoSelect"] }>,
+    base: WidgetDtoBase,
+  ): WidgetDto | null {
+    const timelineFilters = Array.isArray(row.timelineFilters)
+      ? normalizeFilters(row.timelineFilters as unknown as Filter[])
+      : (row.timelineFilters ?? []);
+    const parsed = ActivityWidgetDtoSchema.safeParse({
+      ...base,
+      kind: WidgetKind.activityTimeline,
+      timelineFilters,
+      displayOptions: row.displayOptions ?? null,
+    });
+
+    return parsed.success ? parsed.data : null;
+  }
+
+  private async toFunnelDto(
+    row: Prisma.WidgetGetPayload<{ select: PrismaWidgetRepo["dtoSelect"] }>,
+    base: WidgetDtoBase,
+  ): Promise<WidgetDto | null> {
+    const funnel = {
+      pipelineId: row.pipelineId,
+      periodDays: row.periodDays,
+    };
+    const parsed = FunnelWidgetDtoSchema.safeParse({
+      ...base,
+      ...funnel,
+      kind: WidgetKind.funnel,
+      displayOptions: (row.displayOptions as unknown as FunnelWidgetDisplayOptions | null) ?? null,
+      ...(await getWidgetFunnelRepo().calculateFunnelData(funnel)),
+    });
+
+    return parsed.success ? parsed.data : null;
+  }
+
+  private async toChartDto(
+    row: Prisma.WidgetGetPayload<{ select: PrismaWidgetRepo["dtoSelect"] }>,
+    base: WidgetDtoBase,
+  ): Promise<WidgetDto | null> {
     const entityType = row.entityType as EntityType;
     const aggregationType = row.aggregationType as AggregationType;
     const entityFilters = normalizeFilters((row.entityFilters as unknown as Filter[] | null) ?? []);
@@ -115,15 +190,13 @@ export class PrismaWidgetRepo
       groupByType: row.groupByType as WidgetGroupByType,
       groupByCustomColumnId: row.groupByCustomColumnId,
       aggregationType,
+      periodDays: row.periodDays,
       entityFilters,
       dealFilters,
       displayOptions: (row.displayOptions as unknown as WidgetDisplayOptions | null) ?? null,
     };
 
-    return {
-      ...chart,
-      data: await getWidgetCalculatorRepo().calculateWidgetData(chart),
-    };
+    return { ...chart, ...(await getWidgetCalculatorRepo().calculateWidgetData(chart)) };
   }
 
   async getWidgets() {
@@ -148,35 +221,57 @@ export class PrismaWidgetRepo
 
     const displayOptions = widgetData.displayOptions === undefined ? {} : { displayOptions: widgetData.displayOptions };
 
-    const widgetDataForDb: Prisma.WidgetUncheckedCreateInput =
-      widgetData.kind === WidgetKind.activityTimeline
-        ? {
-            userId,
-            companyId,
-            name: widgetData.name,
-            kind: WidgetKind.activityTimeline,
-            entityType: null,
-            groupByType: null,
-            groupByCustomColumnId: null,
-            aggregationType: null,
-            timelineFilters: widgetData.timelineFilters ?? [],
-            ...displayOptions,
-            isTemplate: widgetData.isTemplate,
-          }
-        : {
-            userId,
-            companyId,
-            name: widgetData.name,
-            kind: WidgetKind.chart,
-            entityType: widgetData.entityType,
-            entityFilters: widgetData.entityFilters ?? [],
-            dealFilters: widgetData.dealFilters ?? [],
-            ...displayOptions,
-            groupByType: widgetData.groupByType ?? null,
-            groupByCustomColumnId: widgetData.groupByCustomColumnId ?? null,
-            aggregationType: widgetData.aggregationType,
-            isTemplate: widgetData.isTemplate,
-          };
+    const common = { userId, companyId, name: widgetData.name, isTemplate: widgetData.isTemplate };
+    let widgetDataForDb: Prisma.WidgetUncheckedCreateInput;
+
+    switch (widgetData.kind) {
+      case WidgetKind.activityTimeline:
+        widgetDataForDb = {
+          ...common,
+          kind: WidgetKind.activityTimeline,
+          entityType: null,
+          groupByType: null,
+          groupByCustomColumnId: null,
+          aggregationType: null,
+          periodDays: null,
+          pipelineId: null,
+          timelineFilters: widgetData.timelineFilters ?? [],
+          ...displayOptions,
+        };
+        break;
+      case WidgetKind.funnel:
+        widgetDataForDb = {
+          ...common,
+          kind: WidgetKind.funnel,
+          entityType: null,
+          groupByType: null,
+          groupByCustomColumnId: null,
+          aggregationType: null,
+          pipelineId: widgetData.pipelineId,
+          periodDays: widgetData.periodDays ?? null,
+          ...displayOptions,
+        };
+        break;
+      case WidgetKind.chart:
+        widgetDataForDb = {
+          ...common,
+          kind: WidgetKind.chart,
+          entityType: widgetData.entityType,
+          entityFilters: widgetData.entityFilters ?? [],
+          dealFilters: widgetData.dealFilters ?? [],
+          ...displayOptions,
+          groupByType: widgetData.groupByType ?? null,
+          groupByCustomColumnId: widgetData.groupByCustomColumnId ?? null,
+          aggregationType: widgetData.aggregationType,
+          periodDays: widgetData.periodDays ?? null,
+          pipelineId: null,
+        };
+        break;
+      default: {
+        const exhaustive: never = widgetData;
+        return exhaustive;
+      }
+    }
     const widgetUpdateData: Prisma.WidgetUncheckedUpdateInput = {
       ...widgetDataForDb,
     };

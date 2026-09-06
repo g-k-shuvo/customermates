@@ -38,6 +38,8 @@ function widget(id: string, x: number, y: number): WidgetDto {
     companyId: "company-1",
     createdAt: new Date(0),
     data: [],
+    dataSummary: null,
+    periodDays: null,
     dealFilters: [],
     displayOptions: null,
     entityFilters: [],

@@ -163,17 +163,21 @@ function store(items: Array<Record<string, unknown>>, canManage = true) {
     setItems: vi.fn(),
     setQueryOptions: vi.fn(),
     viewMode: ViewMode.table,
+    activeTab: "list",
   };
 }
 
 const TRANSFERABLE_VIEWS = new Set(["Deals", "Services", "Tasks"]);
+const VIEW_TAB_VIEWS = new Set(["Tasks"]);
 
 function countOf(html: string, needle: RegExp): number {
   return (html.match(needle) ?? []).length;
 }
 
 function expectOnlyTransferButtons(html: string) {
-  expect(countOf(html, /<button/g)).toBe(countOf(html, /data-transfer-menu/g));
+  expect(countOf(html, /<button/g)).toBe(
+    countOf(html, /data-transfer-menu/g) + countOf(html, /data-slot="tabs-trigger"/g),
+  );
 }
 
 function result(items: Array<Record<string, unknown>>): Result {
@@ -442,6 +446,7 @@ describe("migrated collection page wiring", () => {
     expectOnlyTransferButtons(readOnlyHtml);
     expectOnlyTransferButtons(readOnlyTopBar);
     expect(readOnlyTopBar.includes("data-transfer-menu")).toBe(TRANSFERABLE_VIEWS.has(fixture.name));
+    expect(readOnlyTopBar.includes('data-slot="tabs-trigger"')).toBe(VIEW_TAB_VIEWS.has(fixture.name));
   });
 
   it("keeps Roles off URL sync and makes its rejected retry caller-safe", () => {

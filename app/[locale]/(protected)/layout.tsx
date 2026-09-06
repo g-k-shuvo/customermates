@@ -14,6 +14,7 @@ import { ApiKeyModal } from "./profile/components/api-key-modal";
 import { ConnectedAccountModal } from "./profile/components/connected-account-modal";
 import { ConnectUpsellModal } from "./profile/components/connect-upsell-modal";
 import { MarkDealLostModal } from "./deals/components/mark-deal-lost-modal";
+import { ScheduleFollowUpModal } from "./tasks/components/schedule-follow-up-modal";
 
 import { Toaster } from "@/components/ui/sonner";
 import { GlobalSearchModal } from "@/app/components/global-search-modal";
@@ -104,6 +105,8 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
           <ConnectUpsellModal />
 
           <MarkDealLostModal />
+
+          <ScheduleFollowUpModal />
 
           <TimelineDetailModal />
 

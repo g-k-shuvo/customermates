@@ -158,6 +158,12 @@ function syntheticSnapshot(): SyntheticAuditSnapshot {
     name: index === 6 ? "Prepare Q3 sales pipeline review" : `Task ${index + 1}`,
     type: "custom" as const,
     notes: null,
+    activityKind: null,
+    dueAt: null,
+    durationMinutes: null,
+    completedAt: null,
+    completedById: null,
+    isOverdue: false,
     ...SYNTHETIC_SEED_TIMELINE.task(index),
     users: index === 6 ? [] : [primaryUserReference],
     contacts:

@@ -15,6 +15,54 @@
     "privacyLink": "Privacy details",
     "title": "Help us learn what works"
   },
+  "Activities": {
+    "agenda": {
+      "emptyBody": "No {plural} are scheduled yet.",
+      "emptyTitle": "Nothing scheduled",
+      "later": "Later ({count})",
+      "overdue": "Overdue ({count})",
+      "thisWeek": "This week ({count})",
+      "today": "Today ({count})",
+      "tomorrow": "Tomorrow ({count})",
+      "undated": "No date ({count})"
+    },
+    "completion": {
+      "complete": "Mark done",
+      "completedAt": "Done {date}",
+      "open": "Not done",
+      "reopen": "Reopen"
+    },
+    "fields": {
+      "activityKind": "Activity type",
+      "completion": "Progress",
+      "dueAt": "Due",
+      "durationMinutes": "Duration (min)"
+    },
+    "followUp": {
+      "description": "You finished “{name}”. Schedule what happens next.",
+      "durationPlaceholder": "30",
+      "nameLabel": "What is next?",
+      "schedule": "Schedule",
+      "skip": "Not now",
+      "title": "Plan the next step"
+    },
+    "list": {
+      "empty": "Nothing planned yet",
+      "label": "Planned work"
+    },
+    "nextActivity": {
+      "label": "Next activity",
+      "none": "No next activity"
+    },
+    "summary": {
+      "dueToday": "Due today",
+      "overdue": "My overdue activities"
+    },
+    "tabs": {
+      "agenda": "Agenda",
+      "list": "List view"
+    }
+  },
   "AgentChat": {
     "activity": {
       "cancelled": "Stopped",
@@ -823,6 +871,15 @@
       "save": "Save",
       "signIn": "Login"
     },
+    "activityKinds": {
+      "call": "Call",
+      "deadline": "Deadline",
+      "email": "Email",
+      "lunch": "Lunch",
+      "meeting": "Meeting",
+      "task": "To-do",
+      "unspecified": "Unspecified"
+    },
     "ariaLabels": {
       "breadcrumb": "Breadcrumb",
       "collapseSearch": "Collapse search",
@@ -894,6 +951,12 @@
           "qualified": "Qualified",
           "won": "Won"
         }
+      },
+      "dashboard": {
+        "openPipelineValueByStage": "Open pipeline value by stage",
+        "pipelineFunnel": "Sales funnel",
+        "salesCycle": "Average sales cycle",
+        "winRate": "Win rate"
       },
       "deal": {
         "columnLabel": "Stage",
@@ -1050,8 +1113,11 @@
       "socialActionRequiresSocialAccount": "This action requires a LinkedIn or Instagram connected account, but this account is {provider}.",
       "socialPostsRequireSocialAccount": "Social posts require a LinkedIn or Instagram connected account, but this account is {provider}.",
       "subjectRequired": "Add a subject.",
+      "taskAlreadyCompleted": "This task is already complete. Reopen it before completing it again.",
       "taskNameCannotBeChangedForSystemTasks": "Name cannot be changed for system tasks.",
+      "taskNotCompleted": "This task is not complete, so there is nothing to reopen.",
       "taskNotFound": "Task ID not found or not accessible.",
+      "taskOnlyCustomTasksCanBeCompleted": "Only custom tasks can be completed.",
       "taskOnlyCustomTasksCanBeDeleted": "Only custom tasks can be deleted.",
       "terminologyInvalidPreset": "Choose one of the available name presets.",
       "termsNotAgreed": "You must agree to the terms and conditions.",
@@ -1072,14 +1138,21 @@
       "webhookDeliveryNotFound": "Webhook delivery ID not found or not accessible.",
       "webhookEventsRequired": "Select at least one event.",
       "webhookNotFound": "Webhook ID not found or not accessible.",
+      "widgetClosedDealAggregationCannotGroupByStage": "Win rate and sales cycle count only closed deals, which all sit in the won or lost stage. Group them by pipeline instead.",
       "widgetDealAggregationNotAllowedForTask": "Deal aggregation types are not allowed for Task element type.",
       "widgetDealFiltersNotAllowedForDealEntityType": "Deal filters are not allowed when element type is Deal.",
       "widgetDealQuantityOnlyForService": "Deal quantity aggregation is only allowed for Service element type.",
+      "widgetDurationAggregationFiltersNotSupported": "Sales cycle and time in stage are computed from stage history and do not support filters.",
+      "widgetFunnelPipelineHasNoOpenStages": "This pipeline has no open stages, so there is nothing to funnel.",
+      "widgetFunnelRequiresPipelineAccess": "A funnel widget needs access to pipelines.",
       "widgetGroupByCustomColumnIdRequired": "Custom column ID is required when grouping by custom column.",
       "widgetGroupByEntityTypeNotAllowedForCount": "Grouping by element type itself is not allowed when aggregation type is count.",
       "widgetGroupByTypeMustMatchEntityType": "Group by type must match the chart's element type.",
       "widgetKindImmutable": "A widget's type cannot be changed after it is created.",
       "widgetNotFound": "Widget ID not found or not accessible.",
+      "widgetPeriodAggregationGroupingLimited": "Win rate, sales cycle and time in stage can only be grouped by pipeline or stage.",
+      "widgetPeriodAggregationRequiresDeal": "Win rate, sales cycle and time in stage are only available when element type is Deal.",
+      "widgetPipelineGroupingRequiresDeal": "Grouping by pipeline or stage is only available when element type is Deal.",
       "widgetTaskCanOnlyGroupByCustomColumn": "Tasks can only be grouped by custom columns, not by element types.",
       "widgetWeightedValueNotAllowedForService": "Weighted value aggregation is not allowed for Service element type."
     },
@@ -1187,6 +1260,7 @@
         "event": "Event",
         "isPlatformOperator": "Platform operator",
         "lastActiveAt": "Last active",
+        "overdue": "Overdue",
         "participants": "Participants",
         "pipelineId": "Pipeline",
         "plan": "Plan",
@@ -1222,6 +1296,10 @@
         "lt": "<",
         "lte": "≤",
         "notIn": "not in"
+      },
+      "overdueValues": {
+        "onTrack": "Not overdue",
+        "overdue": "Overdue"
       },
       "presets": {
         "add": "Save as preset…",
@@ -1286,6 +1364,8 @@
         "lastOption": "A single select needs at least one option"
       },
       "password": "Password",
+      "periodDays": "Period",
+      "pipelineId": "Pipeline",
       "roleId": "Role",
       "secret": "Secret",
       "status": "Status",
@@ -1354,12 +1434,14 @@
       "columns": {
         "action": "Action",
         "actions": "Actions",
+        "activityKind": "Activity type",
         "actor": "Actor",
         "adProvider": "Ad provider",
         "allowance": "Allowance",
         "amount": "Amount",
         "avatarUrl": "Avatar",
         "channels": "Channels",
+        "completedAt": "Completed",
         "contacts": "Contacts",
         "createdAt": "Created at",
         "credits": "Credits",
@@ -1367,6 +1449,7 @@
         "deals": "Deals",
         "description": "Description",
         "displayName": "Display name",
+        "dueAt": "Due date",
         "email": "E-Mail",
         "emailAddress": "Email address",
         "enabled": "Enabled",
@@ -1386,6 +1469,7 @@
         "lastRequest": "Last used",
         "members": "Members",
         "name": "Name",
+        "nextActivity": "Next activity",
         "notes": "Notes",
         "operator": "Operator",
         "options": "Options",
@@ -1618,7 +1702,10 @@
       "dealValue": "{deal} value",
       "dealValueRelated": "{deal} value related to {entity}",
       "dealWeightedValue": "Weighted {deal} value",
-      "dealWeightedValueRelated": "Weighted {deal} value related to {entity}"
+      "dealWeightedValueRelated": "Weighted {deal} value related to {entity}",
+      "salesCycleDays": "{deal} cycle length in days",
+      "stageDurationDays": "Time in stage in days",
+      "winRate": "Win rate for {deals}"
     },
     "displayTypes": {
       "doughnutChart": "Doughnut Chart",
@@ -1628,8 +1715,25 @@
       "verticalBarChart": "Vertical Bar Chart",
       "verticalBarChartWithLabels": "Vertical Bar Chart with Labels"
     },
+    "funnelWidget": {
+      "advanced": "{count} advanced",
+      "conversionToNext": "{value}% reached {stage} or later",
+      "dealsEntered": "{count} {deals} entered",
+      "definition": "Entered counts distinct {deals} that moved into a stage during the period. Conversion is the share that later reached a stage further along; won and lost stages are outcomes, never a next stage.",
+      "entered": "{count} entered",
+      "noConversion": "No conversion yet",
+      "noData": "No {deals} entered this pipeline in the last {days} days.",
+      "noPipeline": "Select a pipeline for this funnel.",
+      "noStages": "This pipeline has no open stages to funnel.",
+      "openToWon": "{value}% open to won"
+    },
     "groupBys": {
+      "dealPipeline": "Pipeline",
+      "dealStage": "Stage",
       "none": "No Grouping"
+    },
+    "periods": {
+      "lastDays": "Last {days} days"
     },
     "tabs": {
       "dealFilters": "Filters for {deals}",
@@ -1642,7 +1746,8 @@
         "colorOption": "Color {number}",
         "colors": "Colors",
         "showFilters": "Show activity count and filters",
-        "showMetricAndFilters": "Show metric and filters"
+        "showMetricAndFilters": "Show metric and filters",
+        "showSummary": "Show funnel summary"
       },
       "create": "Create widget",
       "danger": {
@@ -1673,13 +1778,16 @@
       "kind": {
         "activityTimelineDescription": "Follow record changes, messages, and account or calendar activity in time order.",
         "chartDescription": "Compare CRM data in a visual chart.",
+        "funnelDescription": "Follow one pipeline stage by stage and see where records drop out.",
         "title": "Choose a Widget"
       },
       "preview": {
         "activitySummary": "{title}. Filters: {filters, plural, =0 {none} =1 {1 active} other {# active}}.",
         "chartSummary": "{title}. {summary}. Metric: {metric}. Chart style: {chart}.",
         "filterSummary": "{count, plural, =1 {1 filter} other {# filters}}",
+        "funnelSummary": "{title}. Funnel summary: {summary}.",
         "groupLabel": "Group {number}",
+        "stageLabel": "Stage {number}",
         "title": "Preview",
         "untitled": "Untitled widget"
       },
@@ -1708,7 +1816,14 @@
     },
     "widgetKinds": {
       "activityTimeline": "Activity timeline",
-      "chart": "Chart"
+      "chart": "Chart",
+      "funnel": "Funnel"
+    },
+    "widgetMetrics": {
+      "days": "{value} days",
+      "median": "Median {value} days",
+      "percent": "{value}%",
+      "winRateDenominator": "{closed} closed {deals}, open {deals} excluded"
     }
   },
   "DataTransfer": {
