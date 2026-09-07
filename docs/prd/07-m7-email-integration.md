@@ -215,3 +215,74 @@ spec, DI registration in `core/di.ts`, and unit tests colocated in `__tests__/`.
 
 Sending replies from their domain needs SPF/DKIM on the SMTP sender. That is the same
 unanswered T1.4 input — the sending domain for `RESEND_OPERATOR_EMAIL` / SMTP `from`.
+
+---
+
+# Delivered
+
+All nine tasks shipped across eight commits, `3cdd80cf` to `06a0b0b0`. 308 tests.
+
+## Deviations from the plan above, and why
+
+**A new `/mail` route rather than reusing `/inbox`.** The plan already argued for this; it
+held. `/inbox` imports 19 `ee/messaging` modules and 91 AGPL files import it, so repointing
+would have been the fork's largest rebase liability, for UI covering LinkedIn, WhatsApp and
+Telegram that IMAP never uses. `/inbox` keeps its self-hosted redirect and stays inert, which
+also keeps us clean under `ee/LICENSE.md` §4.
+
+**No link table.** T7.5 was going to add one. It is unnecessary: participant identifiers join
+to `ContactIdentifier` at query time, so the association is always current, no upstream model
+gains a relation, and there is nothing to keep in sync. `MessagingThread.sharedToCrm` already
+existed for the privacy gate.
+
+**Only INBOX is synced.** Mail the CRM sends is written to our own tables at send time, so
+syncing Sent would duplicate it. Mail a user sends from their own client, outside the CRM, will
+not appear. That is the deliberate trade, not an oversight.
+
+**Sanitisation happens on read, not on write.** Bodies are stored exactly as received so the
+original is never lost, and every render — page and REST alike — passes through the allowlist.
+"Show images" re-fetches the thread rather than trusting markup already in the browser.
+
+**`MAILBOX_ALLOW_PRIVATE_HOSTS` exists.** The SSRF guard correctly blocks loopback, which also
+blocks every local mail server and made the feature undevelopable against Greenmail or MailHog.
+The escape hatch is environment-only, off by default, and never settable per request.
+
+**Two upstream files were edited.** `tests/conventions/page-state-contract.test.ts` asserts an
+exact protected-loader count, which is a deliberate tripwire for new routes: 29 became 30.
+`components/entity-detail/entity-detail-layout.tsx` gained an optional `emailsPanel`, so an
+entity that passes none gets no tab and nothing changes for organizations, services or tasks.
+
+## Verified against a real server, not stubs
+
+A Greenmail container over IMAP and SMTP, against the real database:
+
+- Three delivered messages synced into two conversations, the reply grouped with its parent.
+- Re-running stores nothing **and** discarding the cursor to force a full refetch stores
+  nothing, so idempotency does not rest on the cursor.
+- A message carrying `<script>` and a `javascript:` link is stored verbatim while both the page
+  and `GET /v1/mailbox/threads/{id}` return it with neither, and a tracking pixel is reported
+  as one blocked image.
+- A reply left over SMTP carrying `In-Reply-To`, landed in the Sent folder, and was recorded as
+  the outbound message on its conversation.
+
+## What the plan got wrong
+
+The plan assumed replies could reuse the T1.5 transport. They cannot: T1.5 sends transactional
+mail as the instance, and a reply must send as the user through their own provider. That is why
+`MailboxCredential` gained nullable SMTP columns.
+
+## Known gaps
+
+- **Attachments are not implemented.** `attachmentsMeta` is untouched and `cid:` inline images
+  are dropped by the sanitiser.
+- **Threading falls back to subject and participants** when a message carries no usable
+  `Message-ID`. Where the identity was hashed or fingerprinted, no `In-Reply-To` is emitted
+  rather than a fabricated one.
+- **`lastMessagePreview` can contain a link target** such as `javascript:...`, because
+  mailparser inlines hrefs when deriving text from HTML. It is inert — rendered as escaped text,
+  never markup — and rewriting stored message text to hide it would be lossy.
+- **Several convention tests are vacuous on Windows.** `page-state-contract`,
+  `background-tenant-boundary`, `i18n-key-resolution`, `di-boundaries` and
+  `rest-openapi-coverage` build paths with `path.join` and match POSIX regexes, so they scan
+  zero files locally. Linux CI is the first real exercise of the new routes, the loader-count
+  bump and the DI registration.
