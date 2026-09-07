@@ -1,6 +1,15 @@
 import type { $ZodRawIssue } from "zod/v4/core";
 
 export enum CustomErrorCode {
+  mailboxAlreadyConnected = "mailboxAlreadyConnected",
+  mailboxAuthenticationFailed = "mailboxAuthenticationFailed",
+  mailboxFolderMissing = "mailboxFolderMissing",
+  mailboxHostRejected = "mailboxHostRejected",
+  mailboxNotFound = "mailboxNotFound",
+  mailboxProtocolFailed = "mailboxProtocolFailed",
+  mailboxSecretKeyMissing = "mailboxSecretKeyMissing",
+  mailboxTlsFailed = "mailboxTlsFailed",
+  mailboxUnreachable = "mailboxUnreachable",
   agentApprovalUnavailable = "agentApprovalUnavailable",
   agentConversationNotFound = "agentConversationNotFound",
   agentLimitReached = "agentLimitReached",

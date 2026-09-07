@@ -1,6 +1,9 @@
+import { randomUUID } from "node:crypto";
+
 import type { NormalizedMessage } from "../sync/normalize-message";
 import type { PlannedThread } from "../sync/sync-plan";
-import type { MailboxFolderCursorDto } from "../mailbox.schema";
+import type { MailboxCredentialDto, MailboxFolderCursorDto } from "../mailbox.schema";
+import type { CreateMailboxArgs } from "../connect/connect-mailbox.repo";
 
 import { MailboxFolderCursorListSchema } from "../mailbox.schema";
 
@@ -22,6 +25,47 @@ export type MailboxAccount = {
 export type StoredThread = { id: string; threadKey: string };
 
 const PREVIEW_LENGTH = 280;
+
+const MAILBOX_CREDENTIAL_SELECT = {
+  id: true,
+  connectedAccountId: true,
+  imapHost: true,
+  imapPort: true,
+  imapSecure: true,
+  username: true,
+  syncCursors: true,
+  backfillFrom: true,
+  lastSyncedAt: true,
+  lastVerifiedAt: true,
+} as const;
+
+type MailboxCredentialRow = {
+  id: string;
+  connectedAccountId: string;
+  imapHost: string;
+  imapPort: number;
+  imapSecure: boolean;
+  username: string;
+  syncCursors: unknown;
+  backfillFrom: Date | null;
+  lastSyncedAt: Date | null;
+  lastVerifiedAt: Date | null;
+};
+
+function toMailboxCredentialDto(row: MailboxCredentialRow): MailboxCredentialDto {
+  return {
+    id: row.id,
+    connectedAccountId: row.connectedAccountId,
+    imapHost: row.imapHost,
+    imapPort: row.imapPort,
+    imapSecure: row.imapSecure,
+    username: row.username,
+    syncCursors: MailboxFolderCursorListSchema.catch([]).parse(row.syncCursors),
+    backfillFrom: row.backfillFrom,
+    lastSyncedAt: row.lastSyncedAt,
+    lastVerifiedAt: row.lastVerifiedAt,
+  };
+}
 
 function previewOf(message: NormalizedMessage): string | null {
   const body = message.message.bodyText ?? message.message.bodyHtml;
@@ -175,6 +219,50 @@ export class PrismaMailboxRepo extends BaseRepository {
         lastMessageIsSender: latest.message.direction === "outbound",
       },
     });
+  }
+
+  async createMailboxOrThrow(args: CreateMailboxArgs): Promise<MailboxCredentialDto> {
+    const { companyId, userId } = this;
+
+    const account = await this.prisma.connectedAccount.create({
+      data: {
+        companyId,
+        userId,
+        unipileAccountId: `imap:${randomUUID()}`,
+        provider: "mail",
+        status: "ok",
+        hasMessaging: true,
+        emailAddress: args.emailAddress,
+        displayName: args.displayName,
+      },
+      select: { id: true },
+    });
+
+    const credential = await this.prisma.mailboxCredential.create({
+      data: {
+        companyId,
+        connectedAccountId: account.id,
+        imapHost: args.imapHost,
+        imapPort: args.imapPort,
+        imapSecure: args.imapSecure,
+        username: args.username,
+        sealedSecret: args.sealedSecret,
+        backfillFrom: args.backfillFrom,
+        lastVerifiedAt: args.verifiedAt,
+      },
+      select: MAILBOX_CREDENTIAL_SELECT,
+    });
+
+    return toMailboxCredentialDto(credential);
+  }
+
+  async findMailboxByAddress(emailAddress: string): Promise<MailboxCredentialDto | null> {
+    const credential = await this.prisma.mailboxCredential.findFirst({
+      where: { companyId: this.companyId, connectedAccount: { emailAddress } },
+      select: MAILBOX_CREDENTIAL_SELECT,
+    });
+
+    return credential ? toMailboxCredentialDto(credential) : null;
   }
 
   async findContactMatches(identifiers: readonly string[]): Promise<{ identifier: string; contactId: string }[]> {

@@ -25,6 +25,14 @@ import { PrismaOrganizationRepo } from "@/features/organizations/prisma-organiza
 import { PrismaDealRepo } from "@/features/deals/prisma-deal.repository";
 import { PrismaPipelineRepo, PrismaPipelineStageRepo } from "@/features/pipelines/prisma-pipeline.repository";
 import { PrismaLostReasonRepo } from "@/features/lost-reasons/prisma-lost-reason.repository";
+import { env } from "@/env";
+import { PrismaMailboxRepo } from "@/features/mailbox/persistence/prisma-mailbox.repository";
+import { PrismaDueMailboxRepo } from "@/features/mailbox/persistence/prisma-due-mailbox.repository";
+import { createImapflowTransport } from "@/features/mailbox/sync/imapflow.transport";
+import { parseSecretBoxKey, type SecretBoxKey } from "@/features/mailbox/credentials/secret-box";
+import { SyncMailboxService } from "@/features/mailbox/sync/sync-mailbox.service";
+import { ConnectMailboxInteractor } from "@/features/mailbox/connect/connect-mailbox.interactor";
+import { SyncMailboxInteractor } from "@/features/mailbox/sync/sync-mailbox.interactor";
 import { PrismaServiceRepo } from "@/features/services/prisma-service.repository";
 import { PrismaTaskRepo } from "@/features/tasks/prisma-task.repository";
 import { PrismaUserRepo } from "@/features/user/prisma-user.repository";
@@ -1789,3 +1797,26 @@ export const getDryRunImportDealsInteractor = () => new DryRunImportDealsInterac
 export const getDryRunImportServicesInteractor = () => new DryRunImportServicesInteractor(getServiceWritePrecheck());
 
 export const getDryRunImportTasksInteractor = () => new DryRunImportTasksInteractor(getTaskWritePrecheck());
+
+// Mailbox (M7). PrismaMailboxRepo is the single implementation behind both narrow repo
+// interfaces; di.ts is the only place allowed to value-import a prisma repository.
+export const getMailboxRepo = () => new PrismaMailboxRepo();
+
+export const getDueMailboxRepo = () => new PrismaDueMailboxRepo();
+
+export const getMailboxSecretKey = () => (env.MAILBOX_SECRET_KEY ? parseSecretBoxKey(env.MAILBOX_SECRET_KEY) : null);
+
+export const getMailboxTransport = () =>
+  createImapflowTransport(undefined, undefined, { allowPrivateHosts: env.MAILBOX_ALLOW_PRIVATE_HOSTS });
+
+export const getSyncMailboxService = (secretKey: SecretBoxKey) =>
+  new SyncMailboxService(getMailboxRepo(), getMailboxTransport(), secretKey, () => new Date());
+
+export const getConnectMailboxInteractor = () =>
+  new ConnectMailboxInteractor(getMailboxRepo(), getMailboxTransport(), getMailboxSecretKey(), () => new Date());
+
+export const getSyncMailboxInteractor = () => {
+  const secretKey = getMailboxSecretKey();
+
+  return new SyncMailboxInteractor(getMailboxRepo(), secretKey ? getSyncMailboxService(secretKey) : null);
+};
