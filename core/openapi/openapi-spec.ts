@@ -49,6 +49,10 @@ import { createPipelineStageOperation } from "@/features/pipelines/stages/create
 import { updatePipelineStageOperation } from "@/features/pipelines/stages/update-stage.openapi";
 import { deletePipelineStageOperation } from "@/features/pipelines/stages/delete-stage.openapi";
 import { getLostReasonsOperation } from "@/features/lost-reasons/get/get-lost-reasons.openapi";
+import { getMailboxThreadsOperation } from "@/features/mailbox/get/get-mailbox-threads.openapi";
+import { getMailboxThreadOperation } from "@/features/mailbox/get/get-mailbox-thread.openapi";
+import { shareThreadOperation } from "@/features/mailbox/upsert/share-thread.openapi";
+import { sendReplyOperation } from "@/features/mailbox/outbound/send-reply.openapi";
 import { getLostReasonByIdOperation } from "@/features/lost-reasons/get/get-lost-reason-by-id.openapi";
 import { createLostReasonOperation } from "@/features/lost-reasons/upsert/create-lost-reason.openapi";
 import { updateLostReasonOperation } from "@/features/lost-reasons/upsert/update-lost-reason.openapi";
@@ -303,6 +307,16 @@ export function generateOpenApiSpec() {
       "/v1/pipeline-stages/{id}": {
         put: updatePipelineStageOperation,
         delete: deletePipelineStageOperation,
+      },
+      "/v1/mailbox/threads": {
+        get: getMailboxThreadsOperation,
+      },
+      "/v1/mailbox/threads/{id}": {
+        get: getMailboxThreadOperation,
+        put: shareThreadOperation,
+      },
+      "/v1/mailbox/threads/{id}/reply": {
+        post: sendReplyOperation,
       },
       "/v1/lost-reasons": {
         get: getLostReasonsOperation,
