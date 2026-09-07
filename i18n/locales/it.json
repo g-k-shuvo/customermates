@@ -1082,6 +1082,7 @@
       "mailboxNotFound": "Questa casella di posta non è più collegata.",
       "mailboxProtocolFailed": "Il server di posta ha risposto in modo non interpretabile.",
       "mailboxSecretKeyMissing": "La sincronizzazione delle caselle di posta non è configurata su questa istanza.",
+      "mailboxThreadNotFound": "Questa conversazione non è più disponibile.",
       "mailboxTlsFailed": "Non è stato possibile verificare il certificato di sicurezza del server di posta.",
       "mailboxUnreachable": "Impossibile raggiungere il server di posta. Controlla host e porta.",
       "messageContentRequired": "Aggiungi un messaggio o un allegato.",
@@ -2536,6 +2537,20 @@
     "showArchived": "Mostra motivi archiviati",
     "title": "Motivi di perdita",
     "unarchive": "Ripristina"
+  },
+  "Mailbox": {
+    "emptyDescription": "Collega una casella di posta e le tue conversazioni compariranno qui.",
+    "emptyTitle": "Ancora nessuna email",
+    "loadingThread": "Caricamento della conversazione",
+    "noSubject": "(nessun oggetto)",
+    "remoteImagesBlocked": "{count} immagini remote bloccate",
+    "selectThreadDescription": "Scegli una conversazione a sinistra per leggerla.",
+    "selectThreadTitle": "Seleziona una conversazione",
+    "showRemoteImages": "Mostra immagini",
+    "threadErrorDescription": "Potrebbe essere stata rimossa dopo il caricamento dell'elenco.",
+    "threadErrorTitle": "Non è stato possibile aprire questa conversazione",
+    "title": "Posta",
+    "unknownSender": "Mittente sconosciuto"
   },
   "MassActions": {
     "apply": "Applica alla selezione",

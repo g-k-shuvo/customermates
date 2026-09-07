@@ -33,6 +33,10 @@ import { parseSecretBoxKey, type SecretBoxKey } from "@/features/mailbox/credent
 import { SyncMailboxService } from "@/features/mailbox/sync/sync-mailbox.service";
 import { ConnectMailboxInteractor } from "@/features/mailbox/connect/connect-mailbox.interactor";
 import { SyncMailboxInteractor } from "@/features/mailbox/sync/sync-mailbox.interactor";
+import { GetMailboxThreadsInteractor } from "@/features/mailbox/get/get-mailbox-threads.interactor";
+import { GetMailboxThreadInteractor } from "@/features/mailbox/get/get-mailbox-thread.interactor";
+import { GetRecordThreadsInteractor } from "@/features/mailbox/get/get-record-threads.interactor";
+import { ShareThreadInteractor } from "@/features/mailbox/upsert/share-thread.interactor";
 import { PrismaServiceRepo } from "@/features/services/prisma-service.repository";
 import { PrismaTaskRepo } from "@/features/tasks/prisma-task.repository";
 import { PrismaUserRepo } from "@/features/user/prisma-user.repository";
@@ -1814,6 +1818,14 @@ export const getSyncMailboxService = (secretKey: SecretBoxKey) =>
 
 export const getConnectMailboxInteractor = () =>
   new ConnectMailboxInteractor(getMailboxRepo(), getMailboxTransport(), getMailboxSecretKey(), () => new Date());
+
+export const getGetMailboxThreadsInteractor = () => new GetMailboxThreadsInteractor(getMailboxRepo());
+
+export const getGetMailboxThreadInteractor = () => new GetMailboxThreadInteractor(getMailboxRepo());
+
+export const getGetRecordThreadsInteractor = () => new GetRecordThreadsInteractor(getMailboxRepo());
+
+export const getShareThreadInteractor = () => new ShareThreadInteractor(getMailboxRepo());
 
 export const getSyncMailboxInteractor = () => {
   const secretKey = getMailboxSecretKey();

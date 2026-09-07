@@ -26,6 +26,17 @@ export type StoredThread = { id: string; threadKey: string };
 
 const PREVIEW_LENGTH = 280;
 
+const THREAD_SUMMARY_SELECT = {
+  id: true,
+  subject: true,
+  lastMessageAt: true,
+  lastMessagePreview: true,
+  lastMessageIsSender: true,
+  state: true,
+  sharedToCrm: true,
+  participants: { select: { identifier: true, displayName: true, isSelf: true } },
+} as const;
+
 const MAILBOX_CREDENTIAL_SELECT = {
   id: true,
   connectedAccountId: true,
@@ -297,15 +308,7 @@ export class PrismaMailboxRepo extends BaseRepository {
         ...(sharedOnly ? { sharedToCrm: true } : {}),
         participants: { some: { companyId: this.companyId, identifier: { in: [...identifiers] } } },
       },
-      select: {
-        id: true,
-        subject: true,
-        lastMessageAt: true,
-        lastMessagePreview: true,
-        lastMessageIsSender: true,
-        state: true,
-        sharedToCrm: true,
-      },
+      select: THREAD_SUMMARY_SELECT,
       orderBy: [{ lastMessageAt: "desc" }, { id: "asc" }],
       take: 100,
     });
@@ -329,6 +332,47 @@ export class PrismaMailboxRepo extends BaseRepository {
     });
 
     return rows.map((row) => row.contactId);
+  }
+
+  async listThreadsForMailboxes(limit: number) {
+    return await this.prisma.messagingThread.findMany({
+      where: { companyId: this.companyId, provider: "mail" },
+      select: THREAD_SUMMARY_SELECT,
+      orderBy: [{ lastMessageAt: "desc" }, { id: "asc" }],
+      take: limit,
+    });
+  }
+
+  async findThreadWithMessages(messagingThreadId: string) {
+    return await this.prisma.messagingThread.findFirst({
+      where: { id: messagingThreadId, companyId: this.companyId, provider: "mail" },
+      select: {
+        ...THREAD_SUMMARY_SELECT,
+        messages: {
+          select: {
+            id: true,
+            subject: true,
+            bodyText: true,
+            bodyHtml: true,
+            direction: true,
+            isDraft: true,
+            sentAt: true,
+            senderIdentifier: true,
+          },
+          orderBy: [{ sentAt: "asc" }, { id: "asc" }],
+          take: 500,
+        },
+      },
+    });
+  }
+
+  async markThreadRead(messagingThreadId: string): Promise<void> {
+    const { companyId } = this;
+
+    await this.prisma.messagingThread.updateMany({
+      where: { id: messagingThreadId, companyId },
+      data: { state: "open" },
+    });
   }
 
   async setThreadShared(messagingThreadId: string, shared: boolean): Promise<void> {

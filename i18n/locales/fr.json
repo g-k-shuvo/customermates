@@ -1082,6 +1082,7 @@
       "mailboxNotFound": "Cette boîte mail n'est plus connectée.",
       "mailboxProtocolFailed": "Le serveur de messagerie a répondu de manière incompréhensible.",
       "mailboxSecretKeyMissing": "La synchronisation des boîtes mail n'est pas configurée sur cette instance.",
+      "mailboxThreadNotFound": "Cette conversation n'est plus disponible.",
       "mailboxTlsFailed": "Le certificat de sécurité du serveur de messagerie n'a pas pu être vérifié.",
       "mailboxUnreachable": "Impossible de joindre ce serveur de messagerie. Vérifiez l'hôte et le port.",
       "messageContentRequired": "Ajoutez un message ou une pièce jointe.",
@@ -2536,6 +2537,20 @@
     "showArchived": "Afficher les motifs archivés",
     "title": "Motifs de perte",
     "unarchive": "Restaurer"
+  },
+  "Mailbox": {
+    "emptyDescription": "Connectez une boîte mail et vos conversations apparaîtront ici.",
+    "emptyTitle": "Pas encore d'e-mails",
+    "loadingThread": "Chargement de la conversation",
+    "noSubject": "(sans objet)",
+    "remoteImagesBlocked": "{count} images distantes bloquées",
+    "selectThreadDescription": "Choisissez une conversation à gauche pour la lire.",
+    "selectThreadTitle": "Sélectionnez une conversation",
+    "showRemoteImages": "Afficher les images",
+    "threadErrorDescription": "Elle a peut-être été supprimée depuis le chargement de la liste.",
+    "threadErrorTitle": "Cette conversation n'a pas pu être ouverte",
+    "title": "E-mail",
+    "unknownSender": "Expéditeur inconnu"
   },
   "MassActions": {
     "apply": "Appliquer à la sélection",

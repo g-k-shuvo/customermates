@@ -8,6 +8,7 @@ export enum CustomErrorCode {
   mailboxNotFound = "mailboxNotFound",
   mailboxProtocolFailed = "mailboxProtocolFailed",
   mailboxSecretKeyMissing = "mailboxSecretKeyMissing",
+  mailboxThreadNotFound = "mailboxThreadNotFound",
   mailboxTlsFailed = "mailboxTlsFailed",
   mailboxUnreachable = "mailboxUnreachable",
   agentApprovalUnavailable = "agentApprovalUnavailable",

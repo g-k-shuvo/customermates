@@ -1082,6 +1082,7 @@
       "mailboxNotFound": "Dieses Postfach ist nicht mehr verbunden.",
       "mailboxProtocolFailed": "Der Mailserver hat unverständlich geantwortet.",
       "mailboxSecretKeyMissing": "Die Postfach-Synchronisierung ist auf dieser Instanz nicht konfiguriert.",
+      "mailboxThreadNotFound": "Diese Konversation ist nicht mehr verfügbar.",
       "mailboxTlsFailed": "Das Sicherheitszertifikat des Mailservers konnte nicht geprüft werden.",
       "mailboxUnreachable": "Der Mailserver war nicht erreichbar. Prüfen Sie Host und Port.",
       "messageContentRequired": "Bitte eine Nachricht oder einen Anhang hinzufügen.",
@@ -2536,6 +2537,20 @@
     "showArchived": "Archivierte Gründe anzeigen",
     "title": "Verlustgründe",
     "unarchive": "Wiederherstellen"
+  },
+  "Mailbox": {
+    "emptyDescription": "Verbinden Sie ein Postfach, dann erscheinen Ihre Konversationen hier.",
+    "emptyTitle": "Noch keine E-Mails",
+    "loadingThread": "Konversation wird geladen",
+    "noSubject": "(kein Betreff)",
+    "remoteImagesBlocked": "{count} externe Bilder blockiert",
+    "selectThreadDescription": "Wählen Sie links eine Konversation aus, um sie zu lesen.",
+    "selectThreadTitle": "Konversation auswählen",
+    "showRemoteImages": "Bilder anzeigen",
+    "threadErrorDescription": "Möglicherweise wurde sie entfernt, seit die Liste geladen wurde.",
+    "threadErrorTitle": "Diese Konversation konnte nicht geöffnet werden",
+    "title": "E-Mail",
+    "unknownSender": "Unbekannter Absender"
   },
   "MassActions": {
     "apply": "Auf Auswahl anwenden",

@@ -12,6 +12,7 @@ import { createImapflowTransport } from "../sync/imapflow.transport";
 import { PrismaMailboxRepo, type MailboxAccount } from "../persistence/prisma-mailbox.repository";
 import { SyncMailboxService } from "../sync/sync-mailbox.service";
 import { planThreadLinks } from "../link/thread-links";
+import { toThreadSummaryDto } from "../get/mailbox-thread-mapper";
 
 const GREENMAIL_HOST = process.env.GREENMAIL_HOST ?? "127.0.0.1";
 const GREENMAIL_SMTP_PORT = Number(process.env.GREENMAIL_SMTP_PORT ?? 3025);
@@ -275,6 +276,43 @@ describeMailbox("mailbox sync against a real imap server", () => {
 
     expect(linked.contactIds).toEqual([contactId]);
     expect(linked.dealId).toBeNull();
+  }, 60_000);
+
+  it("lists the synced threads newest first with the counterpart as participant", async () => {
+    const summaries = await runWithTenant(tenantUser, async () => {
+      const repo = new PrismaMailboxRepo();
+      const rows = await repo.listThreadsForMailboxes(50);
+
+      return rows.map(toThreadSummaryDto);
+    });
+
+    expect(summaries.length).toBe(2);
+    expect(summaries[0].participants.map((participant) => participant.identifier)).toContain(COUNTERPART.toLowerCase());
+    expect(summaries[0].participants.map((participant) => participant.identifier)).not.toContain(
+      MAILBOX_ADDRESS.toLowerCase(),
+    );
+    expect(summaries[0].lastMessageAt?.getTime() ?? 0).toBeGreaterThanOrEqual(
+      summaries[1].lastMessageAt?.getTime() ?? 0,
+    );
+  }, 60_000);
+
+  it("returns a thread's messages oldest first and marks it read", async () => {
+    const result = await runWithTenant(tenantUser, async () => {
+      const repo = new PrismaMailboxRepo();
+      const rows = await repo.listThreadsForMailboxes(50);
+      const target = rows.find((row) => row.participants.length > 0) ?? rows[0];
+
+      const before = await repo.findThreadWithMessages(target.id);
+      await repo.markThreadRead(target.id);
+      const after = await repo.findThreadWithMessages(target.id);
+
+      return { before, after };
+    });
+
+    expect(result.before).not.toBeNull();
+    const sentAt = (result.before?.messages ?? []).map((message) => message.sentAt.getTime());
+    expect([...sentAt].sort((left, right) => left - right)).toEqual(sentAt);
+    expect(result.after?.state).toBe("open");
   }, 60_000);
 
   it("finds the stored threads by the contact's email identifier", async () => {

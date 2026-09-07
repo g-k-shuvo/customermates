@@ -50,6 +50,60 @@ export const SyncMailboxSchema = z.object({
 
 export type SyncMailboxData = z.infer<typeof SyncMailboxSchema>;
 
+export const MailboxThreadSummaryDtoSchema = z.object({
+  id: z.string().uuid(),
+  subject: z.string().nullable(),
+  lastMessageAt: z.date().nullable(),
+  lastMessagePreview: z.string().nullable(),
+  lastMessageIsSender: z.boolean().nullable(),
+  unread: z.boolean(),
+  sharedToCrm: z.boolean(),
+  participants: z.array(z.object({ identifier: z.string(), displayName: z.string().nullable() })),
+});
+
+export type MailboxThreadSummaryDto = z.infer<typeof MailboxThreadSummaryDtoSchema>;
+
+export const MailboxMessageDtoSchema = z.object({
+  id: z.string().uuid(),
+  subject: z.string().nullable(),
+  bodyText: z.string().nullable(),
+  bodyHtml: z.string().nullable(),
+  blockedImageCount: z.number().int().nonnegative(),
+  outbound: z.boolean(),
+  isDraft: z.boolean(),
+  sentAt: z.date(),
+  senderIdentifier: z.string().nullable(),
+});
+
+export type MailboxMessageDto = z.infer<typeof MailboxMessageDtoSchema>;
+
+export const MailboxThreadDtoSchema = MailboxThreadSummaryDtoSchema.extend({
+  messages: z.array(MailboxMessageDtoSchema),
+});
+
+export type MailboxThreadDto = z.infer<typeof MailboxThreadDtoSchema>;
+
+export const GetMailboxThreadSchema = z.object({
+  threadId: z.string().uuid(),
+  allowRemoteImages: z.boolean().default(false),
+});
+
+export type GetMailboxThreadData = z.infer<typeof GetMailboxThreadSchema>;
+
+export const GetRecordThreadsSchema = z.object({
+  contactId: z.string().uuid().optional(),
+  dealId: z.string().uuid().optional(),
+});
+
+export type GetRecordThreadsData = z.infer<typeof GetRecordThreadsSchema>;
+
+export const ShareThreadSchema = z.object({
+  threadId: z.string().uuid(),
+  shared: z.boolean(),
+});
+
+export type ShareThreadData = z.infer<typeof ShareThreadSchema>;
+
 export const MailboxSyncOutcomeSchema = z.object({
   connectedAccountId: z.string().uuid(),
   folderPath: z.string(),

@@ -1082,6 +1082,7 @@
       "mailboxNotFound": "This mailbox is no longer connected.",
       "mailboxProtocolFailed": "The mail server responded in a way we could not understand.",
       "mailboxSecretKeyMissing": "Mailbox syncing is not configured on this instance.",
+      "mailboxThreadNotFound": "That conversation is no longer available.",
       "mailboxTlsFailed": "The mail server's security certificate could not be verified.",
       "mailboxUnreachable": "Could not reach that mail server. Check the host and port.",
       "messageContentRequired": "Add a message or an attachment.",
@@ -2536,6 +2537,20 @@
     "showArchived": "Show archived reasons",
     "title": "Lost reasons",
     "unarchive": "Restore"
+  },
+  "Mailbox": {
+    "emptyDescription": "Connect a mailbox and your conversations will appear here.",
+    "emptyTitle": "No mail yet",
+    "loadingThread": "Loading conversation",
+    "noSubject": "(no subject)",
+    "remoteImagesBlocked": "{count} remote images blocked",
+    "selectThreadDescription": "Pick a conversation on the left to read it.",
+    "selectThreadTitle": "Select a conversation",
+    "showRemoteImages": "Show images",
+    "threadErrorDescription": "It may have been removed since the list was loaded.",
+    "threadErrorTitle": "This conversation could not be opened",
+    "title": "Mail",
+    "unknownSender": "Unknown sender"
   },
   "MassActions": {
     "apply": "Apply to selected",

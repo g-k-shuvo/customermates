@@ -187,6 +187,13 @@ const FullAppSidebar = observer(
               badge: unreadThreadCount,
             },
             {
+              key: "mail",
+              title: t("Mailbox.title"),
+              href: "/mail",
+              icon: Mail,
+              visible: canAccess(Resource.inboxMessages),
+            },
+            {
               key: "tasks",
               title: plural(EntityType.task),
               href: "/tasks",
