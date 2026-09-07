@@ -115,12 +115,19 @@ function mailboxStateOf(client: ImapClient): ImapMailboxState {
   return mailbox;
 }
 
+export type ImapflowTransportOptions = {
+  allowPrivateHosts?: boolean;
+};
+
 export function createImapflowTransport(
   createClient: ImapClientFactory = defaultFactory,
   resolveAddresses?: AddressLookup,
+  options: ImapflowTransportOptions = {},
 ): MailboxTransport {
   async function withClient<T>(connection: MailboxConnection, use: (client: ImapClient) => Promise<T>): Promise<T> {
-    const target = await pinImapTarget(connection.host, resolveAddresses);
+    const target = await pinImapTarget(connection.host, resolveAddresses, {
+      allowPrivateHosts: options.allowPrivateHosts,
+    });
     const client = createClient({
       host: target.address,
       port: connection.port,

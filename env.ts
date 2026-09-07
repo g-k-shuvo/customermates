@@ -53,6 +53,10 @@ export const env = {
   EMAIL_SMTP_SECURE: resolveStrictBoolean("EMAIL_SMTP_SECURE", process.env.EMAIL_SMTP_SECURE),
 
   MAILBOX_SECRET_KEY: process.env.MAILBOX_SECRET_KEY,
+  MAILBOX_ALLOW_PRIVATE_HOSTS: resolveStrictBoolean(
+    "MAILBOX_ALLOW_PRIVATE_HOSTS",
+    process.env.MAILBOX_ALLOW_PRIVATE_HOSTS,
+  ),
 
   WORKFLOW_TARGET_WORLD: process.env.WORKFLOW_TARGET_WORLD,
   CRON_SECRET: process.env.CRON_SECRET,

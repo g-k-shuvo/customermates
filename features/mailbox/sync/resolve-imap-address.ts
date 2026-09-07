@@ -13,6 +13,10 @@ export type PinnedImapTarget = {
   servername: string;
 };
 
+export type PinImapTargetOptions = {
+  allowPrivateHosts?: boolean;
+};
+
 const nodeLookup: AddressLookup = async (host) => {
   const resolved = await lookup(host, { all: true, verbatim: true });
 
@@ -22,7 +26,15 @@ const nodeLookup: AddressLookup = async (host) => {
 export async function pinImapTarget(
   host: string,
   resolveAddresses: AddressLookup = nodeLookup,
+  options: PinImapTargetOptions = {},
 ): Promise<PinnedImapTarget> {
+  if (options.allowPrivateHosts) {
+    const trimmed = host.trim();
+    if (trimmed.length === 0) throw new MailboxTransportError(MailboxTransportFailure.hostRejected, "emptyHost");
+
+    return { address: trimmed, family: 0, servername: trimmed };
+  }
+
   const named = checkImapHost(host);
   if (!named.allowed) throw new MailboxTransportError(MailboxTransportFailure.hostRejected, named.reason);
 

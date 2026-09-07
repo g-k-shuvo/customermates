@@ -1467,6 +1467,9 @@ model MailboxCredential {
   imapSecure         Boolean          @default(true)
   username           String
   sealedSecret       String
+  syncCursors        Json             @default("[]")
+  backfillFrom       DateTime?
+  lastSyncedAt       DateTime?
   lastVerifiedAt     DateTime?
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
