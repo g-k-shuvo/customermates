@@ -11,6 +11,7 @@ import { cn } from "@/core/utils/cn";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 
 import { MailPageSkeleton } from "./mail-page-skeleton";
+import { MailReplyBox } from "./mail-reply-box";
 
 export type MailThreadPanelState =
   | { status: "idle" }
@@ -21,6 +22,7 @@ export type MailThreadPanelState =
 type Props = {
   state: MailThreadPanelState;
   onShowRemoteImages: () => void;
+  onReplySent: () => void;
 };
 
 function MessageBody({ message }: { message: MailboxMessageDto }) {
@@ -36,7 +38,7 @@ function MessageBody({ message }: { message: MailboxMessageDto }) {
   return <p className="text-sm whitespace-pre-wrap break-words">{message.bodyText}</p>;
 }
 
-export function MailThreadPanel({ state, onShowRemoteImages }: Props) {
+export function MailThreadPanel({ state, onShowRemoteImages, onReplySent }: Props) {
   const t = useTranslations();
   const intlStore = useHydratedIntlStore();
 
@@ -120,6 +122,8 @@ export function MailThreadPanel({ state, onShowRemoteImages }: Props) {
           </article>
         ))}
       </div>
+
+      <MailReplyBox threadId={state.thread.id} onSent={onReplySent} />
     </section>
   );
 }

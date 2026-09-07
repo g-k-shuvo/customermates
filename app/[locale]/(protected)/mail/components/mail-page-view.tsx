@@ -76,7 +76,13 @@ export function MailPageView({ threads }: Props) {
         onSelect={(threadId) => openThread(threadId, allowRemoteImages)}
       />
 
-      <MailThreadPanel state={panel} onShowRemoteImages={showRemoteImages} />
+      <MailThreadPanel
+        state={panel}
+        onReplySent={() => {
+          if (panel.status === "ready") openThread(panel.thread.id, allowRemoteImages);
+        }}
+        onShowRemoteImages={showRemoteImages}
+      />
     </div>
   );
 }

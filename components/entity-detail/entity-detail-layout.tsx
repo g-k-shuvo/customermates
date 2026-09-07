@@ -53,11 +53,12 @@ type Props<Form extends FormEntityDto, Dto extends EntityDto> = {
   canDelete?: boolean;
   historyPanel: ReactNode;
   summary?: ReactNode;
+  emailsPanel?: ReactNode;
   showNotesPanel?: boolean;
   serverSnapshotApplied?: boolean;
 };
 
-type DetailPanel = "details" | "notes" | "activities";
+type DetailPanel = "details" | "notes" | "activities" | "emails";
 
 export const EntityDetailLayout = observer(function EntityDetailLayout<
   Form extends FormEntityDto,
@@ -72,6 +73,7 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
   canDelete = true,
   historyPanel,
   summary,
+  emailsPanel,
   showNotesPanel = true,
   serverSnapshotApplied = true,
 }: Props<Form, Dto>) {
@@ -106,8 +108,11 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
   const { canManage, isLoading, isEditingCustomField, toggleEditingCustomField, form } = store;
   const hasId = form && typeof form === "object" && "id" in form && Boolean(form.id);
   const canSeeHistory = userStore.can(Resource.auditLog, Action.readAll);
+  const showEmailsPanel = Boolean(emailsPanel);
   const selectedPanel =
-    (activePanel === "notes" && !showNotesPanel) || (activePanel === "activities" && !canSeeHistory)
+    (activePanel === "notes" && !showNotesPanel) ||
+    (activePanel === "activities" && !canSeeHistory) ||
+    (activePanel === "emails" && !showEmailsPanel)
       ? "details"
       : activePanel;
   const showDeleteAction = canManage && hasId && canDelete && !isEditingCustomField;
@@ -391,6 +396,17 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
                     </TabsTrigger>
                   )}
 
+                  {showEmailsPanel && (
+                    <TabsTrigger
+                      aria-controls={`${formId}-emails-panel`}
+                      className="h-full rounded-none px-4 after:-bottom-px after:z-10"
+                      id={`${formId}-emails-tab`}
+                      value="emails"
+                    >
+                      {t("Mailbox.title")}
+                    </TabsTrigger>
+                  )}
+
                   {canSeeHistory && (
                     <TabsTrigger
                       aria-controls={`${formId}-activities-panel`}
@@ -443,6 +459,18 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
                 role="tabpanel"
               >
                 <EntityNotesPanel key={entityId} store={store} />
+              </div>
+            )}
+
+            {hasMounted && showEmailsPanel && (
+              <div
+                aria-labelledby={`${formId}-emails-tab`}
+                className={cn("min-h-[28rem] flex-col bg-background", selectedPanel === "emails" ? "flex" : "hidden")}
+                data-detail-panel="emails"
+                id={`${formId}-emails-panel`}
+                role="tabpanel"
+              >
+                {emailsPanel}
               </div>
             )}
 

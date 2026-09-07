@@ -1,11 +1,17 @@
 "use server";
 
-import type { GetMailboxThreadData, GetRecordThreadsData, ShareThreadData } from "@/features/mailbox/mailbox.schema";
+import type {
+  GetMailboxThreadData,
+  GetRecordThreadsData,
+  SendReplyData,
+  ShareThreadData,
+} from "@/features/mailbox/mailbox.schema";
 
 import {
   getGetMailboxThreadInteractor,
   getGetMailboxThreadsInteractor,
   getGetRecordThreadsInteractor,
+  getSendReplyInteractor,
   getShareThreadInteractor,
 } from "@/core/di";
 import { serializeResult } from "@/core/utils/action-result";
@@ -24,4 +30,8 @@ export async function getRecordThreadsAction(input: GetRecordThreadsData) {
 
 export async function shareThreadAction(input: ShareThreadData) {
   return serializeResult(getShareThreadInteractor().invoke(input));
+}
+
+export async function sendReplyAction(input: SendReplyData) {
+  return serializeResult(getSendReplyInteractor().invoke(input));
 }

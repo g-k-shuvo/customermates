@@ -1465,6 +1465,9 @@ model MailboxCredential {
   imapHost           String
   imapPort           Int
   imapSecure         Boolean          @default(true)
+  smtpHost           String?
+  smtpPort           Int?
+  smtpSecure         Boolean?
   username           String
   sealedSecret       String
   syncCursors        Json             @default("[]")

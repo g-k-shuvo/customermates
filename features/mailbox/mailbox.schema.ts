@@ -37,6 +37,9 @@ export const ConnectMailboxSchema = z.object({
   imapSecure: z.boolean().default(true),
   username: z.string().trim().min(1).max(320),
   secret: z.string().min(1).max(1024),
+  smtpHost: z.string().trim().min(1).max(253).optional(),
+  smtpPort: z.number().int().min(1).max(65535).optional(),
+  smtpSecure: z.boolean().optional(),
   backfillDays: z.number().int().min(1).max(MAILBOX_MAX_BACKFILL_DAYS).default(MAILBOX_DEFAULT_BACKFILL_DAYS),
 });
 
@@ -103,6 +106,22 @@ export const ShareThreadSchema = z.object({
 });
 
 export type ShareThreadData = z.infer<typeof ShareThreadSchema>;
+
+export const SendReplySchema = z.object({
+  threadId: z.string().uuid(),
+  body: z.string().trim().min(1).max(100_000),
+  replyAll: z.boolean().default(false),
+});
+
+export type SendReplyData = z.infer<typeof SendReplySchema>;
+
+export const SendReplyOutcomeSchema = z.object({
+  threadId: z.string().uuid(),
+  messageId: z.string(),
+  recipients: z.array(z.string()),
+});
+
+export type SendReplyOutcome = z.infer<typeof SendReplyOutcomeSchema>;
 
 export const MailboxSyncOutcomeSchema = z.object({
   connectedAccountId: z.string().uuid(),

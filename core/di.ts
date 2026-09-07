@@ -37,6 +37,8 @@ import { GetMailboxThreadsInteractor } from "@/features/mailbox/get/get-mailbox-
 import { GetMailboxThreadInteractor } from "@/features/mailbox/get/get-mailbox-thread.interactor";
 import { GetRecordThreadsInteractor } from "@/features/mailbox/get/get-record-threads.interactor";
 import { ShareThreadInteractor } from "@/features/mailbox/upsert/share-thread.interactor";
+import { SendReplyInteractor } from "@/features/mailbox/outbound/send-reply.interactor";
+import { SendReplyService } from "@/features/mailbox/outbound/send-reply.service";
 import { PrismaServiceRepo } from "@/features/services/prisma-service.repository";
 import { PrismaTaskRepo } from "@/features/tasks/prisma-task.repository";
 import { PrismaUserRepo } from "@/features/user/prisma-user.repository";
@@ -1826,6 +1828,11 @@ export const getGetMailboxThreadInteractor = () => new GetMailboxThreadInteracto
 export const getGetRecordThreadsInteractor = () => new GetRecordThreadsInteractor(getMailboxRepo());
 
 export const getShareThreadInteractor = () => new ShareThreadInteractor(getMailboxRepo());
+
+export const getSendReplyService = () => new SendReplyService(getMailboxTransport());
+
+export const getSendReplyInteractor = () =>
+  new SendReplyInteractor(getMailboxRepo(), getSendReplyService(), getMailboxSecretKey(), () => new Date());
 
 export const getSyncMailboxInteractor = () => {
   const secretKey = getMailboxSecretKey();

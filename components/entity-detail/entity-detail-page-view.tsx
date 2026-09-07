@@ -11,6 +11,7 @@ import { useTranslations } from "next-intl";
 import { EntityDetailLayout } from "@/components/entity-detail/entity-detail-layout";
 import { ENTITY_DETAIL } from "@/components/entity-detail/entity-detail.registry";
 import { EntityTimelinePanel } from "@/features/messaging/activities/activities-panel";
+import { EntityEmailsPanel } from "@/components/entity-detail/entity-emails-panel";
 import { useRootStore } from "@/core/stores/root-store.provider";
 import { useEntityTerminology } from "@/components/entity-terminology/use-entity-terminology";
 import { EntityDetailPersonalizationProvider } from "@/components/entity-detail/entity-detail-personalization";
@@ -23,6 +24,13 @@ type Props = {
   timelineInitial: ActivitiesResult;
   personalizationInitial?: P13nEntry | null;
 };
+
+function emailsPanelFor(entityType: EntityType, id: string) {
+  if (entityType === "contact") return <EntityEmailsPanel contactId={id} />;
+  if (entityType === "deal") return <EntityEmailsPanel dealId={id} />;
+
+  return undefined;
+}
 
 export const EntityDetailPageView = observer(
   ({ entityType, id, entityInitial, timelineInitial, personalizationInitial }: Props) => {
@@ -55,6 +63,7 @@ export const EntityDetailPageView = observer(
       >
         <EntityDetailLayout
           canDelete={config.canDelete?.(store)}
+          emailsPanel={emailsPanelFor(entityType, id)}
           entityId={id}
           entityType={entityType}
           fallbackTitle={singular(entityType)}

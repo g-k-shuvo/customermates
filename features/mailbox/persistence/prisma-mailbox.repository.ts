@@ -375,6 +375,94 @@ export class PrismaMailboxRepo extends BaseRepository {
     });
   }
 
+  async findReplyContext(messagingThreadId: string) {
+    const thread = await this.prisma.messagingThread.findFirst({
+      where: { id: messagingThreadId, companyId: this.companyId, provider: "mail" },
+      select: {
+        id: true,
+        subject: true,
+        unipileThreadId: true,
+        connectedAccountId: true,
+        messages: {
+          select: {
+            unipileMessageId: true,
+            subject: true,
+            senderIdentifier: true,
+            recipients: true,
+            direction: true,
+          },
+          orderBy: [{ sentAt: "desc" }, { id: "desc" }],
+          take: 1,
+        },
+      },
+    });
+
+    if (!thread) return null;
+
+    const credential = await this.prisma.mailboxCredential.findFirst({
+      where: { companyId: this.companyId, connectedAccountId: thread.connectedAccountId },
+      select: {
+        imapHost: true,
+        imapPort: true,
+        imapSecure: true,
+        smtpHost: true,
+        smtpPort: true,
+        smtpSecure: true,
+        username: true,
+        sealedSecret: true,
+        connectedAccount: { select: { emailAddress: true, displayName: true } },
+      },
+    });
+
+    return credential ? { thread, credential } : null;
+  }
+
+  async storeOutboundReply(args: {
+    messagingThreadId: string;
+    connectedAccountId: string;
+    storedMessageId: string;
+    subject: string;
+    body: string;
+    senderIdentifier: string;
+    recipients: string[];
+    sentAt: Date;
+  }): Promise<void> {
+    const { companyId } = this;
+
+    await this.prisma.messagingMessage.create({
+      data: {
+        companyId,
+        messagingThreadId: args.messagingThreadId,
+        connectedAccountId: args.connectedAccountId,
+        unipileMessageId: args.storedMessageId,
+        provider: "mail",
+        direction: "outbound",
+        origin: "external",
+        sender: { identifier: args.senderIdentifier, displayName: null, attendeeId: args.senderIdentifier },
+        senderIdentifier: args.senderIdentifier,
+        recipients: {
+          to: args.recipients.map((identifier) => ({ identifier, attendeeId: identifier })),
+          cc: [],
+          bcc: [],
+        },
+        subject: args.subject,
+        bodyText: args.body,
+        folderIds: [],
+        isDraft: false,
+        sentAt: args.sentAt,
+      },
+    });
+
+    await this.prisma.messagingThread.updateMany({
+      where: { id: args.messagingThreadId, companyId },
+      data: {
+        lastMessageAt: args.sentAt,
+        lastMessagePreview: args.body.replace(/\s+/g, " ").trim().slice(0, PREVIEW_LENGTH) || null,
+        lastMessageIsSender: true,
+      },
+    });
+  }
+
   async setThreadShared(messagingThreadId: string, shared: boolean): Promise<void> {
     const { companyId } = this;
 
