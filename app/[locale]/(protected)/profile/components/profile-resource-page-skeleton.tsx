@@ -2,14 +2,14 @@ import { SkeletonShape as Shape, type SkeletonMotionPhase } from "@/components/p
 
 import { PROFILE_RESOURCE_CARD_GRID_CLASS_NAME } from "./profile-resource-page-geometry";
 
-type Resource = "api-keys" | "connected-accounts";
+type Resource = "api-keys" | "connected-accounts" | "mailboxes";
 type Props = { animated?: boolean };
 
 const CARDS = Array.from({ length: 4 }, (_, index) => index);
 const ROWS = Array.from({ length: 5 }, (_, index) => index);
 
 function ProfileResourcePageSkeleton({ animated = true, resource }: Props & { resource: Resource }) {
-  const rowCount = resource === "connected-accounts" ? 5 : 3;
+  const rowCount = resource === "connected-accounts" ? 5 : resource === "mailboxes" ? 4 : 3;
   return (
     <div
       aria-hidden="true"
@@ -68,4 +68,8 @@ export function ApiKeysPageSkeleton(props: Props) {
 
 export function ConnectedAccountsPageSkeleton(props: Props) {
   return <ProfileResourcePageSkeleton {...props} resource="connected-accounts" />;
+}
+
+export function MailboxesPageSkeleton(props: Props) {
+  return <ProfileResourcePageSkeleton {...props} resource="mailboxes" />;
 }

@@ -15,6 +15,7 @@ import { failNotFound } from "@/core/validation/interactor-failure-server";
 
 export abstract class ShareThreadRepo {
   abstract setThreadShared(messagingThreadId: string, shared: boolean): Promise<void>;
+  abstract setThreadDeal(messagingThreadId: string, dealId: string | null): Promise<void>;
   abstract findThreadWithMessages(messagingThreadId: string): Promise<ThreadSummaryRow | null>;
 }
 
@@ -36,6 +37,7 @@ export class ShareThreadInteractor extends AuthenticatedInteractor<ShareThreadDa
     if (!existing) return failNotFound(CustomErrorCode.mailboxThreadNotFound, ["threadId"]);
 
     await this.repo.setThreadShared(data.threadId, data.shared);
+    if (!data.shared) await this.repo.setThreadDeal(data.threadId, null);
 
     return { ok: true as const, data: { ...toThreadSummaryDto(existing), sharedToCrm: data.shared } };
   }

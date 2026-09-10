@@ -1,9 +1,13 @@
 import type { Validated } from "@/core/validation/validation.utils";
+import type { DealName } from "../link/thread-deal-link";
+import type { ContactMatch, DealCandidate } from "../link/thread-links";
 
 import { Resource, Action } from "@/generated/prisma";
 
 import { GetMailboxThreadSchema, MailboxThreadDtoSchema } from "../mailbox.schema";
 import { type GetMailboxThreadData, type MailboxThreadDto } from "../mailbox.schema";
+import { loadThreadLinkOffers } from "../link/thread-deal-link";
+import { toParticipantIdentities } from "../link/thread-links";
 import {
   toMessageDto,
   toThreadSummaryDto,
@@ -17,11 +21,17 @@ import { Write } from "@/core/decorators/write.decorator";
 import { CustomErrorCode } from "@/core/validation/validation.types";
 import { failNotFound } from "@/core/validation/interactor-failure-server";
 
-export type ThreadWithMessagesRow = ThreadSummaryRow & { messages: ThreadMessageRow[] };
+export type ThreadWithMessagesRow = ThreadSummaryRow & {
+  linkedDealId: string | null;
+  messages: ThreadMessageRow[];
+};
 
 export abstract class GetMailboxThreadRepo {
   abstract findThreadWithMessages(messagingThreadId: string): Promise<ThreadWithMessagesRow | null>;
   abstract markThreadRead(messagingThreadId: string): Promise<void>;
+  abstract findContactMatches(identifiers: readonly string[]): Promise<ContactMatch[]>;
+  abstract findDealCandidates(contactIds: readonly string[]): Promise<DealCandidate[]>;
+  abstract findDealNames(dealIds: readonly string[]): Promise<DealName[]>;
 }
 
 @TenantInteractor({
@@ -46,12 +56,20 @@ export class GetMailboxThreadInteractor extends AuthenticatedInteractor<GetMailb
 
     await this.repo.markThreadRead(thread.id);
 
+    const offers = await loadThreadLinkOffers(
+      this.repo,
+      thread.linkedDealId,
+      toParticipantIdentities(thread.participants),
+    );
+
     return {
       ok: true as const,
       data: {
         ...toThreadSummaryDto(thread),
         unread: false,
         messages: thread.messages.map((message) => toMessageDto(message, data.allowRemoteImages)),
+        dealLink: offers.dealLink,
+        matchedContactCount: offers.matchedContactCount,
       },
     };
   }

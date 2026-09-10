@@ -5,7 +5,7 @@ import { BaseRepository } from "@/core/base/base-repository";
 
 export class PrismaDueMailboxRepo extends BaseRepository {
   @BypassTenantGuard
-  async findDueMailboxes(before: Date, limit: number): Promise<DueMailbox[]> {
+  async findDueMailboxesUnscoped(before: Date, limit: number): Promise<DueMailbox[]> {
     const rows = await this.prisma.mailboxCredential.findMany({
       where: { OR: [{ lastSyncedAt: null }, { lastSyncedAt: { lt: before } }] },
       select: {

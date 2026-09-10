@@ -49,10 +49,16 @@ import { createPipelineStageOperation } from "@/features/pipelines/stages/create
 import { updatePipelineStageOperation } from "@/features/pipelines/stages/update-stage.openapi";
 import { deletePipelineStageOperation } from "@/features/pipelines/stages/delete-stage.openapi";
 import { getLostReasonsOperation } from "@/features/lost-reasons/get/get-lost-reasons.openapi";
+import { getMailboxAccountsOperation } from "@/features/mailbox/get/get-mailbox-accounts.openapi";
+import { connectMailboxOperation } from "@/features/mailbox/connect/connect-mailbox.openapi";
+import { disconnectMailboxOperation } from "@/features/mailbox/delete/disconnect-mailbox.openapi";
+import { adminDisconnectMailboxOperation } from "@/features/mailbox/delete/admin-disconnect-mailbox.openapi";
 import { getMailboxThreadsOperation } from "@/features/mailbox/get/get-mailbox-threads.openapi";
 import { getMailboxThreadOperation } from "@/features/mailbox/get/get-mailbox-thread.openapi";
 import { shareThreadOperation } from "@/features/mailbox/upsert/share-thread.openapi";
+import { linkThreadDealOperation } from "@/features/mailbox/link/link-thread-deal.openapi";
 import { sendReplyOperation } from "@/features/mailbox/outbound/send-reply.openapi";
+import { forwardThreadOperation } from "@/features/mailbox/outbound/forward-thread.openapi";
 import { getLostReasonByIdOperation } from "@/features/lost-reasons/get/get-lost-reason-by-id.openapi";
 import { createLostReasonOperation } from "@/features/lost-reasons/upsert/create-lost-reason.openapi";
 import { updateLostReasonOperation } from "@/features/lost-reasons/upsert/update-lost-reason.openapi";
@@ -308,6 +314,16 @@ export function generateOpenApiSpec() {
         put: updatePipelineStageOperation,
         delete: deletePipelineStageOperation,
       },
+      "/v1/mailbox/accounts": {
+        get: getMailboxAccountsOperation,
+        post: connectMailboxOperation,
+      },
+      "/v1/mailbox/accounts/{id}": {
+        delete: disconnectMailboxOperation,
+      },
+      "/v1/mailbox/accounts/{id}/admin": {
+        delete: adminDisconnectMailboxOperation,
+      },
       "/v1/mailbox/threads": {
         get: getMailboxThreadsOperation,
       },
@@ -315,8 +331,14 @@ export function generateOpenApiSpec() {
         get: getMailboxThreadOperation,
         put: shareThreadOperation,
       },
+      "/v1/mailbox/threads/{id}/deal": {
+        put: linkThreadDealOperation,
+      },
       "/v1/mailbox/threads/{id}/reply": {
         post: sendReplyOperation,
+      },
+      "/v1/mailbox/threads/{id}/forward": {
+        post: forwardThreadOperation,
       },
       "/v1/lost-reasons": {
         get: getLostReasonsOperation,

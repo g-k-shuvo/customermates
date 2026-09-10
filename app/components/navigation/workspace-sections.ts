@@ -19,6 +19,7 @@ export const WORKSPACE_SECTIONS: Record<WorkspaceSection, WorkspaceSubroute[]> =
       resource: Resource.inboxMessages,
       cloudOnly: true,
     },
+    { slug: "mailboxes", labelKey: "Mailbox.accountsTitle", resource: Resource.inboxMessages },
     { slug: "api-keys", labelKey: "ApiKeysCard.title", resource: Resource.api },
   ],
   company: [

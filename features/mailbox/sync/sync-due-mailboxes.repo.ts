@@ -5,5 +5,5 @@ export type DueMailbox = {
 };
 
 export abstract class SyncDueMailboxesRepo {
-  abstract findDueMailboxes(before: Date, limit: number): Promise<DueMailbox[]>;
+  abstract findDueMailboxesUnscoped(before: Date, limit: number): Promise<DueMailbox[]>;
 }

@@ -34,6 +34,13 @@ export type MailboxFetchPage = {
   reachedEnd: boolean;
 };
 
+export type MailboxFetchRequest = {
+  path: string;
+  cursor: MailboxFolderCursor | null;
+  backfillFrom: Date | null;
+  limit: number;
+};
+
 export const MailboxTransportFailure = {
   hostRejected: "hostRejected",
   unresolvableHost: "unresolvableHost",
@@ -60,11 +67,6 @@ export class MailboxTransportError extends Error {
 export type MailboxTransport = {
   verify(connection: MailboxConnection): Promise<void>;
   listFolders(connection: MailboxConnection): Promise<readonly MailboxFolder[]>;
-  fetchSince(
-    connection: MailboxConnection,
-    cursor: MailboxFolderCursor | null,
-    path: string,
-    limit: number,
-  ): Promise<MailboxFetchPage>;
+  fetchSince(connection: MailboxConnection, request: MailboxFetchRequest): Promise<MailboxFetchPage>;
   appendToSent(connection: MailboxConnection, source: Buffer, path: string | null): Promise<void>;
 };

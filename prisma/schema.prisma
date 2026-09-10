@@ -248,7 +248,7 @@ model Company {
   webhooks                    Webhook[]
   webhookDeliveries           WebhookDelivery[]
   connectedAccounts           ConnectedAccount[]
-  mailboxCredentials       MailboxCredential[]
+  mailboxCredentials          MailboxCredential[]
   messagingThreads            MessagingThread[]
   messagingMessages           MessagingMessage[]
   messagingThreadParticipants MessagingThreadParticipant[]
@@ -503,6 +503,7 @@ model Deal {
   stage             PipelineStage?     @relation(fields: [stageId], references: [id], onDelete: SetNull)
   lostReason        LostReason?        @relation(fields: [lostReasonId], references: [id], onDelete: SetNull)
   stageHistory      DealStageHistory[]
+  mailThreads       MessagingThread[]
 
   @@index([companyId])
   @@index([name])
@@ -1497,6 +1498,8 @@ model MessagingThread {
   lastMessagePreview  String?
   lastMessageIsSender Boolean?
   sharedToCrm         Boolean                      @default(false)
+  linkedDealId        String?
+  linkedDeal          Deal?                        @relation(fields: [linkedDealId], references: [id], onDelete: SetNull)
   createdAt           DateTime                     @default(now())
   updatedAt           DateTime                     @updatedAt
   messages            MessagingMessage[]
@@ -1507,6 +1510,7 @@ model MessagingThread {
   @@index([companyId, state])
   @@index([companyId, lastMessageAt(sort: Desc)])
   @@index([companyId, sharedToCrm])
+  @@index([companyId, linkedDealId])
   @@index([connectedAccountId, unipileThreadAltId])
 }
 

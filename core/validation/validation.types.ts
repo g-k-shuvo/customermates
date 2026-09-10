@@ -3,6 +3,7 @@ import type { $ZodRawIssue } from "zod/v4/core";
 export enum CustomErrorCode {
   mailboxAlreadyConnected = "mailboxAlreadyConnected",
   mailboxAuthenticationFailed = "mailboxAuthenticationFailed",
+  mailboxDealNotOffered = "mailboxDealNotOffered",
   mailboxFolderMissing = "mailboxFolderMissing",
   mailboxHostRejected = "mailboxHostRejected",
   mailboxNotFound = "mailboxNotFound",

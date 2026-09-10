@@ -218,6 +218,17 @@ function nonBlankText(max: number) {
     });
 }
 
+const ISO_DATE_TIME_PATTERN = /^\d{4}-\d{2}-\d{2}([Tt]\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?([Zz]|[+-]\d{2}:\d{2})?)?$/;
+
+function isoDateTime() {
+  return z
+    .preprocess(
+      (value) => (value instanceof Date ? value.toISOString() : value),
+      z.string().regex(ISO_DATE_TIME_PATTERN),
+    )
+    .pipe(z.coerce.date());
+}
+
 function passwordSchema() {
   return z.string().superRefine((password, ctx) => {
     const hasMinLength = password.length >= 8;
@@ -239,4 +250,5 @@ export const zx = {
   nonBlankText,
   secureUrl: secureUrlSchema,
   password: passwordSchema,
+  isoDateTime,
 };

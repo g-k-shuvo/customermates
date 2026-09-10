@@ -64,10 +64,10 @@ const ALLOWED_SCHEMES = ["http", "https", "mailto", "tel"];
 
 const REMOTE_IMAGE_SCHEME = /^https?:\/\//i;
 
-function withoutImageSource(attribs: Record<string, string>): Record<string, string> {
+function without(attribs: Record<string, string>, dropped: readonly string[]): Record<string, string> {
   const kept: Record<string, string> = {};
 
-  for (const [name, value] of Object.entries(attribs)) if (name !== "src") kept[name] = value;
+  for (const [name, value] of Object.entries(attribs)) if (!dropped.includes(name)) kept[name] = value;
 
   return kept;
 }
@@ -106,12 +106,13 @@ function baseOptions(allowRemoteImages: boolean, onImageBlocked: () => void): sa
         attribs: { ...attribs, target: "_blank", rel: "noopener noreferrer nofollow" },
       }),
       img: (tagName, attribs) => {
-        const source = (attribs.src ?? "").trim();
-        if (source.length === 0) return { tagName, attribs };
+        const incoming = without(attribs, [BLOCKED_IMAGE_ATTRIBUTE]);
+        const source = (incoming.src ?? "").trim();
+        if (source.length === 0) return { tagName, attribs: incoming };
 
-        const withoutSource = withoutImageSource(attribs);
+        const withoutSource = without(incoming, ["src"]);
         if (!REMOTE_IMAGE_SCHEME.test(source)) return { tagName, attribs: withoutSource };
-        if (allowRemoteImages) return { tagName, attribs };
+        if (allowRemoteImages) return { tagName, attribs: incoming };
 
         onImageBlocked();
 

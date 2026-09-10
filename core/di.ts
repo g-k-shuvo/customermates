@@ -33,10 +33,17 @@ import { parseSecretBoxKey, type SecretBoxKey } from "@/features/mailbox/credent
 import { SyncMailboxService } from "@/features/mailbox/sync/sync-mailbox.service";
 import { ConnectMailboxInteractor } from "@/features/mailbox/connect/connect-mailbox.interactor";
 import { SyncMailboxInteractor } from "@/features/mailbox/sync/sync-mailbox.interactor";
+import { DisconnectMailboxInteractor } from "@/features/mailbox/delete/disconnect-mailbox.interactor";
+import { AdminDisconnectMailboxInteractor } from "@/features/mailbox/delete/admin-disconnect-mailbox.interactor";
+import { GetMailboxAccountsInteractor } from "@/features/mailbox/get/get-mailbox-accounts.interactor";
 import { GetMailboxThreadsInteractor } from "@/features/mailbox/get/get-mailbox-threads.interactor";
 import { GetMailboxThreadInteractor } from "@/features/mailbox/get/get-mailbox-thread.interactor";
+import { GetMailboxFoldersInteractor } from "@/features/mailbox/get/get-mailbox-folders.interactor";
+import { ListSyncFoldersInteractor } from "@/features/mailbox/sync/list-sync-folders.interactor";
+import { ForwardThreadInteractor } from "@/features/mailbox/outbound/forward-thread.interactor";
 import { GetRecordThreadsInteractor } from "@/features/mailbox/get/get-record-threads.interactor";
 import { ShareThreadInteractor } from "@/features/mailbox/upsert/share-thread.interactor";
+import { LinkThreadDealInteractor } from "@/features/mailbox/link/link-thread-deal.interactor";
 import { SendReplyInteractor } from "@/features/mailbox/outbound/send-reply.interactor";
 import { SendReplyService } from "@/features/mailbox/outbound/send-reply.service";
 import { PrismaServiceRepo } from "@/features/services/prisma-service.repository";
@@ -1819,23 +1826,52 @@ export const getSyncMailboxService = (secretKey: SecretBoxKey) =>
   new SyncMailboxService(getMailboxRepo(), getMailboxTransport(), secretKey, () => new Date());
 
 export const getConnectMailboxInteractor = () =>
-  new ConnectMailboxInteractor(getMailboxRepo(), getMailboxTransport(), getMailboxSecretKey(), () => new Date());
+  new ConnectMailboxInteractor(
+    getMailboxRepo(),
+    getMailboxTransport(),
+    getMailboxSecretKey(),
+    () => new Date(),
+    env.MAILBOX_ALLOW_PRIVATE_HOSTS,
+  );
+
+export const getDisconnectMailboxInteractor = () => new DisconnectMailboxInteractor(getMailboxRepo());
+
+// Company-wide disconnect for workspace admins. findDueMailboxesUnscoped keeps returning a
+// mailbox whose owner was deactivated, so without this the sync workflow retries an orphaned
+// credential forever and the owner-scoped disconnect can no longer reach it.
+export const getAdminDisconnectMailboxInteractor = () => new AdminDisconnectMailboxInteractor(getMailboxRepo());
+
+export const getGetMailboxAccountsInteractor = () => new GetMailboxAccountsInteractor(getMailboxRepo());
 
 export const getGetMailboxThreadsInteractor = () => new GetMailboxThreadsInteractor(getMailboxRepo());
 
 export const getGetMailboxThreadInteractor = () => new GetMailboxThreadInteractor(getMailboxRepo());
 
+export const getGetMailboxFoldersInteractor = () => new GetMailboxFoldersInteractor(getMailboxRepo());
+
 export const getGetRecordThreadsInteractor = () => new GetRecordThreadsInteractor(getMailboxRepo());
 
 export const getShareThreadInteractor = () => new ShareThreadInteractor(getMailboxRepo());
 
-export const getSendReplyService = () => new SendReplyService(getMailboxTransport());
+export const getLinkThreadDealInteractor = () => new LinkThreadDealInteractor(getMailboxRepo());
+
+export const getSendReplyService = () =>
+  new SendReplyService(getMailboxTransport(), undefined, { allowPrivateHosts: env.MAILBOX_ALLOW_PRIVATE_HOSTS });
 
 export const getSendReplyInteractor = () =>
   new SendReplyInteractor(getMailboxRepo(), getSendReplyService(), getMailboxSecretKey(), () => new Date());
+
+export const getForwardThreadInteractor = () =>
+  new ForwardThreadInteractor(getMailboxRepo(), getSendReplyService(), getMailboxSecretKey(), () => new Date());
 
 export const getSyncMailboxInteractor = () => {
   const secretKey = getMailboxSecretKey();
 
   return new SyncMailboxInteractor(getMailboxRepo(), secretKey ? getSyncMailboxService(secretKey) : null);
+};
+
+export const getListSyncFoldersInteractor = () => {
+  const secretKey = getMailboxSecretKey();
+
+  return new ListSyncFoldersInteractor(getMailboxRepo(), secretKey ? getSyncMailboxService(secretKey) : null);
 };

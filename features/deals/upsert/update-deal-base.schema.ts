@@ -9,7 +9,7 @@ export const BaseUpdateDealSchema = z.object({
   notes: NotesSchema,
   pipelineId: z.uuid().nullish(),
   stageId: z.uuid().nullish(),
-  expectedCloseDate: z.coerce.date().nullish(),
+  expectedCloseDate: zx.isoDateTime().nullish(),
   probability: z.number().min(0).max(100).nullish(),
   organizationIds: z.array(z.uuid()).nullish(),
   userIds: z.array(z.uuid()).nullish(),

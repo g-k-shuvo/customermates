@@ -26,21 +26,47 @@ const GUARD_EXEMPT_MODELS = new Set([
   "company",
 ]);
 
-const REACHED_ONLY_FROM_BYPASSED_CALLERS = new Set([
-  "core/auth/better-auth.ts:103",
-  "features/user/prisma-user.repository.ts:697",
-  "features/user/prisma-user.repository.ts:707",
-  "features/user/prisma-user.repository.ts:717",
-  "features/user/prisma-user.repository.ts:727",
-]);
+const MODULE_SCOPE = "(module scope)";
+
+type Exemption = {
+  file: string;
+  method: string;
+  model: string;
+  sites: number;
+};
+
+const REACHED_ONLY_FROM_BYPASSED_CALLERS: readonly Exemption[] = [
+  { file: "core/auth/better-auth.ts", method: MODULE_SCOPE, model: "user", sites: 1 },
+  { file: "features/user/prisma-user.repository.ts", method: "claimWelcomeEmailSent", model: "user", sites: 1 },
+  { file: "features/user/prisma-user.repository.ts", method: "claimTrialExpiredOfferSent", model: "user", sites: 1 },
+  {
+    file: "features/user/prisma-user.repository.ts",
+    method: "claimTrialInactivationReminderSent",
+    model: "user",
+    sites: 1,
+  },
+  {
+    file: "features/user/prisma-user.repository.ts",
+    method: "claimTrialInactivationNoticeSent",
+    model: "user",
+    sites: 1,
+  },
+];
 
 type WriteSite = {
   file: string;
   line: number;
   operation: string;
   method: string;
+  model: string;
   scoped: boolean;
 };
+
+function exemptionFor(site: WriteSite): Exemption | undefined {
+  return REACHED_ONLY_FROM_BYPASSED_CALLERS.find(
+    (entry) => entry.file === site.file && entry.method === site.method && entry.model === site.model,
+  );
+}
 
 function sourceFiles() {
   return SCANNED_DIRECTORIES.flatMap((dir) =>
@@ -156,15 +182,16 @@ function writeSites(): WriteSite[] {
         if (WRITE_OPERATIONS.has(operation) && PRISMA_TARGET.test(target) && !GUARD_EXEMPT_MODELS.has(model)) {
           const method = enclosingMethod(node);
           const methodName = method?.name.getText(source) ?? "";
-          const relativePath = relative(REPO_ROOT, file);
+          const relativePath = relative(REPO_ROOT, file).replaceAll("\\", "/");
           const line = source.getLineAndCharacterOfPosition(node.getStart()).line + 1;
 
-          if (!bypassed.has(methodName) && !REACHED_ONLY_FROM_BYPASSED_CALLERS.has(`${relativePath}:${line}`))
+          if (!bypassed.has(methodName))
             sites.push({
               file: relativePath,
               line,
               operation,
-              method: method?.name.getText(source) ?? "(module scope)",
+              method: methodName === "" ? MODULE_SCOPE : methodName,
+              model,
               scoped: carriesCompanyId(whereInitializer(node, source), operation, source),
             });
         }
@@ -181,9 +208,10 @@ function writeSites(): WriteSite[] {
 
 describe("tenant-scoped writes", () => {
   const sites = writeSites();
+  const guarded = sites.filter((site) => !exemptionFor(site));
 
   it.runIf(ENFORCED)("scopes every tenant-guarded update, updateMany and upsert by companyId in its where", () => {
-    const unscoped = sites
+    const unscoped = guarded
       .filter((site) => !site.scoped)
       .map((site) => `${site.file}:${site.line} ${site.operation} in ${site.method}`);
 
@@ -191,6 +219,22 @@ describe("tenant-scoped writes", () => {
   });
 
   it("still finds the write sites it is meant to guard", () => {
-    expect(sites.length).toBeGreaterThan(10);
+    expect(guarded.length).toBeGreaterThan(10);
+  });
+
+  it("exempts exactly the write sites each allowlist entry was written for", () => {
+    const drift = REACHED_ONLY_FROM_BYPASSED_CALLERS.flatMap((entry) => {
+      const matched = sites.filter(
+        (site) => site.file === entry.file && site.method === entry.method && site.model === entry.model,
+      );
+
+      if (matched.length === entry.sites) return [];
+
+      return [
+        `${entry.file}#${entry.method} on ${entry.model} exempts ${matched.length} write site(s), expected ${entry.sites}`,
+      ];
+    });
+
+    expect(drift, drift.join("\n")).toEqual([]);
   });
 });

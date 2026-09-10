@@ -8,7 +8,7 @@ export const BaseCreateDealSchema = z.object({
   notes: NotesSchema,
   pipelineId: z.uuid().optional(),
   stageId: z.uuid().optional(),
-  expectedCloseDate: z.coerce.date().optional(),
+  expectedCloseDate: zx.isoDateTime().optional(),
   probability: z.number().min(0).max(100).optional(),
   organizationIds: z.array(z.uuid()).optional().default([]),
   userIds: z.array(z.uuid()).optional().default([]),

@@ -28,6 +28,29 @@ describe("BaseCreateTaskSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts an iso dueAt and coerces it to a Date", () => {
+    const result = BaseCreateTaskSchema.safeParse({ name: "Task", dueAt: "2026-05-01T10:00:00.000Z" });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.dueAt?.toISOString()).toBe("2026-05-01T10:00:00.000Z");
+  });
+
+  it("accepts a date-only dueAt and an offset one", () => {
+    expect(BaseCreateTaskSchema.safeParse({ name: "Task", dueAt: "2026-05-01" }).success).toBe(true);
+    expect(BaseCreateTaskSchema.safeParse({ name: "Task", dueAt: "2026-05-01T10:00:00+02:00" }).success).toBe(true);
+  });
+
+  it("still accepts a Date so a re-parsed payload stays valid", () => {
+    const once = BaseCreateTaskSchema.parse({ name: "Task", dueAt: "2026-05-01T10:00:00.000Z" });
+    const twice = BaseCreateTaskSchema.safeParse(once);
+    expect(twice.success).toBe(true);
+    if (twice.success) expect(twice.data.dueAt?.toISOString()).toBe("2026-05-01T10:00:00.000Z");
+  });
+
+  it("rejects a dueAt that is not iso-8601", () => {
+    expect(BaseCreateTaskSchema.safeParse({ name: "Task", dueAt: "tomorrow" }).success).toBe(false);
+    expect(BaseCreateTaskSchema.safeParse({ name: "Task", dueAt: 1767225600000 }).success).toBe(false);
+  });
+
   it("rejects empty name", () => {
     const result = BaseCreateTaskSchema.safeParse({
       name: "",
@@ -119,5 +142,17 @@ describe("BaseUpdateTaskSchema", () => {
       notes: "Updated notes content",
     });
     expect(result.success).toBe(true);
+  });
+
+  it("accepts an iso dueAt, a null one and a re-parsed Date", () => {
+    expect(BaseUpdateTaskSchema.safeParse({ id: VALID_UUID, dueAt: null }).success).toBe(true);
+
+    const once = BaseUpdateTaskSchema.parse({ id: VALID_UUID, dueAt: "2026-05-01T10:00:00.000Z" });
+    expect(once.dueAt?.toISOString()).toBe("2026-05-01T10:00:00.000Z");
+    expect(BaseUpdateTaskSchema.safeParse(once).success).toBe(true);
+  });
+
+  it("rejects a dueAt that is not iso-8601", () => {
+    expect(BaseUpdateTaskSchema.safeParse({ id: VALID_UUID, dueAt: "next friday" }).success).toBe(false);
   });
 });

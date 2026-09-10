@@ -19,7 +19,7 @@ the schema, feature slices, kanban grouping, DI and convention tests read direct
    ```
 
 4. Do not run milestones in parallel. M3 depends on M2's schema, M6 depends on M3's
-   `DealStageHistory`.
+   `DealStageHistory`, M8 depends on M2's pipelines.
 
 ## Files
 
@@ -34,6 +34,9 @@ the schema, feature slices, kanban grouping, DI and convention tests read direct
 | `04-m4-data-migration.md` | CSV import, Pipedrive migration |
 | `05-m5-activities.md` | Scheduling on Task, agenda, overdue |
 | `06-m6-reporting.md` | Funnel, win rate, sales cycle |
+| `07-m7-email-integration.md` | IMAP/SMTP mailbox sync, `/mail`, email on records |
+| `08-m8-web-lead-capture.md` | Lead entity, Fluent Forms webhook, mapping, backfill |
+| `09-observed-client-usage.md` | What the client's live Pipedrive shows, and what it costs |
 
 ## A note on estimates
 

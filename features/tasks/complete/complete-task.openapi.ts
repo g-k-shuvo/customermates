@@ -15,12 +15,12 @@ export const completeTaskOperation: ZodOpenApiOperationObject = {
   operationId: "completeTask",
   summary: "Complete a task",
   description:
-    "Marks a task complete, stamping completedAt and completedById with the calling user. A task that is already complete answers 409. Pass followUp to schedule the next activity in the same request: it is created against the same contacts, organizations, deals, services and assignees as the task just completed, and both writes share one transaction.",
+    "Marks a task complete, stamping completedAt and completedById with the calling user. A task that is already complete answers 409. Send a JSON body; an empty object completes the task on its own. Pass followUp to schedule the next activity in the same request: it is created against the same contacts, organizations, deals, services and assignees as the task just completed, and both writes share one transaction.",
   tags: ["tasks"],
   security: [{ apiKeyAuth: [] }],
   requestParams: { path: CompleteTaskSchema.pick({ id: true }) },
   requestBody: {
-    required: false,
+    required: true,
     content: {
       "application/json": {
         schema: CompleteTaskRequestSchema,

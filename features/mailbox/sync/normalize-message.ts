@@ -38,6 +38,7 @@ export type MailboxSyncContext = {
   mailboxDisplayName?: string | null;
   mailboxAliases?: string[] | null;
   sentFolderIds?: string[] | null;
+  now?: Date;
 };
 
 export type MessageAttendee = {
@@ -243,23 +244,23 @@ function toDate(value: unknown): Date | null {
   return representableDate(new Date(trimmed).getTime());
 }
 
-function isPlausibleSentAt(candidate: Date, reference: Date | null): boolean {
+function isPlausibleSentAt(candidate: Date, reference: Date | null, now: Date): boolean {
   const time = candidate.getTime();
   if (!Number.isFinite(time) || time < EARLIEST_PLAUSIBLE_SENT_AT) return false;
-  if (!reference) return true;
 
-  const referenceTime = reference.getTime();
-  if (!Number.isFinite(referenceTime)) return true;
+  const referenceTime = reference ? reference.getTime() : Number.NaN;
+  const ceiling = Number.isFinite(referenceTime) ? referenceTime : now.getTime();
 
-  return time <= referenceTime + MAX_SENT_AT_SKEW_MS;
+  return time <= ceiling + MAX_SENT_AT_SKEW_MS;
 }
 
-function resolveSentAt(message: ParsedMailboxMessage): { sentAt: Date; sentAtSource: SentAtSource } {
+function resolveSentAt(message: ParsedMailboxMessage, now: Date): { sentAt: Date; sentAtSource: SentAtSource } {
   const receivedAt = toDate(message.receivedAt);
   const headerDate = toDate(message.date);
 
-  if (headerDate && isPlausibleSentAt(headerDate, receivedAt)) return { sentAt: headerDate, sentAtSource: "header" };
-  if (receivedAt && isPlausibleSentAt(receivedAt, null)) return { sentAt: receivedAt, sentAtSource: "received" };
+  if (headerDate && isPlausibleSentAt(headerDate, receivedAt, now))
+    return { sentAt: headerDate, sentAtSource: "header" };
+  if (receivedAt && isPlausibleSentAt(receivedAt, null, now)) return { sentAt: receivedAt, sentAtSource: "received" };
 
   return { sentAt: new Date(EPOCH_SENT_AT_MS), sentAtSource: "epochFallback" };
 }
@@ -391,7 +392,7 @@ export function normalizeMessage(message: ParsedMailboxMessage, context: Mailbox
   const bodyHtml = readTrimmedText(message.html);
   const bodyText = readTrimmedText(message.text) ?? (bodyHtml ? htmlToPlainText(bodyHtml) : null);
 
-  const { sentAt, sentAtSource } = resolveSentAt(message);
+  const { sentAt, sentAtSource } = resolveSentAt(message, context.now ?? new Date());
   const headerMessageId = readMessageId(message.messageId);
   const fingerprint = JSON.stringify([
     toDate(message.date)?.getTime() ?? null,

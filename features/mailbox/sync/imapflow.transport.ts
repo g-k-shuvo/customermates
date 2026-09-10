@@ -36,12 +36,15 @@ export type ImapFetchedMessage = {
   internalDate?: Date;
 };
 
+export type ImapSearchQuery = { since: Date };
+
 export type ImapClient = {
   connect(): Promise<void>;
   logout(): Promise<void>;
   close(): void;
   list(): Promise<readonly ImapListEntry[]>;
   getMailboxLock(path: string): Promise<{ release(): void }>;
+  search(query: ImapSearchQuery, options: { uid: boolean }): Promise<number[] | false | undefined>;
   fetch(range: string, options: Record<string, boolean>): AsyncIterable<ImapFetchedMessage>;
   append(path: string, source: Buffer): Promise<unknown>;
   mailbox: ImapMailboxState | false;
@@ -106,6 +109,16 @@ function flagsOf(message: ImapFetchedMessage): readonly string[] {
   if (!message.flags) return [];
 
   return Array.isArray(message.flags) ? [...message.flags] : [...(message.flags as Set<string>)];
+}
+
+async function firstUidWithin(client: ImapClient, backfillFrom: Date | null, uidNext: number): Promise<number> {
+  if (!backfillFrom) return 1;
+
+  const found = await client.search({ since: backfillFrom }, { uid: true });
+  if (!Array.isArray(found)) return 1;
+  if (found.length === 0) return uidNext;
+
+  return found.reduce((lowest, uid) => Math.min(lowest, uid), uidNext);
 }
 
 function mailboxStateOf(client: ImapClient): ImapMailboxState {
@@ -174,15 +187,19 @@ export function createImapflowTransport(
       });
     },
 
-    async fetchSince(connection, cursor, path, limit) {
+    async fetchSince(connection, request) {
+      const { path, cursor } = request;
+
       return await withClient(connection, async (client) => {
         const lock = await client.getMailboxLock(path);
 
         try {
           const state = mailboxStateOf(client);
           const uidValidity = String(state.uidValidity);
-          const restart = cursor === null || cursor.uidValidity !== uidValidity || cursor.path !== path;
-          const from = restart ? 1 : cursor.uidNext;
+          const from =
+            cursor && cursor.uidValidity === uidValidity && cursor.path === path
+              ? cursor.uidNext
+              : await firstUidWithin(client, request.backfillFrom, state.uidNext);
 
           if (from >= state.uidNext) {
             return {
@@ -192,7 +209,7 @@ export function createImapflowTransport(
             } satisfies MailboxFetchPage;
           }
 
-          const ceiling = Math.min(state.uidNext - 1, from + limit - 1);
+          const ceiling = Math.min(state.uidNext - 1, from + request.limit - 1);
           const messages: FetchedMessage[] = [];
 
           for await (const message of client.fetch(`${from}:${ceiling}`, {
@@ -210,9 +227,10 @@ export function createImapflowTransport(
           }
 
           const highest = messages.reduce((seen, message) => Math.max(seen, message.uid), from - 1);
+          const resumeAt = messages.length > 0 ? highest + 1 : ceiling + 1;
 
           return {
-            cursor: { path, uidValidity, uidNext: Math.max(highest + 1, from) },
+            cursor: { path, uidValidity, uidNext: resumeAt },
             messages,
             reachedEnd: ceiling >= state.uidNext - 1,
           } satisfies MailboxFetchPage;

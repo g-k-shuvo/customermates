@@ -8,6 +8,9 @@ export type CreateMailboxArgs = {
   imapSecure: boolean;
   username: string;
   sealedSecret: string;
+  smtpHost: string | null;
+  smtpPort: number | null;
+  smtpSecure: boolean | null;
   backfillFrom: Date;
   verifiedAt: Date;
 };

@@ -16771,7 +16771,8 @@
                   "expectedCloseDate": {
                     "anyOf": [
                       {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}([Tt]\\d{2}:\\d{2}(:\\d{2}(\\.\\d{1,9})?)?([Zz]|[+-]\\d{2}:\\d{2})?)?$"
                       },
                       {
                         "type": "null"
@@ -20495,17 +20496,647 @@
         }
       }
     },
-    "/v1/mailbox/threads": {
+    "/v1/mailbox/accounts": {
       "get": {
-        "operationId": "getMailboxThreads",
-        "summary": "Get mailbox conversations",
-        "description": "Retrieves the email conversations synced from the company's connected mailboxes, most recently active first.",
+        "operationId": "getMailboxAccounts",
+        "summary": "Get connected mailboxes",
+        "description": "Retrieves the IMAP mailboxes connected to the company, oldest first. The stored password is sealed and never leaves the server, so it is absent from every field of this response.",
         "tags": [
           "mailbox"
         ],
         "security": [
           {
             "apiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The connected mailboxes were retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "connectedAccountId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "imapHost": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "imapPort": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 65535
+                      },
+                      "imapSecure": {
+                        "type": "boolean"
+                      },
+                      "username": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "syncCursors": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "path": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "uidValidity": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "uidNext": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "path",
+                            "uidValidity",
+                            "uidNext"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "backfillFrom": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "lastSyncedAt": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "lastVerifiedAt": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "emailAddress": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "displayName": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "smtpHost": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "smtpPort": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 65535
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "smtpSecure": {
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "connectedAccountId",
+                      "imapHost",
+                      "imapPort",
+                      "imapSecure",
+                      "username",
+                      "syncCursors",
+                      "backfillFrom",
+                      "lastSyncedAt",
+                      "lastVerifiedAt",
+                      "emailAddress",
+                      "displayName",
+                      "smtpHost",
+                      "smtpPort",
+                      "smtpSecure"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "connectMailbox",
+        "summary": "Connect a mailbox",
+        "description": "Verifies the IMAP credentials against the mail server and stores the mailbox only when that succeeds, so a wrong host, port or password is reported instead of saved. The password is sealed with AES-256-GCM before it is written and is never returned.",
+        "tags": [
+          "mailbox"
+        ],
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "emailAddress": {
+                    "type": "string",
+                    "format": "email",
+                    "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                  },
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "imapHost": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 253
+                  },
+                  "imapPort": {
+                    "default": 993,
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 65535
+                  },
+                  "imapSecure": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "username": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 320
+                  },
+                  "secret": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  "smtpHost": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 253
+                  },
+                  "smtpPort": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 65535
+                  },
+                  "smtpSecure": {
+                    "type": "boolean"
+                  },
+                  "backfillDays": {
+                    "default": 90,
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 3650
+                  }
+                },
+                "required": [
+                  "emailAddress",
+                  "imapHost",
+                  "username",
+                  "secret"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The mailbox was verified and connected.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "connectedAccountId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "imapHost": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "imapPort": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 65535
+                    },
+                    "imapSecure": {
+                      "type": "boolean"
+                    },
+                    "username": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "syncCursors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "uidValidity": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "uidNext": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "uidValidity",
+                          "uidNext"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "backfillFrom": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "lastSyncedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "lastVerifiedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "connectedAccountId",
+                    "imapHost",
+                    "imapPort",
+                    "imapSecure",
+                    "username",
+                    "syncCursors",
+                    "backfillFrom",
+                    "lastSyncedAt",
+                    "lastVerifiedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/mailbox/accounts/{id}": {
+      "delete": {
+        "operationId": "disconnectMailbox",
+        "summary": "Disconnect a mailbox",
+        "description": "Removes a connected mailbox together with its sealed credentials and the conversations synced from it. The mail itself stays on the mail server; nothing is deleted there.",
+        "tags": [
+          "mailbox"
+        ],
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The mailbox was disconnected.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/mailbox/accounts/{id}/admin": {
+      "delete": {
+        "operationId": "adminDisconnectMailbox",
+        "summary": "Disconnect any mailbox in the workspace",
+        "description": "Removes a connected mailbox that belongs to any member of the workspace, together with its sealed credentials and the conversations synced from it. Requires workspace administration rights and exists so an offboarded member's mailbox can be cleaned up once they can no longer sign in. The mail itself stays on the mail server; nothing is deleted there.",
+        "tags": [
+          "mailbox"
+        ],
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The mailbox was disconnected.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/mailbox/threads": {
+      "get": {
+        "operationId": "getMailboxThreads",
+        "summary": "Get mailbox conversations",
+        "description": "Retrieves the email conversations synced from the company's connected mailboxes, most recently active first. The optional query matches the conversation subject and the participants' addresses and names, case-insensitively; the optional folder keeps the conversations that hold a message stored in that IMAP folder.",
+        "tags": [
+          "mailbox"
+        ],
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "in": "query",
+            "name": "folder",
+            "schema": {
+              "type": "string",
+              "maxLength": 255
+            }
           }
         ],
         "responses": {
@@ -20854,6 +21485,73 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "dealLink": {
+                      "type": "object",
+                      "properties": {
+                        "linkedDealId": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "linkedDealName": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "offeredDealId": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "offeredDealName": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "openDealCount": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "linkedDealId",
+                        "linkedDealName",
+                        "offeredDealId",
+                        "offeredDealName",
+                        "openDealCount"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "matchedContactCount": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
                     }
                   },
                   "required": [
@@ -20865,7 +21563,9 @@
                     "unread",
                     "sharedToCrm",
                     "participants",
-                    "messages"
+                    "messages",
+                    "dealLink",
+                    "matchedContactCount"
                   ],
                   "additionalProperties": false
                 }
@@ -20917,7 +21617,7 @@
       "put": {
         "operationId": "shareMailboxThread",
         "summary": "Share or unshare a mailbox conversation",
-        "description": "Controls whether a conversation appears on the contacts and deals it matches. Conversations are private until shared, so a personal mailbox does not surface on shared records by default.",
+        "description": "Controls whether a conversation appears on the contacts and deals it matches. Conversations are private until shared, so a personal mailbox does not surface on shared records by default. Unsharing also removes any deal link, because a linked conversation is readable by everyone who can open that record.",
         "tags": [
           "mailbox"
         ],
@@ -21100,6 +21800,190 @@
         }
       }
     },
+    "/v1/mailbox/threads/{id}/deal": {
+      "put": {
+        "operationId": "linkMailboxThreadDeal",
+        "summary": "Confirm or remove the deal a mailbox conversation belongs to",
+        "description": "A conversation is offered a deal only when the contacts it matches have exactly one open deal between them, and the offer has to be confirmed here. Any other deal id is rejected rather than guessed at, and sending null removes an existing link. Confirming a deal also shares the conversation, because the deal's record is where it then appears.",
+        "tags": [
+          "mailbox"
+        ],
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "dealId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "dealId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The conversation's deal link was updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "threadId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "sharedToCrm": {
+                      "type": "boolean"
+                    },
+                    "dealLink": {
+                      "type": "object",
+                      "properties": {
+                        "linkedDealId": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "linkedDealName": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "offeredDealId": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "offeredDealName": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "openDealCount": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "linkedDealId",
+                        "linkedDealName",
+                        "offeredDealId",
+                        "offeredDealName",
+                        "openDealCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "threadId",
+                    "sharedToCrm",
+                    "dealLink"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/mailbox/threads/{id}/reply": {
       "post": {
         "operationId": "sendMailboxReply",
@@ -21151,6 +22035,136 @@
         "responses": {
           "201": {
             "description": "The reply was sent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "threadId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "messageId": {
+                      "type": "string"
+                    },
+                    "recipients": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "threadId",
+                    "messageId",
+                    "recipients"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/mailbox/threads/{id}/forward": {
+      "post": {
+        "operationId": "forwardMailboxThread",
+        "summary": "Forward a mailbox conversation",
+        "description": "Sends the conversation's latest message on to the addresses given, as the mailbox owner and through their own outgoing server. The subject is prefixed with Fwd: and the original is quoted below the note. The forward deliberately carries no In-Reply-To or References header, so the new recipients start a conversation of their own rather than joining the original one. A copy is recorded on the conversation. Requires the mailbox to have outgoing server settings.",
+        "tags": [
+          "mailbox"
+        ],
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "to": {
+                    "minItems": 1,
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "email",
+                      "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                    }
+                  },
+                  "body": {
+                    "type": "string",
+                    "maxLength": 100000
+                  }
+                },
+                "required": [
+                  "to"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The conversation was forwarded.",
             "content": {
               "application/json": {
                 "schema": {
@@ -31976,7 +32990,8 @@
                   "dueAt": {
                     "anyOf": [
                       {
-                        "type": "string"
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}([Tt]\\d{2}:\\d{2}(:\\d{2}(\\.\\d{1,9})?)?([Zz]|[+-]\\d{2}:\\d{2})?)?$"
                       },
                       {
                         "type": "null"
@@ -32536,7 +33551,7 @@
       "post": {
         "operationId": "completeTask",
         "summary": "Complete a task",
-        "description": "Marks a task complete, stamping completedAt and completedById with the calling user. A task that is already complete answers 409. Pass followUp to schedule the next activity in the same request: it is created against the same contacts, organizations, deals, services and assignees as the task just completed, and both writes share one transaction.",
+        "description": "Marks a task complete, stamping completedAt and completedById with the calling user. A task that is already complete answers 409. Send a JSON body; an empty object completes the task on its own. Pass followUp to schedule the next activity in the same request: it is created against the same contacts, organizations, deals, services and assignees as the task just completed, and both writes share one transaction.",
         "tags": [
           "tasks"
         ],
@@ -32558,7 +33573,7 @@
           }
         ],
         "requestBody": {
-          "required": false,
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -49903,7 +50918,8 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "expectedCloseDate": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}([Tt]\\d{2}:\\d{2}(:\\d{2}(\\.\\d{1,9})?)?([Zz]|[+-]\\d{2}:\\d{2})?)?$"
           },
           "probability": {
             "type": "number",
@@ -50035,7 +51051,8 @@
                   "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                 },
                 "expectedCloseDate": {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}([Tt]\\d{2}:\\d{2}(:\\d{2}(\\.\\d{1,9})?)?([Zz]|[+-]\\d{2}:\\d{2})?)?$"
                 },
                 "probability": {
                   "type": "number",
@@ -50194,7 +51211,8 @@
                 "expectedCloseDate": {
                   "anyOf": [
                     {
-                      "type": "string"
+                      "type": "string",
+                      "pattern": "^\\d{4}-\\d{2}-\\d{2}([Tt]\\d{2}:\\d{2}(:\\d{2}(\\.\\d{1,9})?)?([Zz]|[+-]\\d{2}:\\d{2})?)?$"
                     },
                     {
                       "type": "null"
@@ -50792,7 +51810,8 @@
             ]
           },
           "dueAt": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}([Tt]\\d{2}:\\d{2}(:\\d{2}(\\.\\d{1,9})?)?([Zz]|[+-]\\d{2}:\\d{2})?)?$"
           },
           "durationMinutes": {
             "type": "integer",
@@ -50912,7 +51931,8 @@
                   ]
                 },
                 "dueAt": {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}([Tt]\\d{2}:\\d{2}(:\\d{2}(\\.\\d{1,9})?)?([Zz]|[+-]\\d{2}:\\d{2})?)?$"
                 },
                 "durationMinutes": {
                   "type": "integer",
@@ -51052,7 +52072,8 @@
                 "dueAt": {
                   "anyOf": [
                     {
-                      "type": "string"
+                      "type": "string",
+                      "pattern": "^\\d{4}-\\d{2}-\\d{2}([Tt]\\d{2}:\\d{2}(:\\d{2}(\\.\\d{1,9})?)?([Zz]|[+-]\\d{2}:\\d{2})?)?$"
                     },
                     {
                       "type": "null"

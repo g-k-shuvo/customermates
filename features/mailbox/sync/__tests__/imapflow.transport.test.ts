@@ -22,7 +22,10 @@ type StubbedClient = {
   logout: ReturnType<typeof vi.fn>;
   close: ReturnType<typeof vi.fn>;
   append: ReturnType<typeof vi.fn>;
+  search: ReturnType<typeof vi.fn>;
 };
+
+const UNBOUNDED = { backfillFrom: null };
 
 function asyncIterableOf(messages: readonly ImapFetchedMessage[]): AsyncIterable<ImapFetchedMessage> {
   let index = 0;
@@ -54,6 +57,7 @@ function stubClient(overrides: ClientOverrides = {}): StubbedClient {
   const logout = vi.fn(() => Promise.resolve(undefined));
   const close = vi.fn();
   const append = vi.fn(() => Promise.resolve(undefined));
+  const search = vi.fn(() => Promise.resolve([]));
 
   const client = {
     connect: vi.fn(() => (overrides.connectError ? Promise.reject(overrides.connectError) : Promise.resolve())),
@@ -67,13 +71,21 @@ function stubClient(overrides: ClientOverrides = {}): StubbedClient {
         },
       }),
     ),
+    search,
     fetch: fetchYielding(),
     append,
     mailbox: { uidValidity: 42n, uidNext: 1 },
     ...overrides,
   } as unknown as ImapClient;
 
-  return { client, released, logout: (overrides.logout ?? logout) as ReturnType<typeof vi.fn>, close, append };
+  return {
+    client,
+    released,
+    logout: (overrides.logout ?? logout) as ReturnType<typeof vi.fn>,
+    close,
+    append,
+    search: (overrides.search ?? search) as ReturnType<typeof vi.fn>,
+  };
 }
 
 function message(uid: number): ImapFetchedMessage {
@@ -200,7 +212,12 @@ describe("createImapflowTransport", () => {
     const fetch = fetchYielding(message(1), message(2), message(3));
     const { client, released } = stubClient({ fetch, mailbox: { uidValidity: 42n, uidNext: 4 } });
 
-    const page = await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(CONNECTION, null, "INBOX", 100);
+    const page = await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(CONNECTION, {
+      path: "INBOX",
+      cursor: null,
+      limit: 100,
+      ...UNBOUNDED,
+    });
 
     expect(fetch).toHaveBeenCalledWith("1:3", expect.objectContaining({ uid: true, source: true }));
     expect(page.messages.map((m) => m.uid)).toEqual([1, 2, 3]);
@@ -213,12 +230,12 @@ describe("createImapflowTransport", () => {
     const fetch = fetchYielding(message(7));
     const { client } = stubClient({ fetch, mailbox: { uidValidity: 42n, uidNext: 8 } });
 
-    await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(
-      CONNECTION,
-      { path: "INBOX", uidValidity: "42", uidNext: 7 },
-      "INBOX",
-      100,
-    );
+    await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(CONNECTION, {
+      path: "INBOX",
+      cursor: { path: "INBOX", uidValidity: "42", uidNext: 7 },
+      limit: 100,
+      ...UNBOUNDED,
+    });
 
     expect(fetch).toHaveBeenCalledWith("7:7", expect.anything());
   });
@@ -227,12 +244,12 @@ describe("createImapflowTransport", () => {
     const fetch = fetchYielding(message(1));
     const { client } = stubClient({ fetch, mailbox: { uidValidity: 99n, uidNext: 2 } });
 
-    const page = await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(
-      CONNECTION,
-      { path: "INBOX", uidValidity: "42", uidNext: 500 },
-      "INBOX",
-      100,
-    );
+    const page = await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(CONNECTION, {
+      path: "INBOX",
+      cursor: { path: "INBOX", uidValidity: "42", uidNext: 500 },
+      limit: 100,
+      ...UNBOUNDED,
+    });
 
     expect(fetch).toHaveBeenCalledWith("1:1", expect.anything());
     expect(page.cursor.uidValidity).toBe("99");
@@ -242,23 +259,45 @@ describe("createImapflowTransport", () => {
     const fetch = fetchYielding(message(1), message(2));
     const { client } = stubClient({ fetch, mailbox: { uidValidity: 42n, uidNext: 1000 } });
 
-    const page = await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(CONNECTION, null, "INBOX", 2);
+    const page = await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(CONNECTION, {
+      path: "INBOX",
+      cursor: null,
+      limit: 2,
+      ...UNBOUNDED,
+    });
 
     expect(fetch).toHaveBeenCalledWith("1:2", expect.anything());
     expect(page.reachedEnd).toBe(false);
     expect(page.cursor.uidNext).toBe(3);
   });
 
+  it("moves past a page whose messages were all expunged instead of asking for it again forever", async () => {
+    const fetch = fetchYielding();
+    const { client } = stubClient({ fetch, mailbox: { uidValidity: 42n, uidNext: 1000 } });
+
+    const page = await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(CONNECTION, {
+      path: "INBOX",
+      cursor: { path: "INBOX", uidValidity: "42", uidNext: 10 },
+      limit: 5,
+      ...UNBOUNDED,
+    });
+
+    expect(fetch).toHaveBeenCalledWith("10:14", expect.anything());
+    expect(page.messages).toEqual([]);
+    expect(page.cursor.uidNext).toBe(15);
+    expect(page.reachedEnd).toBe(false);
+  });
+
   it("fetches nothing and reports the end when the cursor is already current", async () => {
     const fetch = fetchYielding();
     const { client } = stubClient({ fetch, mailbox: { uidValidity: 42n, uidNext: 9 } });
 
-    const page = await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(
-      CONNECTION,
-      { path: "INBOX", uidValidity: "42", uidNext: 9 },
-      "INBOX",
-      100,
-    );
+    const page = await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(CONNECTION, {
+      path: "INBOX",
+      cursor: { path: "INBOX", uidValidity: "42", uidNext: 9 },
+      limit: 100,
+      ...UNBOUNDED,
+    });
 
     expect(fetch).not.toHaveBeenCalled();
     expect(page.messages).toEqual([]);
@@ -269,9 +308,135 @@ describe("createImapflowTransport", () => {
     const fetch = fetchRejecting(new Error("connection dropped mid-fetch"));
     const { client, released } = stubClient({ fetch, mailbox: { uidValidity: 42n, uidNext: 4 } });
 
-    await failureOf(createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(CONNECTION, null, "INBOX", 10));
+    await failureOf(
+      createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(CONNECTION, {
+        path: "INBOX",
+        cursor: null,
+        limit: 10,
+        ...UNBOUNDED,
+      }),
+    );
 
     expect(released.count).toBe(1);
+  });
+
+  it("starts a bounded first fetch at the oldest uid inside the backfill window", async () => {
+    const backfillFrom = new Date("2026-06-09T10:00:00Z");
+    const fetch = fetchYielding(message(880), message(881));
+    const search = vi.fn(() => Promise.resolve([881, 880, 900]));
+    const { client } = stubClient({ fetch, search, mailbox: { uidValidity: 42n, uidNext: 901 } });
+
+    const page = await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(CONNECTION, {
+      path: "INBOX",
+      cursor: null,
+      backfillFrom,
+      limit: 100,
+    });
+
+    expect(search).toHaveBeenCalledWith({ since: backfillFrom }, { uid: true });
+    expect(fetch).toHaveBeenCalledWith("880:900", expect.anything());
+    expect(page.cursor.uidNext).toBe(882);
+  });
+
+  it("keeps the stored cursor in charge and never searches when one exists", async () => {
+    const fetch = fetchYielding(message(7));
+    const search = vi.fn(() => Promise.resolve([1]));
+    const { client } = stubClient({ fetch, search, mailbox: { uidValidity: 42n, uidNext: 8 } });
+
+    await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(CONNECTION, {
+      path: "INBOX",
+      cursor: { path: "INBOX", uidValidity: "42", uidNext: 7 },
+      backfillFrom: new Date("2026-06-09T10:00:00Z"),
+      limit: 100,
+    });
+
+    expect(search).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledWith("7:7", expect.anything());
+  });
+
+  it("re-searches the bound when uidValidity invalidated the cursor", async () => {
+    const backfillFrom = new Date("2026-06-09T10:00:00Z");
+    const fetch = fetchYielding(message(500));
+    const search = vi.fn(() => Promise.resolve([500]));
+    const { client } = stubClient({ fetch, search, mailbox: { uidValidity: 99n, uidNext: 501 } });
+
+    await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(CONNECTION, {
+      path: "INBOX",
+      cursor: { path: "INBOX", uidValidity: "42", uidNext: 7 },
+      backfillFrom,
+      limit: 100,
+    });
+
+    expect(search).toHaveBeenCalledWith({ since: backfillFrom }, { uid: true });
+    expect(fetch).toHaveBeenCalledWith("500:500", expect.anything());
+  });
+
+  it("stores a cursor at the end of the folder when nothing falls inside the bound", async () => {
+    const fetch = fetchYielding();
+    const search = vi.fn(() => Promise.resolve([]));
+    const { client } = stubClient({ fetch, search, mailbox: { uidValidity: 42n, uidNext: 900 } });
+
+    const page = await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(CONNECTION, {
+      path: "INBOX",
+      cursor: null,
+      backfillFrom: new Date("2026-06-09T10:00:00Z"),
+      limit: 100,
+    });
+
+    expect(fetch).not.toHaveBeenCalled();
+    expect(page.messages).toEqual([]);
+    expect(page.reachedEnd).toBe(true);
+    expect(page.cursor).toEqual({ path: "INBOX", uidValidity: "42", uidNext: 900 });
+  });
+
+  it("falls back to the whole folder when the server cannot answer the search", async () => {
+    const fetch = fetchYielding(message(1));
+    const search = vi.fn(() => Promise.resolve(false as const));
+    const { client } = stubClient({ fetch, search, mailbox: { uidValidity: 42n, uidNext: 2 } });
+
+    await createImapflowTransport(() => client, PUBLIC_LOOKUP).fetchSince(CONNECTION, {
+      path: "INBOX",
+      cursor: null,
+      backfillFrom: new Date("2026-06-09T10:00:00Z"),
+      limit: 100,
+    });
+
+    expect(fetch).toHaveBeenCalledWith("1:1", expect.anything());
+  });
+
+  it("fetches nothing on a second bounded run once the first stored a cursor", async () => {
+    const backfillFrom = new Date("2026-06-09T10:00:00Z");
+    const first = fetchYielding(message(880));
+    const firstClient = stubClient({
+      fetch: first,
+      search: vi.fn(() => Promise.resolve([880])),
+      mailbox: { uidValidity: 42n, uidNext: 881 },
+    });
+
+    const page = await createImapflowTransport(() => firstClient.client, PUBLIC_LOOKUP).fetchSince(CONNECTION, {
+      path: "INBOX",
+      cursor: null,
+      backfillFrom,
+      limit: 100,
+    });
+
+    const second = fetchYielding();
+    const secondClient = stubClient({
+      fetch: second,
+      search: vi.fn(() => Promise.resolve([880])),
+      mailbox: { uidValidity: 42n, uidNext: 881 },
+    });
+
+    const repeated = await createImapflowTransport(() => secondClient.client, PUBLIC_LOOKUP).fetchSince(CONNECTION, {
+      path: "INBOX",
+      cursor: page.cursor,
+      backfillFrom,
+      limit: 100,
+    });
+
+    expect(second).not.toHaveBeenCalled();
+    expect(repeated.messages).toEqual([]);
+    expect(repeated.cursor).toEqual(page.cursor);
   });
 
   it("appends to the discovered sent folder", async () => {

@@ -3,6 +3,10 @@ import { z } from "zod";
 export const MAILBOX_DEFAULT_IMAP_PORT = 993;
 export const MAILBOX_MAX_BACKFILL_DAYS = 3650;
 export const MAILBOX_DEFAULT_BACKFILL_DAYS = 90;
+export const MAILBOX_DEFAULT_SYNC_BATCH_SIZE = 100;
+export const MAILBOX_MAX_THREAD_QUERY_LENGTH = 200;
+export const MAILBOX_MAX_FOLDER_PATH_LENGTH = 255;
+export const MAILBOX_MAX_FORWARD_RECIPIENTS = 20;
 
 export const MailboxFolderCursorSchema = z.object({
   path: z.string().min(1),
@@ -29,6 +33,28 @@ export const MailboxCredentialDtoSchema = z.object({
 
 export type MailboxCredentialDto = z.infer<typeof MailboxCredentialDtoSchema>;
 
+export const MailboxAccountDtoSchema = MailboxCredentialDtoSchema.extend({
+  emailAddress: z.string().min(1),
+  displayName: z.string().nullable(),
+  smtpHost: z.string().nullable(),
+  smtpPort: z.number().int().min(1).max(65535).nullable(),
+  smtpSecure: z.boolean().nullable(),
+});
+
+export type MailboxAccountDto = z.infer<typeof MailboxAccountDtoSchema>;
+
+export const DisconnectMailboxSchema = z.object({
+  connectedAccountId: z.string().uuid(),
+});
+
+export type DisconnectMailboxData = z.infer<typeof DisconnectMailboxSchema>;
+
+export const MailboxAccountRefSchema = z.object({
+  connectedAccountId: z.string().uuid(),
+});
+
+export type MailboxAccountRefData = z.infer<typeof MailboxAccountRefSchema>;
+
 export const ConnectMailboxSchema = z.object({
   emailAddress: z.string().email(),
   displayName: z.string().trim().min(1).max(200).optional(),
@@ -48,7 +74,7 @@ export type ConnectMailboxData = z.infer<typeof ConnectMailboxSchema>;
 export const SyncMailboxSchema = z.object({
   connectedAccountId: z.string().uuid(),
   folderPath: z.string().min(1).optional(),
-  batchSize: z.number().int().min(1).max(500).default(100),
+  batchSize: z.number().int().min(1).max(500).default(MAILBOX_DEFAULT_SYNC_BATCH_SIZE),
 });
 
 export type SyncMailboxData = z.infer<typeof SyncMailboxSchema>;
@@ -80,11 +106,45 @@ export const MailboxMessageDtoSchema = z.object({
 
 export type MailboxMessageDto = z.infer<typeof MailboxMessageDtoSchema>;
 
+export const MailboxThreadDealLinkDtoSchema = z.object({
+  linkedDealId: z.string().uuid().nullable(),
+  linkedDealName: z.string().nullable(),
+  offeredDealId: z.string().uuid().nullable(),
+  offeredDealName: z.string().nullable(),
+  openDealCount: z.number().int().nonnegative(),
+});
+
+export type MailboxThreadDealLinkDto = z.infer<typeof MailboxThreadDealLinkDtoSchema>;
+
 export const MailboxThreadDtoSchema = MailboxThreadSummaryDtoSchema.extend({
   messages: z.array(MailboxMessageDtoSchema),
+  dealLink: MailboxThreadDealLinkDtoSchema,
+  matchedContactCount: z.number().int().nonnegative(),
 });
 
 export type MailboxThreadDto = z.infer<typeof MailboxThreadDtoSchema>;
+
+export const LinkThreadDealSchema = z.object({
+  threadId: z.string().uuid(),
+  dealId: z.string().uuid().nullable(),
+});
+
+export type LinkThreadDealData = z.infer<typeof LinkThreadDealSchema>;
+
+export const LinkThreadDealOutcomeSchema = z.object({
+  threadId: z.string().uuid(),
+  sharedToCrm: z.boolean(),
+  dealLink: MailboxThreadDealLinkDtoSchema,
+});
+
+export type LinkThreadDealOutcome = z.infer<typeof LinkThreadDealOutcomeSchema>;
+
+export const GetMailboxThreadsSchema = z.object({
+  query: z.string().trim().max(MAILBOX_MAX_THREAD_QUERY_LENGTH).optional(),
+  folder: z.string().trim().max(MAILBOX_MAX_FOLDER_PATH_LENGTH).optional(),
+});
+
+export type GetMailboxThreadsData = z.infer<typeof GetMailboxThreadsSchema>;
 
 export const GetMailboxThreadSchema = z.object({
   threadId: z.string().uuid(),
@@ -114,6 +174,14 @@ export const SendReplySchema = z.object({
 });
 
 export type SendReplyData = z.infer<typeof SendReplySchema>;
+
+export const ForwardThreadSchema = z.object({
+  threadId: z.string().uuid(),
+  to: z.array(z.string().trim().email()).min(1).max(MAILBOX_MAX_FORWARD_RECIPIENTS),
+  body: z.string().trim().max(100_000).default(""),
+});
+
+export type ForwardThreadData = z.infer<typeof ForwardThreadSchema>;
 
 export const SendReplyOutcomeSchema = z.object({
   threadId: z.string().uuid(),

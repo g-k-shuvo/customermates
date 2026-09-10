@@ -6,7 +6,7 @@ import type { DealDto } from "@/features/deals/deal.schema";
 import type { PipelineDto } from "@/features/pipelines/pipeline.schema";
 
 import { observer } from "mobx-react-lite";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { EntityType } from "@/generated/prisma";
 
@@ -30,6 +30,7 @@ import { DealPipelineSwitcher } from "./deal-pipeline-switcher";
 import { DealRottingFilterChip } from "./deal-rotting-filter-chip";
 import { DealsPageSkeleton } from "./deals-page-skeleton";
 import { useDealColumns } from "./use-deal-columns";
+import { useDealPipelineSync } from "./use-deal-pipeline-sync";
 
 type Props = { deals: GetResult<DealDto>; forecastsByStage: boolean; pipelines: PipelineDto[] };
 
@@ -37,11 +38,8 @@ export const DealsPageView = observer(function DealsPageView({ deals, forecastsB
   const { contactsStore, dealsStore, importWizardStore, organizationsStore, servicesStore } = useRootStore();
 
   useDataViewSync(dealsStore, deals, [organizationsStore, contactsStore, servicesStore]);
+  useDealPipelineSync(dealsStore, pipelines);
 
-  useEffect(() => {
-    dealsStore.setPipelineCatalog(pipelines);
-    dealsStore.seedDefaultStatusFilter();
-  }, [dealsStore, pipelines]);
   const openEntity = useOpenEntity();
   const entityHref = useEntityHref();
   const columns = useDealColumns(forecastsByStage);

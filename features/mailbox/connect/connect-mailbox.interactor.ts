@@ -7,7 +7,9 @@ import { Resource, Action } from "@/generated/prisma";
 
 import { ConnectMailboxSchema, MailboxCredentialDtoSchema, type ConnectMailboxData } from "../mailbox.schema";
 import { MailboxTransportError } from "../sync/mailbox-transport";
+import { checkImapHost } from "../sync/imap-host-guard";
 import { sealSecret } from "../credentials/secret-box";
+import { resolveSmtpSettings } from "./smtp-settings";
 import { type MailboxCredentialDto } from "../mailbox.schema";
 
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
@@ -50,8 +52,15 @@ export class ConnectMailboxInteractor extends AuthenticatedInteractor<ConnectMai
     private transport: MailboxTransport,
     private secretKey: SecretBoxKey | null,
     private now: () => Date,
+    private allowPrivateHosts = false,
   ) {
     super();
+  }
+
+  private rejectsSmtpHost(smtpHost: string | undefined): boolean {
+    if (!smtpHost || this.allowPrivateHosts) return false;
+
+    return !checkImapHost(smtpHost).allowed;
   }
 
   @Write({
@@ -63,6 +72,8 @@ export class ConnectMailboxInteractor extends AuthenticatedInteractor<ConnectMai
 
     const existing = await this.repo.findMailboxByAddress(data.emailAddress);
     if (existing) return failConflict(CustomErrorCode.mailboxAlreadyConnected, ["emailAddress"]);
+
+    if (this.rejectsSmtpHost(data.smtpHost)) return await fail(CustomErrorCode.mailboxHostRejected, ["smtpHost"]);
 
     const connection = {
       host: data.imapHost,
@@ -90,6 +101,7 @@ export class ConnectMailboxInteractor extends AuthenticatedInteractor<ConnectMai
       imapSecure: data.imapSecure,
       username: data.username,
       sealedSecret: sealSecret(this.secretKey, data.secret),
+      ...resolveSmtpSettings(data),
       backfillFrom: new Date(verifiedAt.getTime() - data.backfillDays * DAY_MS),
       verifiedAt,
     });

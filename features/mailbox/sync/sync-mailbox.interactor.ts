@@ -10,7 +10,7 @@ import {
   type MailboxSyncOutcome,
   type SyncMailboxData,
 } from "../mailbox.schema";
-import { DEFAULT_SYNC_FOLDER } from "./sync-mailbox.service";
+import { DEFAULT_SYNC_FOLDER } from "./select-sync-folders";
 import { MailboxTransportError } from "./mailbox-transport";
 
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";

@@ -20,6 +20,16 @@ export type ThreadLinkPlan = {
   dealChoices: string[];
 };
 
+export function toParticipantIdentities(
+  rows: readonly { identifier: string | null; isSelf: boolean }[],
+): ParticipantIdentity[] {
+  return rows.flatMap((row) => (row.identifier === null ? [] : [{ identifier: row.identifier, isSelf: row.isSelf }]));
+}
+
+export function counterpartAddresses(participants: readonly ParticipantIdentity[]): string[] {
+  return [...counterpartIdentifiers(participants)];
+}
+
 function counterpartIdentifiers(participants: readonly ParticipantIdentity[]): Set<string> {
   const found = new Set<string>();
 

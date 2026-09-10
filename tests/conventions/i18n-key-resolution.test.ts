@@ -288,6 +288,13 @@ const DEFAULT_DATA_OPTION_KEYS = [
   "Common.defaultData.task.options.onHold",
   "Common.defaultData.task.options.open",
 ] as const;
+const DEFAULT_DATA_LOST_REASON_KEYS = [
+  "Common.defaultData.lostReason.options.budget",
+  "Common.defaultData.lostReason.options.competitor",
+  "Common.defaultData.lostReason.options.decision",
+  "Common.defaultData.lostReason.options.price",
+  "Common.defaultData.lostReason.options.timing",
+] as const;
 const ONBOARDING_STEP_TITLE_KEYS = ["profile", "invite", "ai"].map((step) => `OnboardingWizard.steps.${step}.title`);
 const ONBOARDING_STEP_SUBTITLE_KEYS = ["profile", "invite", "ai"].map(
   (step) => `OnboardingWizard.steps.${step}.subtitle`,
@@ -422,6 +429,7 @@ const DYNAMIC_TEMPLATE_CONSUMERS = new Map<string, readonly string[]>([
   ["Common.datePresets.${*}", DATE_PRESET_KEYS],
   ["Common.defaultData.${*}.columnLabel", DEFAULT_DATA_COLUMN_KEYS],
   ["Common.defaultData.${*}.options.${*}", DEFAULT_DATA_OPTION_KEYS],
+  ["Common.defaultData.lostReason.options.${*}", DEFAULT_DATA_LOST_REASON_KEYS],
   ["Common.errors.${*}", CUSTOM_ERROR_CODE_KEYS],
   ["Common.events.${*}", DOMAIN_EVENT_KEYS],
   ["Common.filters.operators.${*}", FILTER_OPERATOR_KEYS],
@@ -649,6 +657,8 @@ export const DYNAMIC_KEY_SITES = [
   "features/messaging/activities/audit-detail.tsx :: t.has :: LegalDocumentNotice.documents.${document}",
   "features/user/prisma-user.repository.ts :: t :: Common.defaultData.${column.entityType}.columnLabel",
   "features/user/prisma-user.repository.ts :: t :: Common.defaultData.${column.entityType}.options.${option.key}",
+  "features/user/prisma-user.repository.ts :: t :: Common.defaultData.${EntityType.deal}.options.${option.key}",
+  "features/user/prisma-user.repository.ts :: t :: Common.defaultData.lostReason.options.${key}",
   'components/entity-terminology/use-filter-field-label.ts :: t :: Common.filters.fields.${field.replace(/\\./g, "_")}',
 ];
 

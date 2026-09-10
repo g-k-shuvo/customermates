@@ -9,7 +9,7 @@ export const BaseUpdateTaskSchema = z.object({
   name: zx.nonBlankText(255).optional(),
   notes: NotesSchema,
   activityKind: z.enum(ActivityKind).nullish(),
-  dueAt: z.coerce.date().nullish(),
+  dueAt: zx.isoDateTime().nullish(),
   durationMinutes: z.number().int().min(1).nullish(),
   userIds: z.array(z.uuid()).nullish(),
   contactIds: z.array(z.uuid()).nullish(),

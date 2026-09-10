@@ -28,7 +28,7 @@ export type BuiltReply = {
 const REPLY_PREFIX = /^\s*(re|aw|antw|sv|vs|r|rif)\s*(\[\d+\])?\s*:\s*/i;
 const MAX_REFERENCES = 20;
 
-function normaliseAddress(raw: string | null | undefined): string | null {
+export function normaliseAddress(raw: string | null | undefined): string | null {
   if (typeof raw !== "string") return null;
 
   const trimmed = raw.trim().toLowerCase();
@@ -36,7 +36,10 @@ function normaliseAddress(raw: string | null | undefined): string | null {
   return trimmed.length > 0 && trimmed.includes("@") ? trimmed : null;
 }
 
-function uniqueAddresses(values: readonly (string | null | undefined)[], exclude: ReadonlySet<string>): string[] {
+export function uniqueAddresses(
+  values: readonly (string | null | undefined)[],
+  exclude: ReadonlySet<string>,
+): string[] {
   const seen = new Set<string>();
 
   for (const value of values) {
@@ -72,6 +75,10 @@ export function replyReferences(source: ReplySourceMessage): string[] {
     : deduped;
 }
 
+export function fromHeader(mailboxAddress: string, mailboxDisplayName: string | null): string {
+  return mailboxDisplayName ? `${mailboxDisplayName} <${mailboxAddress}>` : mailboxAddress;
+}
+
 export function buildReply(request: ReplyRequest): BuiltReply {
   const self = normaliseAddress(request.mailboxAddress);
   const exclude = new Set<string>(self ? [self] : []);
@@ -83,9 +90,7 @@ export function buildReply(request: ReplyRequest): BuiltReply {
   const cc = request.replyAll ? uniqueAddresses(request.source.ccIdentifiers, new Set([...exclude, ...to])) : [];
 
   return {
-    from: request.mailboxDisplayName
-      ? `${request.mailboxDisplayName} <${request.mailboxAddress}>`
-      : request.mailboxAddress,
+    from: fromHeader(request.mailboxAddress, request.mailboxDisplayName),
     to,
     cc,
     subject: replySubject(request.source.subject),

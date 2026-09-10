@@ -1,11 +1,12 @@
 import type { Validated } from "@/core/validation/validation.utils";
 import type { SecretBoxKey } from "../credentials/secret-box";
-import type { SendReplyService } from "./send-reply.service";
+import type { SendReplyService, SentReply } from "./send-reply.service";
 
 import { Resource, Action } from "@/generated/prisma";
 
 import { SendReplyOutcomeSchema, SendReplySchema } from "../mailbox.schema";
 import { type SendReplyData, type SendReplyOutcome } from "../mailbox.schema";
+import { MailboxTransportError, MailboxTransportFailure } from "../sync/mailbox-transport";
 import { buildReply } from "./build-reply";
 import { openSecret } from "../credentials/secret-box";
 import { recoverRfcMessageId, recoverThreadRootMessageId, STORED_MESSAGE_ID_PREFIX } from "./recover-message-id";
@@ -84,6 +85,7 @@ export class SendReplyInteractor extends AuthenticatedInteractor<SendReplyData, 
   @Write({
     input: SendReplySchema,
     output: SendReplyOutcomeSchema,
+    tx: false,
   })
   async invoke(data: SendReplyData): Validated<SendReplyOutcome> {
     const secretKey = this.secretKey;
@@ -127,17 +129,25 @@ export class SendReplyInteractor extends AuthenticatedInteractor<SendReplyData, 
       secret,
     };
 
-    const sent = await this.service.send(
-      {
-        host: credential.smtpHost,
-        port: credential.smtpPort,
-        secure: credential.smtpSecure ?? true,
-        username: credential.username,
-        secret,
-      },
-      reply,
-      imap,
-    );
+    let sent: SentReply;
+    try {
+      sent = await this.service.send(
+        {
+          host: credential.smtpHost,
+          port: credential.smtpPort,
+          secure: credential.smtpSecure ?? true,
+          username: credential.username,
+          secret,
+        },
+        reply,
+        imap,
+      );
+    } catch (error) {
+      if (error instanceof MailboxTransportError && error.failure === MailboxTransportFailure.hostRejected)
+        return await fail(CustomErrorCode.mailboxHostRejected, ["threadId"]);
+
+      throw error;
+    }
 
     const sentAt = this.now();
     await this.repo.storeOutboundReply({

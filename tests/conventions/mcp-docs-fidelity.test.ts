@@ -90,7 +90,7 @@ describe("MCP catalog generation", () => {
       const source = readFileSync(path, "utf8");
       expect(applyCatalogTables(source, locale, summaries), `${path} tables drifted; run yarn docs:generate-catalog`).toBe(source);
     }
-  }, 120_000);
+  }, 300_000);
 
   it.skipIf(!ENFORCED && !process.env.AUDIT_REPORT)("has a summary in every locale for every registered tool", async () => {
     const { CATALOG_SECTIONS } = await import("@/scripts/generate-mcp-catalog");

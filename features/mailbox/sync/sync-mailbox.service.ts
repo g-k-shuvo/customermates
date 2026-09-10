@@ -7,10 +7,9 @@ import { openSecret } from "../credentials/secret-box";
 import { normalizeMessage, type NormalizedMessage } from "./normalize-message";
 import { parseSourceMessage } from "./parse-source";
 import { planMailboxSync } from "./sync-plan";
+import { selectSyncFolders } from "./select-sync-folders";
 
 export type MailboxClock = () => Date;
-
-export const DEFAULT_SYNC_FOLDER = "INBOX";
 
 export class SyncMailboxService {
   constructor(
@@ -20,9 +19,18 @@ export class SyncMailboxService {
     private now: MailboxClock,
   ) {}
 
+  async listSyncFolders(account: MailboxAccount): Promise<string[]> {
+    return selectSyncFolders(await this.transport.listFolders(this.connectionOf(account)));
+  }
+
   async syncFolder(account: MailboxAccount, folderPath: string, batchSize: number): Promise<MailboxSyncOutcome> {
     const cursor = account.syncCursors.find((entry) => entry.path === folderPath) ?? null;
-    const page = await this.transport.fetchSince(this.connectionOf(account), cursor, folderPath, batchSize);
+    const page = await this.transport.fetchSince(this.connectionOf(account), {
+      path: folderPath,
+      cursor,
+      backfillFrom: account.backfillFrom,
+      limit: batchSize,
+    });
 
     const parsed = [];
     for (const envelope of page.messages) {
@@ -43,6 +51,7 @@ export class SyncMailboxService {
     for (const thread of plan.threads) {
       const stored = await this.repo.upsertThread(account.connectedAccountId, thread);
       let latest: NormalizedMessage | null = null;
+      let storedHere = 0;
 
       for (const planned of thread.messages) {
         const normalized = normalizeMessage(planned.parsed.message, {
@@ -54,11 +63,19 @@ export class SyncMailboxService {
         });
 
         const created = await this.repo.storeMessage(normalized);
-        if (created) messagesStored += 1;
+        if (created) {
+          messagesStored += 1;
+          storedHere += 1;
+        }
 
         await this.repo.storeParticipants(normalized);
 
         if (!latest || normalized.message.sentAt >= latest.message.sentAt) latest = normalized;
+      }
+
+      if (stored.created && storedHere === 0) {
+        await this.repo.deleteThreadIfEmpty(stored.id);
+        continue;
       }
 
       if (latest) await this.repo.refreshThreadSummary(stored.id, latest);

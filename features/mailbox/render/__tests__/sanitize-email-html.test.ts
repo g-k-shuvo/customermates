@@ -126,6 +126,32 @@ describe("sanitizeEmailHtml", () => {
     expect(result.html).not.toMatch(/\ssrc=/);
   });
 
+  it.each([
+    { name: "an image with no source", html: `<img ${BLOCKED_IMAGE_ATTRIBUTE}="javascript:alert(1)" alt="x">` },
+    {
+      name: "an inline image",
+      html: `<img src="cid:part1" ${BLOCKED_IMAGE_ATTRIBUTE}="javascript:alert(1)">`,
+    },
+    {
+      name: "a blocked remote image",
+      html: `<img src="https://tracker.example/pixel.gif" ${BLOCKED_IMAGE_ATTRIBUTE}="javascript:alert(1)">`,
+    },
+  ])("drops an attacker-supplied blocked-image marker on $name", ({ html }) => {
+    const result = sanitizeEmailHtml(html);
+
+    expect(result.html).not.toContain("javascript:alert(1)");
+  });
+
+  it("drops an attacker-supplied blocked-image marker once remote images are allowed", () => {
+    const result = sanitizeEmailHtml(
+      `<img src="https://cdn.example/logo.png" ${BLOCKED_IMAGE_ATTRIBUTE}="javascript:alert(1)">`,
+      { allowRemoteImages: true },
+    );
+
+    expect(result.html).toContain('src="https://cdn.example/logo.png"');
+    expect(result.html).not.toContain("javascript:alert(1)");
+  });
+
   it("loads remote images once the reader opts in", () => {
     const result = sanitizeEmailHtml('<img src="https://cdn.example/logo.png">', { allowRemoteImages: true });
 

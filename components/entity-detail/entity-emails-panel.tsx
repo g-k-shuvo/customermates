@@ -29,7 +29,7 @@ export function EntityEmailsPanel({ contactId, dealId }: Props) {
     let active = true;
     setState({ status: "loading" });
 
-    void runUserAction(async () => {
+    runUserAction(async () => {
       const result = await getRecordThreadsAction({ contactId, dealId });
       if (!active) return;
 

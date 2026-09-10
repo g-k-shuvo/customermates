@@ -11,7 +11,8 @@ import { parseSecretBoxKey, sealSecret } from "../credentials/secret-box";
 import { createImapflowTransport } from "../sync/imapflow.transport";
 import { PrismaMailboxRepo, type MailboxAccount } from "../persistence/prisma-mailbox.repository";
 import { SyncMailboxService } from "../sync/sync-mailbox.service";
-import { planThreadLinks } from "../link/thread-links";
+import { planThreadLinks, toParticipantIdentities } from "../link/thread-links";
+import { loadThreadDealLink } from "../link/thread-deal-link";
 import { toThreadSummaryDto } from "../get/mailbox-thread-mapper";
 
 const GREENMAIL_HOST = process.env.GREENMAIL_HOST ?? "127.0.0.1";
@@ -28,6 +29,8 @@ const SECRET_KEY = parseSecretBoxKey(Buffer.alloc(32, 7).toString("base64"));
 const companyId = randomUUID();
 const connectedAccountId = randomUUID();
 const contactId = randomUUID();
+const dealId = randomUUID();
+const secondDealId = randomUUID();
 
 const tenantUser = createMockUser({ id: randomUUID(), companyId, email: MAILBOX_ADDRESS });
 
@@ -281,7 +284,7 @@ describeMailbox("mailbox sync against a real imap server", () => {
   it("lists the synced threads newest first with the counterpart as participant", async () => {
     const summaries = await runWithTenant(tenantUser, async () => {
       const repo = new PrismaMailboxRepo();
-      const rows = await repo.listThreadsForMailboxes(50);
+      const rows = await repo.listThreadsForMailboxes(50, { search: null, folder: null });
 
       return rows.map(toThreadSummaryDto);
     });
@@ -299,7 +302,7 @@ describeMailbox("mailbox sync against a real imap server", () => {
   it("returns a thread's messages oldest first and marks it read", async () => {
     const result = await runWithTenant(tenantUser, async () => {
       const repo = new PrismaMailboxRepo();
-      const rows = await repo.listThreadsForMailboxes(50);
+      const rows = await repo.listThreadsForMailboxes(50, { search: null, folder: null });
       const target = rows.find((row) => row.participants.length > 0) ?? rows[0];
 
       const before = await repo.findThreadWithMessages(target.id);
@@ -315,15 +318,79 @@ describeMailbox("mailbox sync against a real imap server", () => {
     expect(result.after?.state).toBe("open");
   }, 60_000);
 
-  it("finds the stored threads by the contact's email identifier", async () => {
+  it("keeps a synced conversation off the contact's record until someone shares it", async () => {
     const threads = await runWithTenant(tenantUser, async () => {
       const repo = new PrismaMailboxRepo();
       const identifiers = await repo.findEmailIdentifiersOfContacts([contactId]);
 
-      return await repo.findThreadsForIdentifiers(identifiers, false);
+      return await repo.findSharedThreadsForIdentifiersCompanyWide(identifiers);
+    });
+
+    expect(threads).toEqual([]);
+  }, 60_000);
+
+  it("finds the stored threads by the contact's email identifier once they are shared", async () => {
+    const threads = await runWithTenant(tenantUser, async () => {
+      const repo = new PrismaMailboxRepo();
+      const rows = await repo.listThreadsForMailboxes(50, { search: null, folder: null });
+      for (const row of rows) await repo.setThreadShared(row.id, true);
+
+      const identifiers = await repo.findEmailIdentifiersOfContacts([contactId]);
+
+      return await repo.findSharedThreadsForIdentifiersCompanyWide(identifiers);
     });
 
     expect(threads.length).toBe(2);
     expect(threads[0].lastMessageAt).not.toBeNull();
+    expect(threads.every((thread) => thread.sharedToCrm)).toBe(true);
+  }, 60_000);
+
+  it("offers the contact's single open deal, links it once confirmed and stops offering after", async () => {
+    const prisma = await prismaClient();
+
+    await runWithTenant(tenantUser, async () => {
+      await prisma.deal.create({ data: { id: dealId, companyId, name: "Renewal 2026" } });
+      await prisma.dealContact.create({ data: { companyId, dealId, contactId } });
+    });
+
+    const linked = await runWithTenant(tenantUser, async () => {
+      const repo = new PrismaMailboxRepo();
+      const rows = await repo.listThreadsForMailboxes(50, { search: null, folder: null });
+      const target = rows[0];
+      const participants = toParticipantIdentities(target.participants);
+
+      const offer = await loadThreadDealLink(repo, null, participants);
+      await repo.setThreadDeal(target.id, offer.offeredDealId);
+      const after = await loadThreadDealLink(repo, offer.offeredDealId, participants);
+      const onDeal = await repo.findThreadsLinkedToDealCompanyWide(dealId);
+
+      return { offer, after, onDeal, targetId: target.id };
+    });
+
+    expect(linked.offer.offeredDealId).toBe(dealId);
+    expect(linked.offer.offeredDealName).toBe("Renewal 2026");
+    expect(linked.after.linkedDealId).toBe(dealId);
+    expect(linked.after.offeredDealId).toBeNull();
+    expect(linked.onDeal.map((thread) => thread.id)).toEqual([linked.targetId]);
+  }, 60_000);
+
+  it("refuses to offer anything once the same contact has a second open deal", async () => {
+    const prisma = await prismaClient();
+
+    await runWithTenant(tenantUser, async () => {
+      await prisma.deal.create({ data: { id: secondDealId, companyId, name: "Expansion 2026" } });
+      await prisma.dealContact.create({ data: { companyId, dealId: secondDealId, contactId } });
+    });
+
+    const offer = await runWithTenant(tenantUser, async () => {
+      const repo = new PrismaMailboxRepo();
+      const rows = await repo.listThreadsForMailboxes(50, { search: null, folder: null });
+      const unlinked = rows.find((row) => row.participants.some((participant) => !participant.isSelf));
+
+      return await loadThreadDealLink(repo, null, toParticipantIdentities(unlinked?.participants ?? []));
+    });
+
+    expect(offer.offeredDealId).toBeNull();
+    expect(offer.openDealCount).toBe(2);
   }, 60_000);
 });

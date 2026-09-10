@@ -44,6 +44,34 @@ describe("BaseCreateDealSchema", () => {
     if (result.success) expect(result.data.services[0].quantity).toBe(1);
   });
 
+  it("accepts an iso expectedCloseDate and coerces it to a Date", () => {
+    const result = BaseCreateDealSchema.safeParse({
+      name: "Deal",
+      expectedCloseDate: "2026-05-01T10:00:00.000Z",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.expectedCloseDate?.toISOString()).toBe("2026-05-01T10:00:00.000Z");
+  });
+
+  it("accepts a date-only expectedCloseDate and an offset one", () => {
+    expect(BaseCreateDealSchema.safeParse({ name: "Deal", expectedCloseDate: "2026-05-01" }).success).toBe(true);
+    expect(
+      BaseCreateDealSchema.safeParse({ name: "Deal", expectedCloseDate: "2026-05-01T10:00:00+02:00" }).success,
+    ).toBe(true);
+  });
+
+  it("still accepts a Date so a re-parsed payload stays valid", () => {
+    const once = BaseCreateDealSchema.parse({ name: "Deal", expectedCloseDate: "2026-05-01T10:00:00.000Z" });
+    const twice = BaseCreateDealSchema.safeParse(once);
+    expect(twice.success).toBe(true);
+    if (twice.success) expect(twice.data.expectedCloseDate?.toISOString()).toBe("2026-05-01T10:00:00.000Z");
+  });
+
+  it("rejects an expectedCloseDate that is not iso-8601", () => {
+    expect(BaseCreateDealSchema.safeParse({ name: "Deal", expectedCloseDate: "May 1, 2026" }).success).toBe(false);
+    expect(BaseCreateDealSchema.safeParse({ name: "Deal", expectedCloseDate: 1767225600000 }).success).toBe(false);
+  });
+
   it("rejects empty name", () => {
     const result = BaseCreateDealSchema.safeParse({
       name: "",
@@ -122,6 +150,18 @@ describe("BaseUpdateDealSchema", () => {
       services: [{ serviceId: VALID_UUID, quantity: 3 }],
     });
     expect(result.success).toBe(true);
+  });
+
+  it("accepts an iso expectedCloseDate, a null one and a re-parsed Date", () => {
+    expect(BaseUpdateDealSchema.safeParse({ id: VALID_UUID, expectedCloseDate: null }).success).toBe(true);
+
+    const once = BaseUpdateDealSchema.parse({ id: VALID_UUID, expectedCloseDate: "2026-05-01T10:00:00.000Z" });
+    expect(once.expectedCloseDate?.toISOString()).toBe("2026-05-01T10:00:00.000Z");
+    expect(BaseUpdateDealSchema.safeParse(once).success).toBe(true);
+  });
+
+  it("rejects an expectedCloseDate that is not iso-8601", () => {
+    expect(BaseUpdateDealSchema.safeParse({ id: VALID_UUID, expectedCloseDate: "next friday" }).success).toBe(false);
   });
 
   it("rejects empty name when provided", () => {
