@@ -514,6 +514,7 @@ model Deal {
   @@index([companyId, pipelineId, stageId])
   @@index([companyId, status, closedAt])
   @@index([companyId, status, rottingAt])
+  @@index([companyId, status, expectedCloseDate])
   @@index([expectedCloseDate])
   @@index([pipelineId])
   @@index([stageId])
@@ -1388,6 +1389,11 @@ enum WidgetGroupByType {
   service
   dealStage
   dealPipeline
+  dealOwner
+  dealLostReason
+  dealStageLostAt
+  dealCloseMonth
+  dealExpectedCloseMonth
   customColumn
   none
 }

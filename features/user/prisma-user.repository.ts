@@ -372,9 +372,11 @@ export class PrismaUserRepo
 
     const names: Record<DefaultDashboardWidgetKey, string> = {
       openPipelineValueByStage: t("Common.defaultData.dashboard.openPipelineValueByStage"),
+      weightedForecastByCloseMonth: t("Common.defaultData.dashboard.weightedForecastByCloseMonth"),
       pipelineFunnel: t("Common.defaultData.dashboard.pipelineFunnel"),
       salesCycle: t("Common.defaultData.dashboard.salesCycle"),
-      winRate: t("Common.defaultData.dashboard.winRate"),
+      winRateByOwner: t("Common.defaultData.dashboard.winRateByOwner"),
+      lostDealsByReason: t("Common.defaultData.dashboard.lostDealsByReason"),
     };
 
     await this.prisma.widget.createMany({

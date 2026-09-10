@@ -1,5 +1,7 @@
 import type { DiagramDataPoint } from "./widget.schema";
 
+import { WinRateBasis } from "./widget.schema";
+
 export type ClosedDealTotals = {
   wonCount: number;
   lostCount: number;
@@ -27,6 +29,16 @@ export function winRatePercent(wonCount: number, lostCount: number): number | nu
   if (closedDeals <= 0) return null;
 
   return (wonCount / closedDeals) * 100;
+}
+
+export function winRateForBasis(totals: ClosedDealTotals, basis: WinRateBasis): number | null {
+  return basis === WinRateBasis.value
+    ? winRatePercent(totals.wonValue, totals.lostValue)
+    : winRatePercent(totals.wonCount, totals.lostCount);
+}
+
+export function closedDealDenominator(totals: ClosedDealTotals, basis: WinRateBasis): number {
+  return basis === WinRateBasis.value ? totals.wonValue + totals.lostValue : totals.wonCount + totals.lostCount;
 }
 
 export function closedDealTotals(points: readonly DiagramDataPoint[]): ClosedDealTotals {

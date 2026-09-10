@@ -43,6 +43,8 @@ const DEAL_STATUS_FILTER_FIELD: string = FilterFieldKey.dealStatus;
 
 const ROTTING_FILTER_FIELD: string = FilterFieldKey.rotting;
 
+const NEXT_ACTIVITY_FILTER_FIELD: string = FilterFieldKey.nextActivity;
+
 const PIPELINE_FILTER_FIELD: string = FilterFieldKey.pipelineId;
 
 const PIPELINE_SELECTION_OPERATORS: string[] = [FilterOperatorKey.equals, FilterOperatorKey.in];
@@ -50,15 +52,17 @@ const PIPELINE_SELECTION_OPERATORS: string[] = [FilterOperatorKey.equals, Filter
 function partitionDealFilters(filters: Filter[] | undefined) {
   const dealStatus: Filter[] = [];
   const rotting: Filter[] = [];
+  const nextActivity: Filter[] = [];
   const rest: Filter[] = [];
 
   for (const filter of filters ?? []) {
     if (filter.field === DEAL_STATUS_FILTER_FIELD) dealStatus.push(filter);
     else if (filter.field === ROTTING_FILTER_FIELD) rotting.push(filter);
+    else if (filter.field === NEXT_ACTIVITY_FILTER_FIELD) nextActivity.push(filter);
     else rest.push(filter);
   }
 
-  return { dealStatus, rotting, rest };
+  return { dealStatus, rotting, nextActivity, rest };
 }
 
 function selectedFilterValues(filter: Filter): string[] {
@@ -92,14 +96,20 @@ function dealStatusClause(filter: Filter): Prisma.DealWhereInput | null {
   return filter.operator === FilterOperatorKey.in ? { status: { in: values } } : { status: { notIn: values } };
 }
 
-function rottingClause(filter: Filter, now: Date): Prisma.DealWhereInput | null {
+function wantsSelectedBoolean(filter: Filter): boolean | null {
   if (!SELECTION_OPERATORS.includes(filter.operator)) return null;
 
   const selected = new Set(selectedFilterValues(filter).filter((value) => value === "true" || value === "false"));
 
   if (selected.size !== 1) return null;
 
-  const wantsRotting = (filter.operator === FilterOperatorKey.in) === selected.has("true");
+  return (filter.operator === FilterOperatorKey.in) === selected.has("true");
+}
+
+function rottingClause(filter: Filter, now: Date): Prisma.DealWhereInput | null {
+  const wantsRotting = wantsSelectedBoolean(filter);
+
+  if (wantsRotting === null) return null;
 
   return wantsRotting ? { rottingAt: { lte: now } } : { OR: [{ rottingAt: null }, { rottingAt: { gt: now } }] };
 }
@@ -156,6 +166,7 @@ export class PrismaDealRepo
       stageEnteredAt: true,
       rottingAt: true,
       lostReasonId: true,
+      lostReason: { select: { name: true } },
       lostNotes: true,
       wonAt: true,
       lostAt: true,
@@ -238,13 +249,28 @@ export class PrismaDealRepo
       { field: "weightedValue", resolvedFields: ["weightedValue"] },
       { field: "expectedCloseDate", resolvedFields: ["expectedCloseDate"] },
       { field: ROTTING_SORT_FIELD, resolvedFields: [ROTTING_SORT_FIELD] },
+      { field: "lostReason", resolvedFields: ["lostReason.name"] },
       { field: "createdAt", resolvedFields: ["createdAt"] },
       { field: "updatedAt", resolvedFields: ["updatedAt"] },
     ];
   }
 
+  private scheduledActivityWhere(): Prisma.TaskWhereInput {
+    return { ...this.accessWhere("task"), completedAt: null, dueAt: { not: null } };
+  }
+
+  private nextActivityClause(filter: Filter): Prisma.DealWhereInput | null {
+    const wantsScheduled = wantsSelectedBoolean(filter);
+
+    if (wantsScheduled === null) return null;
+
+    const scheduled = { task: this.scheduledActivityWhere() };
+
+    return wantsScheduled ? { tasks: { some: scheduled } } : { tasks: { none: scheduled } };
+  }
+
   override async buildQueryArgs(params: GetQueryParams, baseWhere: Prisma.DealWhereInput = {}) {
-    const { dealStatus, rotting, rest } = partitionDealFilters(params.filters);
+    const { dealStatus, rotting, nextActivity, rest } = partitionDealFilters(params.filters);
     const args = await super.buildQueryArgs({ ...params, filters: rest }, baseWhere);
     const now = new Date();
     const clauses = [
@@ -255,6 +281,11 @@ export class PrismaDealRepo
       }),
       ...rotting.flatMap((filter) => {
         const clause = rottingClause(filter, now);
+
+        return clause ? [clause] : [];
+      }),
+      ...nextActivity.flatMap((filter) => {
+        const clause = this.nextActivityClause(filter);
 
         return clause ? [clause] : [];
       }),
@@ -298,6 +329,18 @@ export class PrismaDealRepo
       filterFields.push({
         field: FilterFieldKey.taskIds,
         operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.taskIds],
+      });
+
+      filterFields.push({
+        field: FilterFieldKey.nextActivity,
+        operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.nextActivity],
+      });
+    }
+
+    if (this.canAccess(Resource.company)) {
+      filterFields.push({
+        field: FilterFieldKey.lostReasonId,
+        operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.lostReasonId],
       });
     }
 
@@ -360,8 +403,11 @@ export class PrismaDealRepo
   }
 
   private toDto(deal: Prisma.DealGetPayload<{ select: PrismaDealRepo["userScopedSelect"] }>): DealDto {
+    const { lostReason, ...dealFields } = deal;
+
     return {
-      ...deal,
+      ...dealFields,
+      lostReasonName: lostReason?.name ?? null,
       isRotting: isRotting(deal.rottingAt, new Date()),
       organizations: deal.organizations.map((it) => it.organization),
       users: deal.users.map((it) => it.user),

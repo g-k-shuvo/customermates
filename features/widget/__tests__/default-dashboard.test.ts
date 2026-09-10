@@ -8,7 +8,9 @@ import { GRID_COLS } from "@/app/[locale]/(protected)/dashboard/components/grid.
 import { WidgetLayoutSchema } from "../widget.schema";
 import { UpsertWidgetInputSchema } from "../upsert-widget.interactor";
 import {
+  DEFAULT_DASHBOARD_FORECAST_PERIOD_DAYS,
   DEFAULT_DASHBOARD_FUNNEL_PERIOD_DAYS,
+  DEFAULT_DASHBOARD_LOST_REASON_PERIOD_DAYS,
   DEFAULT_DASHBOARD_SALES_CYCLE_PERIOD_DAYS,
   DEFAULT_DASHBOARD_WIDGET_KEYS,
   DEFAULT_DASHBOARD_WIN_RATE_PERIOD_DAYS,
@@ -20,9 +22,11 @@ const PIPELINE_ID = "11111111-1111-4111-8111-111111111111";
 
 const NAMES = {
   openPipelineValueByStage: "Open pipeline value by stage",
+  weightedForecastByCloseMonth: "Weighted forecast by expected close month",
   pipelineFunnel: "Sales funnel",
+  winRateByOwner: "Win rate by owner",
   salesCycle: "Average sales cycle",
-  winRate: "Win rate",
+  lostDealsByReason: "Deals lost by reason",
 };
 
 function rows() {
@@ -72,18 +76,38 @@ describe("default dashboard catalog", () => {
     expect(row.entityFilters).toEqual([{ field: "dealStatus", operator: "in", value: ["open"] }]);
   });
 
-  it("bounds the win rate to a stated period rather than all time", () => {
-    const row = rowFor(NAMES.winRate);
+  it("bounds the win rate to a stated period rather than all time, and splits it by owner", () => {
+    const row = rowFor(NAMES.winRateByOwner);
 
     expect(row.aggregationType).toBe(AggregationType.winRate);
     expect(row.periodDays).toBe(DEFAULT_DASHBOARD_WIN_RATE_PERIOD_DAYS);
-    expect(row.groupByType).toBe(WidgetGroupByType.none);
+    expect(row.groupByType).toBe(WidgetGroupByType.dealOwner);
   });
 
   it("never groups the win rate by stage, where won and lost stages force 100% and 0%", () => {
-    const winRateRow = rowFor(NAMES.winRate);
+    const winRateRow = rowFor(NAMES.winRateByOwner);
 
     expect(winRateRow.groupByType).not.toBe(WidgetGroupByType.dealStage);
+  });
+
+  it("forecasts weighted value forward by expected close month over a bounded window", () => {
+    const row = rowFor(NAMES.weightedForecastByCloseMonth);
+
+    expect(row.kind).toBe(WidgetKind.chart);
+    expect(row.entityType).toBe(EntityType.deal);
+    expect(row.aggregationType).toBe(AggregationType.dealWeightedValue);
+    expect(row.groupByType).toBe(WidgetGroupByType.dealExpectedCloseMonth);
+    expect(row.periodDays).toBe(DEFAULT_DASHBOARD_FORECAST_PERIOD_DAYS);
+    expect(row.entityFilters).toEqual([]);
+  });
+
+  it("counts lost deals by reason over a bounded period and keeps won deals out", () => {
+    const row = rowFor(NAMES.lostDealsByReason);
+
+    expect(row.aggregationType).toBe(AggregationType.count);
+    expect(row.groupByType).toBe(WidgetGroupByType.dealLostReason);
+    expect(row.periodDays).toBe(DEFAULT_DASHBOARD_LOST_REASON_PERIOD_DAYS);
+    expect(row.entityFilters).toEqual([]);
   });
 
   it("measures the sales cycle over a year and carries no filters the duration query cannot honour", () => {

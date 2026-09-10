@@ -7,13 +7,15 @@ import { AggregationType, DealStatus, EntityType, WidgetGroupByType, WidgetKind 
 import { Breakpoint } from "@/core/types/breakpoint";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
-import { DisplayType } from "./widget.schema";
+import { DisplayType, WinRateBasis } from "./widget.schema";
 
 export const DEFAULT_DASHBOARD_WIDGET_KEYS = [
   "openPipelineValueByStage",
+  "weightedForecastByCloseMonth",
   "pipelineFunnel",
-  "winRate",
+  "winRateByOwner",
   "salesCycle",
+  "lostDealsByReason",
 ] as const;
 
 export type DefaultDashboardWidgetKey = (typeof DEFAULT_DASHBOARD_WIDGET_KEYS)[number];
@@ -24,6 +26,10 @@ export const DEFAULT_DASHBOARD_FUNNEL_PERIOD_DAYS = 90;
 
 export const DEFAULT_DASHBOARD_SALES_CYCLE_PERIOD_DAYS = 365;
 
+export const DEFAULT_DASHBOARD_FORECAST_PERIOD_DAYS = 365;
+
+export const DEFAULT_DASHBOARD_LOST_REASON_PERIOD_DAYS = 90;
+
 type LayoutBox = { x: number; y: number; w: number; h: number };
 
 const DEFAULT_DASHBOARD_LAYOUT: Record<DefaultDashboardWidgetKey, Record<Breakpoint, LayoutBox>> = {
@@ -33,23 +39,35 @@ const DEFAULT_DASHBOARD_LAYOUT: Record<DefaultDashboardWidgetKey, Record<Breakpo
     [Breakpoint.sm]: { x: 0, y: 0, w: 4, h: 4 },
     [Breakpoint.xs]: { x: 0, y: 0, w: 2, h: 4 },
   },
-  pipelineFunnel: {
+  weightedForecastByCloseMonth: {
     [Breakpoint.lg]: { x: 6, y: 0, w: 6, h: 4 },
     [Breakpoint.md]: { x: 4, y: 0, w: 4, h: 4 },
     [Breakpoint.sm]: { x: 0, y: 4, w: 4, h: 4 },
     [Breakpoint.xs]: { x: 0, y: 4, w: 2, h: 4 },
   },
-  winRate: {
+  pipelineFunnel: {
     [Breakpoint.lg]: { x: 0, y: 4, w: 6, h: 4 },
     [Breakpoint.md]: { x: 0, y: 4, w: 4, h: 4 },
     [Breakpoint.sm]: { x: 0, y: 8, w: 4, h: 4 },
     [Breakpoint.xs]: { x: 0, y: 8, w: 2, h: 4 },
   },
-  salesCycle: {
+  winRateByOwner: {
     [Breakpoint.lg]: { x: 6, y: 4, w: 6, h: 4 },
     [Breakpoint.md]: { x: 4, y: 4, w: 4, h: 4 },
     [Breakpoint.sm]: { x: 0, y: 12, w: 4, h: 4 },
     [Breakpoint.xs]: { x: 0, y: 12, w: 2, h: 4 },
+  },
+  salesCycle: {
+    [Breakpoint.lg]: { x: 0, y: 8, w: 6, h: 4 },
+    [Breakpoint.md]: { x: 0, y: 8, w: 4, h: 4 },
+    [Breakpoint.sm]: { x: 0, y: 16, w: 4, h: 4 },
+    [Breakpoint.xs]: { x: 0, y: 16, w: 2, h: 4 },
+  },
+  lostDealsByReason: {
+    [Breakpoint.lg]: { x: 6, y: 8, w: 6, h: 4 },
+    [Breakpoint.md]: { x: 4, y: 8, w: 4, h: 4 },
+    [Breakpoint.sm]: { x: 0, y: 20, w: 4, h: 4 },
+    [Breakpoint.xs]: { x: 0, y: 20, w: 2, h: 4 },
   },
 };
 
@@ -73,17 +91,47 @@ function openPipelineValueByStage(name: string): UpsertChartWidgetData {
   };
 }
 
-function winRate(name: string): UpsertChartWidgetData {
+function winRateByOwner(name: string): UpsertChartWidgetData {
   return {
     kind: WidgetKind.chart,
     name,
     entityType: EntityType.deal,
     entityFilters: [],
     dealFilters: [],
-    groupByType: WidgetGroupByType.none,
+    groupByType: WidgetGroupByType.dealOwner,
     aggregationType: AggregationType.winRate,
     periodDays: DEFAULT_DASHBOARD_WIN_RATE_PERIOD_DAYS,
-    displayOptions: { displayType: DisplayType.horizontalBarChartWithLabels },
+    displayOptions: { displayType: DisplayType.horizontalBarChartWithLabels, winRateBasis: WinRateBasis.count },
+    isTemplate: true,
+  };
+}
+
+function weightedForecastByCloseMonth(name: string): UpsertChartWidgetData {
+  return {
+    kind: WidgetKind.chart,
+    name,
+    entityType: EntityType.deal,
+    entityFilters: [],
+    dealFilters: [],
+    groupByType: WidgetGroupByType.dealExpectedCloseMonth,
+    aggregationType: AggregationType.dealWeightedValue,
+    periodDays: DEFAULT_DASHBOARD_FORECAST_PERIOD_DAYS,
+    displayOptions: { displayType: DisplayType.verticalBarChartWithLabels },
+    isTemplate: true,
+  };
+}
+
+function lostDealsByReason(name: string): UpsertChartWidgetData {
+  return {
+    kind: WidgetKind.chart,
+    name,
+    entityType: EntityType.deal,
+    entityFilters: [],
+    dealFilters: [],
+    groupByType: WidgetGroupByType.dealLostReason,
+    aggregationType: AggregationType.count,
+    periodDays: DEFAULT_DASHBOARD_LOST_REASON_PERIOD_DAYS,
+    displayOptions: { displayType: DisplayType.doughnutChart },
     isTemplate: true,
   };
 }
@@ -121,9 +169,11 @@ export function defaultDashboardWidgetInputs(args: {
 
   return {
     openPipelineValueByStage: openPipelineValueByStage(names.openPipelineValueByStage),
+    weightedForecastByCloseMonth: weightedForecastByCloseMonth(names.weightedForecastByCloseMonth),
     pipelineFunnel: pipelineFunnel(names.pipelineFunnel, pipelineId),
-    winRate: winRate(names.winRate),
+    winRateByOwner: winRateByOwner(names.winRateByOwner),
     salesCycle: salesCycle(names.salesCycle),
+    lostDealsByReason: lostDealsByReason(names.lostDealsByReason),
   };
 }
 

@@ -62,6 +62,8 @@ export const DEFAULT_FILTER_VALUE_KIND: Record<FilterFieldKey, FilterValueKind> 
   [FilterFieldKey.dealStatus]: { kind: "enum", values: enumValues(DealStatus) },
   [FilterFieldKey.rotting]: { kind: "enum", values: BOOLEAN_FILTER_VALUES },
   [FilterFieldKey.overdue]: { kind: "enum", values: BOOLEAN_FILTER_VALUES },
+  [FilterFieldKey.nextActivity]: { kind: "enum", values: BOOLEAN_FILTER_VALUES },
+  [FilterFieldKey.lostReasonId]: { kind: "string" },
   [FilterFieldKey.pipelineId]: { kind: "string" },
   [FilterFieldKey.stageId]: { kind: "string" },
   [FilterFieldKey.provider]: { kind: "enum", values: enumValues(MessagingProvider) },

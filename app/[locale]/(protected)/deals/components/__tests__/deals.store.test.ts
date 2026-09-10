@@ -146,6 +146,16 @@ describe("the pipeline catalog the board is given", () => {
   });
 });
 
+describe("the column catalogue", () => {
+  it("offers a lost reason column the reader can sort on", () => {
+    const store = createStore();
+    const lostReason = store.columnsDefinition.find((column) => column.uid === "lostReason");
+
+    expect(lostReason).toEqual({ uid: "lostReason", sortable: true });
+    expect(store.sortableColumnIds.has("lostReason")).toBe(true);
+  });
+});
+
 describe("selecting a pipeline", () => {
   it("goes through the ordinary filter path, so the URL and personalization follow", () => {
     const store = createStore();

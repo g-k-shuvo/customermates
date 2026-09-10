@@ -47,6 +47,38 @@ export function isPipelinePositionGrouping(groupByType: WidgetGroupByType): bool
   return groupByType === WidgetGroupByType.dealStage || groupByType === WidgetGroupByType.dealPipeline;
 }
 
+export const DEAL_DIMENSION_GROUP_BY_TYPES = [
+  WidgetGroupByType.dealStage,
+  WidgetGroupByType.dealPipeline,
+  WidgetGroupByType.dealOwner,
+  WidgetGroupByType.dealLostReason,
+  WidgetGroupByType.dealStageLostAt,
+  WidgetGroupByType.dealCloseMonth,
+  WidgetGroupByType.dealExpectedCloseMonth,
+] as const;
+
+const DEAL_DIMENSIONS = new Set<WidgetGroupByType>(DEAL_DIMENSION_GROUP_BY_TYPES);
+
+export function isDealDimensionGrouping(groupByType: WidgetGroupByType | undefined): boolean {
+  return groupByType !== undefined && DEAL_DIMENSIONS.has(groupByType);
+}
+
+export function isMonthGrouping(groupByType: WidgetGroupByType | undefined): boolean {
+  return groupByType === WidgetGroupByType.dealCloseMonth || groupByType === WidgetGroupByType.dealExpectedCloseMonth;
+}
+
+export function isForecastGrouping(groupByType: WidgetGroupByType | undefined): boolean {
+  return groupByType === WidgetGroupByType.dealExpectedCloseMonth;
+}
+
+export function isLostOutcomeGrouping(groupByType: WidgetGroupByType | undefined): boolean {
+  return groupByType === WidgetGroupByType.dealLostReason || groupByType === WidgetGroupByType.dealStageLostAt;
+}
+
+export function requiresRawDimensionQuery(groupByType: WidgetGroupByType | undefined): boolean {
+  return isLostOutcomeGrouping(groupByType) || isMonthGrouping(groupByType);
+}
+
 export function isClosedDealAggregation(aggregationType: AggregationType | undefined): boolean {
   return aggregationType === AggregationType.winRate || aggregationType === AggregationType.salesCycleDays;
 }
@@ -56,4 +88,36 @@ export function groupsClosedDealsByCurrentStage(
   groupByType: WidgetGroupByType | undefined,
 ): boolean {
   return isClosedDealAggregation(aggregationType) && groupByType === WidgetGroupByType.dealStage;
+}
+
+export function groupsClosedDealsByLostOutcome(
+  aggregationType: AggregationType | undefined,
+  groupByType: WidgetGroupByType | undefined,
+): boolean {
+  return isClosedDealAggregation(aggregationType) && isLostOutcomeGrouping(groupByType);
+}
+
+export function groupsClosedDealsByForecastMonth(
+  aggregationType: AggregationType | undefined,
+  groupByType: WidgetGroupByType | undefined,
+): boolean {
+  return isClosedDealAggregation(aggregationType) && isForecastGrouping(groupByType);
+}
+
+export function isUnsupportedClosedDealGrouping(
+  aggregationType: AggregationType | undefined,
+  groupByType: WidgetGroupByType | undefined,
+): boolean {
+  return (
+    groupsClosedDealsByCurrentStage(aggregationType, groupByType) ||
+    groupsClosedDealsByLostOutcome(aggregationType, groupByType) ||
+    groupsClosedDealsByForecastMonth(aggregationType, groupByType)
+  );
+}
+
+export function usesPeriodWindow(
+  aggregationType: AggregationType | undefined,
+  groupByType: WidgetGroupByType | undefined,
+): boolean {
+  return isPeriodAggregation(aggregationType) || isMonthGrouping(groupByType) || isLostOutcomeGrouping(groupByType);
 }

@@ -17,13 +17,18 @@ import { EntityType, WidgetGroupByType, AggregationType, Resource, WidgetKind } 
 
 import { upsertWidgetAction, deleteWidgetAction, getWidgetByIdAction, getCompanyWidgetsAction } from "../actions";
 
-import { ChartColor, DisplayType, supportsDealFilters } from "@/features/widget/widget.schema";
+import { ChartColor, DisplayType, WinRateBasis, supportsDealFilters } from "@/features/widget/widget.schema";
 import {
-  groupsClosedDealsByCurrentStage,
+  DEAL_DIMENSION_GROUP_BY_TYPES,
+  isDealDimensionGrouping,
+  isDurationAggregation,
   isPeriodAggregation,
   isPipelinePositionGrouping,
+  isRateAggregation,
+  isUnsupportedClosedDealGrouping,
   resolveFunnelPeriodDays,
   resolvePeriodDays,
+  usesPeriodWindow,
 } from "@/features/widget/widget-aggregation";
 import { toastZodErrorTree } from "@/core/utils/toast-zod-error-tree";
 import { BaseModalStore } from "@/core/base/base-modal.store";
@@ -177,6 +182,11 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
     [WidgetGroupByType.service]: Resource.services,
     [WidgetGroupByType.dealStage]: Resource.pipelines,
     [WidgetGroupByType.dealPipeline]: Resource.pipelines,
+    [WidgetGroupByType.dealOwner]: Resource.users,
+    [WidgetGroupByType.dealLostReason]: Resource.company,
+    [WidgetGroupByType.dealStageLostAt]: Resource.pipelines,
+    [WidgetGroupByType.dealCloseMonth]: null,
+    [WidgetGroupByType.dealExpectedCloseMonth]: null,
     [WidgetGroupByType.customColumn]: null,
   };
 
@@ -214,12 +224,15 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
       startFromKind: action,
       openWithFilter: action,
       onPeriodDaysChange: action,
+      onWinRateBasisChange: action,
 
       groupBySelectOptions: computed,
       groupBySelectValue: computed,
       aggregationTypeOptions: computed,
       showPeriodPicker: computed,
       periodDaysValue: computed,
+      showWinRateBasisPicker: computed,
+      winRateBasisValue: computed,
       funnelPipelineOptions: computed,
       funnelPipelineValue: computed,
       filterableFields: computed,
@@ -371,8 +384,25 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
   get showPeriodPicker() {
     const form = this.chartForm;
     if (this.funnelForm) return true;
-    return Boolean(form && isPeriodAggregation(form.aggregationType));
+    return Boolean(form && usesPeriodWindow(form.aggregationType, form.groupByType));
   }
+
+  get showWinRateBasisPicker() {
+    const form = this.chartForm;
+    return Boolean(form && isRateAggregation(form.aggregationType));
+  }
+
+  get winRateBasisValue() {
+    return this.chartForm?.displayOptions?.winRateBasis ?? WinRateBasis.count;
+  }
+
+  onWinRateBasisChange = (value: string) => {
+    const form = this.chartForm;
+    const basis = Object.values(WinRateBasis).find((candidate) => String(candidate) === value);
+    if (!form || !form.displayOptions || !basis) return;
+
+    form.displayOptions.winRateBasis = basis;
+  };
 
   get periodDaysValue() {
     const funnelForm = this.funnelForm;
@@ -408,11 +438,22 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
       }
     }
 
-    if (form.entityType === EntityType.deal && this.rootStore.userStore.canAccess(Resource.pipelines)) {
-      if (!groupsClosedDealsByCurrentStage(form.aggregationType, WidgetGroupByType.dealStage))
-        options.push({ key: WidgetGroupByType.dealStage });
+    if (form.entityType === EntityType.deal) {
+      for (const dimension of DEAL_DIMENSION_GROUP_BY_TYPES) {
+        const resource = this.groupByTypeToResource[dimension];
+        if (resource && !this.rootStore.userStore.canAccess(resource)) continue;
+        if (isUnsupportedClosedDealGrouping(form.aggregationType, dimension)) continue;
 
-      options.push({ key: WidgetGroupByType.dealPipeline });
+        options.push({ key: dimension });
+      }
+    }
+
+    if (isDurationAggregation(form.aggregationType)) {
+      return options.filter((option) => {
+        const groupByType = option.key as WidgetGroupByType;
+
+        return groupByType === WidgetGroupByType.none || isPipelinePositionGrouping(groupByType);
+      });
     }
 
     if (isPeriodAggregation(form.aggregationType))
@@ -659,7 +700,7 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
               groupByType: form.groupByType,
               groupByCustomColumnId: form.groupByCustomColumnId,
               aggregationType: form.aggregationType,
-              periodDays: isPeriodAggregation(form.aggregationType) ? form.periodDays : undefined,
+              periodDays: usesPeriodWindow(form.aggregationType, form.groupByType) ? form.periodDays : undefined,
               isTemplate: form.isTemplate,
             }
           : {
@@ -898,10 +939,10 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
           const form = this.chartForm;
           if (!form) return;
 
-          const keepsGrouping =
-            isPipelinePositionGrouping(form.groupByType) &&
-            !groupsClosedDealsByCurrentStage(aggregationType, form.groupByType);
-          if (keepsGrouping) return;
+          const allowedGrouping = isDurationAggregation(aggregationType)
+            ? isPipelinePositionGrouping(form.groupByType)
+            : isDealDimensionGrouping(form.groupByType);
+          if (allowedGrouping && !isUnsupportedClosedDealGrouping(aggregationType, form.groupByType)) return;
 
           form.groupByType = WidgetGroupByType.none;
           form.groupByCustomColumnId = undefined;

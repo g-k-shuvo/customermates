@@ -22,7 +22,7 @@ const scalarSelectOperators = [FilterOperatorKey.in, FilterOperatorKey.notIn];
 
 const stringOperators = [FilterOperatorKey.equals, FilterOperatorKey.contains];
 
-const PIPELINE_PLACEMENT_OPERATORS = [
+const OPTIONAL_REFERENCE_OPERATORS = [
   FilterOperatorKey.in,
   FilterOperatorKey.notIn,
   FilterOperatorKey.isNull,
@@ -48,8 +48,10 @@ export const FILTER_FIELD_DEFAULT_OPERATORS: Record<FilterFieldKey, FilterOperat
   [FilterFieldKey.dealStatus]: scalarSelectOperators,
   [FilterFieldKey.rotting]: scalarSelectOperators,
   [FilterFieldKey.overdue]: scalarSelectOperators,
-  [FilterFieldKey.pipelineId]: PIPELINE_PLACEMENT_OPERATORS,
-  [FilterFieldKey.stageId]: PIPELINE_PLACEMENT_OPERATORS,
+  [FilterFieldKey.nextActivity]: scalarSelectOperators,
+  [FilterFieldKey.lostReasonId]: OPTIONAL_REFERENCE_OPERATORS,
+  [FilterFieldKey.pipelineId]: OPTIONAL_REFERENCE_OPERATORS,
+  [FilterFieldKey.stageId]: OPTIONAL_REFERENCE_OPERATORS,
   [FilterFieldKey.provider]: scalarSelectOperators,
   [FilterFieldKey.state]: scalarSelectOperators,
   [FilterFieldKey.connectedAccountId]: scalarSelectOperators,

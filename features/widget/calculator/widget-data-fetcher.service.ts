@@ -18,6 +18,7 @@ import { Action, DealStatus, EntityType, Resource, StageKind, WidgetGroupByType 
 
 import { BaseRepository } from "@/core/base/base-repository";
 import { getContactRepo, getOrganizationRepo, getDealRepo, getServiceRepo, getTaskRepo } from "@/core/di";
+import { requiresRawDimensionQuery } from "../widget-aggregation";
 
 const CUSTOM_FIELD_RELATION: Record<EntityType, keyof Prisma.CustomFieldValueWhereInput> = {
   [EntityType.contact]: "contact",
@@ -40,6 +41,27 @@ type RawFunnelStageEntryRow = {
   stageId: string;
   enteredAt: Date;
   isWon: boolean;
+};
+
+type RawDimensionAggregateRow = {
+  key: string | null;
+  count: number;
+  totalValue: number | null;
+  totalQuantity: number | null;
+  weightedValue: number | null;
+};
+
+type RawDimensionWinRateRow = {
+  key: string | null;
+  status: DealStatus;
+  count: number;
+  value: number | null;
+};
+
+type DimensionSql = {
+  key: string;
+  joins: string;
+  conditions: string[];
 };
 
 type GroupingSql = {
@@ -74,6 +96,14 @@ class SqlParams {
   values(): unknown[] {
     return this.collected;
   }
+}
+
+export function monthBucketSql(column: string): string {
+  return `to_char(date_trunc('month', ${column}), 'YYYY-MM')`;
+}
+
+function assignedUserIds(assignments: Array<{ userId: string }>): Array<string | null> {
+  return assignments.length > 0 ? assignments.map((assignment) => assignment.userId) : [null];
 }
 
 function toDurationRow(row: RawDurationRow): DurationRow {
@@ -179,13 +209,37 @@ export class WidgetDataFetcher extends BaseRepository {
     });
   }
 
-  async groupDealsByPipelinePosition(
+  async getOwnerPositions(): Promise<PipelinePosition[]> {
+    const users = await this.prisma.user.findMany({
+      where: { companyId: this.companyId },
+      select: { id: true, firstName: true, lastName: true, email: true },
+      orderBy: [{ firstName: "asc" }, { lastName: "asc" }, { email: "asc" }],
+    });
+
+    return users.map((user, index) => ({
+      id: user.id,
+      name: `${user.firstName} ${user.lastName}`.trim() || user.email,
+      position: index,
+    }));
+  }
+
+  async getLostReasonPositions(): Promise<PipelinePosition[]> {
+    return await this.prisma.lostReason.findMany({
+      where: { companyId: this.companyId },
+      select: { id: true, name: true, position: true },
+      orderBy: [{ position: "asc" }, { name: "asc" }],
+    });
+  }
+
+  async groupDealsByDealDimension(
     widget: WidgetForCalculation,
     groupByType: WidgetGroupByType,
   ): Promise<GroupedDealAggregate[]> {
     const where = await this.boundedDealWhere(widget);
     const _count = { _all: true } as const;
     const _sum = { totalValue: true, totalQuantity: true, weightedValue: true } as const;
+
+    if (groupByType === WidgetGroupByType.dealOwner) return await this.groupDealsByOwner(where);
 
     if (groupByType === WidgetGroupByType.dealPipeline) {
       const rows = await this.prisma.deal.groupBy({ by: ["pipelineId"], where, _count, _sum });
@@ -194,6 +248,182 @@ export class WidgetDataFetcher extends BaseRepository {
 
     const rows = await this.prisma.deal.groupBy({ by: ["stageId"], where, _count, _sum });
     return rows.map((row) => this.toGroupedDealAggregate(row.stageId, row));
+  }
+
+  private async groupDealsByOwner(where: Prisma.DealWhereInput): Promise<GroupedDealAggregate[]> {
+    const deals = await this.prisma.deal.findMany({
+      where,
+      select: { totalValue: true, totalQuantity: true, weightedValue: true, users: { select: { userId: true } } },
+    });
+
+    const byOwner = new Map<string, GroupedDealAggregate>();
+
+    for (const deal of deals) {
+      for (const key of assignedUserIds(deal.users)) {
+        const aggregate = byOwner.get(key ?? "") ?? {
+          key,
+          count: 0,
+          totalValue: 0,
+          totalQuantity: 0,
+          weightedValue: 0,
+        };
+
+        aggregate.count += 1;
+        aggregate.totalValue += deal.totalValue;
+        aggregate.totalQuantity += deal.totalQuantity;
+        aggregate.weightedValue += deal.weightedValue ?? 0;
+
+        byOwner.set(key ?? "", aggregate);
+      }
+    }
+
+    return Array.from(byOwner.values());
+  }
+
+  private async findStageIdsByKind(kind: StageKind): Promise<string[]> {
+    const stages = await this.prisma.pipelineStage.findMany({
+      where: { companyId: this.companyId, kind },
+      select: { id: true },
+    });
+
+    return stages.map((stage) => stage.id);
+  }
+
+  private async dealDimensionSql(
+    groupByType: WidgetGroupByType,
+    window: PeriodWindow,
+    params: SqlParams,
+  ): Promise<DimensionSql | null> {
+    if (groupByType === WidgetGroupByType.dealCloseMonth) {
+      return {
+        key: monthBucketSql('d."closedAt"'),
+        joins: "",
+        conditions: [
+          `d."status" IN (${params.add(DealStatus.won)}::"DealStatus", ${params.add(DealStatus.lost)}::"DealStatus")`,
+          `d."closedAt" >= ${params.add(window.from)}`,
+          `d."closedAt" < ${params.add(window.to)}`,
+        ],
+      };
+    }
+
+    if (groupByType === WidgetGroupByType.dealExpectedCloseMonth) {
+      return {
+        key: monthBucketSql('d."expectedCloseDate"'),
+        joins: "",
+        conditions: [
+          `d."status" = ${params.add(DealStatus.open)}::"DealStatus"`,
+          `d."expectedCloseDate" >= ${params.add(window.from)}`,
+          `d."expectedCloseDate" < ${params.add(window.to)}`,
+        ],
+      };
+    }
+
+    if (groupByType === WidgetGroupByType.dealLostReason)
+      return { key: 'd."lostReasonId"', joins: "", conditions: this.lostDealConditions(window, params) };
+
+    if (groupByType === WidgetGroupByType.dealStageLostAt) return await this.stageLostAtSql(window, params);
+
+    return null;
+  }
+
+  private lostDealConditions(window: PeriodWindow, params: SqlParams): string[] {
+    return [
+      `d."status" = ${params.add(DealStatus.lost)}::"DealStatus"`,
+      `d."closedAt" >= ${params.add(window.from)}`,
+      `d."closedAt" < ${params.add(window.to)}`,
+    ];
+  }
+
+  private async stageLostAtSql(window: PeriodWindow, params: SqlParams): Promise<DimensionSql> {
+    const lostStageIds = await this.findStageIdsByKind(StageKind.lost);
+    const conditions = this.lostDealConditions(window, params);
+
+    if (lostStageIds.length === 0) return { key: 'd."stageId"', joins: "", conditions };
+
+    const stageList = lostStageIds.map((id) => params.add(id)).join(", ");
+    const historyCompany = params.add(this.companyId);
+
+    return {
+      key: `COALESCE(lost."stageId", CASE WHEN d."stageId" IN (${stageList}) THEN NULL ELSE d."stageId" END)`,
+      joins: `LEFT JOIN LATERAL (
+        SELECT h."fromStageId" AS "stageId"
+        FROM "DealStageHistory" h
+        WHERE h."dealId" = d."id" AND h."companyId" = ${historyCompany} AND h."toStageId" IN (${stageList})
+        ORDER BY h."enteredAt" DESC
+        LIMIT 1
+      ) lost ON TRUE`,
+      conditions,
+    };
+  }
+
+  async getDealDimensionAggregates(
+    groupByType: WidgetGroupByType,
+    window: PeriodWindow,
+  ): Promise<GroupedDealAggregate[]> {
+    const params = new SqlParams();
+    const companyParam = params.add(this.companyId);
+    const dimension = await this.dealDimensionSql(groupByType, window, params);
+    if (!dimension) return [];
+
+    const text = `
+      SELECT ${dimension.key} AS "key",
+             COUNT(*)::int AS "count",
+             COALESCE(SUM(d."totalValue"), 0)::float8 AS "totalValue",
+             COALESCE(SUM(d."totalQuantity"), 0)::float8 AS "totalQuantity",
+             COALESCE(SUM(d."weightedValue"), 0)::float8 AS "weightedValue"
+      FROM "Deal" d
+      ${dimension.joins}
+      WHERE d."companyId" = ${companyParam}
+        ${dimension.conditions.map((condition) => `AND ${condition}`).join("\n        ")}
+        AND ${this.dealAccessSql(params)}
+      GROUP BY 1`;
+
+    const rows = await this.prisma.$queryRawUnsafe<RawDimensionAggregateRow[]>(text, ...params.values());
+
+    return rows.map((row) => ({
+      key: row.key,
+      count: Number(row.count),
+      totalValue: Number(row.totalValue ?? 0),
+      totalQuantity: Number(row.totalQuantity ?? 0),
+      weightedValue: Number(row.weightedValue ?? 0),
+    }));
+  }
+
+  async getDealDimensionWinRateRows(groupByType: WidgetGroupByType, window: PeriodWindow): Promise<WinRateRow[]> {
+    const params = new SqlParams();
+    const companyParam = params.add(this.companyId);
+    const wonParam = params.add(DealStatus.won);
+    const lostParam = params.add(DealStatus.lost);
+    const fromParam = params.add(window.from);
+    const toParam = params.add(window.to);
+    const dimension = await this.dealDimensionSql(groupByType, window, params);
+    if (!dimension) return [];
+
+    const text = `
+      SELECT ${dimension.key} AS "key",
+             d."status" AS "status",
+             COUNT(*)::int AS "count",
+             COALESCE(SUM(d."totalValue"), 0)::float8 AS "value"
+      FROM "Deal" d
+      ${dimension.joins}
+      WHERE d."companyId" = ${companyParam}
+        AND d."status" IN (${wonParam}::"DealStatus", ${lostParam}::"DealStatus")
+        AND d."closedAt" >= ${fromParam}
+        AND d."closedAt" < ${toParam}
+        ${dimension.conditions.map((condition) => `AND ${condition}`).join("\n        ")}
+        AND ${this.dealAccessSql(params)}
+      GROUP BY 1, d."status"`;
+
+    const rows = await this.prisma.$queryRawUnsafe<RawDimensionWinRateRow[]>(text, ...params.values());
+
+    return this.foldWinRateRows(
+      rows.map((row) => ({
+        key: row.key,
+        status: row.status,
+        count: Number(row.count),
+        value: Number(row.value ?? 0),
+      })),
+    );
   }
 
   private toGroupedDealAggregate(
@@ -212,7 +442,16 @@ export class WidgetDataFetcher extends BaseRepository {
     };
   }
 
+  async getWinRateTotals(widget: WidgetForCalculation, window: PeriodWindow): Promise<WinRateRow> {
+    const rows = await this.getWinRateRows({ ...widget, groupByType: WidgetGroupByType.none }, window);
+
+    return rows[0] ?? { key: null, wonCount: 0, lostCount: 0, wonValue: 0, lostValue: 0 };
+  }
+
   async getWinRateRows(widget: WidgetForCalculation, window: PeriodWindow): Promise<WinRateRow[]> {
+    if (requiresRawDimensionQuery(widget.groupByType))
+      return await this.getDealDimensionWinRateRows(widget.groupByType, window);
+
     const base = await this.boundedDealWhere(widget);
     const where: Prisma.DealWhereInput = {
       companyId: this.companyId,
@@ -224,6 +463,8 @@ export class WidgetDataFetcher extends BaseRepository {
     };
     const _count = { _all: true } as const;
     const _sum = { totalValue: true } as const;
+
+    if (widget.groupByType === WidgetGroupByType.dealOwner) return await this.ownerWinRateRows(where);
 
     if (widget.groupByType === WidgetGroupByType.dealStage) {
       const rows = await this.prisma.deal.groupBy({ by: ["stageId", "status"], where, _count, _sum });
@@ -237,6 +478,24 @@ export class WidgetDataFetcher extends BaseRepository {
 
     const rows = await this.prisma.deal.groupBy({ by: ["status"], where, _count, _sum });
     return this.foldWinRateRows(rows.map((row) => ({ key: null, ...this.closedSlice(row) })));
+  }
+
+  private async ownerWinRateRows(where: Prisma.DealWhereInput): Promise<WinRateRow[]> {
+    const deals = await this.prisma.deal.findMany({
+      where,
+      select: { status: true, totalValue: true, users: { select: { userId: true } } },
+    });
+
+    return this.foldWinRateRows(
+      deals.flatMap((deal) =>
+        assignedUserIds(deal.users).map((key) => ({
+          key,
+          status: deal.status,
+          count: 1,
+          value: deal.totalValue,
+        })),
+      ),
+    );
   }
 
   private closedSlice(row: { status: DealStatus; _count: { _all: number }; _sum: { totalValue: number | null } }): {

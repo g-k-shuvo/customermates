@@ -10921,6 +10921,18 @@
                         }
                       ]
                     },
+                    "lostReasonName": {
+                      "default": null,
+                      "description": "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "lostNotes": {
                       "anyOf": [
                         {
@@ -11211,6 +11223,7 @@
                     "stageEnteredAt",
                     "isRotting",
                     "lostReasonId",
+                    "lostReasonName",
                     "lostNotes",
                     "wonAt",
                     "lostAt",
@@ -11419,6 +11432,18 @@
                           }
                         ]
                       },
+                      "lostReasonName": {
+                        "default": null,
+                        "description": "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
                       "lostNotes": {
                         "anyOf": [
                           {
@@ -11709,6 +11734,7 @@
                       "stageEnteredAt",
                       "isRotting",
                       "lostReasonId",
+                      "lostReasonName",
                       "lostNotes",
                       "wonAt",
                       "lostAt",
@@ -11916,6 +11942,18 @@
                           }
                         ]
                       },
+                      "lostReasonName": {
+                        "default": null,
+                        "description": "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
                       "lostNotes": {
                         "anyOf": [
                           {
@@ -12206,6 +12244,7 @@
                       "stageEnteredAt",
                       "isRotting",
                       "lostReasonId",
+                      "lostReasonName",
                       "lostNotes",
                       "wonAt",
                       "lostAt",
@@ -14056,6 +14095,18 @@
                               }
                             ]
                           },
+                          "lostReasonName": {
+                            "default": null,
+                            "description": "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "lostNotes": {
                             "anyOf": [
                               {
@@ -14346,6 +14397,7 @@
                           "stageEnteredAt",
                           "isRotting",
                           "lostReasonId",
+                          "lostReasonName",
                           "lostNotes",
                           "wonAt",
                           "lostAt",
@@ -15577,6 +15629,18 @@
                                 }
                               ]
                             },
+                            "lostReasonName": {
+                              "default": null,
+                              "description": "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "lostNotes": {
                               "anyOf": [
                                 {
@@ -15867,6 +15931,7 @@
                             "stageEnteredAt",
                             "isRotting",
                             "lostReasonId",
+                            "lostReasonName",
                             "lostNotes",
                             "wonAt",
                             "lostAt",
@@ -17040,6 +17105,18 @@
                         }
                       ]
                     },
+                    "lostReasonName": {
+                      "default": null,
+                      "description": "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "lostNotes": {
                       "anyOf": [
                         {
@@ -17330,6 +17407,7 @@
                     "stageEnteredAt",
                     "isRotting",
                     "lostReasonId",
+                    "lostReasonName",
                     "lostNotes",
                     "wonAt",
                     "lostAt",
@@ -17620,6 +17698,18 @@
                         }
                       ]
                     },
+                    "lostReasonName": {
+                      "default": null,
+                      "description": "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "lostNotes": {
                       "anyOf": [
                         {
@@ -17910,6 +18000,7 @@
                     "stageEnteredAt",
                     "isRotting",
                     "lostReasonId",
+                    "lostReasonName",
                     "lostNotes",
                     "wonAt",
                     "lostAt",
@@ -18149,6 +18240,18 @@
                         }
                       ]
                     },
+                    "lostReasonName": {
+                      "default": null,
+                      "description": "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "lostNotes": {
                       "anyOf": [
                         {
@@ -18439,6 +18542,7 @@
                     "stageEnteredAt",
                     "isRotting",
                     "lostReasonId",
+                    "lostReasonName",
                     "lostNotes",
                     "wonAt",
                     "lostAt",
@@ -18652,6 +18756,18 @@
                         }
                       ]
                     },
+                    "lostReasonName": {
+                      "default": null,
+                      "description": "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "lostNotes": {
                       "anyOf": [
                         {
@@ -18942,6 +19058,7 @@
                     "stageEnteredAt",
                     "isRotting",
                     "lostReasonId",
+                    "lostReasonName",
                     "lostNotes",
                     "wonAt",
                     "lostAt",
@@ -54918,6 +55035,18 @@
                       }
                     ]
                   },
+                  "lostReasonName": {
+                    "default": null,
+                    "description": "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "lostNotes": {
                     "anyOf": [
                       {
@@ -55371,6 +55500,18 @@
                             "type": "string",
                             "format": "uuid",
                             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "lostReasonName": {
+                        "default": null,
+                        "description": "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
+                        "anyOf": [
+                          {
+                            "type": "string"
                           },
                           {
                             "type": "null"
@@ -56000,6 +56141,35 @@
                           "previous",
                           "current"
                         ]
+                      },
+                      "lostReasonName": {
+                        "type": "object",
+                        "properties": {
+                          "previous": {
+                            "default": null,
+                            "description": "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "current": {
+                            "default": null,
+                            "description": "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
                       },
                       "lostNotes": {
                         "type": "object",
@@ -56775,6 +56945,18 @@
                         "type": "string",
                         "format": "uuid",
                         "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "lostReasonName": {
+                    "default": null,
+                    "description": "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
+                    "anyOf": [
+                      {
+                        "type": "string"
                       },
                       {
                         "type": "null"

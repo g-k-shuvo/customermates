@@ -109,7 +109,7 @@ describe("dashboard widget UI", () => {
     const chart = dashboardComponent("widget-chart.tsx");
     const tooltip = read("components/chart/chart-tooltip.tsx");
 
-    expect(chart).toContain("metricsNote: noteText(widgetPointMetricNote(aggregationType, item.metrics))");
+    expect(chart).toContain("metricsNote: noteText(widgetPointMetricNote(aggregationType, item.metrics, winRateBasis))");
     expect(tooltip).toContain("entry.payload?.metricsNote");
 
     for (const name of ["vertical-bar-chart-with-labels.tsx", "horizontal-bar-chart-with-labels.tsx"]) {

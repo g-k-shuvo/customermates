@@ -953,10 +953,12 @@
         }
       },
       "dashboard": {
+        "lostDealsByReason": "Deals lost by reason",
         "openPipelineValueByStage": "Open pipeline value by stage",
         "pipelineFunnel": "Sales funnel",
         "salesCycle": "Average sales cycle",
-        "winRate": "Win rate"
+        "weightedForecastByCloseMonth": "Weighted forecast by expected close month",
+        "winRateByOwner": "Win rate by owner"
       },
       "deal": {
         "columnLabel": "Stage",
@@ -1151,8 +1153,11 @@
       "webhookDeliveryNotFound": "Webhook delivery ID not found or not accessible.",
       "webhookEventsRequired": "Select at least one event.",
       "webhookNotFound": "Webhook ID not found or not accessible.",
+      "widgetClosedDealAggregationCannotGroupByForecastMonth": "Expected close month describes open deals. Group closed-deal metrics by close month instead.",
+      "widgetClosedDealAggregationCannotGroupByLostOutcome": "Won deals have no lost reason and no stage they were lost at, so a win rate grouped that way would read 0% everywhere. Use a count or value metric filtered to lost deals instead.",
       "widgetClosedDealAggregationCannotGroupByStage": "Win rate and sales cycle count only closed deals, which all sit in the won or lost stage. Group them by pipeline instead.",
       "widgetDealAggregationNotAllowedForTask": "Deal aggregation types are not allowed for Task element type.",
+      "widgetDealDimensionGroupingFiltersNotSupported": "Grouping by lost reason, stage lost at or calendar month is aggregated in the database over a bounded period and does not support filters.",
       "widgetDealFiltersNotAllowedForDealEntityType": "Deal filters are not allowed when element type is Deal.",
       "widgetDealQuantityOnlyForService": "Deal quantity aggregation is only allowed for Service element type.",
       "widgetDurationAggregationFiltersNotSupported": "Sales cycle and time in stage are computed from stage history and do not support filters.",
@@ -1273,6 +1278,8 @@
         "event": "Event",
         "isPlatformOperator": "Platform operator",
         "lastActiveAt": "Last active",
+        "lostReasonId": "Lost reason",
+        "nextActivity": "Next activity",
         "overdue": "Overdue",
         "participants": "Participants",
         "pipelineId": "Pipeline",
@@ -1291,6 +1298,10 @@
         "userIds": "Assigned",
         "workspaceId": "Workspace",
         "workspaceTags": "Tags"
+      },
+      "nextActivityValues": {
+        "none": "No next activity",
+        "scheduled": "Activity scheduled"
       },
       "operators": {
         "allSet": "fully linked",
@@ -1480,6 +1491,7 @@
         "lastActiveAt": "Last active",
         "lastName": "Last Name",
         "lastRequest": "Last used",
+        "lostReason": "Lost reason",
         "members": "Members",
         "name": "Name",
         "nextActivity": "Next activity",
@@ -1741,12 +1753,18 @@
       "openToWon": "{value}% open to won"
     },
     "groupBys": {
+      "dealCloseMonth": "Close month",
+      "dealExpectedCloseMonth": "Expected close month",
+      "dealLostReason": "Lost reason",
+      "dealOwner": "Assigned",
       "dealPipeline": "Pipeline",
       "dealStage": "Stage",
+      "dealStageLostAt": "Stage lost at",
       "none": "No Grouping"
     },
     "periods": {
-      "lastDays": "Last {days} days"
+      "lastDays": "Last {days} days",
+      "nextDays": "Next {days} days"
     },
     "tabs": {
       "dealFilters": "Filters for {deals}",
@@ -1760,7 +1778,12 @@
         "colors": "Colors",
         "showFilters": "Show activity count and filters",
         "showMetricAndFilters": "Show metric and filters",
-        "showSummary": "Show funnel summary"
+        "showSummary": "Show funnel summary",
+        "winRateBasis": "Win rate basis",
+        "winRateBasisOptions": {
+          "count": "By count",
+          "value": "By value"
+        }
       },
       "create": "Create widget",
       "danger": {
@@ -1836,7 +1859,8 @@
       "days": "{value} days",
       "median": "Median {value} days",
       "percent": "{value}%",
-      "winRateDenominator": "{closed} closed {deals}, open {deals} excluded"
+      "winRateDenominator": "{closed} closed {deals}, open {deals} excluded",
+      "winRateValueDenominator": "{closed} in closed {deals}, open {deals} excluded"
     }
   },
   "DataTransfer": {

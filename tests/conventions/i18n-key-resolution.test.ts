@@ -38,7 +38,8 @@ import {
   ENTITY_TERMINOLOGY_PRESETS,
   FILTER_FIELD_TERMINOLOGY,
 } from "@/features/entity-terminology/entity-terminology.constants";
-import { DIAGRAM_SYSTEM_LABEL_KEYS, DisplayType } from "@/features/widget/widget.schema";
+import { DIAGRAM_SYSTEM_LABEL_KEYS, DisplayType, WinRateBasis } from "@/features/widget/widget.schema";
+import { DEAL_DIMENSION_GROUP_BY_TYPES } from "@/features/widget/widget-aggregation";
 import { ROUTING_LOCALES } from "@/i18n/locale-registry";
 
 const ENTITY_TERMINOLOGY_KEYS = Object.entries(ENTITY_TERMINOLOGY_PRESETS).flatMap(([entityType, presets]) =>
@@ -57,6 +58,13 @@ const FILTER_FIELD_KEYS = Object.values(FilterFieldKey)
 const ROLE_RESOURCE_KEYS = Object.values(Resource).map((resource) => `RoleModal.resources.${resource}`);
 const DISPLAY_TYPE_KEYS = Object.values(DisplayType).map((displayType) => `Dashboard.displayTypes.${displayType}`);
 const WIDGET_KIND_KEYS = Object.values(WidgetKind).map((kind) => `Dashboard.widgetKinds.${kind}`);
+const WIDGET_GROUP_BY_KEYS = [
+  ...DEAL_DIMENSION_GROUP_BY_TYPES.map((groupByType) => `Dashboard.groupBys.${groupByType}`),
+  "Dashboard.groupBys.none",
+];
+const WIN_RATE_BASIS_KEYS = Object.values(WinRateBasis).map(
+  (basis) => `Dashboard.widgetEditor.appearance.winRateBasisOptions.${basis}`,
+);
 const WIDGET_KIND_DESCRIPTION_KEYS = Object.values(WidgetKind).map(
   (kind) => `Dashboard.widgetEditor.kind.${kind}Description`,
 );
@@ -174,6 +182,7 @@ const TABLE_COLUMN_KEYS = [
   "Common.table.columns.label",
   "Common.table.columns.lastName",
   "Common.table.columns.lastRequest",
+  "Common.table.columns.lostReason",
   "Common.table.columns.name",
   "Common.table.columns.notes",
   "Common.table.columns.options",
@@ -441,6 +450,8 @@ const DYNAMIC_TEMPLATE_CONSUMERS = new Map<string, readonly string[]>([
   ["Common.userStatuses.${*}", USER_STATUS_KEYS],
   ["ConnectedAccountsCard.statusLabels.${*}", CONNECTED_ACCOUNT_STATUS_KEYS],
   ["Dashboard.displayTypes.${*}", DISPLAY_TYPE_KEYS],
+  ["Dashboard.groupBys.${*}", WIDGET_GROUP_BY_KEYS],
+  ["Dashboard.widgetEditor.appearance.winRateBasisOptions.${*}", WIN_RATE_BASIS_KEYS],
   ["Dashboard.widgetEditor.filters.activityTypeOptions.${*}.description", activityTypeOptionKeys("description")],
   ["Dashboard.widgetEditor.filters.activityTypeOptions.${*}.label", activityTypeOptionKeys("label")],
   ["Dashboard.widgetEditor.kind.${*}Description", WIDGET_KIND_DESCRIPTION_KEYS],
@@ -552,6 +563,8 @@ export const DYNAMIC_KEY_SITES = [
   "app/[locale]/(protected)/dashboard/components/activity-filter-fields.tsx :: t :: Dashboard.widgetEditor.filters.activityTypeOptions.${value}.description",
   "app/[locale]/(protected)/dashboard/components/activity-filter-fields.tsx :: t :: Dashboard.widgetEditor.filters.activityTypeOptions.${value}.label",
   "app/[locale]/(protected)/dashboard/components/widget-display-type-picker.tsx :: t :: Dashboard.displayTypes.${type}",
+  "app/[locale]/(protected)/dashboard/components/widget-modal.tsx :: t :: Dashboard.groupBys.${option.key}",
+  "app/[locale]/(protected)/dashboard/components/widget-modal.tsx :: t :: Dashboard.widgetEditor.appearance.winRateBasisOptions.${basis}",
   "app/[locale]/(protected)/dashboard/components/widget-filter-chip.tsx :: t :: Common.filters.operators.${filter.operator}",
   "app/[locale]/(protected)/dashboard/components/widget-preview.tsx :: t :: Dashboard.displayTypes.${displayType}",
   "app/[locale]/(protected)/dashboard/components/widget-starter-picker.tsx :: t :: Dashboard.widgetEditor.kind.${kind}Description",

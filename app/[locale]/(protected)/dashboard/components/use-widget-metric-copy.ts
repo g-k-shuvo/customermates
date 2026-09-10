@@ -3,7 +3,7 @@
 import type { WidgetMetricNote } from "./widget-metric-note";
 
 import { useTranslations } from "next-intl";
-import type { AggregationType } from "@/generated/prisma";
+import type { AggregationType, WidgetGroupByType } from "@/generated/prisma";
 import { EntityType } from "@/generated/prisma";
 
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
@@ -11,15 +11,20 @@ import { useEntityTerminology } from "@/components/entity-terminology/use-entity
 import {
   isCurrencyAggregation,
   isDurationAggregation,
-  isPeriodAggregation,
+  isForecastGrouping,
   isRateAggregation,
   resolvePeriodDays,
+  usesPeriodWindow,
 } from "@/features/widget/widget-aggregation";
 
 export type WidgetMetricCopy = {
   formatHeadline: (aggregationType: AggregationType, value: number) => string;
   noteText: (note: WidgetMetricNote) => string | null;
-  periodText: (aggregationType: AggregationType, periodDays: number | null) => string | null;
+  periodText: (
+    aggregationType: AggregationType,
+    periodDays: number | null,
+    groupByType?: WidgetGroupByType,
+  ) => string | null;
 };
 
 export function useWidgetMetricCopy(): WidgetMetricCopy {
@@ -46,10 +51,14 @@ export function useWidgetMetricCopy(): WidgetMetricCopy {
       return intlStore.formatNumber(value);
     },
 
-    periodText: (aggregationType, periodDays) => {
-      if (!isPeriodAggregation(aggregationType)) return null;
+    periodText: (aggregationType, periodDays, groupByType) => {
+      if (!usesPeriodWindow(aggregationType, groupByType)) return null;
 
-      return t("Dashboard.periods.lastDays", { days: resolvePeriodDays(aggregationType, periodDays) });
+      const days = resolvePeriodDays(aggregationType, periodDays);
+
+      return isForecastGrouping(groupByType)
+        ? t("Dashboard.periods.nextDays", { days })
+        : t("Dashboard.periods.lastDays", { days });
     },
 
     noteText: (note) => {
@@ -58,6 +67,16 @@ export function useWidgetMetricCopy(): WidgetMetricCopy {
       if (note.kind === "winRateDenominator") {
         return t("Dashboard.widgetMetrics.winRateDenominator", {
           closed: intlStore.formatNumber(note.sampleSize),
+          deals: plural(EntityType.deal),
+        });
+      }
+
+      if (note.kind === "winRateValueDenominator") {
+        return t("Dashboard.widgetMetrics.winRateValueDenominator", {
+          closed: intlStore.formatCurrency(note.closedValue, undefined, {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+          }),
           deals: plural(EntityType.deal),
         });
       }

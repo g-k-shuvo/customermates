@@ -10,8 +10,9 @@ import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { AggregationType } from "@/generated/prisma";
 
-import { ChartColor, DisplayType } from "@/features/widget/widget.schema";
+import { ChartColor, DisplayType, WinRateBasis } from "@/features/widget/widget.schema";
 import { getChartColors, getChartStrokeColors, getChartTextColors } from "@/constants/chart-colors";
+import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { useWidgetMetricCopy } from "./use-widget-metric-copy";
 import { widgetPointMetricNote } from "./widget-metric-note";
 import { widgetDataPointLabel } from "./widget-label";
@@ -72,9 +73,11 @@ type Props = {
 
 export const WidgetChart = observer(({ aggregationType, data, displayOptions }: Props) => {
   const t = useTranslations();
+  const intlStore = useHydratedIntlStore();
   const { noteText } = useWidgetMetricCopy();
   const { resolvedTheme } = useTheme();
   const configuredBarColors = displayOptions?.barColors?.length ? displayOptions.barColors : [ChartColor.primary1];
+  const winRateBasis = displayOptions?.winRateBasis ?? WinRateBasis.count;
   const useGroupColors = displayOptions?.useGroupColors !== false;
   const chartColors = getChartColors(resolvedTheme);
   const chartTextColors = getChartTextColors(resolvedTheme);
@@ -84,13 +87,13 @@ export const WidgetChart = observer(({ aggregationType, data, displayOptions }: 
     const colorKey = useGroupColors && item.optionColor ? CHIP_TO_CHART_COLOR[item.optionColor] : fallbackKey;
 
     return {
-      label: widgetDataPointLabel(item, t),
+      label: widgetDataPointLabel(item, t, (date) => intlStore.formatMonthYear(date)),
       value: Number(item.value) || 0,
       fill: chartColors[colorKey],
       color: chartColors[colorKey],
       labelColor: chartTextColors[colorKey],
       strokeColor: chartStrokeColors[colorKey],
-      metricsNote: noteText(widgetPointMetricNote(aggregationType, item.metrics)) ?? undefined,
+      metricsNote: noteText(widgetPointMetricNote(aggregationType, item.metrics, winRateBasis)) ?? undefined,
     };
   });
   const colors = useGroupColors

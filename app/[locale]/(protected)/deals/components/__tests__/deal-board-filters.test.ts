@@ -9,14 +9,17 @@ import { FilterFieldKey } from "@/core/types/filter-field-key";
 
 import {
   DEFAULT_DEAL_STATUS_FILTER,
+  NO_NEXT_ACTIVITY_FILTER,
   PIPELINE_FILTER_FIELD,
   ROTTING_DEALS_FILTER,
   hasActiveDealQuery,
   isDefaultDealStatusFilter,
+  isNoNextActivityFilterActive,
   isRottingFilterActive,
   pipelineFilter,
   selectedPipelineFilterId,
   shouldSeedDefaultDealStatusFilter,
+  toggleNoNextActivityFilter,
   toggleRottingDealsFilter,
   withPipelineFilter,
 } from "../deal-board-filters";
@@ -102,6 +105,51 @@ describe("the rotting chip", () => {
 
     expect(isRottingFilterActive([healthyOnly])).toBe(false);
     expect(toggleRottingDealsFilter([healthyOnly])).toEqual([ROTTING_DEALS_FILTER]);
+  });
+});
+
+describe("the neglected-deals chip", () => {
+  it("asks for the deals with nothing on the calendar", () => {
+    expect(NO_NEXT_ACTIVITY_FILTER).toEqual({
+      field: FilterFieldKey.nextActivity,
+      operator: FilterOperatorKey.in,
+      value: ["false"],
+    });
+  });
+
+  it("adds the clause and keeps every other filter", () => {
+    expect(toggleNoNextActivityFilter([userFilter])).toEqual([userFilter, NO_NEXT_ACTIVITY_FILTER]);
+  });
+
+  it("removes the clause on a second press", () => {
+    const withoutActivity = toggleNoNextActivityFilter([userFilter]);
+
+    expect(isNoNextActivityFilterActive(withoutActivity)).toBe(true);
+    expect(toggleNoNextActivityFilter(withoutActivity)).toEqual([userFilter]);
+    expect(isNoNextActivityFilterActive([userFilter])).toBe(false);
+  });
+
+  it("replaces the opposite selection rather than stacking a contradictory second clause", () => {
+    const scheduledOnly: Filter = {
+      field: FilterFieldKey.nextActivity,
+      operator: FilterOperatorKey.in,
+      value: ["true"],
+    };
+
+    expect(isNoNextActivityFilterActive([scheduledOnly])).toBe(false);
+    expect(toggleNoNextActivityFilter([scheduledOnly])).toEqual([NO_NEXT_ACTIVITY_FILTER]);
+  });
+
+  it("leaves the rotting chip untouched, so a manager can press both", () => {
+    const both = toggleNoNextActivityFilter(toggleRottingDealsFilter([DEFAULT_DEAL_STATUS_FILTER]));
+
+    expect(both).toEqual([DEFAULT_DEAL_STATUS_FILTER, ROTTING_DEALS_FILTER, NO_NEXT_ACTIVITY_FILTER]);
+    expect(isRottingFilterActive(both)).toBe(true);
+    expect(isNoNextActivityFilterActive(both)).toBe(true);
+  });
+
+  it("counts as an active query, so an empty result reaches the filtered empty state", () => {
+    expect(hasActiveDealQuery({ filters: toggleNoNextActivityFilter([DEFAULT_DEAL_STATUS_FILTER]) })).toBe(true);
   });
 });
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import deMessages from "@/i18n/locales/de.json";
 import enMessages from "@/i18n/locales/en.json";
@@ -7,7 +7,7 @@ import frMessages from "@/i18n/locales/fr.json";
 import itMessages from "@/i18n/locales/it.json";
 import { APP_LOCALES, type AppLocale } from "@/i18n/locale-registry";
 
-import { widgetDataPointLabel } from "../widget-label";
+import { monthStartDate, widgetDataPointLabel } from "../widget-label";
 
 const DIAGRAMS = {
   de: deMessages.Diagrams,
@@ -39,5 +39,71 @@ describe("widgetDataPointLabel", () => {
     expect(widgetDataPointLabel({ labelKind: "literal", label: id, value: 1 }, () => "Unavailable")).toBe(
       "Unavailable",
     );
+  });
+
+  it("hands a month bucket to the shared formatter as the first instant of that month where the viewer is", () => {
+    const seen: Date[] = [];
+    const label = widgetDataPointLabel(
+      { labelKind: "month", month: "2026-03", value: 1 },
+      () => "translated",
+      (date) => {
+        seen.push(date);
+        return "March 2026";
+      },
+    );
+
+    expect(label).toBe("March 2026");
+    expect(seen[0].getFullYear()).toBe(2026);
+    expect(seen[0].getMonth()).toBe(2);
+    expect(seen[0].getDate()).toBe(1);
+    expect(seen[0].getHours()).toBe(0);
+  });
+
+  it("falls back to the machine-readable month when no formatter is available yet", () => {
+    expect(widgetDataPointLabel({ labelKind: "month", month: "2026-03", value: 1 }, () => "translated")).toBe(
+      "2026-03",
+    );
+    expect(
+      widgetDataPointLabel(
+        { labelKind: "month", month: "2026-03", value: 1 },
+        () => "translated",
+        () => "",
+      ),
+    ).toBe("2026-03");
+  });
+
+  it("reads December as the twelfth month rather than rolling into the next year", () => {
+    const december = monthStartDate("2026-12");
+
+    expect(december.getFullYear()).toBe(2026);
+    expect(december.getMonth()).toBe(11);
+    expect(december.getDate()).toBe(1);
+  });
+});
+
+describe("widgetDataPointLabel for a viewer west of UTC", () => {
+  const originalTimeZone = process.env.TZ;
+
+  beforeAll(() => {
+    process.env.TZ = "America/New_York";
+  });
+
+  afterAll(() => {
+    if (originalTimeZone === undefined) delete process.env.TZ;
+    else process.env.TZ = originalTimeZone;
+  });
+
+  function monthLabelAsRendered(month: string): string {
+    return widgetDataPointLabel(
+      { labelKind: "month", month, value: 1 },
+      () => "translated",
+      (date) => new Intl.DateTimeFormat("en-US", { year: "numeric", month: "long" }).format(date),
+    );
+  }
+
+  it("names the month the bucket carries and not the one before it", () => {
+    expect(new Date(2026, 2, 1).getTimezoneOffset()).toBeGreaterThan(0);
+    expect(monthLabelAsRendered("2026-03")).toBe("March 2026");
+    expect(monthLabelAsRendered("2026-01")).toBe("January 2026");
   });
 });

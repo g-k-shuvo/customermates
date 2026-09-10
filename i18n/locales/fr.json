@@ -953,10 +953,12 @@
         }
       },
       "dashboard": {
+        "lostDealsByReason": "Affaires perdues par motif",
         "openPipelineValueByStage": "Valeur du pipeline ouvert par étape",
         "pipelineFunnel": "Entonnoir de vente",
         "salesCycle": "Cycle de vente moyen",
-        "winRate": "Taux de réussite"
+        "weightedForecastByCloseMonth": "Prévision pondérée par mois de clôture prévu",
+        "winRateByOwner": "Taux de réussite par responsable"
       },
       "deal": {
         "columnLabel": "Étape",
@@ -1151,8 +1153,11 @@
       "webhookDeliveryNotFound": "ID de livraison de webhook introuvable ou inaccessible.",
       "webhookEventsRequired": "Sélectionnez au moins un évènement.",
       "webhookNotFound": "ID de webhook introuvable ou inaccessible.",
+      "widgetClosedDealAggregationCannotGroupByForecastMonth": "Le mois de clôture prévu décrit les affaires ouvertes. Regroupez les mesures sur affaires clôturées par mois de clôture.",
+      "widgetClosedDealAggregationCannotGroupByLostOutcome": "Les affaires gagnées n’ont ni motif de perte ni étape au moment de la perte : un taux de réussite regroupé ainsi afficherait 0 % partout. Utilisez plutôt un nombre ou une valeur filtrés sur les affaires perdues.",
       "widgetClosedDealAggregationCannotGroupByStage": "Le taux de réussite et le cycle de vente ne comptent que les affaires clôturées, qui se trouvent toutes dans l’étape gagnée ou perdue. Regroupez-les plutôt par pipeline.",
       "widgetDealAggregationNotAllowedForTask": "Les types d'agrégation d'affaires ne sont pas autorisés pour le type d'élément Tâche.",
+      "widgetDealDimensionGroupingFiltersNotSupported": "Le regroupement par motif de perte, étape au moment de la perte ou mois calendaire est agrégé dans la base de données sur une période bornée et n’accepte pas de filtres.",
       "widgetDealFiltersNotAllowedForDealEntityType": "Les filtres d'affaire ne sont pas autorisés lorsque le type d'élément est Affaire.",
       "widgetDealQuantityOnlyForService": "L'agrégation de quantité d'affaire n'est autorisée que pour le type d'élément Service.",
       "widgetDurationAggregationFiltersNotSupported": "Le cycle de vente et le temps par étape sont calculés à partir de l’historique des étapes et n’acceptent pas de filtres.",
@@ -1273,6 +1278,8 @@
         "event": "Évènement",
         "isPlatformOperator": "Opérateur de plateforme",
         "lastActiveAt": "Dernière activité",
+        "lostReasonId": "Motif de perte",
+        "nextActivity": "Prochaine activité",
         "overdue": "En retard",
         "participants": "Participants",
         "pipelineId": "Pipeline",
@@ -1291,6 +1298,10 @@
         "userIds": "Assigné à",
         "workspaceId": "Espace de travail",
         "workspaceTags": "Étiquettes"
+      },
+      "nextActivityValues": {
+        "none": "Aucune activité prévue",
+        "scheduled": "Activité prévue"
       },
       "operators": {
         "allSet": "entièrement lié",
@@ -1480,6 +1491,7 @@
         "lastActiveAt": "Dernière activité",
         "lastName": "Nom",
         "lastRequest": "Dernière utilisation",
+        "lostReason": "Motif de perte",
         "members": "Membres",
         "name": "Nom",
         "nextActivity": "Prochaine activité",
@@ -1741,12 +1753,18 @@
       "openToWon": "{value}% d’ouvert à gagné"
     },
     "groupBys": {
+      "dealCloseMonth": "Mois de clôture",
+      "dealExpectedCloseMonth": "Mois de clôture prévu",
+      "dealLostReason": "Motif de perte",
+      "dealOwner": "Assigné à",
       "dealPipeline": "Pipeline",
       "dealStage": "Étape",
+      "dealStageLostAt": "Étape au moment de la perte",
       "none": "Aucun regroupement"
     },
     "periods": {
-      "lastDays": "{days} derniers jours"
+      "lastDays": "{days} derniers jours",
+      "nextDays": "{days} prochains jours"
     },
     "tabs": {
       "dealFilters": "Filtres pour {deals}",
@@ -1760,7 +1778,12 @@
         "colors": "Couleurs",
         "showFilters": "Afficher le nombre d'activités et les filtres",
         "showMetricAndFilters": "Afficher l'indicateur et les filtres",
-        "showSummary": "Afficher le résumé de l’entonnoir"
+        "showSummary": "Afficher le résumé de l’entonnoir",
+        "winRateBasis": "Base du taux de réussite",
+        "winRateBasisOptions": {
+          "count": "Par nombre",
+          "value": "Par valeur"
+        }
       },
       "create": "Créer le widget",
       "danger": {
@@ -1836,7 +1859,8 @@
       "days": "{value} jours",
       "median": "Médiane {value} jours",
       "percent": "{value} %",
-      "winRateDenominator": "{closed} {deals} clôturés, {deals} ouverts exclus"
+      "winRateDenominator": "{closed} {deals} clôturés, {deals} ouverts exclus",
+      "winRateValueDenominator": "{closed} dans les {deals} clôturés, {deals} ouverts exclus"
     }
   },
   "DataTransfer": {

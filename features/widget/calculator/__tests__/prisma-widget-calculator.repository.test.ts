@@ -8,10 +8,14 @@ const mocks = vi.hoisted(() => ({
   getEntitiesForGrouping: vi.fn(),
   getEntityCount: vi.fn(),
   sumDealField: vi.fn(),
-  groupDealsByPipelinePosition: vi.fn(),
+  groupDealsByDealDimension: vi.fn(),
+  getDealDimensionAggregates: vi.fn(),
   getStagePositions: vi.fn(),
   getPipelinePositions: vi.fn(),
+  getOwnerPositions: vi.fn(),
+  getLostReasonPositions: vi.fn(),
   getWinRateRows: vi.fn(),
+  getWinRateTotals: vi.fn(),
   getSalesCycleRows: vi.fn(),
   getStageDurationRows: vi.fn(),
 }));
@@ -23,6 +27,8 @@ const grouping = vi.hoisted(() => ({
   groupEntitiesByEntityType: vi.fn(),
   buildPipelinePositionPoints: vi.fn(),
   buildWinRatePoints: vi.fn(),
+  buildMonthWinRatePoints: vi.fn(),
+  buildMonthPoints: vi.fn(),
   buildDurationPoints: vi.fn(),
 }));
 
@@ -33,6 +39,7 @@ vi.mock("@/core/di", () => ({
 }));
 
 import { PrismaWidgetCalculatorRepo } from "../prisma-widget-calculator.repository";
+import { DisplayType, WinRateBasis } from "../../widget.schema";
 
 function widget(
   entityType: EntityType,
@@ -47,7 +54,20 @@ function widget(
     groupByCustomColumnId: null,
     groupByType,
     periodDays: null,
+    displayOptions: null,
   };
+}
+
+const MILLISECONDS_PER_DAY = 86_400_000;
+
+function isUtcMonthStart(date: Date): boolean {
+  return (
+    date.getUTCDate() === 1 &&
+    date.getUTCHours() === 0 &&
+    date.getUTCMinutes() === 0 &&
+    date.getUTCSeconds() === 0 &&
+    date.getUTCMilliseconds() === 0
+  );
 }
 
 const ASCENDING_STAGE_POINTS = [
@@ -103,7 +123,7 @@ describe("PrismaWidgetCalculatorRepo pipeline ordering", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("keeps stage-grouped points in pipeline order instead of sorting them by value", async () => {
-    mocks.groupDealsByPipelinePosition.mockResolvedValue([]);
+    mocks.groupDealsByDealDimension.mockResolvedValue([]);
     mocks.getStagePositions.mockResolvedValue([]);
     grouping.buildPipelinePositionPoints.mockReturnValue(ASCENDING_STAGE_POINTS);
 
@@ -115,7 +135,7 @@ describe("PrismaWidgetCalculatorRepo pipeline ordering", () => {
   });
 
   it("keeps pipeline-grouped points in pipeline order and asks for pipelines, not stages", async () => {
-    mocks.groupDealsByPipelinePosition.mockResolvedValue([]);
+    mocks.groupDealsByDealDimension.mockResolvedValue([]);
     mocks.getPipelinePositions.mockResolvedValue([]);
     grouping.buildPipelinePositionPoints.mockReturnValue(ASCENDING_STAGE_POINTS);
 
@@ -215,6 +235,7 @@ describe("PrismaWidgetCalculatorRepo closed-deal metrics stored against the deal
 
   it("keeps grouping win rate by pipeline, which a close does not move the deal out of", async () => {
     mocks.getWinRateRows.mockResolvedValue([]);
+    mocks.getWinRateTotals.mockResolvedValue({ key: null, wonCount: 0, lostCount: 0, wonValue: 0, lostValue: 0 });
     mocks.getPipelinePositions.mockResolvedValue([]);
     grouping.buildWinRatePoints.mockReturnValue([]);
 
@@ -266,5 +287,181 @@ describe("PrismaWidgetCalculatorRepo duration summaries", () => {
     );
 
     expect(result.dataSummary).toBeNull();
+  });
+});
+
+describe("PrismaWidgetCalculatorRepo reporting dimensions", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("labels a win rate grouped by owner from the company roster", async () => {
+    mocks.getWinRateRows.mockResolvedValue([]);
+    mocks.getWinRateTotals.mockResolvedValue({ key: null, wonCount: 0, lostCount: 0, wonValue: 0, lostValue: 0 });
+    mocks.getOwnerPositions.mockResolvedValue([{ id: "user-a", name: "Ann", position: 0 }]);
+    grouping.buildWinRatePoints.mockReturnValue([]);
+
+    await new PrismaWidgetCalculatorRepo().calculateWidgetData(
+      widget(EntityType.deal, AggregationType.winRate, WidgetGroupByType.dealOwner),
+    );
+
+    expect(mocks.getOwnerPositions).toHaveBeenCalled();
+    expect(mocks.getWinRateRows.mock.calls[0][0].groupByType).toBe(WidgetGroupByType.dealOwner);
+    expect(grouping.buildWinRatePoints.mock.calls[0][2]).toBe(true);
+  });
+
+  it("labels a lost-reason count from the configured reasons instead of the raw uuid", async () => {
+    mocks.getDealDimensionAggregates.mockResolvedValue([]);
+    mocks.getLostReasonPositions.mockResolvedValue([{ id: "reason-1", name: "Price", position: 0 }]);
+    grouping.buildPipelinePositionPoints.mockReturnValue([]);
+
+    await new PrismaWidgetCalculatorRepo().calculateWidgetData(
+      widget(EntityType.deal, AggregationType.count, WidgetGroupByType.dealLostReason),
+    );
+
+    expect(mocks.getLostReasonPositions).toHaveBeenCalled();
+    expect(mocks.groupDealsByDealDimension).not.toHaveBeenCalled();
+  });
+
+  it("plots calendar months as month points and asks for no label registry at all", async () => {
+    mocks.getDealDimensionAggregates.mockResolvedValue([]);
+    grouping.buildMonthPoints.mockReturnValue([]);
+
+    await new PrismaWidgetCalculatorRepo().calculateWidgetData(
+      widget(EntityType.deal, AggregationType.dealValue, WidgetGroupByType.dealCloseMonth),
+    );
+
+    expect(grouping.buildMonthPoints).toHaveBeenCalled();
+    expect(mocks.getStagePositions).not.toHaveBeenCalled();
+    expect(mocks.getPipelinePositions).not.toHaveBeenCalled();
+  });
+
+  it("plots a win rate by close month on the month builder rather than the position builder", async () => {
+    mocks.getWinRateRows.mockResolvedValue([]);
+    mocks.getWinRateTotals.mockResolvedValue({ key: null, wonCount: 0, lostCount: 0, wonValue: 0, lostValue: 0 });
+    grouping.buildMonthWinRatePoints.mockReturnValue([]);
+
+    await new PrismaWidgetCalculatorRepo().calculateWidgetData(
+      widget(EntityType.deal, AggregationType.winRate, WidgetGroupByType.dealCloseMonth),
+    );
+
+    expect(grouping.buildMonthWinRatePoints).toHaveBeenCalled();
+    expect(grouping.buildWinRatePoints).not.toHaveBeenCalled();
+  });
+
+  it("looks forward for an expected close month and backward for everything else", async () => {
+    mocks.getDealDimensionAggregates.mockResolvedValue([]);
+    grouping.buildMonthPoints.mockReturnValue([]);
+    const before = new Date();
+
+    await new PrismaWidgetCalculatorRepo().calculateWidgetData(
+      widget(EntityType.deal, AggregationType.dealWeightedValue, WidgetGroupByType.dealExpectedCloseMonth),
+    );
+
+    const forecast = mocks.getDealDimensionAggregates.mock.calls[0][1];
+    expect(forecast.to.getTime()).toBeGreaterThan(before.getTime());
+
+    await new PrismaWidgetCalculatorRepo().calculateWidgetData(
+      widget(EntityType.deal, AggregationType.dealValue, WidgetGroupByType.dealCloseMonth),
+    );
+
+    const history = mocks.getDealDimensionAggregates.mock.calls[1][1];
+    expect(history.from.getTime()).toBeLessThan(before.getTime() - MILLISECONDS_PER_DAY);
+    expect(forecast.from.getTime()).toBeGreaterThan(history.from.getTime());
+  });
+
+  it("opens a month-grouped window on a calendar month, so no bar covers a part month", async () => {
+    mocks.getDealDimensionAggregates.mockResolvedValue([]);
+    grouping.buildMonthPoints.mockReturnValue([]);
+    const before = new Date();
+
+    await new PrismaWidgetCalculatorRepo().calculateWidgetData(
+      widget(EntityType.deal, AggregationType.dealWeightedValue, WidgetGroupByType.dealExpectedCloseMonth),
+    );
+
+    await new PrismaWidgetCalculatorRepo().calculateWidgetData(
+      widget(EntityType.deal, AggregationType.dealValue, WidgetGroupByType.dealCloseMonth),
+    );
+
+    for (const [, window] of mocks.getDealDimensionAggregates.mock.calls) {
+      expect(isUtcMonthStart(window.from)).toBe(true);
+      expect(isUtcMonthStart(window.to)).toBe(true);
+      expect(window.to.getTime()).toBeGreaterThan(before.getTime());
+    }
+  });
+
+  it("starts the forecast at the month in progress, so a deal that has already slipped still counts", async () => {
+    mocks.getDealDimensionAggregates.mockResolvedValue([]);
+    grouping.buildMonthPoints.mockReturnValue([]);
+    const before = new Date();
+
+    await new PrismaWidgetCalculatorRepo().calculateWidgetData(
+      widget(EntityType.deal, AggregationType.dealWeightedValue, WidgetGroupByType.dealExpectedCloseMonth),
+    );
+
+    const forecast = mocks.getDealDimensionAggregates.mock.calls[0][1];
+
+    expect(forecast.from.getTime()).toBeLessThanOrEqual(before.getTime());
+    expect(forecast.from).toEqual(new Date(Date.UTC(before.getUTCFullYear(), before.getUTCMonth(), 1)));
+  });
+
+  it("reads the headline of a grouped win rate from an ungrouped pass, not from the sum of the groups", async () => {
+    mocks.getWinRateRows.mockResolvedValue([
+      { key: "user-a", wonCount: 1, lostCount: 1, wonValue: 1000, lostValue: 1000 },
+      { key: "user-b", wonCount: 1, lostCount: 0, wonValue: 1000, lostValue: 0 },
+      { key: null, wonCount: 0, lostCount: 1, wonValue: 0, lostValue: 4000 },
+    ]);
+    mocks.getWinRateTotals.mockResolvedValue({ key: null, wonCount: 1, lostCount: 2, wonValue: 1000, lostValue: 5000 });
+    mocks.getOwnerPositions.mockResolvedValue([]);
+    grouping.buildWinRatePoints.mockReturnValue([]);
+
+    const result = await new PrismaWidgetCalculatorRepo().calculateWidgetData(
+      widget(EntityType.deal, AggregationType.winRate, WidgetGroupByType.dealOwner),
+    );
+
+    expect(result.dataSummary).toEqual({ headline: (1 / 3) * 100, median: null, sampleSize: 3 });
+    expect(mocks.getWinRateTotals).toHaveBeenCalled();
+  });
+
+  it("asks for no second pass when nothing is grouped, where the single row is already the total", async () => {
+    mocks.getWinRateRows.mockResolvedValue([{ key: null, wonCount: 1, lostCount: 1, wonValue: 1000, lostValue: 3000 }]);
+    grouping.buildWinRatePoints.mockReturnValue([]);
+
+    const result = await new PrismaWidgetCalculatorRepo().calculateWidgetData(
+      widget(EntityType.deal, AggregationType.winRate),
+    );
+
+    expect(mocks.getWinRateTotals).not.toHaveBeenCalled();
+    expect(result.dataSummary).toEqual({ headline: 50, median: null, sampleSize: 2 });
+  });
+
+  it("summarises the win rate by value when the widget is configured to read value", async () => {
+    mocks.getWinRateRows.mockResolvedValue([{ key: null, wonCount: 1, lostCount: 3, wonValue: 9000, lostValue: 1000 }]);
+    grouping.buildWinRatePoints.mockReturnValue([]);
+
+    const byValue = await new PrismaWidgetCalculatorRepo().calculateWidgetData({
+      ...widget(EntityType.deal, AggregationType.winRate),
+      displayOptions: { displayType: DisplayType.verticalBarChart, winRateBasis: WinRateBasis.value },
+    });
+
+    expect(byValue.dataSummary).toEqual({ headline: 90, median: null, sampleSize: 4 });
+    expect(grouping.buildWinRatePoints.mock.calls[0][3]).toBe(WinRateBasis.value);
+
+    const byCount = await new PrismaWidgetCalculatorRepo().calculateWidgetData(
+      widget(EntityType.deal, AggregationType.winRate),
+    );
+
+    expect(byCount.dataSummary).toEqual({ headline: 25, median: null, sampleSize: 4 });
+    expect(grouping.buildWinRatePoints.mock.calls[1][3]).toBe(WinRateBasis.count);
+  });
+
+  it("keeps the sample size a deal count even when the rate is read by value", async () => {
+    mocks.getWinRateRows.mockResolvedValue([{ key: null, wonCount: 1, lostCount: 3, wonValue: 9000, lostValue: 1000 }]);
+    grouping.buildWinRatePoints.mockReturnValue([]);
+
+    const result = await new PrismaWidgetCalculatorRepo().calculateWidgetData({
+      ...widget(EntityType.deal, AggregationType.winRate),
+      displayOptions: { displayType: DisplayType.verticalBarChart, winRateBasis: WinRateBasis.value },
+    });
+
+    expect(result.dataSummary?.sampleSize).toBe(4);
   });
 });

@@ -9,7 +9,9 @@ import {
   DiagramDataPointSchema,
   DisplayType,
   FunnelWidgetDtoSchema,
+  WidgetDisplayOptionsSchema,
   WidgetDtoSchema,
+  WinRateBasis,
   isActivityWidget,
   isChartWidget,
   isFunnelWidget,
@@ -372,5 +374,56 @@ describe("WidgetDtoSchema discrimination", () => {
 
     expect(result.success).toBe(false);
     expect(result.error?.issues.some((issue) => issue.path.join(".") === "timelineFilters.1.field")).toBe(true);
+  });
+});
+
+describe("calendar month data points", () => {
+  it("accepts a zero-padded calendar month and rejects anything that is not one", () => {
+    expect(DiagramDataPointSchema.safeParse({ labelKind: "month", month: "2026-01", value: 4 }).success).toBe(true);
+    expect(DiagramDataPointSchema.safeParse({ labelKind: "month", month: "2026-12", value: 4 }).success).toBe(true);
+    expect(DiagramDataPointSchema.safeParse({ labelKind: "month", month: "2026-13", value: 4 }).success).toBe(false);
+    expect(DiagramDataPointSchema.safeParse({ labelKind: "month", month: "2026-1", value: 4 }).success).toBe(false);
+    expect(DiagramDataPointSchema.safeParse({ labelKind: "month", month: "January", value: 4 }).success).toBe(false);
+  });
+
+  it("keeps a month point free of the literal label, so nothing renders an unlocalized date", () => {
+    expect(
+      DiagramDataPointSchema.safeParse({ labelKind: "month", month: "2026-01", label: "Jan", value: 4 }).success,
+    ).toBe(false);
+  });
+
+  it("carries the win-rate metrics on a month point like any other group", () => {
+    expect(
+      DiagramDataPointSchema.safeParse({
+        labelKind: "month",
+        month: "2026-01",
+        value: 75,
+        metrics: { wonCount: 3, lostCount: 1, wonValue: 300, lostValue: 100, sampleSize: 4 },
+      }).success,
+    ).toBe(true);
+  });
+});
+
+describe("win rate basis display option", () => {
+  it("stores the reader's chosen basis alongside the chart style", () => {
+    const parsed = WidgetDisplayOptionsSchema.safeParse({
+      displayType: DisplayType.horizontalBarChart,
+      winRateBasis: WinRateBasis.value,
+    });
+
+    expect(parsed.success && parsed.data.winRateBasis).toBe(WinRateBasis.value);
+  });
+
+  it("stays optional, so every widget stored before the option keeps parsing", () => {
+    const parsed = WidgetDisplayOptionsSchema.safeParse({ displayType: DisplayType.horizontalBarChart });
+
+    expect(parsed.success && parsed.data.winRateBasis).toBeUndefined();
+  });
+
+  it("refuses a basis the calculator cannot compute", () => {
+    expect(
+      WidgetDisplayOptionsSchema.safeParse({ displayType: DisplayType.horizontalBarChart, winRateBasis: "median" })
+        .success,
+    ).toBe(false);
   });
 });

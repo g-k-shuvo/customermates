@@ -302,6 +302,108 @@ describe("UpsertWidgetInteractor closed-deal metrics grouped by stage", () => {
   });
 });
 
+describe("UpsertWidgetInteractor reporting dimensions", () => {
+  let repo: MockUpsertWidgetRepo;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    repo = new MockUpsertWidgetRepo();
+  });
+
+  it.each([WidgetGroupByType.dealOwner, WidgetGroupByType.dealCloseMonth])(
+    "groups the win rate by %s, where a won deal and a lost deal both carry the group",
+    async (groupByType) => {
+      const result = await makeInteractor(repo).invoke(chartInput(AggregationType.winRate, groupByType));
+
+      expect(result.ok).toBe(true);
+      expect(repo.upsertWidget).toHaveBeenCalled();
+    },
+  );
+
+  it.each([WidgetGroupByType.dealLostReason, WidgetGroupByType.dealStageLostAt])(
+    "refuses to group the win rate by %s, which no won deal can ever carry",
+    async (groupByType) => {
+      const result = await makeInteractor(repo).invoke(chartInput(AggregationType.winRate, groupByType));
+
+      expect(result.ok).toBe(false);
+      expect(JSON.stringify(result)).toContain(CustomErrorCode.widgetClosedDealAggregationCannotGroupByLostOutcome);
+      expect(repo.upsertWidget).not.toHaveBeenCalled();
+    },
+  );
+
+  it("refuses to group the win rate by expected close month, which only describes open deals", async () => {
+    const result = await makeInteractor(repo).invoke(
+      chartInput(AggregationType.winRate, WidgetGroupByType.dealExpectedCloseMonth),
+    );
+
+    expect(result.ok).toBe(false);
+    expect(JSON.stringify(result)).toContain(CustomErrorCode.widgetClosedDealAggregationCannotGroupByForecastMonth);
+  });
+
+  it.each([WidgetGroupByType.dealLostReason, WidgetGroupByType.dealStageLostAt, WidgetGroupByType.dealOwner])(
+    "counts deals by %s, where the lost-only dimensions are the honest way to read a loss breakdown",
+    async (groupByType) => {
+      const result = await makeInteractor(repo).invoke(chartInput(AggregationType.count, groupByType));
+
+      expect(result.ok).toBe(true);
+      expect(repo.upsertWidget).toHaveBeenCalled();
+    },
+  );
+
+  it("keeps filters on the stage grouping, which stays on the typed aggregate", async () => {
+    const result = await makeInteractor(repo).invoke({
+      ...chartInput(AggregationType.count, WidgetGroupByType.dealStage),
+      entityFilters: [{ field: "dealStatus", operator: FilterOperatorKey.in, value: ["lost"] }],
+    });
+
+    expect(result.ok).toBe(true);
+    expect(repo.upsertWidget).toHaveBeenCalled();
+  });
+
+  it("narrows an owner grouping to open deals, which is the only way that report is a pipeline snapshot", async () => {
+    const result = await makeInteractor(repo).invoke({
+      ...chartInput(AggregationType.dealValue, WidgetGroupByType.dealOwner),
+      entityFilters: [{ field: "dealStatus", operator: FilterOperatorKey.in, value: ["open"] }],
+    });
+
+    expect(result.ok).toBe(true);
+    expect(repo.upsertWidget).toHaveBeenCalled();
+  });
+
+  it.each([WidgetGroupByType.dealCloseMonth, WidgetGroupByType.dealLostReason, WidgetGroupByType.dealStageLostAt])(
+    "rejects filters on %s, whose bounded aggregate is computed in the database",
+    async (groupByType) => {
+      const result = await makeInteractor(repo).invoke({
+        ...chartInput(AggregationType.count, groupByType),
+        entityFilters: [{ field: "dealStatus", operator: FilterOperatorKey.in, value: ["lost"] }],
+      });
+
+      expect(result.ok).toBe(false);
+      expect(JSON.stringify(result)).toContain(CustomErrorCode.widgetDealDimensionGroupingFiltersNotSupported);
+    },
+  );
+
+  it("refuses a deal dimension on a non-deal widget", async () => {
+    const result = await makeInteractor(repo).invoke({
+      ...chartInput(AggregationType.count, WidgetGroupByType.dealOwner),
+      entityType: EntityType.contact,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(JSON.stringify(result)).toContain(CustomErrorCode.widgetPipelineGroupingRequiresDeal);
+  });
+
+  it.each([WidgetGroupByType.dealOwner, WidgetGroupByType.dealCloseMonth])(
+    "keeps duration metrics off %s, which the stage-history query has no column for",
+    async (groupByType) => {
+      const result = await makeInteractor(repo).invoke(chartInput(AggregationType.stageDurationDays, groupByType));
+
+      expect(result.ok).toBe(false);
+      expect(JSON.stringify(result)).toContain(CustomErrorCode.widgetPeriodAggregationGroupingLimited);
+    },
+  );
+});
+
 describe("UpsertWidgetInteractor funnel widgets", () => {
   let repo: MockUpsertWidgetRepo;
 

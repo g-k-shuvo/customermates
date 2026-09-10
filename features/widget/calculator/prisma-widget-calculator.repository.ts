@@ -1,13 +1,28 @@
 import type { DiagramDataPoint } from "../widget.schema";
-import type { WidgetForCalculation, WidgetCalculation, PipelinePosition } from "./widget-calculator.types";
+import type {
+  WidgetForCalculation,
+  WidgetCalculation,
+  PeriodWindow,
+  PipelinePosition,
+  WinRateRow,
+} from "./widget-calculator.types";
+import type { ClosedDealTotals } from "../widget-metrics";
 
 import { AggregationType, EntityType, WidgetGroupByType } from "@/generated/prisma";
 
 import { BaseRepository } from "@/core/base/base-repository";
 import { getWidgetGroupingService, getWidgetDataFetcher, getCustomColumnRepo } from "@/core/di";
-import { groupsClosedDealsByCurrentStage, isPipelinePositionGrouping } from "../widget-aggregation";
-import { winRatePercent } from "../widget-metrics";
-import { periodWindow } from "./widget-period";
+import { WinRateBasis } from "../widget.schema";
+import {
+  isDealDimensionGrouping,
+  isForecastGrouping,
+  isMonthGrouping,
+  isPipelinePositionGrouping,
+  isUnsupportedClosedDealGrouping,
+  requiresRawDimensionQuery,
+} from "../widget-aggregation";
+import { winRateForBasis } from "../widget-metrics";
+import { forecastWindow, monthAlignedWindow, periodWindow } from "./widget-period";
 
 export class PrismaWidgetCalculatorRepo extends BaseRepository {
   async calculateWidgetData(widget: WidgetForCalculation): Promise<WidgetCalculation> {
@@ -41,50 +56,94 @@ export class PrismaWidgetCalculatorRepo extends BaseRepository {
   }
 
   private orderPoints(widget: WidgetForCalculation, data: DiagramDataPoint[]): DiagramDataPoint[] {
-    if (isPipelinePositionGrouping(widget.groupByType)) return data;
+    if (isDealDimensionGrouping(widget.groupByType)) return data;
 
     return [...data].sort((a, b) => b.value - a.value);
   }
 
   private async positionsFor(groupByType: WidgetGroupByType): Promise<PipelinePosition[]> {
-    return groupByType === WidgetGroupByType.dealPipeline
-      ? await getWidgetDataFetcher().getPipelinePositions()
-      : await getWidgetDataFetcher().getStagePositions();
+    if (groupByType === WidgetGroupByType.dealPipeline) return await getWidgetDataFetcher().getPipelinePositions();
+    if (groupByType === WidgetGroupByType.dealOwner) return await getWidgetDataFetcher().getOwnerPositions();
+    if (groupByType === WidgetGroupByType.dealLostReason) return await getWidgetDataFetcher().getLostReasonPositions();
+
+    return await getWidgetDataFetcher().getStagePositions();
   }
 
-  private async calculatePipelinePositionGroup(widget: WidgetForCalculation): Promise<DiagramDataPoint[]> {
+  private dimensionWindow(widget: WidgetForCalculation): PeriodWindow {
+    const window = isForecastGrouping(widget.groupByType)
+      ? forecastWindow(widget.aggregationType, widget.periodDays, new Date())
+      : periodWindow(widget.aggregationType, widget.periodDays, new Date());
+
+    return isMonthGrouping(widget.groupByType) ? monthAlignedWindow(window) : window;
+  }
+
+  private async calculateDealDimensionGroup(widget: WidgetForCalculation): Promise<DiagramDataPoint[]> {
+    const grouping = getWidgetGroupingService();
+
+    if (requiresRawDimensionQuery(widget.groupByType)) {
+      const aggregates = await getWidgetDataFetcher().getDealDimensionAggregates(
+        widget.groupByType,
+        this.dimensionWindow(widget),
+      );
+
+      if (isMonthGrouping(widget.groupByType)) return grouping.buildMonthPoints(aggregates, widget.aggregationType);
+
+      return grouping.buildPipelinePositionPoints(
+        aggregates,
+        await this.positionsFor(widget.groupByType),
+        widget.aggregationType,
+      );
+    }
+
     const [aggregates, positions] = await Promise.all([
-      getWidgetDataFetcher().groupDealsByPipelinePosition(widget, widget.groupByType),
+      getWidgetDataFetcher().groupDealsByDealDimension(widget, widget.groupByType),
       this.positionsFor(widget.groupByType),
     ]);
 
-    return getWidgetGroupingService().buildPipelinePositionPoints(aggregates, positions, widget.aggregationType);
+    return grouping.buildPipelinePositionPoints(aggregates, positions, widget.aggregationType);
   }
 
   private withSupportedGrouping(widget: WidgetForCalculation): WidgetForCalculation {
-    if (!groupsClosedDealsByCurrentStage(widget.aggregationType, widget.groupByType)) return widget;
+    if (!isUnsupportedClosedDealGrouping(widget.aggregationType, widget.groupByType)) return widget;
 
     return { ...widget, groupByType: WidgetGroupByType.none };
   }
 
+  private addUpWinRateRows(rows: WinRateRow[]): ClosedDealTotals {
+    return rows.reduce<ClosedDealTotals>(
+      (accumulated, row) => ({
+        wonCount: accumulated.wonCount + row.wonCount,
+        lostCount: accumulated.lostCount + row.lostCount,
+        wonValue: accumulated.wonValue + row.wonValue,
+        lostValue: accumulated.lostValue + row.lostValue,
+      }),
+      { wonCount: 0, lostCount: 0, wonValue: 0, lostValue: 0 },
+    );
+  }
+
   private async calculateWinRate(unsafeWidget: WidgetForCalculation): Promise<WidgetCalculation> {
     const widget = this.withSupportedGrouping(unsafeWidget);
-    const grouped = isPipelinePositionGrouping(widget.groupByType);
-    const window = periodWindow(widget.aggregationType, widget.periodDays, new Date());
-    const [rows, positions] = await Promise.all([
-      getWidgetDataFetcher().getWinRateRows(widget, window),
-      grouped ? this.positionsFor(widget.groupByType) : Promise.resolve([]),
+    const grouped = isDealDimensionGrouping(widget.groupByType);
+    const basis = widget.displayOptions?.winRateBasis ?? WinRateBasis.count;
+    const groupsByMonth = isMonthGrouping(widget.groupByType);
+    const window = this.dimensionWindow(widget);
+    const fetcher = getWidgetDataFetcher();
+    const [rows, ungrouped, positions] = await Promise.all([
+      fetcher.getWinRateRows(widget, window),
+      grouped ? fetcher.getWinRateTotals(widget, window) : Promise.resolve(null),
+      grouped && !groupsByMonth ? this.positionsFor(widget.groupByType) : Promise.resolve([]),
     ]);
 
-    const wonCount = rows.reduce((sum, row) => sum + row.wonCount, 0);
-    const lostCount = rows.reduce((sum, row) => sum + row.lostCount, 0);
+    const totals = ungrouped ?? this.addUpWinRateRows(rows);
 
     return {
-      data: getWidgetGroupingService().buildWinRatePoints(rows, positions, grouped),
+      data: groupsByMonth
+        ? getWidgetGroupingService().buildMonthWinRatePoints(rows, basis)
+        : getWidgetGroupingService().buildWinRatePoints(rows, positions, grouped, basis),
       dataSummary: {
-        headline: winRatePercent(wonCount, lostCount),
+        headline: winRateForBasis(totals, basis),
         median: null,
-        sampleSize: wonCount + lostCount,
+        sampleSize: totals.wonCount + totals.lostCount,
       },
     };
   }
@@ -124,7 +183,7 @@ export class PrismaWidgetCalculatorRepo extends BaseRepository {
       ];
     }
 
-    if (isPipelinePositionGrouping(groupByType)) return await this.calculatePipelinePositionGroup(widget);
+    if (isDealDimensionGrouping(groupByType)) return await this.calculateDealDimensionGroup(widget);
 
     if (groupByType === WidgetGroupByType.customColumn && groupByCustomColumnId) {
       const customColumn = await getCustomColumnRepo().findById(groupByCustomColumnId);
@@ -160,7 +219,7 @@ export class PrismaWidgetCalculatorRepo extends BaseRepository {
       ];
     }
 
-    if (isPipelinePositionGrouping(groupByType)) return await this.calculatePipelinePositionGroup(widget);
+    if (isDealDimensionGrouping(groupByType)) return await this.calculateDealDimensionGroup(widget);
 
     const deals = await getWidgetDataFetcher().getDealsForEntityType(widget);
 
@@ -185,7 +244,7 @@ export class PrismaWidgetCalculatorRepo extends BaseRepository {
       ];
     }
 
-    if (isPipelinePositionGrouping(groupByType)) return await this.calculatePipelinePositionGroup(widget);
+    if (isDealDimensionGrouping(groupByType)) return await this.calculateDealDimensionGroup(widget);
 
     const deals = await getWidgetDataFetcher().getDealsForEntityType(widget);
 
@@ -210,7 +269,7 @@ export class PrismaWidgetCalculatorRepo extends BaseRepository {
       ];
     }
 
-    if (isPipelinePositionGrouping(groupByType)) return await this.calculatePipelinePositionGroup(widget);
+    if (isDealDimensionGrouping(groupByType)) return await this.calculateDealDimensionGroup(widget);
 
     if (groupByType === WidgetGroupByType.service) {
       return getWidgetGroupingService().groupDealsByEntityType(

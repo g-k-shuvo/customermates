@@ -44,6 +44,13 @@ export const DealDtoSchema = z.object({
       "Whether the deal has passed the rotting deadline its stage sets. Derived from the stored deadline at read time, so it is absent from stored snapshots taken before the deadline existed.",
     ),
   lostReasonId: z.uuid().nullable(),
+  lostReasonName: z
+    .string()
+    .nullable()
+    .default(null)
+    .describe(
+      "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
+    ),
   lostNotes: z.string().nullable(),
   wonAt: z.date().nullable(),
   lostAt: z.date().nullable(),

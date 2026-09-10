@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { closedDealTotals, meanOf, medianOf, winRatePercent } from "../widget-metrics";
+import {
+  closedDealDenominator,
+  closedDealTotals,
+  meanOf,
+  medianOf,
+  winRateForBasis,
+  winRatePercent,
+} from "../widget-metrics";
+import { WinRateBasis } from "../widget.schema";
 
 const SKEWED_SALES_CYCLE_DAYS = [8, 11, 12, 14, 15, 17, 21, 26, 34, 240];
 
@@ -62,5 +70,24 @@ describe("mean versus median on a skewed sample", () => {
   it("has no mean and no median for an empty sample", () => {
     expect(meanOf([])).toBeNull();
     expect(medianOf([])).toBeNull();
+  });
+});
+
+describe("win rate read by count versus by value", () => {
+  const LOPSIDED = { wonCount: 1, lostCount: 3, wonValue: 9000, lostValue: 1000 };
+
+  it("gives two different answers for the same closed set, which is the point of offering both", () => {
+    expect(winRateForBasis(LOPSIDED, WinRateBasis.count)).toBe(25);
+    expect(winRateForBasis(LOPSIDED, WinRateBasis.value)).toBe(90);
+  });
+
+  it("reports the denominator in the unit the reader chose", () => {
+    expect(closedDealDenominator(LOPSIDED, WinRateBasis.count)).toBe(4);
+    expect(closedDealDenominator(LOPSIDED, WinRateBasis.value)).toBe(10000);
+  });
+
+  it("has no value rate when everything that closed was worth nothing", () => {
+    expect(winRateForBasis({ wonCount: 2, lostCount: 2, wonValue: 0, lostValue: 0 }, WinRateBasis.value)).toBeNull();
+    expect(winRateForBasis({ wonCount: 2, lostCount: 2, wonValue: 0, lostValue: 0 }, WinRateBasis.count)).toBe(50);
   });
 });

@@ -33,7 +33,13 @@ export function useDealColumns(forecastsByStage: boolean): ColumnDef<DealDto>[] 
       },
       {
         id: "status",
-        cell: ({ row }) => <DealStatusBadge status={row.original.status} />,
+        cell: ({ row }) => (
+          <DealStatusBadge lostReasonName={row.original.lostReasonName} status={row.original.status} />
+        ),
+      },
+      {
+        id: "lostReason",
+        cell: ({ row }) => <span className="truncate text-sm">{row.original.lostReasonName ?? ""}</span>,
       },
       {
         id: "rottingAt",

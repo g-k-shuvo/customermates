@@ -35,8 +35,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useRootStore } from "@/core/stores/root-store.provider";
 import type { ChartColor } from "@/features/widget/widget.schema";
-import { DisplayType } from "@/features/widget/widget.schema";
-import { WIDGET_PERIOD_DAY_OPTIONS } from "@/features/widget/widget-aggregation";
+import { DisplayType, WinRateBasis } from "@/features/widget/widget.schema";
+import { WIDGET_PERIOD_DAY_OPTIONS, isDealDimensionGrouping } from "@/features/widget/widget-aggregation";
 import { useDeleteConfirmation } from "@/components/modal/hooks/use-delete-confirmation";
 import { FilterAccordion } from "@/components/data-view/filter-modal/filter-accordion";
 import { getChartColors } from "@/constants/chart-colors";
@@ -144,8 +144,7 @@ export const WidgetModal = observer((props: Props) => {
   function groupByOptionLabel(option: { key: string; label?: string }) {
     if (Object.values(EntityType).includes(option.key as EntityType)) return singular(option.key as EntityType);
     if (option.key.startsWith("custom:") && option.label) return option.label;
-    if (option.key === WidgetGroupByType.dealStage) return t("Dashboard.groupBys.dealStage");
-    if (option.key === WidgetGroupByType.dealPipeline) return t("Dashboard.groupBys.dealPipeline");
+    if (isDealDimensionGrouping(option.key as WidgetGroupByType)) return t(`Dashboard.groupBys.${option.key}`);
 
     return t("Dashboard.groupBys.none");
   }
@@ -198,6 +197,36 @@ export const WidgetModal = observer((props: Props) => {
         </div>
 
         {renderPeriodPicker("sm:col-span-2")}
+
+        {renderWinRateBasisPicker("sm:col-span-2")}
+      </div>
+    );
+  }
+
+  function renderWinRateBasisPicker(className?: string) {
+    if (!widgetModalStore.showWinRateBasisPicker) return null;
+
+    return (
+      <div className={className ? `space-y-1.5 ${className}` : "space-y-1.5"}>
+        <FormLabel htmlFor="winRateBasis">{t("Dashboard.widgetEditor.appearance.winRateBasis")}</FormLabel>
+
+        <Select
+          disabled={isDisabled}
+          value={widgetModalStore.winRateBasisValue}
+          onValueChange={widgetModalStore.onWinRateBasisChange}
+        >
+          <SelectTrigger className="w-full" id="winRateBasis">
+            <SelectValue placeholder=" " />
+          </SelectTrigger>
+
+          <SelectContent>
+            {Object.values(WinRateBasis).map((basis) => (
+              <SelectItem key={basis} value={basis}>
+                {t(`Dashboard.widgetEditor.appearance.winRateBasisOptions.${basis}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     );
   }

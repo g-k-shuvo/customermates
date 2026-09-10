@@ -26,6 +26,7 @@ import { useRootStore } from "@/core/stores/root-store.provider";
 
 import { DealCloseActions } from "./deal-close-actions";
 import { hasActiveDealQuery } from "./deal-board-filters";
+import { DealNextActivityFilterChip } from "./deal-next-activity-filter-chip";
 import { DealPipelineSwitcher } from "./deal-pipeline-switcher";
 import { DealRottingFilterChip } from "./deal-rotting-filter-chip";
 import { DealsPageSkeleton } from "./deals-page-skeleton";
@@ -76,6 +77,8 @@ export const DealsPageView = observer(function DealsPageView({ deals, forecastsB
         <DealPipelineSwitcher />
 
         <DealRottingFilterChip />
+
+        <DealNextActivityFilterChip />
 
         <DataViewToolbar
           addLabel={pageState === "true-empty" ? emptyActionLabel : undefined}

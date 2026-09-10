@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { AggregationType } from "@/generated/prisma";
 
+import { WinRateBasis } from "@/features/widget/widget.schema";
+
 import { widgetHeadlineValue, widgetMetricNote, widgetPointMetricNote } from "../widget-metric-note";
 import { widgetSubheader } from "../widget-subheader";
 
@@ -35,6 +37,39 @@ describe("widgetMetricNote", () => {
 
   it("leaves the ordinary sum aggregations without a note", () => {
     expect(widgetMetricNote(AggregationType.dealValue, null)).toBeNull();
+  });
+
+  it("names the closed value instead of the closed count when the rate is read by value", () => {
+    expect(
+      widgetMetricNote(
+        AggregationType.winRate,
+        { headline: 90, median: null, sampleSize: 4 },
+        { basis: WinRateBasis.value, totals: { wonValue: 9000, lostValue: 1000 } },
+      ),
+    ).toEqual({ kind: "winRateValueDenominator", closedValue: 10000 });
+  });
+
+  it("keeps naming the closed count when the rate is read by count", () => {
+    expect(
+      widgetMetricNote(
+        AggregationType.winRate,
+        { headline: 25, median: null, sampleSize: 4 },
+        { basis: WinRateBasis.count, totals: { wonValue: 9000, lostValue: 1000 } },
+      ),
+    ).toEqual({ kind: "winRateDenominator", sampleSize: 4 });
+  });
+
+  it("matches the per-group note to the basis the chart is plotting", () => {
+    const metrics = { wonCount: 1, lostCount: 3, wonValue: 9000, lostValue: 1000, sampleSize: 4 };
+
+    expect(widgetPointMetricNote(AggregationType.winRate, metrics)).toEqual({
+      kind: "winRateDenominator",
+      sampleSize: 4,
+    });
+    expect(widgetPointMetricNote(AggregationType.winRate, metrics, WinRateBasis.value)).toEqual({
+      kind: "winRateValueDenominator",
+      closedValue: 10000,
+    });
   });
 });
 

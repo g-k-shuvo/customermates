@@ -17,7 +17,8 @@ import { AppCardHeader } from "@/components/card/app-card-header";
 import { AppCardBody } from "@/components/card/app-card-body";
 import { hasValidFilterConfiguration } from "@/components/data-view/table-view.utils";
 import { useFilterFieldLabel } from "@/components/entity-terminology/use-filter-field-label";
-import { supportsDealFilters } from "@/features/widget/widget.schema";
+import { WinRateBasis, supportsDealFilters } from "@/features/widget/widget.schema";
+import { closedDealTotals } from "@/features/widget/widget-metrics";
 import { widgetSubheader } from "./widget-subheader";
 import { WidgetChart } from "./widget-chart";
 import { WidgetFilterChip } from "./widget-filter-chip";
@@ -41,14 +42,20 @@ export const ChartWidgetCard = observer(({ widget }: Props) => {
     : [];
 
   const data = widget.data ?? [];
+  const winRateBasis = widget.displayOptions?.winRateBasis ?? WinRateBasis.count;
   const summedValue = data.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
   const formattedTotal = formatHeadline(
     widget.aggregationType,
     widgetHeadlineValue(widget.aggregationType, widget.dataSummary, summedValue),
   );
   const subheaderNotes = [
-    periodText(widget.aggregationType, widget.periodDays),
-    noteText(widgetMetricNote(widget.aggregationType, widget.dataSummary)),
+    periodText(widget.aggregationType, widget.periodDays, widget.groupByType),
+    noteText(
+      widgetMetricNote(widget.aggregationType, widget.dataSummary, {
+        basis: winRateBasis,
+        totals: closedDealTotals(data),
+      }),
+    ),
   ].filter((note): note is string => Boolean(note));
   const subheader = widgetSubheader(
     data.length,

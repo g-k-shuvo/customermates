@@ -174,9 +174,11 @@ describe("PrismaUserRepo.createCompanyAndUser", () => {
 
     expect(seeded.map((widget) => widget.name)).toEqual([
       "Common.defaultData.dashboard.openPipelineValueByStage",
+      "Common.defaultData.dashboard.weightedForecastByCloseMonth",
       "Common.defaultData.dashboard.pipelineFunnel",
-      "Common.defaultData.dashboard.winRate",
+      "Common.defaultData.dashboard.winRateByOwner",
       "Common.defaultData.dashboard.salesCycle",
+      "Common.defaultData.dashboard.lostDealsByReason",
     ]);
     expect(
       seeded.every(
@@ -207,13 +209,32 @@ describe("PrismaUserRepo.createCompanyAndUser", () => {
       entityType: EntityType.deal,
       entityFilters: [{ field: "dealStatus", operator: "in", value: ["open"] }],
     });
-    expect(byName.get("Common.defaultData.dashboard.winRate")).toMatchObject({
+    expect(byName.get("Common.defaultData.dashboard.winRateByOwner")).toMatchObject({
       aggregationType: AggregationType.winRate,
+      groupByType: WidgetGroupByType.dealOwner,
       periodDays: 90,
     });
     expect(byName.get("Common.defaultData.dashboard.salesCycle")).toMatchObject({
       aggregationType: AggregationType.salesCycleDays,
       periodDays: 365,
+    });
+  });
+
+  it("seeds the forecast and the loss breakdown the reporting milestone asks for", async () => {
+    await new PrismaUserRepo().createCompanyAndUser(registerArgs);
+
+    const seeded = widgetCreateMany.mock.calls[0][0].data as Array<Record<string, unknown>>;
+    const byName = new Map(seeded.map((widget) => [widget.name, widget]));
+
+    expect(byName.get("Common.defaultData.dashboard.weightedForecastByCloseMonth")).toMatchObject({
+      aggregationType: AggregationType.dealWeightedValue,
+      groupByType: WidgetGroupByType.dealExpectedCloseMonth,
+      periodDays: 365,
+    });
+    expect(byName.get("Common.defaultData.dashboard.lostDealsByReason")).toMatchObject({
+      aggregationType: AggregationType.count,
+      groupByType: WidgetGroupByType.dealLostReason,
+      periodDays: 90,
     });
   });
 

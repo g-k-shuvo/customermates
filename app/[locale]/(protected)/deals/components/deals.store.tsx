@@ -144,6 +144,7 @@ export class DealsStore extends BaseDataViewStore<DealDto> {
     const columns: (TableColumn | false)[] = [
       { uid: "name", sortable: true },
       { uid: "status" },
+      { uid: "lostReason", sortable: true },
       { uid: "rottingAt", sortable: true },
       this.canAccessTasks && { uid: "nextActivity" },
       { uid: "totalValue", sortable: true },

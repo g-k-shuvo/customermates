@@ -19,9 +19,13 @@ import {
 import {
   WIDGET_PERIOD_DAYS_MAX,
   groupsClosedDealsByCurrentStage,
+  groupsClosedDealsByForecastMonth,
+  groupsClosedDealsByLostOutcome,
+  isDealDimensionGrouping,
   isDurationAggregation,
   isPeriodAggregation,
   isPipelinePositionGrouping,
+  requiresRawDimensionQuery,
 } from "./widget-aggregation";
 import { CustomErrorCode } from "@/core/validation/validation.types";
 import { type Validated } from "@/core/validation/validation.utils";
@@ -119,9 +123,9 @@ const ChartWidgetInputSchema = z
       });
     }
 
-    const groupsByPipelinePosition = isPipelinePositionGrouping(data.groupByType);
+    const groupsByDealDimension = isDealDimensionGrouping(data.groupByType);
 
-    if (groupsByPipelinePosition && data.entityType !== EntityType.deal) {
+    if (groupsByDealDimension && data.entityType !== EntityType.deal) {
       ctx.addIssue({
         code: "custom",
         params: { error: CustomErrorCode.widgetPipelineGroupingRequiresDeal },
@@ -138,7 +142,11 @@ const ChartWidgetInputSchema = z
         });
       }
 
-      if (!groupsByPipelinePosition && data.groupByType !== WidgetGroupByType.none) {
+      const allowedGrouping = isDurationAggregation(data.aggregationType)
+        ? isPipelinePositionGrouping(data.groupByType)
+        : groupsByDealDimension;
+
+      if (!allowedGrouping && data.groupByType !== WidgetGroupByType.none) {
         ctx.addIssue({
           code: "custom",
           params: { error: CustomErrorCode.widgetPeriodAggregationGroupingLimited },
@@ -155,10 +163,25 @@ const ChartWidgetInputSchema = z
       });
     }
 
-    if (
-      isDurationAggregation(data.aggregationType) &&
-      ((data.entityFilters?.length ?? 0) > 0 || (data.dealFilters?.length ?? 0) > 0)
-    ) {
+    if (groupsClosedDealsByLostOutcome(data.aggregationType, data.groupByType)) {
+      ctx.addIssue({
+        code: "custom",
+        params: { error: CustomErrorCode.widgetClosedDealAggregationCannotGroupByLostOutcome },
+        path: ["groupByType"],
+      });
+    }
+
+    if (groupsClosedDealsByForecastMonth(data.aggregationType, data.groupByType)) {
+      ctx.addIssue({
+        code: "custom",
+        params: { error: CustomErrorCode.widgetClosedDealAggregationCannotGroupByForecastMonth },
+        path: ["groupByType"],
+      });
+    }
+
+    const carriesFilters = (data.entityFilters?.length ?? 0) > 0 || (data.dealFilters?.length ?? 0) > 0;
+
+    if (isDurationAggregation(data.aggregationType) && carriesFilters) {
       ctx.addIssue({
         code: "custom",
         params: { error: CustomErrorCode.widgetDurationAggregationFiltersNotSupported },
@@ -166,9 +189,17 @@ const ChartWidgetInputSchema = z
       });
     }
 
+    if (requiresRawDimensionQuery(data.groupByType) && carriesFilters) {
+      ctx.addIssue({
+        code: "custom",
+        params: { error: CustomErrorCode.widgetDealDimensionGroupingFiltersNotSupported },
+        path: ["entityFilters"],
+      });
+    }
+
     if (
       data.groupByType &&
-      !groupsByPipelinePosition &&
+      !groupsByDealDimension &&
       data.groupByType !== WidgetGroupByType.customColumn &&
       data.groupByType !== WidgetGroupByType.none
     ) {

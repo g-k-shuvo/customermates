@@ -30,6 +30,8 @@ const RELATION_FILTER_FIELDS = [
   FilterFieldKey.dealStatus,
   FilterFieldKey.rotting,
   FilterFieldKey.overdue,
+  FilterFieldKey.nextActivity,
+  FilterFieldKey.lostReasonId,
   FilterFieldKey.pipelineId,
   FilterFieldKey.stageId,
   FilterFieldKey.provider,

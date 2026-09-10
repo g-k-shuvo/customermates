@@ -138,6 +138,7 @@ function syntheticSnapshot(): SyntheticAuditSnapshot {
       stageEnteredAt: null,
       isRotting: false,
       lostReasonId: null,
+      lostReasonName: null,
       lostNotes: null,
       wonAt: null,
       lostAt: null,

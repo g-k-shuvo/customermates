@@ -50,6 +50,35 @@ model would duplicate all of it and double the fork delta.
 
 `activityKind` is nullable so existing tasks stay valid.
 
+### Shipped indexes, and why they differ from the three above
+
+`20260906120000_task_activity_scheduling` created `Task(companyId, completedAt, dueAt)`,
+`Task(companyId, dueAt)` and `Task(completedById)`. That migration's header argues the first
+two; the third indexes the new `ON DELETE SET NULL` foreign key.
+
+**`@@index([relatedUserId, dueAt])` was not created and should stay uncreated.** It is the
+one place the schema knowingly departs from this document, so the reasoning belongs here
+rather than only in a migration header:
+
+- `relatedUserId` is written in exactly one place — `PrismaTaskRepo.create`, called by
+  `user-pending-authorization-task.listener.ts` for `TaskType.userPendingAuthorization`
+  rows. That path sets `type`, `companyId`, `name` and `relatedUserId` and nothing else, so
+  every row the index could contain has `dueAt` NULL. The user-facing activity path
+  (`createTaskOrThrow`) never sets `relatedUserId` at all.
+- `relatedUserId` is read in exactly one query —
+  `findByTypeAndRelatedUserIdCompanyWide`, `where: { type, companyId, relatedUserId }`. No
+  due date, no ordering. The existing single-column `@@index([relatedUserId])` and
+  `@@index([type, companyId])` already serve it, and `@@index([relatedUserId])` is needed
+  anyway for the `relatedUser` foreign key's delete-time lookup.
+- The agenda, the overdue counts and the "my activities" filters resolve the owner through
+  the `TaskUser` assignment table (`users: { some: { userId } }`), not `relatedUserId` —
+  see `countAssignedActivities` and `buildQueryArgs` in `features/tasks/prisma-task.repository.ts`.
+  A per-assignee due-date index would have to lead on `TaskUser`, not on `Task`.
+
+Revisit this only if `relatedUserId` starts carrying due dates, or if a query appears that
+filters on `relatedUserId` together with `dueAt`. Until then the index would be dead weight
+on every task write.
+
 ---
 
 ## T5.2 — Behaviour
@@ -86,7 +115,11 @@ Icons per `ActivityKind`. All copy in five locales.
   complete it.
 - Overdue activities are visible on the dashboard, the agenda and the kanban card.
 - Completing an activity prompts to schedule the next.
-- Deals with no next activity are identifiable via a filter.
+- Deals with no next activity are identifiable via a filter. `FilterFieldKey.nextActivity`
+  on the deals view: `false` selects deals with no linked, readable, incomplete task that
+  carries a `dueAt` — the exact complement of the "next activity" the card, the list column
+  and the pinned summary compute, so an overdue activity still counts as scheduled. The
+  deals board carries it as a one-click chip beside the rotting chip.
 - Conventions green, OpenAPI regenerated, five locales updated.
 - Tests cover overdue boundaries, completion and reversal, and next-activity selection with
   ties.

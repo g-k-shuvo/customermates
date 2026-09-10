@@ -28,6 +28,11 @@ export enum ChartColor {
   danger3 = "danger3",
 }
 
+export enum WinRateBasis {
+  count = "count",
+  value = "value",
+}
+
 export enum DisplayType {
   verticalBarChart = "verticalBarChart",
   horizontalBarChart = "horizontalBarChart",
@@ -60,6 +65,7 @@ export const WidgetDisplayOptionsSchema = z.object({
   useGroupColors: z.boolean().optional(),
   showLegend: z.boolean().optional(),
   showFilters: z.boolean().optional(),
+  winRateBasis: z.enum(WinRateBasis).optional(),
 });
 
 export type WidgetDisplayOptions = Data<typeof WidgetDisplayOptionsSchema>;
@@ -108,8 +114,17 @@ const DiagramDataPointFields = {
   metrics: DiagramMetricsSchema.optional(),
 };
 
+export const DIAGRAM_MONTH_PATTERN = /^\d{4}-(?:0[1-9]|1[0-2])$/;
+
 export const DiagramDataPointSchema = z.discriminatedUnion("labelKind", [
   z.object({ labelKind: z.literal("literal"), label: z.string().min(1), ...DiagramDataPointFields }).strict(),
+  z
+    .object({
+      labelKind: z.literal("month"),
+      month: z.string().regex(DIAGRAM_MONTH_PATTERN),
+      ...DiagramDataPointFields,
+    })
+    .strict(),
   z
     .object({
       labelKind: z.literal("system"),

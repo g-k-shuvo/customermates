@@ -953,10 +953,12 @@
         }
       },
       "dashboard": {
+        "lostDealsByReason": "Verlorene Deals nach Grund",
         "openPipelineValueByStage": "Offener Pipeline-Wert nach Phase",
         "pipelineFunnel": "Vertriebstrichter",
         "salesCycle": "Durchschnittliche Verkaufsdauer",
-        "winRate": "Gewinnrate"
+        "weightedForecastByCloseMonth": "Gewichtete Prognose nach erwartetem Abschlussmonat",
+        "winRateByOwner": "Gewinnrate nach Zuständigkeit"
       },
       "deal": {
         "columnLabel": "Phase",
@@ -1151,8 +1153,11 @@
       "webhookDeliveryNotFound": "Webhook-Zustellungs-ID nicht gefunden oder nicht zugänglich.",
       "webhookEventsRequired": "Wähle mindestens ein Ereignis aus.",
       "webhookNotFound": "Webhook-ID nicht gefunden oder nicht zugänglich.",
+      "widgetClosedDealAggregationCannotGroupByForecastMonth": "Der erwartete Abschlussmonat beschreibt offene Deals. Gruppiere Kennzahlen zu abgeschlossenen Deals stattdessen nach Abschlussmonat.",
+      "widgetClosedDealAggregationCannotGroupByLostOutcome": "Gewonnene Deals haben keinen Verlustgrund und keine Phase beim Verlust, eine so gruppierte Gewinnrate stünde überall bei 0 %. Verwende stattdessen eine Anzahl oder einen Wert, gefiltert auf verlorene Deals.",
       "widgetClosedDealAggregationCannotGroupByStage": "Gewinnrate und Verkaufszyklus zählen nur abgeschlossene Deals, die alle in der Gewonnen- oder Verloren-Phase liegen. Gruppieren Sie stattdessen nach Pipeline.",
       "widgetDealAggregationNotAllowedForTask": "Deal-Aggregationstypen sind für den Elementtyp Aufgabe nicht erlaubt.",
+      "widgetDealDimensionGroupingFiltersNotSupported": "Die Gruppierung nach Verlustgrund, Phase beim Verlust oder Kalendermonat wird in der Datenbank über einen begrenzten Zeitraum aggregiert und unterstützt keine Filter.",
       "widgetDealFiltersNotAllowedForDealEntityType": "Deal-Filter sind nicht erlaubt, wenn der Elementtyp Deal ist.",
       "widgetDealQuantityOnlyForService": "Deal-Mengen-Aggregation ist nur für den Elementtyp Service erlaubt.",
       "widgetDurationAggregationFiltersNotSupported": "Verkaufszyklus und Verweildauer in der Phase werden aus dem Phasenverlauf berechnet und unterstützen keine Filter.",
@@ -1273,6 +1278,8 @@
         "event": "Ereignis",
         "isPlatformOperator": "Plattform-Operator",
         "lastActiveAt": "Zuletzt aktiv",
+        "lostReasonId": "Verlustgrund",
+        "nextActivity": "Nächste Aktivität",
         "overdue": "Überfällig",
         "participants": "Teilnehmer",
         "pipelineId": "Pipeline",
@@ -1291,6 +1298,10 @@
         "userIds": "Zugewiesen",
         "workspaceId": "Arbeitsbereich",
         "workspaceTags": "Schlagwörter"
+      },
+      "nextActivityValues": {
+        "none": "Keine nächste Aktivität",
+        "scheduled": "Aktivität geplant"
       },
       "operators": {
         "allSet": "vollständig verknüpft",
@@ -1480,6 +1491,7 @@
         "lastActiveAt": "Zuletzt aktiv",
         "lastName": "Nachname",
         "lastRequest": "Zuletzt verwendet",
+        "lostReason": "Verlustgrund",
         "members": "Mitglieder",
         "name": "Name",
         "nextActivity": "Nächste Aktivität",
@@ -1741,12 +1753,18 @@
       "openToWon": "{value}% von offen zu gewonnen"
     },
     "groupBys": {
+      "dealCloseMonth": "Abschlussmonat",
+      "dealExpectedCloseMonth": "Erwarteter Abschlussmonat",
+      "dealLostReason": "Verlustgrund",
+      "dealOwner": "Zugewiesen",
       "dealPipeline": "Pipeline",
       "dealStage": "Phase",
+      "dealStageLostAt": "Phase beim Verlust",
       "none": "Keine Gruppierung"
     },
     "periods": {
-      "lastDays": "Letzte {days} Tage"
+      "lastDays": "Letzte {days} Tage",
+      "nextDays": "Nächste {days} Tage"
     },
     "tabs": {
       "dealFilters": "Filter für {deals}",
@@ -1760,7 +1778,12 @@
         "colors": "Farben",
         "showFilters": "Aktivitätsanzahl und Filter anzeigen",
         "showMetricAndFilters": "Kennzahl und Filter anzeigen",
-        "showSummary": "Funnel-Zusammenfassung anzeigen"
+        "showSummary": "Funnel-Zusammenfassung anzeigen",
+        "winRateBasis": "Grundlage der Gewinnrate",
+        "winRateBasisOptions": {
+          "count": "Nach Anzahl",
+          "value": "Nach Wert"
+        }
       },
       "create": "Widget erstellen",
       "danger": {
@@ -1836,7 +1859,8 @@
       "days": "{value} Tage",
       "median": "Median {value} Tage",
       "percent": "{value} %",
-      "winRateDenominator": "{closed} abgeschlossene {deals}, offene {deals} ausgeschlossen"
+      "winRateDenominator": "{closed} abgeschlossene {deals}, offene {deals} ausgeschlossen",
+      "winRateValueDenominator": "{closed} in abgeschlossenen {deals}, offene {deals} ausgeschlossen"
     }
   },
   "DataTransfer": {

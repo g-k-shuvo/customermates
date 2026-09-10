@@ -13,7 +13,8 @@ import { toJS } from "mobx";
 import { AggregationType, CustomColumnType, EntityType, WidgetGroupByType, WidgetKind } from "@/generated/prisma";
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
-import { ChartColor, DisplayType } from "@/features/widget/widget.schema";
+import { ChartColor, DisplayType, WinRateBasis } from "@/features/widget/widget.schema";
+import { DEAL_DIMENSION_GROUP_BY_TYPES } from "@/features/widget/widget-aggregation";
 
 import { WidgetModalStore } from "../widget-modal.store";
 
@@ -352,8 +353,7 @@ describe("WidgetModalStore chart combinations", () => {
     startChart(store);
 
     for (const entityType of Object.values(EntityType)) {
-      const pipelineGrouping =
-        entityType === EntityType.deal ? [WidgetGroupByType.dealStage, WidgetGroupByType.dealPipeline] : [];
+      const pipelineGrouping = entityType === EntityType.deal ? [...DEAL_DIMENSION_GROUP_BY_TYPES] : [];
 
       store.onChange("entityType", entityType);
       expect(store.groupBySelectOptions.map(({ key }) => key)).toEqual([
@@ -384,12 +384,70 @@ describe("WidgetModalStore chart combinations", () => {
       store.onChange("entityType", EntityType.deal);
       store.onChange("aggregationType", aggregationType);
 
-      expect(store.groupBySelectOptions.map(({ key }) => key)).toEqual([
-        WidgetGroupByType.none,
-        WidgetGroupByType.dealPipeline,
-      ]);
+      expect(store.groupBySelectOptions.map(({ key }) => key)).toEqual(
+        aggregationType === AggregationType.winRate
+          ? [
+              WidgetGroupByType.none,
+              WidgetGroupByType.dealPipeline,
+              WidgetGroupByType.dealOwner,
+              WidgetGroupByType.dealCloseMonth,
+            ]
+          : [WidgetGroupByType.none, WidgetGroupByType.dealPipeline],
+      );
     },
   );
+
+  it("never offers a lost-only dimension for win rate, where every won deal would fall outside the group", () => {
+    const store = createStore();
+    startChart(store);
+    store.onChange("entityType", EntityType.deal);
+    store.onChange("aggregationType", AggregationType.winRate);
+
+    const offered = store.groupBySelectOptions.map(({ key }) => key);
+
+    expect(offered).not.toContain(WidgetGroupByType.dealLostReason);
+    expect(offered).not.toContain(WidgetGroupByType.dealStageLostAt);
+    expect(offered).not.toContain(WidgetGroupByType.dealExpectedCloseMonth);
+  });
+
+  it("offers every deal dimension for a plain count, including the lost-only ones", () => {
+    const store = createStore();
+    startChart(store);
+    store.onChange("entityType", EntityType.deal);
+    store.onChange("aggregationType", AggregationType.count);
+
+    const offered = store.groupBySelectOptions.map(({ key }) => key);
+
+    for (const dimension of DEAL_DIMENSION_GROUP_BY_TYPES) expect(offered).toContain(dimension);
+  });
+
+  it("keeps the period picker for a month-grouped value metric that has no period aggregation of its own", () => {
+    const store = createStore();
+    startChart(store);
+    store.onChange("entityType", EntityType.deal);
+    store.onChange("aggregationType", AggregationType.dealValue);
+    store.onGroupByChange(WidgetGroupByType.dealExpectedCloseMonth);
+
+    expect(store.showPeriodPicker).toBe(true);
+  });
+
+  it("offers the win rate basis only for the win rate metric and defaults it to count", () => {
+    const store = createStore();
+    startChart(store);
+    store.onChange("entityType", EntityType.deal);
+    store.onChange("aggregationType", AggregationType.dealValue);
+
+    expect(store.showWinRateBasisPicker).toBe(false);
+
+    store.onChange("aggregationType", AggregationType.winRate);
+
+    expect(store.showWinRateBasisPicker).toBe(true);
+    expect(store.winRateBasisValue).toBe(WinRateBasis.count);
+
+    store.onWinRateBasisChange(WinRateBasis.value);
+
+    expect(store.winRateBasisValue).toBe(WinRateBasis.value);
+  });
 
   it("still offers stage grouping for time in stage, which reads the stage history", () => {
     const store = createStore();

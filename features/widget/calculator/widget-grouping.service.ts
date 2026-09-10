@@ -15,7 +15,8 @@ import { AggregationType, EntityType, WidgetGroupByType } from "@/generated/pris
 
 import { getCustomColumnRepo } from "@/core/di";
 import { BaseRepository } from "@/core/base/base-repository";
-import { winRatePercent } from "../widget-metrics";
+import { DIAGRAM_MONTH_PATTERN, WinRateBasis } from "../widget.schema";
+import { winRateForBasis } from "../widget-metrics";
 
 function winRateMetrics(row: WinRateRow) {
   return {
@@ -27,8 +28,35 @@ function winRateMetrics(row: WinRateRow) {
   };
 }
 
+function combineWinRateRows(rows: WinRateRow[]): WinRateRow {
+  return rows.reduce<WinRateRow>(
+    (combined, row) => ({
+      key: null,
+      wonCount: combined.wonCount + row.wonCount,
+      lostCount: combined.lostCount + row.lostCount,
+      wonValue: combined.wonValue + row.wonValue,
+      lostValue: combined.lostValue + row.lostValue,
+    }),
+    { key: null, wonCount: 0, lostCount: 0, wonValue: 0, lostValue: 0 },
+  );
+}
+
 function durationMetrics(row: DurationRow) {
   return { mean: row.meanDays, median: row.medianDays, sampleSize: row.sampleSize };
+}
+
+function compareMonthKeys(left: string | null, right: string | null): number {
+  const first = left ?? "";
+  const second = right ?? "";
+  if (first === second) return 0;
+
+  return first < second ? -1 : 1;
+}
+
+function monthKeysInOrder<T extends { key: string | null }>(rows: T[]): T[] {
+  return rows
+    .filter((row) => row.key !== null && DIAGRAM_MONTH_PATTERN.test(row.key))
+    .toSorted((left, right) => compareMonthKeys(left.key, right.key));
 }
 
 export class WidgetGroupingService extends BaseRepository {
@@ -110,6 +138,11 @@ export class WidgetGroupingService extends BaseRepository {
 
       case WidgetGroupByType.dealStage:
       case WidgetGroupByType.dealPipeline:
+      case WidgetGroupByType.dealOwner:
+      case WidgetGroupByType.dealLostReason:
+      case WidgetGroupByType.dealStageLostAt:
+      case WidgetGroupByType.dealCloseMonth:
+      case WidgetGroupByType.dealExpectedCloseMonth:
       case WidgetGroupByType.customColumn:
       case WidgetGroupByType.none:
         break;
@@ -221,7 +254,12 @@ export class WidgetGroupingService extends BaseRepository {
     }
   }
 
-  buildWinRatePoints(rows: WinRateRow[], positions: PipelinePosition[], grouped: boolean): DiagramDataPoint[] {
+  buildWinRatePoints(
+    rows: WinRateRow[],
+    positions: PipelinePosition[],
+    grouped: boolean,
+    basis: WinRateBasis = WinRateBasis.count,
+  ): DiagramDataPoint[] {
     if (!grouped) {
       const row = rows[0];
       if (!row) return [];
@@ -230,7 +268,7 @@ export class WidgetGroupingService extends BaseRepository {
         {
           labelKind: "system",
           systemLabelKey: "total",
-          value: winRatePercent(row.wonCount, row.lostCount) ?? 0,
+          value: winRateForBasis(row, basis) ?? 0,
           metrics: winRateMetrics(row),
         },
       ];
@@ -246,12 +284,42 @@ export class WidgetGroupingService extends BaseRepository {
       points.push({
         labelKind: "literal",
         label: position.name || position.id,
-        value: winRatePercent(row.wonCount, row.lostCount) ?? 0,
+        value: winRateForBasis(row, basis) ?? 0,
         metrics: winRateMetrics(row),
       });
     }
 
+    const ungrouped = rows.filter((row) => !row.key || !positions.some((position) => position.id === row.key));
+
+    if (ungrouped.length > 0) {
+      const combined = combineWinRateRows(ungrouped);
+
+      points.push({
+        labelKind: "system",
+        systemLabelKey: "noGroup",
+        value: winRateForBasis(combined, basis) ?? 0,
+        metrics: winRateMetrics(combined),
+      });
+    }
+
     return points;
+  }
+
+  buildMonthWinRatePoints(rows: WinRateRow[], basis: WinRateBasis = WinRateBasis.count): DiagramDataPoint[] {
+    return monthKeysInOrder(rows).map((row) => ({
+      labelKind: "month" as const,
+      month: row.key ?? "",
+      value: winRateForBasis(row, basis) ?? 0,
+      metrics: winRateMetrics(row),
+    }));
+  }
+
+  buildMonthPoints(aggregates: GroupedDealAggregate[], aggregationType: AggregationType): DiagramDataPoint[] {
+    return monthKeysInOrder(aggregates).map((aggregate) => ({
+      labelKind: "month" as const,
+      month: aggregate.key ?? "",
+      value: this.getAggregateValue(aggregate, aggregationType),
+    }));
   }
 
   buildDurationPoints(rows: DurationRow[], positions: PipelinePosition[], grouped: boolean): DiagramDataPoint[] {

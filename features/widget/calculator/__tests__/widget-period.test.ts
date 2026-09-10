@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { AggregationType } from "@/generated/prisma";
 
-import { funnelPeriodWindow, periodWindow } from "../widget-period";
+import { forecastWindow, funnelPeriodWindow, monthAlignedWindow, periodWindow } from "../widget-period";
 import { WIDGET_PERIOD_DAYS_MAX, resolvePeriodDays } from "../../widget-aggregation";
 
 const NOW = new Date("2026-09-06T12:00:00.000Z");
@@ -62,5 +62,64 @@ describe("funnel period window", () => {
       expect(days).toBeGreaterThan(0);
       expect(days).toBeLessThanOrEqual(WIDGET_PERIOD_DAYS_MAX);
     }
+  });
+});
+
+describe("widget forecast window", () => {
+  it("looks forward from now, so an expected close month covers deals that have not closed yet", () => {
+    const window = forecastWindow(AggregationType.dealWeightedValue, 365, NOW);
+
+    expect(window.from).toEqual(NOW);
+    expect((window.to.getTime() - NOW.getTime()) / MILLISECONDS_PER_DAY).toBe(365);
+  });
+
+  it("falls back to ninety days when the widget carries no configured window", () => {
+    const window = forecastWindow(AggregationType.dealValue, null, NOW);
+
+    expect((window.to.getTime() - NOW.getTime()) / MILLISECONDS_PER_DAY).toBe(90);
+  });
+
+  it("never forecasts further ahead than the shared maximum", () => {
+    const window = forecastWindow(AggregationType.dealValue, WIDGET_PERIOD_DAYS_MAX * 4, NOW);
+
+    expect((window.to.getTime() - NOW.getTime()) / MILLISECONDS_PER_DAY).toBe(
+      resolvePeriodDays(AggregationType.dealValue, WIDGET_PERIOD_DAYS_MAX * 4),
+    );
+  });
+});
+
+describe("calendar month alignment", () => {
+  it("opens the window on the first instant of the month the period started in", () => {
+    const aligned = monthAlignedWindow(periodWindow(AggregationType.winRate, 90, NOW));
+
+    expect(aligned.from.toISOString()).toBe("2026-06-01T00:00:00.000Z");
+  });
+
+  it("closes the window on the first instant of the month after the period ended", () => {
+    const aligned = monthAlignedWindow(periodWindow(AggregationType.winRate, 90, NOW));
+
+    expect(aligned.to.toISOString()).toBe("2026-10-01T00:00:00.000Z");
+  });
+
+  it("shows a forecast every deal still open this month, not only the rest of today onward", () => {
+    const aligned = monthAlignedWindow(forecastWindow(AggregationType.dealWeightedValue, 365, NOW));
+
+    expect(aligned.from.toISOString()).toBe("2026-09-01T00:00:00.000Z");
+    expect(aligned.from.getTime()).toBeLessThan(NOW.getTime());
+    expect(aligned.to.toISOString()).toBe("2027-10-01T00:00:00.000Z");
+  });
+
+  it("leaves a window that already sits on month boundaries exactly where it is", () => {
+    const window = { from: new Date("2026-01-01T00:00:00.000Z"), to: new Date("2026-04-01T00:00:00.000Z") };
+
+    expect(monthAlignedWindow(window)).toEqual(window);
+  });
+
+  it("rolls a December end into the following January rather than into month thirteen", () => {
+    const window = { from: new Date("2026-12-05T09:00:00.000Z"), to: new Date("2026-12-31T23:59:59.000Z") };
+    const aligned = monthAlignedWindow(window);
+
+    expect(aligned.from.toISOString()).toBe("2026-12-01T00:00:00.000Z");
+    expect(aligned.to.toISOString()).toBe("2027-01-01T00:00:00.000Z");
   });
 });

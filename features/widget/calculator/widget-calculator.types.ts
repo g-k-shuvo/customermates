@@ -11,7 +11,7 @@ import type { Filter } from "@/core/base/base-get.schema";
 
 export type WidgetForCalculation = Pick<
   ChartWidgetDto,
-  "entityType" | "groupByType" | "groupByCustomColumnId" | "aggregationType" | "periodDays"
+  "entityType" | "groupByType" | "groupByCustomColumnId" | "aggregationType" | "periodDays" | "displayOptions"
 > & {
   entityFilters: Filter[];
   dealFilters: Filter[];

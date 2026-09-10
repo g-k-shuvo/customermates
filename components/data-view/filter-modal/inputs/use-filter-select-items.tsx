@@ -29,7 +29,7 @@ import { type ChipColor } from "@/constants/chip-colors";
 import { USER_STATUS_COLORS_MAP } from "@/constants/user-statuses";
 import { SUBSCRIPTION_STATUS_COLOR_MAP } from "@/app/[locale]/(protected)/company/components/subscription/subscription-panel";
 import { OPERATOR_AUDIT_SOURCE } from "@/ee/operator/operator-lists.schema";
-import { getPipelinesAction, getUsersAction } from "@/app/[locale]/(protected)/company/actions";
+import { getLostReasonsAction, getPipelinesAction, getUsersAction } from "@/app/[locale]/(protected)/company/actions";
 import { getContactsAction } from "@/app/[locale]/(protected)/contacts/actions";
 import { getOrganizationsAction } from "@/app/[locale]/(protected)/organizations/actions";
 import { getDealsAction } from "@/app/[locale]/(protected)/deals/actions";
@@ -201,6 +201,14 @@ export function useFilterSelectItems(
             textValue: workspace.ownerEmail
               ? `${workspace.workspaceLabel} · ${workspace.ownerEmail}`
               : workspace.workspaceLabel,
+          })),
+        })),
+      [FilterFieldKey.lostReasonId]: () =>
+        getLostReasonsAction().then((lostReasons) => ({
+          items: lostReasons.map((lostReason) => ({
+            key: lostReason.id,
+            value: lostReason.id,
+            textValue: lostReason.name,
           })),
         })),
       [FilterFieldKey.pipelineId]: () =>
@@ -451,6 +459,13 @@ export function useFilterSelectItems(
         return [
           { key: "true", value: "true", textValue: t("Common.filters.overdueValues.overdue") },
           { key: "false", value: "false", textValue: t("Common.filters.overdueValues.onTrack") },
+        ];
+      }
+
+      case FilterFieldKey.nextActivity: {
+        return [
+          { key: "true", value: "true", textValue: t("Common.filters.nextActivityValues.scheduled") },
+          { key: "false", value: "false", textValue: t("Common.filters.nextActivityValues.none") },
         ];
       }
 
