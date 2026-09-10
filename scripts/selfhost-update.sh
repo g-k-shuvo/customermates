@@ -15,7 +15,7 @@ if ! docker compose version >/dev/null 2>&1; then
   exit 1
 fi
 
-docker compose pull app
+if [ -n "${APP_IMAGE:-}" ]; then docker compose pull app; else docker compose build app; fi
 docker compose run --rm app npx prisma migrate deploy
 docker compose up -d --no-deps app
 docker compose ps

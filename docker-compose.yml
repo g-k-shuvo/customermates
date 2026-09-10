@@ -11,11 +11,15 @@ services:
       - postgres-data:/var/lib/postgresql/data
 
   app:
-    image: ghcr.io/customermates/customermates:latest
+    image: ${APP_IMAGE:-customermates-crm:local}
+    build:
+      context: .
     container_name: customermates-app
     depends_on:
       - postgres
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       APP_MODE: self-hosted
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}

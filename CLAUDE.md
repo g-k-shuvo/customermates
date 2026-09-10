@@ -157,6 +157,12 @@ inline in the interactor that caused them.
   `/profile/connected-accounts` and `/company/subscription`. Do not build features that
   depend on `ConnectedAccount` — it is unavailable in our deployment.
 
+**The one agreed exception.** `ee/agent-chat/__tests__/provider-safe-schema.test.ts` pins an
+exact census of MCP tool schema formats (`{ uuid: N, email: 6, uri: 4 }`). Every uuid field we
+add to an MCP tool input raises that count, so the constant must be bumped with the change or
+`yarn test` fails. Bump the number; never remove fields to satisfy it. This is the only edit
+sanctioned under `ee/`, and it will conflict on rebase.
+
 ---
 
 ## Commands

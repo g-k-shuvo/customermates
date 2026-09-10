@@ -46,7 +46,7 @@ for VAR in "${REQUIRED_VARS[@]}"; do
   fi
 done
 
-docker compose pull app
+if [ -n "${APP_IMAGE:-}" ]; then docker compose pull app; else docker compose build app; fi
 docker compose up -d postgres
 docker compose run --rm app npx prisma migrate deploy
 docker compose up -d app

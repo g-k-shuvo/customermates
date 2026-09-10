@@ -148,6 +148,14 @@ Useful scripts:
 - `yarn db:provision`
 - `yarn db:reset`
 
+### Build machine requirements
+
+The production build static-generates every route and needs headroom to do it. Build on a
+machine with at least **4 vCPU and 16 GB of RAM**; below that the build is killed part way
+through with a heap out-of-memory error. The Docker build already sets
+`NODE_OPTIONS="--max-old-space-size=5120"` in its builder stage for the same reason, so
+building the image on a smaller machine fails even though `yarn dev` runs happily there.
+
 ## 📚 Documentation
 
 The docs cover:
