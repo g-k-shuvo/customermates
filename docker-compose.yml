@@ -33,5 +33,16 @@ services:
     ports:
       - "${APP_PORT:-4000}:4000"
 
+  cron:
+    build:
+      context: ./docker/cron
+    container_name: customermates-cron
+    depends_on:
+      - app
+    restart: unless-stopped
+    environment:
+      APP_INTERNAL_URL: http://app:4000
+      CRON_SECRET: ${CRON_SECRET}
+
 volumes:
   postgres-data:

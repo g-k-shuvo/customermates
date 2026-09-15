@@ -15,7 +15,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NODE_OPTIONS="--max-old-space-size=5120"
-RUN yarn build
+RUN yarn build && rm -rf .next/cache
 
 FROM base AS runner
 ENV NODE_ENV=production
