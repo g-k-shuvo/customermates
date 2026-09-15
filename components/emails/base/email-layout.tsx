@@ -7,6 +7,7 @@ import { Body, Container, Head, Heading, Html, Preview, Section, Tailwind, Text 
 import { EmailImage } from "./email-image";
 
 import { env } from "@/env";
+import { branding } from "@/core/config/branding";
 import { colorPalettes } from "@/styles/color-palettes";
 
 const config = {
@@ -49,7 +50,7 @@ export function EmailLayout({ preview, title, logoUrl = PRODUCTION_LOGO_URL, loc
         <Body className="m-0 py-8 font-sans bg-content2">
           <Container className="mx-auto max-w-[600px] px-4">
             <Section className="pb-6">
-              <EmailImage alt="Customermates" height={56} src={logoUrl} style={{ margin: "0 auto" }} width={56} />
+              <EmailImage alt={branding.name} height={56} src={logoUrl} style={{ margin: "0 auto" }} width={56} />
             </Section>
 
             <Section className="bg-content1 rounded-xl p-10">
@@ -62,7 +63,7 @@ export function EmailLayout({ preview, title, logoUrl = PRODUCTION_LOGO_URL, loc
 
             <Section className="pt-6 text-center">
               <Text className="m-0 text-xs text-default-700">
-                <span>© {year} Customermates · </span>
+                <span>{`© ${year} ${branding.name} · `}</span>
 
                 <span>{layoutCopy.tagline}</span>
               </Text>
@@ -71,8 +72,8 @@ export function EmailLayout({ preview, title, logoUrl = PRODUCTION_LOGO_URL, loc
                 <Text className="mt-2 text-xs text-default-700">
                   <span>Benjamin Wagner · An den Kasernen 25 · 68167 Mannheim, {layoutCopy.country} · </span>
 
-                  <a className="text-default-700 underline" href="mailto:mail@customermates.com">
-                    mail@customermates.com
+                  <a className="text-default-700 underline" href={`mailto:${branding.supportEmail}`}>
+                    {branding.supportEmail}
                   </a>
                 </Text>
               ) : null}

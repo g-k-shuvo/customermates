@@ -69,8 +69,6 @@ const ALLOWED_VISIBLE_COPY_SITES = new Map<string, VisibleCopyException>([
     'app/components/footer-content.tsx :: jsx-aria-label :: "GitHub"',
     'app/components/footer-content.tsx :: jsx-aria-label :: "LinkedIn"',
     'app/components/footer-content.tsx :: jsx-aria-label :: "X (Twitter)"',
-    'components/emails/base/email-layout.tsx :: jsx-alt :: "Customermates"',
-    'components/emails/base/email-layout.tsx :: jsx-text :: "Customermates ·"',
     'components/marketing/founder-contact-card.tsx :: jsx-text :: "Benjamin Wagner"',
     'components/marketing/comparison-table.tsx :: jsx-alt :: "Customermates"',
   ]),
@@ -87,7 +85,6 @@ const ALLOWED_VISIBLE_COPY_SITES = new Map<string, VisibleCopyException>([
   ]),
   ...reviewedVisibleCopy("The company identity and address are legal contact data, not localized prose.", [
     'components/emails/base/email-layout.tsx :: jsx-text :: "Benjamin Wagner · An den Kasernen 25 · 68167 Mannheim,"',
-    'components/emails/base/email-layout.tsx :: jsx-text :: "mail@customermates.com"',
   ]),
   ...reviewedVisibleCopy("These English-only templates notify internal operators, not localized recipients.", [
     'components/emails/contact-inquiry.tsx :: jsx-label :: "From"',

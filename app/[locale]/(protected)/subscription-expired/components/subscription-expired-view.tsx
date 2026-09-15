@@ -17,7 +17,7 @@ import { runUserAction } from "@/core/errors/report-application-error";
 
 export const SubscriptionExpiredView = observer(({ recoveryPath }: { recoveryPath: SubscriptionRecoveryPath }) => {
   const t = useTranslations();
-  const { subscriptionExpiredStore, loadingOverlayStore } = useRootStore();
+  const { branding, subscriptionExpiredStore, loadingOverlayStore } = useRootStore();
   const description =
     recoveryPath === "selfServiceCheckout"
       ? t("SubscriptionExpiredView.selfServiceCheckoutDescription")
@@ -45,7 +45,7 @@ export const SubscriptionExpiredView = observer(({ recoveryPath }: { recoveryPat
           className="w-full"
           variant="secondary"
           onClick={() => {
-            window.location.href = `mailto:mail@customermates.com?subject=${encodeURIComponent(t("SubscriptionExpiredView.supportEmailSubject"))}`;
+            window.location.href = `mailto:${branding.supportEmail}?subject=${encodeURIComponent(t("SubscriptionExpiredView.supportEmailSubject"))}`;
           }}
         >
           {t("SubscriptionExpiredView.contactSupportCta")}

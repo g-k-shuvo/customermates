@@ -20,7 +20,7 @@ type Props = {
 
 export const McpConsentCard = observer(({ clientName, consentCode, redirectHost, scopes }: Props) => {
   const t = useTranslations();
-  const { mcpConsentStore, navigationGuard } = useRootStore();
+  const { branding, mcpConsentStore, navigationGuard } = useRootStore();
 
   const decide = async (accept: boolean) => {
     const redirectURI = await mcpConsentStore.decide(consentCode, accept);
@@ -54,7 +54,7 @@ export const McpConsentCard = observer(({ clientName, consentCode, redirectHost,
       />
 
       <AppCardBody>
-        <p className="text-x-sm">{t("McpConsentCard.body", { client: clientName })}</p>
+        <p className="text-x-sm">{t("McpConsentCard.body", { brandName: branding.name, client: clientName })}</p>
 
         {scopes.length > 0 && (
           <ul className="text-x-sm text-subdued list-disc space-y-1 pl-5">

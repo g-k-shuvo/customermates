@@ -77,7 +77,8 @@ const mobileOverviewRowClassName =
 
 export const PublicNavbar = observer(({ accountState, hasValidSession }: Props) => {
   const t = useTranslations();
-  const { layoutStore } = useRootStore();
+  const { branding, layoutStore } = useRootStore();
+  const marketingChromeHidden = branding.marketingChromeDisabled;
   const pathname = usePathname();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -320,6 +321,8 @@ export const PublicNavbar = observer(({ accountState, hasValidSession }: Props) 
   const logoAlt = t("Common.imageAlt.logo");
   const homeLabel = t("UserAvatar.home");
   function renderHomeButton() {
+    if (marketingChromeHidden) return null;
+
     return (
       <AppLink aria-label={`${logoAlt} ${homeLabel}`} href="/" onNavigate={closeMenu}>
         <AppImage
@@ -351,7 +354,7 @@ export const PublicNavbar = observer(({ accountState, hasValidSession }: Props) 
           ? t("Common.actions.continueSetup")
           : null;
   function renderCtaButton(className?: string, prominent = false) {
-    if (!cta || !ctaLabel || pathname === cta.href) return null;
+    if (marketingChromeHidden || !cta || !ctaLabel || pathname === cta.href) return null;
 
     return (
       <Button asChild className={className} size="sm" variant={prominent ? "default" : "softPrimary"}>
@@ -378,7 +381,7 @@ export const PublicNavbar = observer(({ accountState, hasValidSession }: Props) 
   }
 
   function renderSignOutButton(className?: string) {
-    if (actions.signOut === "hidden") return null;
+    if (marketingChromeHidden || actions.signOut === "hidden") return null;
 
     return (
       <Button
@@ -396,7 +399,7 @@ export const PublicNavbar = observer(({ accountState, hasValidSession }: Props) 
   }
 
   function renderContactButton(className?: string, subtle = false) {
-    if (!actions.showContact) return null;
+    if (marketingChromeHidden || !actions.showContact) return null;
 
     return (
       <Button asChild className={className} size="sm" variant={subtle ? "ghost" : "secondary"}>
@@ -422,14 +425,18 @@ export const PublicNavbar = observer(({ accountState, hasValidSession }: Props) 
       <MarketingContainer className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-6 xl:h-14 xl:max-w-[75rem] xl:border-x xl:border-border xl:gap-4">
         <div className="hidden justify-self-start xl:flex">{renderHomeButton()}</div>
 
-        <PublicNavbarMenu
-          ariaLabel={t("NavigationBar.public.primaryNavigation")}
-          docsLabel={t("NavigationBar.docs")}
-          groups={publicNavGroups}
-          pathname={pathname}
-          pricingLabel={t("NavigationBar.pricing")}
-          onNavigate={closeMenu}
-        />
+        {marketingChromeHidden ? (
+          <div />
+        ) : (
+          <PublicNavbarMenu
+            ariaLabel={t("NavigationBar.public.primaryNavigation")}
+            docsLabel={t("NavigationBar.docs")}
+            groups={publicNavGroups}
+            pathname={pathname}
+            pricingLabel={t("NavigationBar.pricing")}
+            onNavigate={closeMenu}
+          />
+        )}
 
         <div className="hidden items-center gap-1 justify-self-end xl:flex">
           {renderPreferenceButtons()}
@@ -444,113 +451,117 @@ export const PublicNavbar = observer(({ accountState, hasValidSession }: Props) 
         <div className="col-span-3 flex w-full items-center justify-between xl:hidden">
           {renderHomeButton()}
 
-          <Sheet open={layoutStore.isMenuOpen} onOpenChange={layoutStore.setIsMenuOpen}>
-            <SheetTrigger asChild>
-              <Button aria-label={t("Common.sidebar.toggle")} size="icon" variant="ghost">
-                <Icon aria-hidden icon={layoutStore.isMenuOpen ? X : Menu} />
-              </Button>
-            </SheetTrigger>
+          {marketingChromeHidden ? (
+            renderPreferenceButtons()
+          ) : (
+            <Sheet open={layoutStore.isMenuOpen} onOpenChange={layoutStore.setIsMenuOpen}>
+              <SheetTrigger asChild>
+                <Button aria-label={t("Common.sidebar.toggle")} size="icon" variant="ghost">
+                  <Icon aria-hidden icon={layoutStore.isMenuOpen ? X : Menu} />
+                </Button>
+              </SheetTrigger>
 
-            <SheetContent className="w-80 max-w-[85vw] gap-0 bg-sidebar text-sidebar-foreground" side="right">
-              <SheetHeader>
-                <SheetTitle className="sr-only">{logoAlt}</SheetTitle>
+              <SheetContent className="w-80 max-w-[85vw] gap-0 bg-sidebar text-sidebar-foreground" side="right">
+                <SheetHeader>
+                  <SheetTitle className="sr-only">{logoAlt}</SheetTitle>
 
-                <SheetDescription className="sr-only">{t("Common.sidebar.description")}</SheetDescription>
-              </SheetHeader>
+                  <SheetDescription className="sr-only">{t("Common.sidebar.description")}</SheetDescription>
+                </SheetHeader>
 
-              <SheetBody className="flex flex-col gap-3 pb-6">
-                <div className="w-full">
-                  <Accordion collapsible className="w-full" type="single">
-                    {publicNavGroups.map((group) => (
-                      <AccordionItem key={group.id} value={group.id}>
-                        <AccordionTrigger className={mobileOverviewRowClassName}>
-                          <span className="flex items-center gap-2.5">
-                            <Icon aria-hidden icon={group.icon} size="md" />
+                <SheetBody className="flex flex-col gap-3 pb-6">
+                  <div className="w-full">
+                    <Accordion collapsible className="w-full" type="single">
+                      {publicNavGroups.map((group) => (
+                        <AccordionItem key={group.id} value={group.id}>
+                          <AccordionTrigger className={mobileOverviewRowClassName}>
+                            <span className="flex items-center gap-2.5">
+                              <Icon aria-hidden icon={group.icon} size="md" />
 
-                            {group.title}
-                          </span>
-                        </AccordionTrigger>
+                              {group.title}
+                            </span>
+                          </AccordionTrigger>
 
-                        <AccordionContent>
-                          <div className="flex flex-col gap-1 pt-1">
-                            {group.links.map((link) => {
-                              const linkActive =
-                                isNavItemActive(link.href) && isPrimaryPublicNavLink(publicNavGroups, link);
+                          <AccordionContent>
+                            <div className="flex flex-col gap-1 pt-1">
+                              {group.links.map((link) => {
+                                const linkActive =
+                                  isNavItemActive(link.href) && isPrimaryPublicNavLink(publicNavGroups, link);
 
-                              return (
-                                <AppLink
-                                  key={`${link.href}-${link.title}`}
-                                  aria-current={linkActive ? "page" : undefined}
-                                  className={cn(
-                                    "flex min-h-10 items-center gap-2.5 rounded-md p-2 text-sm",
-                                    !linkActive && "text-subdued",
-                                  )}
-                                  href={link.href}
-                                  onNavigate={closeMenu}
-                                >
-                                  {link.mark ? (
-                                    <PublicNavLinkMark mark={link.mark} />
-                                  ) : (
-                                    <PublicNavLinkIcon icon={link.icon} />
-                                  )}
+                                return (
+                                  <AppLink
+                                    key={`${link.href}-${link.title}`}
+                                    aria-current={linkActive ? "page" : undefined}
+                                    className={cn(
+                                      "flex min-h-10 items-center gap-2.5 rounded-md p-2 text-sm",
+                                      !linkActive && "text-subdued",
+                                    )}
+                                    href={link.href}
+                                    onNavigate={closeMenu}
+                                  >
+                                    {link.mark ? (
+                                      <PublicNavLinkMark mark={link.mark} />
+                                    ) : (
+                                      <PublicNavLinkIcon icon={link.icon} />
+                                    )}
 
-                                  {link.title}
-                                </AppLink>
-                              );
-                            })}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
+                                    {link.title}
+                                  </AppLink>
+                                );
+                              })}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
 
-                  <AppLink
-                    appearance="unstyled"
-                    aria-current={isNavItemActive("/pricing") ? "page" : undefined}
-                    className={cn(
-                      mobileOverviewRowClassName,
-                      "border-t border-border",
-                      isNavItemActive("/pricing") && "bg-accent",
-                    )}
-                    href="/pricing"
-                    onNavigate={closeMenu}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <Icon aria-hidden icon={CircleDollarSign} size="md" />
+                    <AppLink
+                      appearance="unstyled"
+                      aria-current={isNavItemActive("/pricing") ? "page" : undefined}
+                      className={cn(
+                        mobileOverviewRowClassName,
+                        "border-t border-border",
+                        isNavItemActive("/pricing") && "bg-accent",
+                      )}
+                      href="/pricing"
+                      onNavigate={closeMenu}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <Icon aria-hidden icon={CircleDollarSign} size="md" />
 
-                      {t("NavigationBar.pricing")}
-                    </span>
-                  </AppLink>
+                        {t("NavigationBar.pricing")}
+                      </span>
+                    </AppLink>
 
-                  <AppLink
-                    appearance="unstyled"
-                    aria-current={isNavItemActive("/docs") ? "page" : undefined}
-                    className={cn(
-                      mobileOverviewRowClassName,
-                      "border-t border-border",
-                      isNavItemActive("/docs") && "bg-accent",
-                    )}
-                    href="/docs"
-                    onNavigate={closeMenu}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <Icon aria-hidden icon={FileText} size="md" />
+                    <AppLink
+                      appearance="unstyled"
+                      aria-current={isNavItemActive("/docs") ? "page" : undefined}
+                      className={cn(
+                        mobileOverviewRowClassName,
+                        "border-t border-border",
+                        isNavItemActive("/docs") && "bg-accent",
+                      )}
+                      href="/docs"
+                      onNavigate={closeMenu}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <Icon aria-hidden icon={FileText} size="md" />
 
-                      {t("NavigationBar.docs")}
-                    </span>
-                  </AppLink>
-                </div>
+                        {t("NavigationBar.docs")}
+                      </span>
+                    </AppLink>
+                  </div>
 
-                <div className="my-1 py-3">{renderPreferenceButtons()}</div>
+                  <div className="my-1 py-3">{renderPreferenceButtons()}</div>
 
-                {renderContactButton("w-full")}
+                  {renderContactButton("w-full")}
 
-                {renderCtaButton("w-full")}
+                  {renderCtaButton("w-full")}
 
-                {renderSignOutButton("w-full")}
-              </SheetBody>
-            </SheetContent>
-          </Sheet>
+                  {renderSignOutButton("w-full")}
+                </SheetBody>
+              </SheetContent>
+            </Sheet>
+          )}
         </div>
       </MarketingContainer>
     </div>

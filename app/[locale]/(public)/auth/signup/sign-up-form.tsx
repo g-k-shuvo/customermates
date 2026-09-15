@@ -30,8 +30,9 @@ type Props = {
 
 export const SignUpForm = observer(({ isInvited, socialProviders }: Props) => {
   const t = useTranslations();
-  const { signUpStore, appMode } = useRootStore();
+  const { signUpStore, appMode, branding } = useRootStore();
   const { isLoading, form } = signUpStore;
+  const brandName = branding.name;
 
   useEffect(() => {
     signUpStore.setWithUnsavedChangesGuard(false);
@@ -48,15 +49,13 @@ export const SignUpForm = observer(({ isInvited, socialProviders }: Props) => {
               </AppLink>
             ),
           })}
-          title={isInvited ? t("SignUpForm.inviteTitle") : t("SignUpForm.title")}
+          title={isInvited ? t("SignUpForm.inviteTitle") : t("SignUpForm.title", { brandName })}
         />
 
         <AppCardBody>
-          <SocialErrorToast />
-
           {isInvited ? (
             <Alert className="mb-4" color="success">
-              <p className="text-x-sm">{t("SignUpForm.inviteSubtitle")}</p>
+              <p className="text-x-sm">{t("SignUpForm.inviteSubtitle", { brandName })}</p>
             </Alert>
           ) : appMode === "cloud" ? (
             <Alert className="mb-4" color="primary">
@@ -66,6 +65,8 @@ export const SignUpForm = observer(({ isInvited, socialProviders }: Props) => {
 
           {(socialProviders.google || socialProviders.microsoft) && (
             <>
+              <SocialErrorToast />
+
               <div className="flex flex-col items-center gap-4 sm:flex-row">
                 {socialProviders.google && (
                   <SignInProviderButton

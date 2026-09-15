@@ -1,5 +1,6 @@
 import type { BaseModalStore } from "../base/base-modal.store";
 import type { AppMode } from "@/core/config/environment";
+import type { Branding } from "@/core/config/branding";
 
 import { SignInStore } from "@/app/[locale]/(public)/auth/signin/sign-in.store";
 import { SignUpStore } from "@/app/[locale]/(public)/auth/signup/sign-up.store";
@@ -163,10 +164,12 @@ export class RootStore {
 
   readonly appMode: AppMode;
   readonly agentChatEnabled: boolean;
+  readonly branding: Branding;
 
-  constructor(appMode: AppMode, agentChatEnabled: boolean) {
+  constructor(appMode: AppMode, agentChatEnabled: boolean, branding: Branding) {
     this.appMode = appMode;
     this.agentChatEnabled = agentChatEnabled;
+    this.branding = branding;
   }
 
   get layoutStore() {

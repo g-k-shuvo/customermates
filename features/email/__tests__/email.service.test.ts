@@ -6,6 +6,11 @@ const mockEnv = vi.hoisted(() => ({
   NODE_ENV: "production" as "production" | "test",
   RESEND_API_KEY: "test-key" as string | undefined,
   RESEND_OPERATOR_EMAIL: "mail@customermates.com",
+  BRAND_NAME: "AcmeCRM" as string | undefined,
+  BRAND_SUPPORT_EMAIL: undefined as string | undefined,
+  AUTH_SOCIAL_LOGIN_DISABLED: false,
+  MARKETING_CHROME_DISABLED: false,
+  VENDOR_HELP_DISABLED: false,
 }));
 const resendSend = vi.hoisted(() => vi.fn());
 const resendConstructor = vi.hoisted(() => vi.fn());
@@ -43,7 +48,7 @@ describe("EmailService", () => {
     expect(resendConstructor).toHaveBeenCalledWith("test-key");
     expect(resendSend).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: "Customermates <mail@customermates.com>",
+        from: "AcmeCRM <mail@customermates.com>",
         react: email.react,
         subject: email.subject,
         to: email.to,

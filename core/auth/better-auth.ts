@@ -7,6 +7,7 @@ import * as Sentry from "@sentry/nextjs";
 
 import { prisma } from "@/prisma/db";
 import { runWithoutTenant } from "@/core/decorators/tenant-context";
+import { branding } from "@/core/config/branding";
 import { env } from "@/env";
 import { API_KEY_MAX_EXPIRATION_DAYS, API_KEY_MIN_EXPIRATION_DAYS } from "@/features/api-key/api-key-expiration";
 
@@ -31,8 +32,8 @@ const socialProviders = {
 };
 
 export const enabledSocialProviders = {
-  google: "google" in socialProviders,
-  microsoft: "microsoft" in socialProviders,
+  google: !branding.socialLoginDisabled && "google" in socialProviders,
+  microsoft: !branding.socialLoginDisabled && "microsoft" in socialProviders,
 };
 
 const oauthProxy =

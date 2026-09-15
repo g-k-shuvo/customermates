@@ -2668,7 +2668,7 @@
   },
   "McpConsentCard": {
     "approve": "Zulassen",
-    "body": "{client} fordert Zugriff auf dein Customermates-Konto an. Lass den Zugriff nur zu, wenn du diese Verbindung selbst gestartet hast.",
+    "body": "{client} fordert Zugriff auf dein {brandName}-Konto an. Lass den Zugriff nur zu, wenn du diese Verbindung selbst gestartet hast.",
     "deny": "Ablehnen",
     "destination": "Verbindungsziel: {host}",
     "error": "Etwas ist schiefgelaufen. Bitte versuche es erneut oder starte die Verbindung in deinem Client neu.",
@@ -3228,13 +3228,13 @@
     "acceptInviteCta": "Einladung annehmen",
     "agreeToTerms": "Mit dem Fortfahren stimmst du unseren <termsOfServiceLink>AGB</termsOfServiceLink> zu und nimmst unsere <dataPrivacyLink>Datenschutzerklärung</dataPrivacyLink> zur Kenntnis. Siehe unseren <dpaLink>AVV</dpaLink>.",
     "buttonLabel": "Registrieren mit {provider}",
-    "inviteSubtitle": "Du wurdest eingeladen, einem Team auf Customermates beizutreten. Wähle deine Anmeldemethode, um die Einladung anzunehmen.",
+    "inviteSubtitle": "Du wurdest eingeladen, einem Team auf {brandName} beizutreten. Wähle deine Anmeldemethode, um die Einladung anzunehmen.",
     "inviteTitle": "Firmeneinladung annehmen",
     "newCompanySubtitle": "Registriere ein neues Unternehmen und teste Customermates kostenlos für {days} Tage. Keine Kreditkarte erforderlich.",
     "or": "ODER",
     "signUpCta": "Konto erstellen",
     "switchToSignIn": "Bereits ein Konto? <signInLink>Anmelden</signInLink>",
-    "title": "Customermates-Konto erstellen"
+    "title": "{brandName}-Konto erstellen"
   },
   "StructuredData": {
     "breadcrumb": {

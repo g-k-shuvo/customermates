@@ -11,12 +11,14 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 import { RootStore } from "@/core/stores/root.store";
 import type { AppMode } from "@/core/config/environment";
+import type { Branding } from "@/core/config/branding";
 
 const RootStoreContext = createContext<RootStore | null>(null);
 
 type Props = {
   agentChatEnabled: boolean;
   appMode: AppMode;
+  branding: Branding;
   children: ReactNode;
   initialState: RootStoreInitialState;
 };
@@ -29,8 +31,13 @@ export type RootStoreInitialState = {
   subscription: SubscriptionDto | null;
 };
 
-function createRootStore(agentChatEnabled: boolean, appMode: AppMode, initialState: RootStoreInitialState): RootStore {
-  const rootStore = new RootStore(appMode, agentChatEnabled);
+function createRootStore(
+  agentChatEnabled: boolean,
+  appMode: AppMode,
+  branding: Branding,
+  initialState: RootStoreInitialState,
+): RootStore {
+  const rootStore = new RootStore(appMode, agentChatEnabled, branding);
   rootStore.localeStore.setLocale(initialState.locale);
   rootStore.userStore.setUser(initialState.user);
   rootStore.companyStore.setCompany(initialState.company);
@@ -39,8 +46,8 @@ function createRootStore(agentChatEnabled: boolean, appMode: AppMode, initialSta
   return rootStore;
 }
 
-export function RootStoreProvider({ agentChatEnabled, appMode, children, initialState }: Props) {
-  const [rootStore] = useState(() => createRootStore(agentChatEnabled, appMode, initialState));
+export function RootStoreProvider({ agentChatEnabled, appMode, branding, children, initialState }: Props) {
+  const [rootStore] = useState(() => createRootStore(agentChatEnabled, appMode, branding, initialState));
 
   useEffect(() => {
     rootStore.intlStore.markClientHydrated();

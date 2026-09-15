@@ -1,7 +1,8 @@
 import { env } from "@/env";
+import { branding } from "@/core/config/branding";
 import { COMMERCIAL_OFFERS } from "@/core/commercial/plan-catalog";
 
-export const ORGANIZATION_NAME = "Customermates";
+export const ORGANIZATION_NAME = branding.name;
 const ORGANIZATION_LOGO = `${env.BASE_URL}/images/light/customermates-square.svg`;
 const ORGANIZATION_SAME_AS = [
   "https://github.com/customermates/customermates",

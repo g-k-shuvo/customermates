@@ -1,6 +1,7 @@
 import type React from "react";
 
 import { env } from "@/env";
+import { branding } from "@/core/config/branding";
 
 import type { EmailTransport } from "./email-transport";
 import { ResendTransport } from "./resend.transport";
@@ -13,7 +14,7 @@ type SendArgs = {
   from?: string;
 };
 
-const defaultSender = `Customermates <${env.RESEND_OPERATOR_EMAIL}>`;
+const defaultSender = `${branding.name} <${env.RESEND_OPERATOR_EMAIL}>`;
 
 function selectTransport(): EmailTransport {
   return env.EMAIL_TRANSPORT === "smtp" ? new SmtpTransport() : new ResendTransport();

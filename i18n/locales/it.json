@@ -2668,7 +2668,7 @@
   },
   "McpConsentCard": {
     "approve": "Approva",
-    "body": "{client} sta chiedendo l'accesso al tuo account Customermates. Approva solo se hai avviato tu questo collegamento.",
+    "body": "{client} sta chiedendo l'accesso al tuo account {brandName}. Approva solo se hai avviato tu questo collegamento.",
     "deny": "Rifiuta",
     "destination": "Destinazione del collegamento: {host}",
     "error": "Qualcosa è andato storto. Riprova oppure riavvia il collegamento dal tuo client.",
@@ -3228,13 +3228,13 @@
     "acceptInviteCta": "Accetta l'invito",
     "agreeToTerms": "Continuando, accetti i nostri <termsOfServiceLink>Termini</termsOfServiceLink> e dichiari di aver letto la nostra <dataPrivacyLink>Informativa sulla privacy</dataPrivacyLink>. Consulta il nostro <dpaLink>DPA</dpaLink>.",
     "buttonLabel": "Registrati con {provider}",
-    "inviteSubtitle": "Hai ricevuto un invito a unirti a un team su Customermates. Scegli il tuo metodo di accesso per accettare l’invito.",
+    "inviteSubtitle": "Hai ricevuto un invito a unirti a un team su {brandName}. Scegli il tuo metodo di accesso per accettare l’invito.",
     "inviteTitle": "Accetta l'invito aziendale",
     "newCompanySubtitle": "Registra una nuova azienda e prova Customermates gratis per {days} giorni. Nessuna carta di credito richiesta.",
     "or": "OPPURE",
     "signUpCta": "Crea un account",
     "switchToSignIn": "Hai già un account? <signInLink>Accedi</signInLink>",
-    "title": "Crea un account Customermates"
+    "title": "Crea un account {brandName}"
   },
   "StructuredData": {
     "breadcrumb": {

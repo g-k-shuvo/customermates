@@ -6,6 +6,9 @@ import type { RequestPasswordResetData } from "@/features/auth/request-password-
 import type { ResetPasswordData } from "@/features/auth/reset-password.interactor";
 import type { DecideMcpConsentData } from "@/features/auth/decide-mcp-consent.interactor";
 
+import { getTranslations } from "next-intl/server";
+import { z } from "zod";
+
 import {
   getSignInWithEmailInteractor,
   getSignUpWithEmailInteractor,
@@ -15,8 +18,19 @@ import {
   getResendVerificationEmailInteractor,
   getDecideMcpConsentInteractor,
 } from "@/core/di";
+import { branding } from "@/core/config/branding";
+import { createZodError } from "@/core/validation/validation.utils";
 import { serializeResult } from "@/core/utils/action-result";
 import { isRedirect } from "@/features/auth/auth-outcome";
+
+async function socialLoginUnavailable() {
+  const t = await getTranslations();
+
+  return {
+    ok: false as const,
+    error: z.treeifyError(createZodError(t("Common.errors.permissionDenied"))),
+  };
+}
 
 export async function signInWithEmailAction(data: EmailSignInData) {
   const result = await getSignInWithEmailInteractor().invoke(data);
@@ -34,6 +48,8 @@ export async function signInWithEmailAction(data: EmailSignInData) {
 }
 
 export async function continueWithGoogleAction(callbackURL?: string, errorCallbackURL?: string) {
+  if (branding.socialLoginDisabled) return socialLoginUnavailable();
+
   const result = await getContinueWithSocialsInteractor().invoke({
     provider: "google",
     callbackURL,
@@ -48,6 +64,8 @@ export async function continueWithGoogleAction(callbackURL?: string, errorCallba
 }
 
 export async function continueWithMicrosoftAction(callbackURL?: string, errorCallbackURL?: string) {
+  if (branding.socialLoginDisabled) return socialLoginUnavailable();
+
   const result = await getContinueWithSocialsInteractor().invoke({
     provider: "microsoft",
     callbackURL,

@@ -3,6 +3,7 @@ import type { HomepageRootMetadata } from "@/core/fumadocs/schemas/homepage";
 import type { ContentLocale } from "@/i18n/locale-registry";
 
 import { env } from "@/env";
+import { branding } from "@/core/config/branding";
 import { buildAlternateLanguages } from "@/core/seo/alternates";
 import { buildLocalePath } from "@/i18n/locale-registry";
 
@@ -12,7 +13,7 @@ export const GLOBAL_METADATA: Metadata = {
     icon: "/favicon.ico",
   },
   title: {
-    default: "Customermates",
+    default: branding.name,
     template: "%s",
   },
 };
@@ -42,7 +43,7 @@ export function buildHomepageMetadata({
     openGraph: {
       description: rootMetadata.defaultDescription,
       images: [defaultOgImageUrl],
-      siteName: "Customermates",
+      siteName: branding.name,
       title: rootMetadata.defaultTitle,
       type: "website",
       url: canonical,

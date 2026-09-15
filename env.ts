@@ -27,6 +27,14 @@ export const env = {
   CI: process.env.CI,
 
   APP_MODE: resolveAppMode(process.env),
+  BRAND_NAME: process.env.BRAND_NAME,
+  BRAND_SUPPORT_EMAIL: process.env.BRAND_SUPPORT_EMAIL,
+  AUTH_SOCIAL_LOGIN_DISABLED: resolveStrictBoolean(
+    "AUTH_SOCIAL_LOGIN_DISABLED",
+    process.env.AUTH_SOCIAL_LOGIN_DISABLED,
+  ),
+  MARKETING_CHROME_DISABLED: resolveStrictBoolean("MARKETING_CHROME_DISABLED", process.env.MARKETING_CHROME_DISABLED),
+  VENDOR_HELP_DISABLED: resolveStrictBoolean("VENDOR_HELP_DISABLED", process.env.VENDOR_HELP_DISABLED),
   AGENT_CHAT_DISABLED: Boolean(process.env.AGENT_CHAT_DISABLED),
   AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY,
   HOSTED_AI_OPERATOR_CONTROLS_ENABLED: resolveStrictBoolean(

@@ -59,10 +59,10 @@ export const SignInForm = observer(({ isInvited, socialProviders }: Props) => {
         />
 
         <AppCardBody>
-          <SocialErrorToast />
-
           {(socialProviders.google || socialProviders.microsoft) && (
             <>
+              <SocialErrorToast />
+
               <div className="flex flex-col items-center gap-4 sm:flex-row">
                 {socialProviders.google && (
                   <SignInProviderButton

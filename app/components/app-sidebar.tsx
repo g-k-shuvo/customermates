@@ -306,33 +306,35 @@ const FullAppSidebar = observer(
       channelsNeedingActionCount,
     ]);
 
-    const secondaryItems: NavSecondaryItem[] = [
-      {
-        key: "documentation",
-        title: t("UserAvatar.documentation"),
-        icon: FileText,
-        href: restricted ? "/dashboard" : "/docs",
-      },
-      {
-        key: "feedback",
-        title: t("Common.inputs.feedback"),
-        icon: MessageCircle,
-        onSelect: (invoker) => {
-          if (restricted) {
-            closeMobileSidebar(recheckAccountState);
-            return;
-          }
+    const secondaryItems: NavSecondaryItem[] = rootStore.branding.vendorHelpDisabled
+      ? []
+      : [
+          {
+            key: "documentation",
+            title: t("UserAvatar.documentation"),
+            icon: FileText,
+            href: restricted ? "/dashboard" : "/docs",
+          },
+          {
+            key: "feedback",
+            title: t("Common.inputs.feedback"),
+            icon: MessageCircle,
+            onSelect: (invoker) => {
+              if (restricted) {
+                closeMobileSidebar(recheckAccountState);
+                return;
+              }
 
-          closeMobileSidebar(() => {
-            rootStore.feedbackModalStore.onInitOrRefresh({
-              type: FeedbackType.general,
-              feedback: "",
-            });
-            rootStore.feedbackModalStore.openFrom(invoker, document.getElementById("sidebar-trigger"));
-          });
-        },
-      },
-    ];
+              closeMobileSidebar(() => {
+                rootStore.feedbackModalStore.onInitOrRefresh({
+                  type: FeedbackType.general,
+                  feedback: "",
+                });
+                rootStore.feedbackModalStore.openFrom(invoker, document.getElementById("sidebar-trigger"));
+              });
+            },
+          },
+        ];
 
     const addItems = [
       {
@@ -409,7 +411,7 @@ const FullAppSidebar = observer(
               rootStore.agentChatEnabled && rootStore.agentChatStore.enabled === true ? t("AgentChat.askAi") : undefined
             }
             assistantShortcut="⌘J"
-            brandName="Customermates"
+            brandName={rootStore.branding.name}
             brandSubtitle={planSubtitle}
             homeHref={
               restricted ? "/dashboard" : rootStore.appMode === "demo" ? "https://customermates.com" : "/dashboard"

@@ -1,9 +1,10 @@
 import type { HomepageRootMetadata } from "@/core/fumadocs/schemas/homepage";
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { buildHomepageMetadata, GLOBAL_METADATA } from "../homepage-metadata";
 
+import { UPSTREAM_BRAND_NAME } from "@/core/config/branding";
 import { CONTENT_LOCALES, DEFAULT_LOCALE } from "@/i18n/locale-registry";
 
 const BASE_URL = "http://localhost:4000";
@@ -13,12 +14,26 @@ const ROOT_METADATA: HomepageRootMetadata = {
 };
 
 describe("global metadata", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
   it("contains only route-neutral defaults", () => {
     expect(GLOBAL_METADATA).toEqual({
       icons: { icon: "/favicon.ico" },
       metadataBase: new URL(BASE_URL),
-      title: { default: "Customermates", template: "%s" },
+      title: { default: UPSTREAM_BRAND_NAME, template: "%s" },
     });
+  });
+
+  it("titles every page with the configured brand", async () => {
+    vi.resetModules();
+    vi.stubEnv("BRAND_NAME", "AcmeCRM");
+
+    const { GLOBAL_METADATA: branded } = await import("../homepage-metadata");
+
+    expect(branded.title).toEqual({ default: "AcmeCRM", template: "%s" });
   });
 });
 
@@ -45,7 +60,7 @@ describe("homepage metadata", () => {
       openGraph: {
         description: ROOT_METADATA.defaultDescription,
         images: [image],
-        siteName: "Customermates",
+        siteName: UPSTREAM_BRAND_NAME,
         title: ROOT_METADATA.defaultTitle,
         type: "website",
         url: `${BASE_URL}/de`,

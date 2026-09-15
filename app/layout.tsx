@@ -20,6 +20,7 @@ import {
   getGetOperatorConsoleVisibilityInteractor,
 } from "@/core/di";
 import { accountNeedsAction } from "@/ee/messaging/provider";
+import { branding } from "@/core/config/branding";
 import { env } from "@/env";
 import { GLOBAL_METADATA } from "@/core/seo/homepage-metadata";
 import { resolveRequestAccountState } from "@/features/auth/next/resolve-account-state";
@@ -86,6 +87,7 @@ export default async function RootLayout({ children }: Props) {
         <Providers
           agentChatEnabled={isAgentChatAvailable()}
           appMode={env.APP_MODE}
+          branding={branding}
           defaultTheme={themeCookie}
           displayLanguage={displayLanguage}
           initialStoreState={{
