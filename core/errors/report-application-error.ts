@@ -6,10 +6,14 @@ type ApplicationErrorHandler = (error: unknown) => void;
 
 let activeHandler: ApplicationErrorHandler | null = null;
 
-export function isDemoEnvironment(): boolean {
-  if (typeof window === "undefined") return false;
+let demoEnvironment = false;
 
-  return window.location.hostname.includes("demo");
+export function setDemoEnvironment(isDemo: boolean): void {
+  demoEnvironment = isDemo;
+}
+
+export function isDemoEnvironment(): boolean {
+  return demoEnvironment;
 }
 
 export function registerApplicationErrorHandler(handler: ApplicationErrorHandler): () => void {

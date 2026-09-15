@@ -130,7 +130,7 @@ export class RouteGuardService {
     }
 
     let subscription: Subscription | null = null;
-    if (env.APP_MODE !== "demo") {
+    if (env.APP_MODE === "cloud") {
       subscription = await this.subscriptionRepo.getSubscriptionOrThrowUnscoped(user.companyId);
       if (isSubscriptionExpired(subscription)) return { state: "subscription", ...base, legalStatus, subscription };
     }

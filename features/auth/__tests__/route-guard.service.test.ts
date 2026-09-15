@@ -237,6 +237,14 @@ describe("accessRedirectForAccountState", () => {
     expect(mocks.getSubscriptionOrThrowUnscoped).not.toHaveBeenCalled();
   });
 
+  it("skips the subscription check when self-hosted, where there is no way to pay", async () => {
+    mockEnv.APP_MODE = "self-hosted";
+    mocks.getSubscriptionOrThrowUnscoped.mockResolvedValue(subscription(SubscriptionStatus.expired, PAST));
+
+    expect(await resolveAccess()).toBeNull();
+    expect(mocks.getSubscriptionOrThrowUnscoped).not.toHaveBeenCalled();
+  });
+
   it("lets an active user on a not-yet-expired trial through", async () => {
     mocks.getSubscriptionOrThrowUnscoped.mockResolvedValue(subscription(SubscriptionStatus.trial, FUTURE));
 

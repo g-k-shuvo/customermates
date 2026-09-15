@@ -13,6 +13,8 @@ import { RootStore } from "@/core/stores/root.store";
 import type { AppMode } from "@/core/config/environment";
 import type { Branding } from "@/core/config/branding";
 
+import { setDemoEnvironment } from "@/core/errors/report-application-error";
+
 const RootStoreContext = createContext<RootStore | null>(null);
 
 type Props = {
@@ -37,6 +39,8 @@ function createRootStore(
   branding: Branding,
   initialState: RootStoreInitialState,
 ): RootStore {
+  setDemoEnvironment(appMode === "demo");
+
   const rootStore = new RootStore(appMode, agentChatEnabled, branding);
   rootStore.localeStore.setLocale(initialState.locale);
   rootStore.userStore.setUser(initialState.user);

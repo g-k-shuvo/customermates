@@ -23,18 +23,14 @@ vi.mock("@/components/shared/app-link", () => ({
 }));
 
 import { UnexpectedErrorToaster } from "../unexpected-error-toaster";
-import { reportApplicationError } from "@/core/errors/report-application-error";
+import { reportApplicationError, setDemoEnvironment } from "@/core/errors/report-application-error";
 
 let root: ReactRoot | undefined;
 let container: HTMLDivElement | undefined;
-const originalLocation = window.location;
 
 beforeEach(() => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-  Object.defineProperty(window, "location", {
-    configurable: true,
-    value: { ...originalLocation, hostname: "demo.customermates.com" },
-  });
+  setDemoEnvironment(true);
   vi.stubGlobal(
     "matchMedia",
     vi.fn(() => ({
@@ -50,10 +46,7 @@ afterEach(() => {
   container?.remove();
   root = undefined;
   container = undefined;
-  Object.defineProperty(window, "location", {
-    configurable: true,
-    value: originalLocation,
-  });
+  setDemoEnvironment(false);
   vi.clearAllMocks();
   vi.unstubAllGlobals();
 });
