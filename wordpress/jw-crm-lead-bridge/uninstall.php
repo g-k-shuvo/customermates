@@ -14,7 +14,7 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 
 global $wpdb;
 
-foreach (['jw_crm_base_url', 'jw_crm_signing_secret', 'jw_crm_form_map', 'jw_crm_admin_email', 'jw_crm_unmapped_forms'] as $option) {
+foreach (['jw_crm_base_url', 'jw_crm_signing_secret', 'jw_crm_form_map', 'jw_crm_admin_email', 'jw_crm_unmapped_forms', 'jw_crm_db_version'] as $option) {
     delete_option($option);
 }
 

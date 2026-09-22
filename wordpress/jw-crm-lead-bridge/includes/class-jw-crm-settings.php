@@ -131,10 +131,14 @@ final class JW_CRM_Settings
     }
 
     /**
-     * Accepts one "form id = slug" pair per line and drops anything malformed,
-     * because a typo should skip one form rather than break every form.
+     * Accepts "form id = slug" per line, optionally followed by "| secret".
      *
-     * @return array<int, string>
+     * Each CRM source signs with its own secret, so a site forwarding more than one
+     * form needs a secret per line. The single Signing secret field is the fallback
+     * for lines that omit one. A malformed line is dropped rather than failing the
+     * save, so a typo skips one form instead of breaking every form.
+     *
+     * @return array<int, array{slug: string, secret: string}>
      */
     public static function parse_form_map(string $raw): array
     {
@@ -147,26 +151,68 @@ final class JW_CRM_Settings
                 continue;
             }
 
-            [$formId, $slug] = array_map('trim', explode('=', $line, 2));
-            $slug = sanitize_title($slug);
+            [$formId, $rest] = array_map('trim', explode('=', $line, 2));
+
+            $secret = '';
+            if (str_contains($rest, '|')) {
+                [$rest, $secret] = array_map('trim', explode('|', $rest, 2));
+            }
+
+            $slug = sanitize_title($rest);
 
             if (!ctype_digit($formId) || $slug === '') {
                 continue;
             }
 
-            $map[(int) $formId] = $slug;
+            $map[(int) $formId] = [
+                'slug'   => $slug,
+                'secret' => (string) preg_replace('/[^a-f0-9]/i', '', $secret),
+            ];
         }
 
         return $map;
     }
 
-    /** @param array<int, string> $map */
+    /**
+     * Normalises a stored entry, which may predate per-line secrets.
+     *
+     * @param array<int, mixed> $map
+     * @return array{slug: string, secret: string}|null
+     */
+    public static function map_entry(array $map, int $formId): ?array
+    {
+        if (!isset($map[$formId])) {
+            return null;
+        }
+
+        $entry = $map[$formId];
+
+        if (is_string($entry) && $entry !== '') {
+            return ['slug' => $entry, 'secret' => ''];
+        }
+
+        if (is_array($entry) && !empty($entry['slug'])) {
+            return ['slug' => (string) $entry['slug'], 'secret' => (string) ($entry['secret'] ?? '')];
+        }
+
+        return null;
+    }
+
+    /** @param array<int, mixed> $map */
     private static function render_form_map(array $map): string
     {
         $lines = [];
 
-        foreach ($map as $formId => $slug) {
-            $lines[] = $formId . ' = ' . $slug;
+        foreach (array_keys($map) as $formId) {
+            $entry = self::map_entry($map, (int) $formId);
+
+            if ($entry === null) {
+                continue;
+            }
+
+            $lines[] = $entry['secret'] === ''
+                ? $formId . ' = ' . $entry['slug']
+                : $formId . ' = ' . $entry['slug'] . ' | ' . $entry['secret'];
         }
 
         return implode("\n", $lines);

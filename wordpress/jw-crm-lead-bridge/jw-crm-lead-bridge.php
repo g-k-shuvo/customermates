@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       JW CRM Lead Bridge
  * Description:       Forwards Fluent Forms submissions to the CRM web form endpoint, signed and with retries.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Requires at least: 6.0
  * Requires PHP:      8.0
  * License:           GPL-2.0-or-later
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('JW_CRM_VERSION', '1.0.0');
+define('JW_CRM_VERSION', '1.1.0');
 define('JW_CRM_PLUGIN_FILE', __FILE__);
 define('JW_CRM_PLUGIN_DIR', plugin_dir_path(__FILE__));
 
@@ -22,6 +22,7 @@ define('JW_CRM_OPTION_BASE_URL', 'jw_crm_base_url');
 define('JW_CRM_OPTION_SECRET', 'jw_crm_signing_secret');
 define('JW_CRM_OPTION_FORM_MAP', 'jw_crm_form_map');
 define('JW_CRM_OPTION_ADMIN_EMAIL', 'jw_crm_admin_email');
+define('JW_CRM_OPTION_DB_VERSION', 'jw_crm_db_version');
 
 define('JW_CRM_RETRY_HOOK', 'jw_crm_drain_retry_queue');
 define('JW_CRM_MAX_ATTEMPTS', 6);
@@ -48,7 +49,9 @@ add_action('fluentform/submission_inserted', static function ($submissionId, $fo
     $map = get_option(JW_CRM_OPTION_FORM_MAP, []);
     $formId = (int) $form->id;
 
-    if (empty($map[$formId])) {
+    $entry = JW_CRM_Settings::map_entry($map, $formId);
+
+    if ($entry === null) {
         JW_CRM_Unmapped::record($formId, (string) $form->title);
 
         return;
@@ -56,7 +59,8 @@ add_action('fluentform/submission_inserted', static function ($submissionId, $fo
 
     JW_CRM_Unmapped::forget($formId);
 
-    $slug = (string) $map[$formId];
+    $slug = $entry['slug'];
+    $secret = $entry['secret'];
 
     $payload = wp_json_encode([
         'external_id'  => (string) $submissionId,
@@ -73,7 +77,7 @@ add_action('fluentform/submission_inserted', static function ($submissionId, $fo
         return;
     }
 
-    $result = JW_CRM_Client::deliver($slug, $payload);
+    $result = JW_CRM_Client::deliver($slug, $payload, $secret);
 
     if ($result['delivered']) {
         return;
@@ -85,5 +89,5 @@ add_action('fluentform/submission_inserted', static function ($submissionId, $fo
         return;
     }
 
-    JW_CRM_Queue::enqueue($slug, (string) $submissionId, $payload);
+    JW_CRM_Queue::enqueue($slug, (string) $submissionId, $payload, $secret);
 }, 20, 3);

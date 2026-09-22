@@ -41,6 +41,7 @@ final class JW_CRM_Queue
                 slug VARCHAR(128) NOT NULL,
                 external_id VARCHAR(128) NOT NULL,
                 payload LONGTEXT NOT NULL,
+                secret VARCHAR(128) NOT NULL DEFAULT '',
                 attempts SMALLINT UNSIGNED NOT NULL DEFAULT 0,
                 next_attempt_at DATETIME NOT NULL,
                 last_error TEXT NULL,
@@ -67,6 +68,8 @@ final class JW_CRM_Queue
 
     public static function boot(): void
     {
+        add_action('plugins_loaded', [self::class, 'maybe_upgrade'], 5);
+
         add_filter('cron_schedules', static function (array $schedules): array {
             $schedules['jw_crm_five_minutes'] = [
                 'interval' => 300,
@@ -79,7 +82,22 @@ final class JW_CRM_Queue
         add_action(JW_CRM_RETRY_HOOK, [self::class, 'drain']);
     }
 
-    public static function enqueue(string $slug, string $externalId, string $payload): void
+    /**
+     * dbDelta only runs on activation, so a plugin updated in place would keep a
+     * table without the columns a newer version writes. Re-running it when the
+     * stored version differs adds them; dbDelta is a no-op when nothing changed.
+     */
+    public static function maybe_upgrade(): void
+    {
+        if (get_option(JW_CRM_OPTION_DB_VERSION) === JW_CRM_VERSION) {
+            return;
+        }
+
+        self::activate();
+        update_option(JW_CRM_OPTION_DB_VERSION, JW_CRM_VERSION, false);
+    }
+
+    public static function enqueue(string $slug, string $externalId, string $payload, string $secret = ''): void
     {
         global $wpdb;
 
@@ -92,10 +110,12 @@ final class JW_CRM_Queue
         $wpdb->query(
             $wpdb->prepare(
                 'REPLACE INTO ' . self::table_name() .
-                ' (slug, external_id, payload, attempts, next_attempt_at, created_at) VALUES (%s, %s, %s, %d, %s, %s)',
+                ' (slug, external_id, payload, secret, attempts, next_attempt_at, created_at)' .
+                ' VALUES (%s, %s, %s, %s, %d, %s, %s)',
                 $slug,
                 $externalId,
                 $payload,
+                $secret,
                 0,
                 self::schedule_for(1),
                 $now
@@ -115,7 +135,7 @@ final class JW_CRM_Queue
         );
 
         foreach ($rows as $row) {
-            $result = JW_CRM_Client::deliver((string) $row->slug, (string) $row->payload);
+            $result = JW_CRM_Client::deliver((string) $row->slug, (string) $row->payload, (string) ($row->secret ?? ''));
             $attempts = (int) $row->attempts + 1;
 
             if ($result['delivered']) {

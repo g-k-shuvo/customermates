@@ -26,10 +26,13 @@ final class JW_CRM_Client
     /**
      * @return array{delivered: bool, permanent: bool, code: int, reason: string}
      */
-    public static function deliver(string $slug, string $payload): array
+    public static function deliver(string $slug, string $payload, string $secret = ''): array
     {
         $base = rtrim((string) get_option(JW_CRM_OPTION_BASE_URL, ''), '/');
-        $secret = (string) get_option(JW_CRM_OPTION_SECRET, '');
+
+        if ($secret === '') {
+            $secret = (string) get_option(JW_CRM_OPTION_SECRET, '');
+        }
 
         if ($base === '' || $secret === '') {
             return self::result(false, true, 0, 'base url or signing secret is not configured');
