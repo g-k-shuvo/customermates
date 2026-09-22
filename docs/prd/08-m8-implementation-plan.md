@@ -387,3 +387,48 @@ suite passed throughout. Open the page.
 **A stale dev server cost time twice.** Both the `leadStatus` fix and the Phase 7 listener
 appeared not to work until `next dev` was restarted; editing `core/di.ts` in particular does
 not reliably hot-reload. Restart before concluding that a fix failed.
+
+---
+
+## The site, as found on 22 Sep 2026
+
+The PRD's site section is out of date. Recorded here from wp-admin rather than inferred.
+
+**The host moved.** `mistyrose-sardine-560260.hostingersite.com` still resolves, and TCP
+connects on 80 and 443, but the server resets as soon as data is sent — a torn-down
+Hostinger site. The rebuild now lives at `mediumseagreen-tapir-118956.hostingersite.com`.
+
+**Seven forms, not eight to twelve.** All active, ids 3–9:
+
+| id | Title | Entries |
+|----|-------|---------|
+| 9 | Contact Form | 1 |
+| 8 | Subscription Form | 0 |
+| 7 | Register Acquisition Criteria | 0 |
+| 6 | Request a Call | 0 |
+| 5 | Business Valuation Lead | 0 |
+| 4 | Contact Listing Broker | 0 |
+| 3 | NDA | 2 |
+
+Only **Request a Call** survives from the PRD's list by name. *Business Valuation Calculator*
+is now *Business Valuation Lead*; *Free Market Assessment*, *Buyer Registration*, *Seller
+Registration*, the *EBITDA Worksheet* and the two whitepaper downloads do not exist on this
+build at all. Four forms the PRD never mentions do: Contact Form, Subscription Form, Contact
+Listing Broker, NDA. Treat the PRD's form names as describing the **live** `jackimwoods.com`,
+not the rebuild.
+
+**Fluent Forms Pro is installed but unlicensed.** 6.2.14 core and Pro, plus the Signature
+add-on, all showing activation warnings. That confirms the PRD's inference from the Pro-only
+REST routes, and it settles T8.6: Option A was never safely available, because an unlicensed
+Pro cannot be relied on for updates.
+
+**Three entries exist in total.** Backfill against this host is close to meaningless — the
+historical entries the PRD wants reconciled are on the live site. Decide deliberately whether
+`scripts/backfill-fluent-forms.ts` ever points at production.
+
+**FluentCRM is active on the same site**, already receiving these submissions. Nobody has
+stated how it relates to what we are building; worth settling before leads land in two
+systems. **WP Reset is also active** — a plugin whose whole purpose is wiping the site.
+
+The bridge plugin was installed and activated here on 22 Sep 2026. It forwards nothing until
+a base URL, a signing secret and a mapping are saved.
