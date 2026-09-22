@@ -190,6 +190,8 @@ import { DeleteLostReasonInteractor } from "@/features/lost-reasons/delete/delet
 import { IngestWebFormSubmissionInteractor } from "@/features/webform/ingest/ingest-web-form-submission.interactor";
 import { ProcessWebFormSubmissionInteractor } from "@/features/webform/process/process-web-form-submission.interactor";
 
+import { LeadCreatedNotificationListener } from "@/features/leads/listener/lead-created-notification.listener";
+
 // Leads interactors
 import { GetLeadsInteractor } from "@/features/leads/get/get-leads.interactor";
 import { GetLeadByIdInteractor } from "@/features/leads/get/get-lead-by-id.interactor";
@@ -470,6 +472,8 @@ export const getRouteGuardService = () =>
 export const getBackgroundTaskService = () => new BackgroundTaskService();
 export const getUserPendingAuthorizationTaskListener = () => new UserPendingAuthorizationTaskListener(getTaskRepo());
 export const getDealStageHistoryListener = () => new DealStageHistoryListener(getDealRepo());
+export const getLeadCreatedNotificationListener = () =>
+  new LeadCreatedNotificationListener(getLeadRepo(), getEmailService());
 
 const EXPECTED_EVENT_LISTENERS = [
   {
@@ -479,6 +483,10 @@ const EXPECTED_EVENT_LISTENERS = [
   {
     factory: getDealStageHistoryListener,
     events: [DomainEvent.DEAL_CREATED, DomainEvent.DEAL_UPDATED],
+  },
+  {
+    factory: getLeadCreatedNotificationListener,
+    events: [DomainEvent.LEAD_CREATED],
   },
 ] as const;
 

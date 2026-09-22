@@ -2503,6 +2503,15 @@
     },
     "youPrefix": "You:"
   },
+  "LeadCreatedNotice": {
+    "cta": "Open the lead",
+    "fallback": "If the button does not work, copy and paste this link into your browser: ",
+    "intro": "{leadTitle} arrived from {sourceName}. Follow up while it is fresh.",
+    "organization": "Organization: {organizationName}",
+    "person": "From: {personName}",
+    "preview": "A new lead arrived from {sourceName}",
+    "subject": "New lead: {leadTitle}"
+  },
   "LegalDocumentNotice": {
     "contractBody": "We updated the legal documents listed below. Please review them for the business customer and arrange electronic acceptance by an authorised system administrator.",
     "contractDeadlineLabel": "Objection and acceptance deadline",

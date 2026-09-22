@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 
 import AccountsRemovedNotice from "../accounts-removed-notice";
 import CompanyInvite from "../company-invite";
+import LeadCreatedNotice from "../lead-created-notice";
 import ContactInquiry from "../contact-inquiry";
 import Feedback from "../feedback";
 import LegalDocumentNoticeContract from "../legal-document-notice-contract";
@@ -174,6 +175,31 @@ const EMAIL_PREVIEW_CASES = [
         name: "Sofia Example",
         provider: "Google",
       }),
+  },
+  {
+    key: "lead-created-notice",
+    sendSite: "lead-created-notice",
+    audience: "recipient-localized",
+    sourcePath: "features/leads/listener/lead-created-notification.listener.ts",
+    templatePath: "components/emails/lead-created-notice.tsx",
+    template: LeadCreatedNotice,
+    expectedText: (locale) => catalog(locale).LeadCreatedNotice.cta,
+    render: (locale) => {
+      const copy = catalog(locale).LeadCreatedNotice;
+      const leadTitle = "Analytical Engines";
+      const sourceName = "Request a Call";
+      return createElement(LeadCreatedNotice, {
+        ...previewLayoutProps(locale),
+        leadLink: `${PREVIEW_BASE_URL}/leads/synthetic-preview-lead`,
+        subject: copy.subject.replace("{leadTitle}", leadTitle),
+        preview: copy.preview.replace("{sourceName}", sourceName),
+        intro: copy.intro.replace("{leadTitle}", leadTitle).replace("{sourceName}", sourceName),
+        person: copy.person.replace("{personName}", "Ada Lovelace"),
+        organization: copy.organization.replace("{organizationName}", leadTitle),
+        cta: copy.cta,
+        fallback: copy.fallback,
+      });
+    },
   },
   {
     key: "company-invite",
@@ -425,11 +451,11 @@ function localesFor(definition: PreviewDefinition): readonly AppLocale[] {
 }
 
 describe("transactional email preview inventory", () => {
-  it("maps all 13 production send sites onto 14 production templates", () => {
-    expect(EMAIL_PREVIEW_CASES).toHaveLength(14);
-    expect(new Set(EMAIL_PREVIEW_CASES.map(({ key }) => key)).size).toBe(14);
-    expect(new Set(EMAIL_PREVIEW_CASES.map(({ sendSite }) => sendSite)).size).toBe(13);
-    expect(new Set(EMAIL_PREVIEW_CASES.map(({ templatePath }) => templatePath)).size).toBe(14);
+  it("maps all 14 production send sites onto 15 production templates", () => {
+    expect(EMAIL_PREVIEW_CASES).toHaveLength(15);
+    expect(new Set(EMAIL_PREVIEW_CASES.map(({ key }) => key)).size).toBe(15);
+    expect(new Set(EMAIL_PREVIEW_CASES.map(({ sendSite }) => sendSite)).size).toBe(14);
+    expect(new Set(EMAIL_PREVIEW_CASES.map(({ templatePath }) => templatePath)).size).toBe(15);
     expect(EMAIL_PREVIEW_CASES.map(({ templatePath }) => templatePath).sort()).toEqual(topLevelTemplates());
   });
 
@@ -458,11 +484,11 @@ describe("transactional email preview inventory", () => {
   });
 
   it("keeps recipient localization and internal English explicit", () => {
-    expect(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "recipient-localized")).toHaveLength(11);
+    expect(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "recipient-localized")).toHaveLength(12);
     expect(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "operator-english")).toHaveLength(3);
   });
 
-  it("discovers all 14 top-level production templates", () => {
+  it("discovers all 15 top-level production templates", () => {
     expect(discoveredPreviewEntries()).toEqual(
       EMAIL_PREVIEW_CASES.map(({ templatePath }) => templatePath.replace("components/emails/", "")).sort(),
     );
@@ -520,7 +546,7 @@ describe("transactional email preview rendering", () => {
       }
     }
 
-    expect(renderCount).toBe(58);
+    expect(renderCount).toBe(63);
   }, 15_000);
 
   it.each(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "operator-english"))(

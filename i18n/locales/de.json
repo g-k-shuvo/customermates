@@ -2503,6 +2503,15 @@
     },
     "youPrefix": "Du:"
   },
+  "LeadCreatedNotice": {
+    "cta": "Lead öffnen",
+    "fallback": "Falls die Schaltfläche nicht funktioniert, kopiere diesen Link in deinen Browser: ",
+    "intro": "{leadTitle} ist über {sourceName} eingegangen. Melde dich, solange die Anfrage frisch ist.",
+    "organization": "Unternehmen: {organizationName}",
+    "person": "Von: {personName}",
+    "preview": "Ein neuer Lead ist über {sourceName} eingegangen",
+    "subject": "Neuer Lead: {leadTitle}"
+  },
   "LegalDocumentNotice": {
     "contractBody": "Wir haben die unten aufgeführten Rechtsdokumente aktualisiert. Bitte prüfen Sie diese für den Geschäftskunden und veranlassen Sie die elektronische Annahme durch einen berechtigten Systemadministrator.",
     "contractDeadlineLabel": "Widerspruchs- und Annahmefrist",

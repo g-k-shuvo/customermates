@@ -2503,6 +2503,15 @@
     },
     "youPrefix": "Tu:"
   },
+  "LeadCreatedNotice": {
+    "cta": "Apri il lead",
+    "fallback": "Se il pulsante non funziona, copia e incolla questo link nel browser: ",
+    "intro": "{leadTitle} è arrivato da {sourceName}. Ricontatta finché la richiesta è recente.",
+    "organization": "Organizzazione: {organizationName}",
+    "person": "Da: {personName}",
+    "preview": "È arrivato un nuovo lead da {sourceName}",
+    "subject": "Nuovo lead: {leadTitle}"
+  },
   "LegalDocumentNotice": {
     "contractBody": "Abbiamo aggiornato i documenti legali elencati di seguito. Esaminali per il cliente aziendale e fai in modo che un amministratore di sistema autorizzato li accetti elettronicamente.",
     "contractDeadlineLabel": "Termine per l’opposizione e l’accettazione",

@@ -2503,6 +2503,15 @@
     },
     "youPrefix": "Tú:"
   },
+  "LeadCreatedNotice": {
+    "cta": "Abrir el prospecto",
+    "fallback": "Si el botón no funciona, copia y pega este enlace en tu navegador: ",
+    "intro": "{leadTitle} llegó desde {sourceName}. Haz el seguimiento mientras está reciente.",
+    "organization": "Organización: {organizationName}",
+    "person": "De: {personName}",
+    "preview": "Llegó un nuevo prospecto desde {sourceName}",
+    "subject": "Nuevo prospecto: {leadTitle}"
+  },
   "LegalDocumentNotice": {
     "contractBody": "Hemos actualizado los documentos legales que se indican a continuación. Revísalos en nombre del cliente empresarial y organiza su aceptación electrónica por parte de un administrador del sistema autorizado.",
     "contractDeadlineLabel": "Fecha límite de objeción y aceptación",

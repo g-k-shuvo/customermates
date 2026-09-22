@@ -4,6 +4,7 @@ import type { GetLeadsRepo } from "./get/get-leads.interactor";
 import type { CreateLeadRepo } from "./upsert/create-lead.repo";
 import type { UpdateLeadRepo } from "./upsert/update-lead.repo";
 import type { DeleteLeadRepo } from "./delete/delete-lead.repo";
+import type { LeadNotificationRecipient, LeadNotificationRepo } from "./listener/lead-notification.repo";
 
 import { type LeadDto, type LeadListResponse } from "./lead.schema";
 
@@ -12,7 +13,7 @@ import { Transaction } from "@/core/decorators/transaction.decorator";
 
 export class PrismaLeadRepo
   extends BaseRepository
-  implements GetLeadByIdRepo, GetLeadsRepo, CreateLeadRepo, UpdateLeadRepo, DeleteLeadRepo
+  implements GetLeadByIdRepo, GetLeadsRepo, CreateLeadRepo, UpdateLeadRepo, DeleteLeadRepo, LeadNotificationRepo
 {
   private get leadSelect() {
     return {
@@ -62,6 +63,15 @@ export class PrismaLeadRepo
     ]);
 
     return { leads, total };
+  }
+
+  async findLeadOwnerCompanyWide(leadId: string): Promise<LeadNotificationRecipient | null> {
+    const lead = await this.prisma.lead.findFirst({
+      where: { companyId: this.companyId, id: leadId },
+      select: { owner: { select: { email: true, displayLanguage: true } } },
+    });
+
+    return lead?.owner ?? null;
   }
 
   async getOrThrowCompanyWide(id: string): Promise<LeadDto> {
