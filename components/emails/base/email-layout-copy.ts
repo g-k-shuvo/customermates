@@ -1,4 +1,4 @@
-import enMessages from "@/i18n/locales/en.json";
+import { brandedEnMessages as enMessages } from "@/i18n/brand-messages";
 
 import { getTranslator } from "@/i18n/get-translator";
 import { DEFAULT_LOCALE, formattingTagFor, type AppLocale } from "@/i18n/locale-registry";

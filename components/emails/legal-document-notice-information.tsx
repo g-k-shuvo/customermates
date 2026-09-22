@@ -8,7 +8,7 @@ import { EmailText } from "@/components/emails/base/email-text";
 import { PREVIEW_EMAIL_LAYOUT_PROPS } from "@/components/emails/preview-layout-props";
 import { LEGAL_DOCUMENT_VERSIONS } from "@/constants/legal-documents";
 import { DEFAULT_LOCALE, formattingTagFor } from "@/i18n/locale-registry";
-import enMessages from "@/i18n/locales/en.json";
+import { brandedEnMessages as enMessages } from "@/i18n/brand-messages";
 
 type DocumentLink = {
   name: string;

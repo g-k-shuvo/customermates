@@ -28,6 +28,7 @@ COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/env.ts ./env.ts
 COPY --from=builder /app/core ./core
+COPY --from=builder /app/components ./components
 COPY --from=builder /app/content ./content
 COPY --from=builder /app/i18n ./i18n
 COPY --from=builder /app/instrumentation.ts ./instrumentation.ts

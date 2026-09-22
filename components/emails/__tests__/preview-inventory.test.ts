@@ -27,7 +27,7 @@ import { EmailLayout } from "../base/email-layout";
 import { EMAIL_PREVIEW_LOGO_URL } from "../preview-layout-props";
 
 import deMessages from "@/i18n/locales/de.json";
-import enMessages from "@/i18n/locales/en.json";
+import { brandedEnMessages as enMessages } from "@/i18n/brand-messages";
 import esMessages from "@/i18n/locales/es.json";
 import frMessages from "@/i18n/locales/fr.json";
 import itMessages from "@/i18n/locales/it.json";

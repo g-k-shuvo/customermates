@@ -1,4 +1,4 @@
-import enMessages from "@/i18n/locales/en.json";
+import { brandedEnMessages as enMessages } from "@/i18n/brand-messages";
 import { EmailLayout, type EmailLayoutSharedProps } from "@/components/emails/base/email-layout";
 import { EmailText } from "@/components/emails/base/email-text";
 import { PREVIEW_EMAIL_LAYOUT_PROPS } from "@/components/emails/preview-layout-props";

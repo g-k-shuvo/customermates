@@ -402,7 +402,7 @@
           "data": {
             "accounts-add-channel": {
               "label": "Añadir otro canal",
-              "prompt": "Guíame para añadir otro canal de mensajería a Customermates."
+              "prompt": "Guíame para añadir otro canal de mensajería a {brand}."
             },
             "accounts-list": {
               "label": "¿Qué cuentas están conectadas?",
@@ -410,21 +410,21 @@
             },
             "accounts-sync": {
               "label": "¿Cómo funciona la sincronización?",
-              "prompt": "Explícame cómo sincroniza Customermates las cuentas conectadas y qué hace con los mensajes que importa."
+              "prompt": "Explícame cómo sincroniza {brand} las cuentas conectadas y qué hace con los mensajes que importa."
             }
           },
           "empty": {
             "accounts-connect-email": {
               "label": "Conectar mi correo",
-              "prompt": "Guíame para conectar mi cuenta de correo a Customermates."
+              "prompt": "Guíame para conectar mi cuenta de correo a {brand}."
             },
             "accounts-connect-linkedin": {
               "label": "Conectar LinkedIn",
-              "prompt": "Guíame para conectar LinkedIn a Customermates."
+              "prompt": "Guíame para conectar LinkedIn a {brand}."
             },
             "accounts-connect-whatsapp": {
               "label": "Conectar WhatsApp",
-              "prompt": "Guíame para conectar WhatsApp a Customermates."
+              "prompt": "Guíame para conectar WhatsApp a {brand}."
             }
           }
         },
@@ -476,15 +476,15 @@
           "empty": {
             "capabilities": {
               "label": "¿Qué puedo automatizar?",
-              "prompt": "A partir de esta página, explícame el trabajo más útil que puedes automatizar para mí en Customermates."
+              "prompt": "A partir de esta página, explícame el trabajo más útil que puedes automatizar para mí en {brand}."
             },
             "setup": {
               "label": "Configurar mi espacio de trabajo",
-              "prompt": "Ayúdame a configurar Customermates para mi negocio. Hazme unas pocas preguntas concretas antes de proponer cambios."
+              "prompt": "Ayúdame a configurar {brand} para mi negocio. Hazme unas pocas preguntas concretas antes de proponer cambios."
             },
             "tour": {
               "label": "Enséñame la aplicación",
-              "prompt": "Dame una visita guiada a fondo de Customermates y explícame cómo encajan entre sí las áreas principales."
+              "prompt": "Dame una visita guiada a fondo de {brand} y explícame cómo encajan entre sí las áreas principales."
             }
           }
         },
@@ -506,7 +506,7 @@
           "empty": {
             "deals-tour": {
               "label": "Descubrir cómo funcionan las oportunidades",
-              "prompt": "Enséñame las oportunidades y explícame cómo gestionar un pipeline en Customermates."
+              "prompt": "Enséñame las oportunidades y explícame cómo gestionar un pipeline en {brand}."
             },
             "first-deal": {
               "label": "Crear mi primera oportunidad",
@@ -530,21 +530,21 @@
             },
             "default-tour": {
               "label": "Enséñame la aplicación",
-              "prompt": "Dame una visita guiada a fondo de Customermates y explícame cómo encajan entre sí las áreas principales."
+              "prompt": "Dame una visita guiada a fondo de {brand} y explícame cómo encajan entre sí las áreas principales."
             }
           },
           "empty": {
             "default-capabilities": {
               "label": "¿Qué puedes hacer?",
-              "prompt": "Explícame qué puedes hacer por mí en Customermates y en qué eres más útil."
+              "prompt": "Explícame qué puedes hacer por mí en {brand} y en qué eres más útil."
             },
             "default-import": {
               "label": "¿Cómo importo mis contactos?",
-              "prompt": "Guíame para importar a Customermates los contactos que ya tengo."
+              "prompt": "Guíame para importar a {brand} los contactos que ya tengo."
             },
             "default-setup": {
               "label": "Ayúdame a configurar mi CRM",
-              "prompt": "Ayúdame a configurar Customermates para mi negocio. Hazme unas pocas preguntas concretas antes de proponer cambios."
+              "prompt": "Ayúdame a configurar {brand} para mi negocio. Hazme unas pocas preguntas concretas antes de proponer cambios."
             }
           }
         },
@@ -552,11 +552,11 @@
           "data": {
             "inbox-add-channel": {
               "label": "Conectar otro canal",
-              "prompt": "Guíame para conectar otro canal de mensajería a Customermates."
+              "prompt": "Guíame para conectar otro canal de mensajería a {brand}."
             },
             "inbox-explain-data": {
               "label": "Enséñame cómo funciona la bandeja de entrada",
-              "prompt": "Explícame cómo funciona la bandeja de entrada de Customermates y qué relación tiene con los registros de mi CRM."
+              "prompt": "Explícame cómo funciona la bandeja de entrada de {brand} y qué relación tiene con los registros de mi CRM."
             },
             "inbox-needs-reply": {
               "label": "¿Qué conversaciones necesitan respuesta?",
@@ -566,15 +566,15 @@
           "empty": {
             "inbox-connect-email": {
               "label": "Conectar mi correo",
-              "prompt": "Guíame para conectar mi cuenta de correo a la bandeja de entrada de Customermates."
+              "prompt": "Guíame para conectar mi cuenta de correo a la bandeja de entrada de {brand}."
             },
             "inbox-connect-whatsapp": {
               "label": "Conectar WhatsApp",
-              "prompt": "Guíame para conectar WhatsApp a la bandeja de entrada de Customermates."
+              "prompt": "Guíame para conectar WhatsApp a la bandeja de entrada de {brand}."
             },
             "inbox-explain": {
               "label": "Enséñame cómo funciona la bandeja de entrada",
-              "prompt": "Explícame cómo funciona la bandeja de entrada de Customermates y qué relación tiene con los registros de mi CRM."
+              "prompt": "Explícame cómo funciona la bandeja de entrada de {brand} y qué relación tiene con los registros de mi CRM."
             }
           }
         },
@@ -676,7 +676,7 @@
         },
         "relationships": {
           "label": "Mostrar cómo se conecta",
-          "prompt": "Explícame cómo se conecta esta página con las demás áreas de Customermates. No hagas ningún cambio."
+          "prompt": "Explícame cómo se conecta esta página con las demás áreas de {brand}. No hagas ningún cambio."
         },
         "tour": {
           "label": "Hacer una visita guiada",
@@ -838,7 +838,7 @@
   },
   "BrowserFrame": {
     "live": "en directo",
-    "liveDemoTitle": "Demo en directo de Customermates",
+    "liveDemoTitle": "Demo en directo de {brand}",
     "open": "Abrir"
   },
   "Common": {
@@ -1342,7 +1342,7 @@
     },
     "imageAlt": {
       "countryFlag": "Bandera de {country}",
-      "logo": "Logotipo de Customermates"
+      "logo": "Logotipo de {brand}"
     },
     "inputs": {
       "addOption": "Añadir \"{value}\"",
@@ -1549,9 +1549,9 @@
   "CompanyInvite": {
     "cta": "Aceptar la invitación",
     "fallback": "Si el botón no funciona, copia y pega este enlace en tu navegador: ",
-    "intro": "{inviterName} te ha invitado a unirte a su equipo en Customermates. Haz clic en el botón de abajo para aceptar la invitación y crear tu cuenta.",
-    "preview": "{inviterName} te ha invitado a su equipo en Customermates",
-    "subject": "Únete a tu equipo en Customermates"
+    "intro": "{inviterName} te ha invitado a unirte a su equipo en {brand}. Haz clic en el botón de abajo para aceptar la invitación y crear tu cuenta.",
+    "preview": "{inviterName} te ha invitado a su equipo en {brand}",
+    "subject": "Únete a tu equipo en {brand}"
   },
   "CompanyInviteModal": {
     "description": "Comparte este enlace con los usuarios que quieras invitar a tu empresa.",
@@ -1584,7 +1584,7 @@
   "ConnectedAccountsCard": {
     "accountLimitReached": "Has alcanzado el límite de cuentas conectadas de este plan. Contáctanos sobre el plan Enterprise para tener cuentas ilimitadas.",
     "agentChatDisabled": "El asistente no está disponible temporalmente.",
-    "agentChatRequiresCloud": "El asistente está disponible en Customermates Cloud.",
+    "agentChatRequiresCloud": "El asistente está disponible en {brand} Cloud.",
     "agentChatRequiresPlan": "El asistente no está disponible con su plan actual.",
     "alreadyExistsToastDescription": "Esta cuenta ya está conectada por un miembro de tu espacio de trabajo. Pídele que la comparta con el espacio de trabajo para evitar mensajes duplicados en la bandeja de entrada.",
     "alreadyExistsToastTitle": "Cuenta ya conectada",
@@ -1618,7 +1618,7 @@
     "invalidCredentialsToastDescription": "No se aceptaron las credenciales. Compruébalas e inténtalo de nuevo.",
     "invalidCredentialsToastTitle": "Credenciales no válidas",
     "lastSynced": "Última sincronización",
-    "messagingRequiresCloud": "La mensajería está disponible en Customermates Cloud (plan Pro o superior).",
+    "messagingRequiresCloud": "La mensajería está disponible en {brand} Cloud (plan Pro o superior).",
     "messagingRequiresPro": "La mensajería requiere el plan Pro o superior. Cambia a un plan superior para conectar un canal.",
     "ownerLabel": "Propietario",
     "paidSubscriptionRequired": "Conectar canales requiere una suscripción activa o una prueba no caducada.",
@@ -1630,7 +1630,7 @@
     "resyncStartedDescription": "Reimportando el historial en segundo plano. Suele tardar de 1 a 3 minutos.",
     "resyncStartedTitle": "Resincronización iniciada",
     "sharedAccountsRequiresBusiness": "Las cuentas compartidas requieren el plan Business o superior.",
-    "sharedAccountsRequiresCloud": "Las cuentas compartidas están disponibles en Customermates Cloud (plan Business o superior).",
+    "sharedAccountsRequiresCloud": "Las cuentas compartidas están disponibles en {brand} Cloud (plan Business o superior).",
     "sharedOffToast": "La cuenta ahora es privada",
     "sharedOnToast": "Cuenta compartida con tu espacio de trabajo",
     "status": "Estado",
@@ -1681,7 +1681,7 @@
     "form": {
       "founderName": "Benjamin Wagner",
       "founderNote": "Tu mensaje me llega directamente. Cuéntame qué utilizas ahora y en qué punto se atasca el flujo de trabajo.",
-      "founderRole": "Fundador de Customermates",
+      "founderRole": "Fundador de {brand}",
       "messagePlaceholder": "¿En qué estás trabajando y cómo puedo ayudarte?",
       "privacyAcknowledgement": "He leído la <dataPrivacyLink>Política de privacidad</dataPrivacyLink>.",
       "privacyAcknowledgementRequired": "Confirma que has leído la Política de privacidad.",
@@ -2304,7 +2304,7 @@
   },
   "Footer": {
     "company": "Empresa",
-    "copyrightText": "© {year} Customermates. Todos los derechos reservados.",
+    "copyrightText": "© {year} {brand}. Todos los derechos reservados.",
     "dpa": "DPA",
     "featuredOn": "Destacado en",
     "featuredOnPlatform": "Destacado en {platform}",
@@ -2317,7 +2317,7 @@
     "privacyChoices": "Opciones de privacidad",
     "product": "Producto",
     "resources": "Recursos",
-    "reviewsOnPlatform": "Reseñas de Customermates en {platform}",
+    "reviewsOnPlatform": "Reseñas de {brand} en {platform}",
     "solutions": "Soluciones",
     "solutionsViewAll": "Ver todos los sectores",
     "subprocessors": "Subencargados",
@@ -2507,7 +2507,7 @@
     "contractBody": "Hemos actualizado los documentos legales que se indican a continuación. Revísalos en nombre del cliente empresarial y organiza su aceptación electrónica por parte de un administrador del sistema autorizado.",
     "contractDeadlineLabel": "Fecha límite de objeción y aceptación",
     "contractObjection": "Envía cualquier objeción antes de la fecha límite indicada respondiendo a este correo. El silencio o la inactividad no constituyen aceptación. Si los documentos contractuales actualizados no se aceptan antes de la fecha límite, el acceso a la interfaz de usuario del servicio gestionado puede restringirse hasta que los acepte un administrador autorizado.",
-    "contractSubject": "Acción necesaria: documentos legales de Customermates actualizados",
+    "contractSubject": "Acción necesaria: documentos legales de {brand} actualizados",
     "contractTitle": "Documentos legales actualizados",
     "documents": {
       "dpa": "Acuerdo de tratamiento de datos",
@@ -2517,7 +2517,7 @@
     },
     "greeting": "Hola {firstName}:",
     "informationBody": "Hemos actualizado la información legal que se indica a continuación. Este aviso no requiere aceptación, salvo que el correo también identifique Términos o un Acuerdo de tratamiento de datos actualizados.",
-    "informationSubject": "Información legal de Customermates actualizada",
+    "informationSubject": "Información legal de {brand} actualizada",
     "informationTitle": "Información legal actualizada",
     "signoff": "Un saludo,\nBen",
     "subprocessorDeadlineLabel": "Fecha límite de objeción al subencargado",
@@ -2777,13 +2777,13 @@
         "skip": "Omitir por ahora"
       },
       "connector": {
-        "chatgptDescription": "En la aplicación de escritorio de ChatGPT, añade Customermates como servidor MCP Streamable HTTP. La autenticación usa OAuth.",
-        "chatgptSteps": "Abre Configuración → Servidores MCP → Añadir servidor, elige Streamable HTTP y pega la URL. Guarda, reinicia la aplicación y selecciona Autenticar junto a Customermates. Inicia sesión y aprueba el acceso.",
-        "chatgptTitle": "Añadir Customermates como servidor MCP",
+        "chatgptDescription": "En la aplicación de escritorio de ChatGPT, añade {brand} como servidor MCP Streamable HTTP. La autenticación usa OAuth.",
+        "chatgptSteps": "Abre Configuración → Servidores MCP → Añadir servidor, elige Streamable HTTP y pega la URL. Guarda, reinicia la aplicación y selecciona Autenticar junto a {brand}. Inicia sesión y aprueba el acceso.",
+        "chatgptTitle": "Añadir {brand} como servidor MCP",
         "claudeButton": "Añadir a Claude",
-        "claudeDescription": "Abre el cuadro de diálogo preconfigurado de Claude para conectores personalizados, inicia sesión en Customermates y aprueba el acceso.",
+        "claudeDescription": "Abre el cuadro de diálogo preconfigurado de Claude para conectores personalizados, inicia sesión en {brand} y aprueba el acceso.",
         "claudeTitle": "Conecta tu cuenta de Claude",
-        "externalNote": "Esta configuración se realiza en una pestaña nueva o en tu IA. Customermates no verifica automáticamente la conexión externa. <guide>Lee la guía de configuración completa</guide>.",
+        "externalNote": "Esta configuración se realiza en una pestaña nueva o en tu IA. {brand} no verifica automáticamente la conexión externa. <guide>Lee la guía de configuración completa</guide>.",
         "urlLabel": "URL del servidor MCP"
       },
       "createKey": "Crear una clave de API",
@@ -2800,7 +2800,7 @@
           "gemini": "Añade esto a ~/.gemini/settings.json (fusiónalo con mcpServers si ya existe):"
         },
         "keyNote": "Copia ahora esta configuración. La clave de API se muestra una sola vez y podrás revocarla más tarde desde tu perfil. <guide>Lee la guía de configuración completa</guide>.",
-        "label": "Conecta Customermates a {tool}"
+        "label": "Conecta {brand} a {tool}"
       },
       "local": {
         "ariaLabel": "Aplicación local de Claude",
@@ -2827,7 +2827,7 @@
         "methods": {
           "ariaLabel": "Métodos de conexión de ChatGPT y Codex",
           "chatgpt": {
-            "description": "Añade Customermates en la aplicación e inicia sesión una vez. No necesitas una clave de API ni un archivo de configuración.",
+            "description": "Añade {brand} en la aplicación e inicia sesión una vez. No necesitas una clave de API ni un archivo de configuración.",
             "meta": "Servidor MCP · OAuth",
             "note": "La misma configuración MCP se comparte con Codex en este ordenador.",
             "title": "Aplicación ChatGPT"
@@ -2846,11 +2846,11 @@
       "screen": {
         "back": "Todos los clientes de IA",
         "claude": {
-          "subtitle": "Ambas opciones usan MCP y las mismas herramientas de Customermates. Elige la configuración que se adapte a cómo usas Claude.",
+          "subtitle": "Ambas opciones usan MCP y las mismas herramientas de {brand}. Elige la configuración que se adapte a cómo usas Claude.",
           "title": "¿Cómo usas Claude?"
         },
         "openai": {
-          "subtitle": "Ambas opciones usan MCP y las mismas herramientas de Customermates. Elige la configuración que mejor se adapte a tu forma de trabajar.",
+          "subtitle": "Ambas opciones usan MCP y las mismas herramientas de {brand}. Elige la configuración que mejor se adapte a tu forma de trabajar.",
           "title": "¿Cómo usas ChatGPT o Codex?"
         },
         "setup": {
@@ -3230,7 +3230,7 @@
     "buttonLabel": "Regístrate con {provider}",
     "inviteSubtitle": "Te han invitado a unirte a un equipo en {brandName}. Elige tu método de inicio de sesión para aceptar la invitación.",
     "inviteTitle": "Aceptar la invitación de la empresa",
-    "newCompanySubtitle": "Registra una empresa nueva y prueba Customermates gratis durante {days} días. Sin tarjeta de crédito.",
+    "newCompanySubtitle": "Registra una empresa nueva y prueba {brand} gratis durante {days} días. Sin tarjeta de crédito.",
     "or": "O",
     "signUpCta": "Crear una cuenta",
     "switchToSignIn": "¿Ya tienes una cuenta? <signInLink>Inicia sesión</signInLink>",
@@ -3309,7 +3309,7 @@
     "contactSupportCta": "Contactar con soporte",
     "manualEnterpriseBillingDescription": "Tu espacio de trabajo Enterprise se factura manualmente. Contacta con nuestro equipo de soporte para recuperar el acceso y vuelve a intentarlo después.",
     "retry": "Volver a intentarlo",
-    "selfServiceCheckoutDescription": "Tu espacio de trabajo ya no tiene una suscripción activa. Elige un plan para seguir usando Customermates o contacta con nuestro equipo de soporte si tienes alguna duda.",
+    "selfServiceCheckoutDescription": "Tu espacio de trabajo ya no tiene una suscripción activa. Elige un plan para seguir usando {brand} o contacta con nuestro equipo de soporte si tienes alguna duda.",
     "subtitle": "El acceso al espacio de trabajo está pausado",
     "supportEmailSubject": "Consulta sobre la suscripción",
     "title": "Suscripción necesaria"
@@ -3331,7 +3331,7 @@
     "systemTaskTooltip": "Elemento «{task}» gestionado por el sistema. No se puede eliminar manualmente; ábrelo para obtener más información."
   },
   "TrialExpiredOffer": {
-    "body": "Tu prueba terminó hace poco, pero me encantaría ayudarte a sacarle valor real a Customermates. Si quieres, puedo ampliar tu prueba y repasar contigo tu configuración.",
+    "body": "Tu prueba terminó hace poco, pero me encantaría ayudarte a sacarle valor real a {brand}. Si quieres, puedo ampliar tu prueba y repasar contigo tu configuración.",
     "cta": "Ponte en contacto",
     "greeting": "Hola {firstName}:",
     "scheduleFallback": "Si el botón no funciona, copia y pega este enlace en tu navegador: ",
@@ -3360,12 +3360,12 @@
     "title": "Recordatorio de desactivación de la prueba"
   },
   "TrialWelcome": {
-    "body": "Me alegra tenerte aquí. Soy Ben, fundador de Customermates, y me encantaría ayudarte a empezar rápido y a que tus primeros pasos de configuración sean sencillos.",
+    "body": "Me alegra tenerte aquí. Soy Ben, fundador de {brand}, y me encantaría ayudarte a empezar rápido y a que tus primeros pasos de configuración sean sencillos.",
     "dismiss": "Si tienes alguna duda o quieres una demostración personalizada, responde a este correo. Llega directamente a mi bandeja de entrada.",
     "greeting": "Hola {firstName}:",
     "planNote": "Tu prueba incluye todo lo del plan Pro, así que puedes probar la experiencia de mensajería completa desde el primer momento.",
     "signoff": "Un saludo,\nBen",
-    "subject": "Te damos la bienvenida a Customermates",
+    "subject": "Te damos la bienvenida a {brand}",
     "title": "Te damos la bienvenida a tu prueba"
   },
   "UserAvatar": {
