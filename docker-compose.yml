@@ -30,6 +30,7 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY}
       WORKFLOW_TARGET_WORLD: "@workflow/world-postgres"
       WORKFLOW_POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      WORKFLOW_LOCAL_BASE_URL: http://127.0.0.1:4000
     ports:
       - "${APP_PORT:-4000}:4000"
 
