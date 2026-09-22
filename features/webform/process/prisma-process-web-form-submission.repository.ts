@@ -171,4 +171,19 @@ export class PrismaProcessWebFormSubmissionRepo extends BaseRepository implement
       },
     });
   }
+
+  @BypassTenantGuard
+  async findTaskCapableUserIdUnscoped(companyId: string): Promise<string | null> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        companyId,
+        status: "active",
+        role: { permissions: { some: { resource: "tasks", action: "create" } } },
+      },
+      orderBy: { createdAt: "asc" },
+      select: { id: true },
+    });
+
+    return user?.id ?? null;
+  }
 }

@@ -31,8 +31,9 @@ export class ProcessWebFormSubmissionInteractor {
 
   private async publishLeadCreated(leadId: string, companyId: string, ownerUserId: string | null): Promise<void> {
     const lead = await this.repo.findLeadForEventUnscoped(leadId);
+    const publisherUserId = ownerUserId ?? (await this.repo.findTaskCapableUserIdUnscoped(companyId));
 
-    if (!ownerUserId) {
+    if (!publisherUserId) {
       await this.eventService.publish(
         DomainEvent.LEAD_CREATED,
         { entityId: lead.id, payload: lead },
@@ -42,7 +43,7 @@ export class ProcessWebFormSubmissionInteractor {
       return;
     }
 
-    await runAsBackgroundTenant(ownerUserId, () =>
+    await runAsBackgroundTenant(publisherUserId, () =>
       this.eventService.publish(DomainEvent.LEAD_CREATED, { entityId: lead.id, payload: lead }),
     );
   }
