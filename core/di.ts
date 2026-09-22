@@ -189,6 +189,9 @@ import { DeleteLostReasonInteractor } from "@/features/lost-reasons/delete/delet
 // Web form interactors
 import { IngestWebFormSubmissionInteractor } from "@/features/webform/ingest/ingest-web-form-submission.interactor";
 import { ProcessWebFormSubmissionInteractor } from "@/features/webform/process/process-web-form-submission.interactor";
+import { CreateWebFormSourceInteractor } from "@/features/webform/upsert/create-web-form-source.interactor";
+import { RotateWebFormSecretInteractor } from "@/features/webform/upsert/rotate-web-form-secret.interactor";
+import { GetWebFormSourcesInteractor } from "@/features/webform/get/get-web-form-sources.interactor";
 
 import { LeadCreatedNotificationListener } from "@/features/leads/listener/lead-created-notification.listener";
 
@@ -918,6 +921,12 @@ export const getIngestWebFormSubmissionInteractor = () =>
 
 export const getProcessWebFormSubmissionInteractor = () =>
   new ProcessWebFormSubmissionInteractor(getProcessWebFormSubmissionRepo());
+
+export const getCreateWebFormSourceInteractor = () => new CreateWebFormSourceInteractor(getWebFormRepo());
+
+export const getRotateWebFormSecretInteractor = () => new RotateWebFormSecretInteractor(getWebFormRepo());
+
+export const getGetWebFormSourcesInteractor = () => new GetWebFormSourcesInteractor(getWebFormRepo());
 
 export const getGetLeadsInteractor = () => new GetLeadsInteractor(getLeadRepo());
 

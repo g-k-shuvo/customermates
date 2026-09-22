@@ -1,3 +1,4 @@
+import type { RepoArgs } from "@/core/utils/types";
 import type { Prisma } from "@/generated/prisma";
 import type {
   ConsumeRateLimitArgs,
@@ -6,8 +7,18 @@ import type {
   WebFormSourceRecord,
 } from "./ingest/ingest-web-form-submission.repo";
 
+import type { CreateWebFormSourceRepo } from "./upsert/create-web-form-source.repo";
+import type { GetWebFormSourcesRepo } from "./get/get-web-form-sources.interactor";
+import type { RotateWebFormSecretRepo } from "./upsert/rotate-web-form-secret.repo";
+
+import { randomBytes } from "node:crypto";
+
+import { type WebFormSourceList, type WebFormSourceWithSecret } from "./webform-source.schema";
+import { WebFormFieldMappingSchema } from "./ingest/field-mapping";
+
 import { BaseRepository } from "@/core/base/base-repository";
 import { BypassTenantGuard } from "@/core/decorators/bypass-tenant.decorator";
+import { Transaction } from "@/core/decorators/transaction.decorator";
 
 const UNIQUE_VIOLATION = "P2002";
 
@@ -20,7 +31,103 @@ const CONSUME_RATE_LIMIT_SQL = `
     "updatedAt" = now()
   RETURNING "count"`;
 
-export class PrismaWebFormRepo extends BaseRepository implements IngestWebFormSubmissionRepo {
+function newSigningSecret(): string {
+  return randomBytes(32).toString("hex");
+}
+
+export class PrismaWebFormRepo
+  extends BaseRepository
+  implements IngestWebFormSubmissionRepo, CreateWebFormSourceRepo, GetWebFormSourcesRepo, RotateWebFormSecretRepo
+{
+  private get sourceSelect() {
+    return {
+      id: true,
+      name: true,
+      slug: true,
+      active: true,
+      defaultOwnerId: true,
+      defaultLabels: true,
+      fieldMapping: true,
+      createdAt: true,
+      updatedAt: true,
+    };
+  }
+
+  private toSourceDto(row: {
+    id: string;
+    name: string;
+    slug: string;
+    active: boolean;
+    defaultOwnerId: string | null;
+    defaultLabels: string[];
+    fieldMapping: unknown;
+    createdAt: Date;
+    updatedAt: Date;
+  }) {
+    const mapping = WebFormFieldMappingSchema.safeParse(row.fieldMapping);
+
+    return { ...row, fieldMapping: mapping.success ? mapping.data : {}, endpointPath: `/api/webforms/${row.slug}` };
+  }
+
+  async slugExists(slug: string): Promise<boolean> {
+    const existing = await this.prisma.webFormSource.findFirst({
+      where: { companyId: this.companyId, slug },
+      select: { id: true },
+    });
+
+    return existing !== null;
+  }
+
+  async getWebFormSources(): Promise<WebFormSourceList> {
+    const rows = await this.prisma.webFormSource.findMany({
+      where: { companyId: this.companyId },
+      select: this.sourceSelect,
+      orderBy: { createdAt: "desc" },
+    });
+
+    return { sources: rows.map((row) => this.toSourceDto(row)) };
+  }
+
+  @Transaction()
+  async createWebFormSourceOrThrow(
+    args: RepoArgs<CreateWebFormSourceRepo, "createWebFormSourceOrThrow">,
+  ): Promise<WebFormSourceWithSecret> {
+    const signingSecret = newSigningSecret();
+
+    const row = await this.prisma.webFormSource.create({
+      data: {
+        companyId: this.companyId,
+        name: args.name,
+        slug: args.slug,
+        active: args.active,
+        defaultOwnerId: args.defaultOwnerId ?? null,
+        defaultLabels: args.defaultLabels,
+        fieldMapping: args.fieldMapping,
+        signingSecret,
+      },
+      select: this.sourceSelect,
+    });
+
+    return { ...this.toSourceDto(row), signingSecret };
+  }
+
+  @Transaction()
+  async rotateWebFormSecretOrThrow(id: string): Promise<WebFormSourceWithSecret> {
+    const signingSecret = newSigningSecret();
+
+    await this.prisma.webFormSource.updateMany({
+      where: { companyId: this.companyId, id },
+      data: { signingSecret },
+    });
+
+    const row = await this.prisma.webFormSource.findFirstOrThrow({
+      where: { companyId: this.companyId, id },
+      select: this.sourceSelect,
+    });
+
+    return { ...this.toSourceDto(row), signingSecret };
+  }
+
   @BypassTenantGuard
   async findActiveSourceBySlugUnscoped(slug: string): Promise<WebFormSourceRecord | null> {
     return this.prisma.webFormSource.findFirst({

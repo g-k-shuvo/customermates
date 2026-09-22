@@ -1150,6 +1150,7 @@
       "userNotFound": "User ID not found or not accessible.",
       "userPlatformOperatorStatusForbidden": "This account belongs to a platform operator and cannot be deactivated here. Use the operator console.",
       "userSelfAdminUpdateForbidden": "You cannot update your own account through team administration.",
+      "webFormSourceSlugTaken": "A web form source with this address already exists. Choose a different one.",
       "webhookDeliveryNotFound": "Webhook delivery ID not found or not accessible.",
       "webhookEventsRequired": "Select at least one event.",
       "webhookNotFound": "Webhook ID not found or not accessible.",

@@ -1150,6 +1150,7 @@
       "userNotFound": "ID d'utilisateur introuvable ou inaccessible.",
       "userPlatformOperatorStatusForbidden": "Ce compte appartient à un opérateur de la plateforme et ne peut pas être désactivé ici. Utilisez la console opérateur.",
       "userSelfAdminUpdateForbidden": "Vous ne pouvez pas mettre à jour votre propre compte depuis l’administration de l’équipe.",
+      "webFormSourceSlugTaken": "Une source de formulaire web avec cette adresse existe déjà. Choisissez-en une autre.",
       "webhookDeliveryNotFound": "ID de livraison de webhook introuvable ou inaccessible.",
       "webhookEventsRequired": "Sélectionnez au moins un évènement.",
       "webhookNotFound": "ID de webhook introuvable ou inaccessible.",

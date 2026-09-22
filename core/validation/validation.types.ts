@@ -35,6 +35,7 @@ export enum CustomErrorCode {
   invalidCredentials = "invalidCredentials",
   invalidCallbackUrl = "invalidCallbackUrl",
   emailAlreadyExists = "emailAlreadyExists",
+  webFormSourceSlugTaken = "webFormSourceSlugTaken",
   invalidEmail = "invalidEmail",
   invalidJsonBody = "invalidJsonBody",
   salesNavigatorRequiresLinkedin = "salesNavigatorRequiresLinkedin",

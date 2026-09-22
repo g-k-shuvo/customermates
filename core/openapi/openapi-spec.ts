@@ -24,6 +24,9 @@ import { updateManyOrganizationsOperation } from "@/features/organizations/upser
 import { webhookOrganizationCreatedOperation } from "@/features/organizations/upsert/organization-created.openapi";
 import { webhookOrganizationUpdatedOperation } from "@/features/organizations/upsert/organization-updated.openapi";
 import { webhookOrganizationDeletedOperation } from "@/features/organizations/delete/organization-deleted.openapi";
+import { getWebFormSourcesOperation } from "@/features/webform/get/get-web-form-sources.openapi";
+import { createWebFormSourceOperation } from "@/features/webform/upsert/create-web-form-source.openapi";
+import { rotateWebFormSecretOperation } from "@/features/webform/upsert/rotate-web-form-secret.openapi";
 import { getLeadsOperation } from "@/features/leads/get/get-leads.openapi";
 import { getLeadByIdOperation } from "@/features/leads/get/get-lead-by-id.openapi";
 import { createLeadOperation } from "@/features/leads/upsert/create-lead.openapi";
@@ -158,6 +161,8 @@ import { UpdateOrganizationSchema } from "@/features/organizations/upsert/update
 import { UpdateManyOrganizationsSchema } from "@/features/organizations/upsert/update-many-organizations.interactor";
 import { DeleteManyOrganizationsSchema } from "@/features/organizations/delete/delete-many-organizations.interactor";
 import { GetOrganizationByIdSchema } from "@/features/organizations/get/get-organization-by-id.interactor";
+import { CreateWebFormSourceSchema } from "@/features/webform/upsert/create-web-form-source.interactor";
+import { RotateWebFormSecretSchema } from "@/features/webform/upsert/rotate-web-form-secret.interactor";
 import { CreateLeadSchema } from "@/features/leads/upsert/create-lead.interactor";
 import { UpdateLeadSchema } from "@/features/leads/upsert/update-lead.interactor";
 import { DeleteLeadSchema } from "@/features/leads/delete/delete-lead.interactor";
@@ -276,6 +281,13 @@ export function generateOpenApiSpec() {
         get: getOrganizationByIdOperation,
         put: updateOrganizationOperation,
         delete: deleteOrganizationOperation,
+      },
+      "/v1/webform-sources": {
+        get: getWebFormSourcesOperation,
+        post: createWebFormSourceOperation,
+      },
+      "/v1/webform-sources/{id}/rotate-secret": {
+        post: rotateWebFormSecretOperation,
       },
       "/v1/leads": {
         post: createLeadOperation,
@@ -605,6 +617,8 @@ export function generateOpenApiSpec() {
         UpdateOrganizationSchema,
         UpdateManyOrganizationsSchema,
         GetOrganizationByIdSchema,
+        CreateWebFormSourceSchema,
+        RotateWebFormSecretSchema,
         DeleteLeadSchema,
         GetLeadByIdSchema,
         GetLeadsSchema,
