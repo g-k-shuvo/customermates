@@ -8,22 +8,68 @@ import type { GetLeadsRepo } from "./get/get-leads.interactor";
 import type { GetWidgetFilterableFieldsLeadRepo } from "../widget/get-widget-filterable-fields.interactor";
 import type { CreateLeadRepo } from "./upsert/create-lead.repo";
 import type { UpdateLeadRepo } from "./upsert/update-lead.repo";
+import type { ConvertLeadToDealRepo } from "./convert/convert-lead-to-deal.repo";
 import type { DeleteLeadRepo } from "./delete/delete-lead.repo";
 import type { FindLeadsByIdsRepo } from "./find-leads-by-ids.repo";
 import type { LeadNotificationRecipient, LeadNotificationRepo } from "./listener/lead-notification.repo";
 
-import { EntityType, Resource } from "@/generated/prisma";
+import { EntityType, LeadStatus, Resource } from "@/generated/prisma";
+
+import type { Filter } from "@/core/base/base-get.schema";
 
 import { type LeadDto } from "./lead.schema";
 
 import { BaseRepository } from "@/core/base/base-repository";
 import { Transaction } from "@/core/decorators/transaction.decorator";
+import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
 import { getCustomColumnRepo } from "@/core/di";
 
+const LEAD_STATUS_VALUES = new Set<string>(Object.values(LeadStatus));
+
+const SELECTION_OPERATORS: string[] = [FilterOperatorKey.in, FilterOperatorKey.notIn];
+
+const LEAD_STATUS_FILTER_FIELD: string = FilterFieldKey.leadStatus;
+
+function partitionLeadFilters(filters: Filter[] | undefined) {
+  const leadStatus: Filter[] = [];
+  const rest: Filter[] = [];
+
+  for (const filter of filters ?? []) {
+    if (filter.field === LEAD_STATUS_FILTER_FIELD) leadStatus.push(filter);
+    else rest.push(filter);
+  }
+
+  return { leadStatus, rest };
+}
+
+function selectedFilterValues(filter: Filter): string[] {
+  const raw: unknown = "value" in filter ? filter.value : undefined;
+
+  return (Array.isArray(raw) ? (raw as unknown[]) : [raw]).flatMap((value) =>
+    typeof value === "string" ? [value] : [],
+  );
+}
+
+function leadStatusClause(filter: Filter): Prisma.LeadWhereInput | null {
+  if (!SELECTION_OPERATORS.includes(filter.operator)) return null;
+
+  const values = selectedFilterValues(filter).filter((value): value is LeadStatus => LEAD_STATUS_VALUES.has(value));
+
+  if (values.length === 0) return null;
+
+  return filter.operator === FilterOperatorKey.in ? { status: { in: values } } : { status: { notIn: values } };
+}
+
+function existingAndClauses(where: Prisma.LeadWhereInput): Prisma.LeadWhereInput[] {
+  if (!where.AND) return [];
+
+  return Array.isArray(where.AND) ? where.AND : [where.AND];
+}
+
 export class PrismaLeadRepo
-  extends BaseRepository
+  extends BaseRepository<Prisma.LeadWhereInput>
   implements
     GetLeadByIdRepo,
     GetLeadsRepo,
@@ -32,6 +78,7 @@ export class PrismaLeadRepo
     CreateLeadRepo,
     UpdateLeadRepo,
     DeleteLeadRepo,
+    ConvertLeadToDealRepo,
     FindLeadsByIdsRepo,
     LeadNotificationRepo,
     ExportRecordsRepo<LeadDto>
@@ -56,6 +103,22 @@ export class PrismaLeadRepo
       source: { select: { id: true, name: true, slug: true } },
       customFieldValues: { select: { columnId: true, value: true } },
     } as const;
+  }
+
+  override async buildQueryArgs(params: GetQueryParams, baseWhere: Prisma.LeadWhereInput = {}) {
+    const { leadStatus, rest } = partitionLeadFilters(params.filters);
+    const args = await super.buildQueryArgs({ ...params, filters: rest }, baseWhere);
+
+    const clauses = leadStatus.flatMap((filter) => {
+      const clause = leadStatusClause(filter);
+
+      return clause ? [clause] : [];
+    });
+
+    const where =
+      clauses.length === 0 ? args.where : { ...args.where, AND: [...existingAndClauses(args.where), ...clauses] };
+
+    return { ...args, where };
   }
 
   getSearchableFields() {
@@ -209,6 +272,16 @@ export class PrismaLeadRepo
       await getCustomColumnRepo().replaceValuesForEntity(EntityType.lead, id, rest.customFieldValues);
 
     return this.getOrThrowCompanyWide(id);
+  }
+
+  @Transaction()
+  async markLeadConvertedOrThrow(args: RepoArgs<ConvertLeadToDealRepo, "markLeadConvertedOrThrow">): Promise<LeadDto> {
+    await this.prisma.lead.updateMany({
+      where: { ...this.accessWhere("lead"), id: args.id },
+      data: { convertedDealId: args.dealId, convertedAt: args.convertedAt, status: LeadStatus.converted },
+    });
+
+    return this.getOrThrowCompanyWide(args.id);
   }
 
   @Transaction()

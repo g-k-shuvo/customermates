@@ -1,7 +1,10 @@
 import type { ZodOpenApiOperationObject } from "zod-openapi";
 
-import { WebFormSourceListSchema } from "../webform-source.schema";
+import { z } from "zod";
 
+import { WebFormSourceDtoSchema } from "../webform-source.schema";
+
+import { GetResultSchema } from "@/core/base/base-get.schema";
 import { CommonApiResponses } from "@/core/api/interactor-handler";
 
 export const getWebFormSourcesOperation: ZodOpenApiOperationObject = {
@@ -15,7 +18,7 @@ export const getWebFormSourcesOperation: ZodOpenApiOperationObject = {
       description: "The sources were retrieved successfully.",
       content: {
         "application/json": {
-          schema: WebFormSourceListSchema,
+          schema: GetResultSchema.extend({ items: z.array(WebFormSourceDtoSchema) }),
         },
       },
     },

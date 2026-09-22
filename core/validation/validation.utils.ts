@@ -74,6 +74,7 @@ const NOT_FOUND_FAILURE_CODES = new Set<CustomErrorCode>([
   CustomErrorCode.taskNotFound,
   CustomErrorCode.threadNotFound,
   CustomErrorCode.userNotFound,
+  CustomErrorCode.webFormSourceNotFound,
   CustomErrorCode.webhookDeliveryNotFound,
   CustomErrorCode.webhookNotFound,
   CustomErrorCode.widgetNotFound,

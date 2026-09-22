@@ -1071,6 +1071,7 @@
       "invalidJsonBody": "Le corps de la requête n'est pas un JSON valide.",
       "invalidSortField": "Champ de tri introuvable ou inaccessible. Champs disponibles : {validValues}.",
       "invalidUrl": "Saisissez une URL valide.",
+      "leadAlreadyConverted": "Cette piste a déjà été convertie en affaire.",
       "leadNotFound": "ID de piste introuvable ou inaccessible.",
       "legalNoticeNotDelivered": "La mise à jour juridique actuelle n’a pas encore été remise à cet espace de travail.",
       "linkedinInboxUnavailable": "Ce compte LinkedIn n'a pas de boîte de réception {product}. Connectez le compte avec {product} associé pour l'utiliser.",
@@ -1151,6 +1152,7 @@
       "userNotFound": "ID d'utilisateur introuvable ou inaccessible.",
       "userPlatformOperatorStatusForbidden": "Ce compte appartient à un opérateur de la plateforme et ne peut pas être désactivé ici. Utilisez la console opérateur.",
       "userSelfAdminUpdateForbidden": "Vous ne pouvez pas mettre à jour votre propre compte depuis l’administration de l’équipe.",
+      "webFormSourceNotFound": "ID de source de formulaire web introuvable ou inaccessible.",
       "webFormSourceSlugTaken": "Une source de formulaire web avec cette adresse existe déjà. Choisissez-en une autre.",
       "webhookDeliveryNotFound": "ID de livraison de webhook introuvable ou inaccessible.",
       "webhookEventsRequired": "Sélectionnez au moins un évènement.",
@@ -1491,12 +1493,14 @@
         "credits": "Crédits",
         "customFieldValues": "Champs personnalisés",
         "deals": "Affaires",
+        "defaultLabels": "Étiquettes par défaut",
         "description": "Description",
         "displayName": "Nom affiché",
         "dueAt": "Date d’échéance",
         "email": "E-mail",
         "emailAddress": "Adresse e-mail",
         "enabled": "Activé",
+        "endpointPath": "Point de terminaison",
         "entity": "Élément",
         "entityId": "ID de l'élément",
         "entityType": "Type d'enregistrement",
@@ -2554,6 +2558,7 @@
     "subject": "Nouveau prospect : {leadTitle}"
   },
   "LeadDetail": {
+    "convert": "Convertir en affaire",
     "owner": "Responsable",
     "source": "Source",
     "title": "Piste"
@@ -3451,6 +3456,30 @@
     "resendSuccess": "E-mail de vérification envoyé.",
     "subtitle": "Vérifiez votre adresse e-mail pour continuer.",
     "title": "Vérification de l'adresse e-mail"
+  },
+  "WebFormSourceModal": {
+    "active": "Accepte les envois",
+    "defaultLabels": "Étiquettes par défaut",
+    "inactive": "En pause",
+    "mappingDescription": "Chemins pointés dans les données envoyées, par exemple fields.email ou data.contact.first_name. Laissez un champ vide pour l'ignorer.",
+    "mappingTitle": "Correspondance des champs",
+    "message": "Message",
+    "phone": "Téléphone",
+    "rotateSecret": "Renouveler le secret de signature",
+    "secretRevealedDescription": "Copiez-le maintenant. Il s'affiche une seule fois et ne peut pas être récupéré.",
+    "secretRevealedTitle": "Secret de signature",
+    "slug": "Slug",
+    "slugDescription": "Minuscules, chiffres et tirets. Devient le chemin public du point de terminaison.",
+    "slugImmutable": "Le slug ne peut pas changer, car un formulaire actif envoie déjà vers ce point de terminaison.",
+    "title": "Source de formulaire web",
+    "titleTemplate": "Modèle de titre de piste",
+    "titleTemplateDescription": "Les espaces réservés sont remplacés par les champs associés, par exemple '{organizationName}' — '{form_title}'."
+  },
+  "WebFormSourcesCard": {
+    "emptyBody": "Créez une source pour obtenir un point de terminaison et un secret de signature pour le formulaire de votre site.",
+    "emptyTitle": "Aucun formulaire web",
+    "endpoint": "Point de terminaison",
+    "title": "Formulaires web"
   },
   "WebhookDeliveriesCard": {
     "emptyBody": "Les tentatives de livraison apparaîtront ici dès qu’un webhook sera déclenché.",

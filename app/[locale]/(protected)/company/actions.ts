@@ -8,6 +8,10 @@ import type { UpdateCompanySettingsData } from "@/features/company/update-compan
 import type { DeleteRoleData } from "@/features/role/delete-role.interactor";
 import type { UpsertRoleData } from "@/features/role/upsert-role.interactor";
 import type { UpsertWebhookData } from "@/features/webhook/upsert-webhook.interactor";
+import type { CreateWebFormSourceData } from "@/features/webform/upsert/create-web-form-source.interactor";
+import type { UpdateWebFormSourceData } from "@/features/webform/upsert/update-web-form-source.interactor";
+import type { DeleteWebFormSourceData } from "@/features/webform/delete/delete-web-form-source.interactor";
+import type { RotateWebFormSecretData } from "@/features/webform/upsert/rotate-web-form-secret.interactor";
 import type { DeleteWebhookData } from "@/features/webhook/delete-webhook.interactor";
 import type { ResendWebhookDeliveryData } from "@/features/webhook/resend-webhook-delivery.interactor";
 import type { InviteUsersByEmailData } from "@/features/company/invite-users-by-email.interactor";
@@ -57,6 +61,11 @@ import {
   getGetSubscriptionInteractor,
   getGetWebhooksInteractor,
   getUpsertWebhookInteractor,
+  getGetWebFormSourcesInteractor,
+  getCreateWebFormSourceInteractor,
+  getUpdateWebFormSourceInteractor,
+  getDeleteWebFormSourceInteractor,
+  getRotateWebFormSecretInteractor,
   getDeleteWebhookInteractor,
   getGetWebhookDeliveriesInteractor,
   getResendWebhookDeliveryInteractor,
@@ -204,6 +213,26 @@ export async function upsertWebhookAction(data: UpsertWebhookData) {
 
 export async function deleteWebhookAction(data: DeleteWebhookData) {
   return serializeResult(getDeleteWebhookInteractor().invoke(data));
+}
+
+export async function getWebFormSourcesAction(params?: GetQueryParams) {
+  return unwrapValidated(getGetWebFormSourcesInteractor().invoke(params));
+}
+
+export async function createWebFormSourceAction(data: CreateWebFormSourceData) {
+  return serializeResult(getCreateWebFormSourceInteractor().invoke(data));
+}
+
+export async function updateWebFormSourceAction(data: UpdateWebFormSourceData) {
+  return serializeResult(getUpdateWebFormSourceInteractor().invoke(data));
+}
+
+export async function deleteWebFormSourceAction(data: DeleteWebFormSourceData) {
+  return serializeResult(getDeleteWebFormSourceInteractor().invoke(data));
+}
+
+export async function rotateWebFormSecretAction(data: RotateWebFormSecretData) {
+  return serializeResult(getRotateWebFormSecretInteractor().invoke(data));
 }
 
 export async function getWebhooksAction(params?: GetQueryParams) {

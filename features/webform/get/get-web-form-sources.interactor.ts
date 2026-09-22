@@ -1,22 +1,19 @@
+import type { GetResult, P13nRepo } from "@/core/base/base-get.interactor";
+import type { QueryParamsPrecheckInteractor } from "@/core/base/query-params-precheck.interactor";
 import type { Validated } from "@/core/validation/validation.utils";
 
-import { z } from "zod";
 import { Resource, Action } from "@/generated/prisma";
 
-import { type WebFormSourceList, WebFormSourceListSchema } from "../webform-source.schema";
+import { type WebFormSourceDto, WebFormSourceDtoSchema } from "../webform-source.schema";
 
+import { BaseGetInteractor, BaseGetRepo } from "@/core/base/base-get.interactor";
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
 import { AllowInDemoMode } from "@/core/decorators/allow-in-demo-mode.decorator";
-import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
+import { GetQueryParamsSchema, type GetQueryParams, createGetResultSchema } from "@/core/base/base-get.schema";
 import { Validate } from "@/core/decorators/validate.decorator";
 import { ValidateOutput } from "@/core/decorators/validate-output.decorator";
 
-export const GetWebFormSourcesSchema = z.object({});
-export type GetWebFormSourcesData = z.infer<typeof GetWebFormSourcesSchema>;
-
-export abstract class GetWebFormSourcesRepo {
-  abstract getWebFormSources(): Promise<WebFormSourceList>;
-}
+export abstract class GetWebFormSourcesRepo extends BaseGetRepo<WebFormSourceDto> {}
 
 @AllowInDemoMode
 @TenantInteractor({
@@ -26,14 +23,26 @@ export abstract class GetWebFormSourcesRepo {
   ],
   condition: "OR",
 })
-export class GetWebFormSourcesInteractor extends AuthenticatedInteractor<GetWebFormSourcesData, WebFormSourceList> {
-  constructor(private repo: GetWebFormSourcesRepo) {
-    super();
+export class GetWebFormSourcesInteractor extends BaseGetInteractor<WebFormSourceDto> {
+  constructor(
+    repo: GetWebFormSourcesRepo,
+    p13nRepo: P13nRepo,
+    mode: "interactive" | "api",
+    queryParamsPrecheck: QueryParamsPrecheckInteractor,
+  ) {
+    super(
+      repo,
+      p13nRepo,
+      mode,
+      undefined,
+      { sortDescriptor: { field: "createdAt", direction: "desc" } },
+      queryParamsPrecheck,
+    );
   }
 
-  @Validate(GetWebFormSourcesSchema)
-  @ValidateOutput(WebFormSourceListSchema)
-  async invoke(_data: GetWebFormSourcesData): Validated<WebFormSourceList> {
-    return { ok: true as const, data: await this.repo.getWebFormSources() };
+  @Validate(GetQueryParamsSchema)
+  @ValidateOutput(createGetResultSchema(WebFormSourceDtoSchema))
+  async invoke(params: GetQueryParams = {}): Validated<GetResult<WebFormSourceDto>> {
+    return await super.invoke(params);
   }
 }

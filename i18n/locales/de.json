@@ -1071,6 +1071,7 @@
       "invalidJsonBody": "Der Request-Body ist kein gültiges JSON.",
       "invalidSortField": "Sortierfeld nicht gefunden oder nicht zugänglich. Verfügbare Felder: {validValues}.",
       "invalidUrl": "Gib eine gültige URL ein.",
+      "leadAlreadyConverted": "Dieser Lead wurde bereits in einen Deal umgewandelt.",
       "leadNotFound": "Lead-ID nicht gefunden oder nicht zugänglich.",
       "legalNoticeNotDelivered": "Die aktuelle rechtliche Änderung wurde diesem Workspace noch nicht zugestellt.",
       "linkedinInboxUnavailable": "Dieses LinkedIn-Konto hat keinen {product}-Posteingang. Verbinde das Konto mit {product}, um ihn zu nutzen.",
@@ -1151,6 +1152,7 @@
       "userNotFound": "Benutzer-ID nicht gefunden oder nicht zugänglich.",
       "userPlatformOperatorStatusForbidden": "Dieses Konto gehört einem Plattform-Operator und kann hier nicht deaktiviert werden. Nutze die Operator-Konsole.",
       "userSelfAdminUpdateForbidden": "Du kannst dein eigenes Konto nicht über die Teamverwaltung aktualisieren.",
+      "webFormSourceNotFound": "Webformular-Quellen-ID nicht gefunden oder nicht zugänglich.",
       "webFormSourceSlugTaken": "Eine Webformular-Quelle mit dieser Adresse existiert bereits. Wähle eine andere.",
       "webhookDeliveryNotFound": "Webhook-Zustellungs-ID nicht gefunden oder nicht zugänglich.",
       "webhookEventsRequired": "Wähle mindestens ein Ereignis aus.",
@@ -1491,12 +1493,14 @@
         "credits": "Guthaben",
         "customFieldValues": "Benutzerdefinierte Felder",
         "deals": "Deals",
+        "defaultLabels": "Standard-Labels",
         "description": "Beschreibung",
         "displayName": "Anzeigename",
         "dueAt": "Fälligkeitsdatum",
         "email": "E-Mail",
         "emailAddress": "E-Mail-Adresse",
         "enabled": "Aktiviert",
+        "endpointPath": "Endpunkt",
         "entity": "Element",
         "entityId": "Element-ID",
         "entityType": "Datensatztyp",
@@ -2554,6 +2558,7 @@
     "subject": "Neuer Lead: {leadTitle}"
   },
   "LeadDetail": {
+    "convert": "In Deal umwandeln",
     "owner": "Zuständig",
     "source": "Quelle",
     "title": "Lead"
@@ -3451,6 +3456,30 @@
     "resendSuccess": "Verifizierungs-E-Mail wurde erfolgreich gesendet.",
     "subtitle": "Verifiziere deine E-Mail-Adresse, um fortzufahren.",
     "title": "E-Mail-Verifizierung"
+  },
+  "WebFormSourceModal": {
+    "active": "Nimmt Einsendungen an",
+    "defaultLabels": "Standard-Labels",
+    "inactive": "Pausiert",
+    "mappingDescription": "Punktpfade in die gesendeten Daten, zum Beispiel fields.email oder data.contact.first_name. Leer lassen, um ein Feld zu ignorieren.",
+    "mappingTitle": "Feldzuordnung",
+    "message": "Nachricht",
+    "phone": "Telefon",
+    "rotateSecret": "Signaturgeheimnis erneuern",
+    "secretRevealedDescription": "Kopiere es jetzt. Es wird einmal angezeigt und kann nicht erneut abgerufen werden.",
+    "secretRevealedTitle": "Signaturgeheimnis",
+    "slug": "Slug",
+    "slugDescription": "Kleinbuchstaben, Ziffern und Bindestriche. Wird zum öffentlichen Endpunktpfad.",
+    "slugImmutable": "Der Slug kann nicht geändert werden, da ein aktives Formular bereits an diesen Endpunkt sendet.",
+    "title": "Webformular-Quelle",
+    "titleTemplate": "Vorlage für den Lead-Titel",
+    "titleTemplateDescription": "Platzhalter werden aus den zugeordneten Feldern ersetzt, zum Beispiel '{organizationName}' — '{form_title}'."
+  },
+  "WebFormSourcesCard": {
+    "emptyBody": "Lege eine Quelle an, um einen Endpunkt und ein Signaturgeheimnis für dein Website-Formular zu erhalten.",
+    "emptyTitle": "Noch keine Webformulare",
+    "endpoint": "Endpunkt",
+    "title": "Webformulare"
   },
   "WebhookDeliveriesCard": {
     "emptyBody": "Zustellversuche erscheinen hier, sobald ein Webhook ausgelöst wird.",

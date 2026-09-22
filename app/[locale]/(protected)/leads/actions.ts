@@ -5,6 +5,7 @@ import type { DeleteLeadData } from "@/features/leads/delete/delete-lead.interac
 import type { GetLeadByIdData } from "@/features/leads/get/get-lead-by-id.interactor";
 import type { CreateLeadData } from "@/features/leads/upsert/create-lead.interactor";
 import type { UpdateLeadData } from "@/features/leads/upsert/update-lead.interactor";
+import type { ConvertLeadToDealData } from "@/features/leads/convert/convert-lead-to-deal.interactor";
 
 import {
   getGetLeadsInteractor,
@@ -12,6 +13,7 @@ import {
   getCreateLeadInteractor,
   getUpdateLeadInteractor,
   getDeleteLeadInteractor,
+  getConvertLeadToDealInteractor,
 } from "@/core/di";
 import { serializeResult } from "@/core/utils/action-result";
 import { unwrapValidated } from "@/core/validation/validation.utils";
@@ -35,4 +37,8 @@ export async function deleteLeadAction(data: DeleteLeadData) {
 export async function getLeadByIdAction(data: GetLeadByIdData) {
   const result = await unwrapValidated(getGetLeadByIdInteractor().invoke(data));
   return { entity: result.lead, customColumns: result.customColumns };
+}
+
+export async function convertLeadToDealAction(data: ConvertLeadToDealData) {
+  return serializeResult(getConvertLeadToDealInteractor().invoke(data));
 }

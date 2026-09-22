@@ -94,6 +94,8 @@ export enum CustomErrorCode {
   dealNotFound = "dealNotFound",
   dealAlreadyClosed = "dealAlreadyClosed",
   dealNotClosed = "dealNotClosed",
+  leadAlreadyConverted = "leadAlreadyConverted",
+  webFormSourceNotFound = "webFormSourceNotFound",
   pipelineArchived = "pipelineArchived",
   pipelineNotFound = "pipelineNotFound",
   pipelineStageNotFound = "pipelineStageNotFound",

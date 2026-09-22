@@ -163,6 +163,8 @@ const TABLE_COLUMN_KEYS = [
   "Common.table.columns.avatarUrl",
   "Common.table.columns.channels",
   "Common.table.columns.contact",
+  "Common.table.columns.defaultLabels",
+  "Common.table.columns.endpointPath",
   "Common.table.columns.contacts",
   "Common.table.columns.createdAt",
   "Common.table.columns.credits",

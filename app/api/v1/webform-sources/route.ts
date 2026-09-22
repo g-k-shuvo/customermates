@@ -9,7 +9,7 @@ import { mapRequestJsonError } from "@/core/api/request-json-error";
 
 export async function GET() {
   try {
-    const result = await getGetWebFormSourcesInteractor().invoke({});
+    const result = await getGetWebFormSourcesInteractor().invoke();
 
     if (!result.ok) return NextResponse.json(z.prettifyError(result.error), { status: 400 });
 

@@ -18,6 +18,9 @@ import { RoleModalStore } from "@/app/[locale]/(protected)/company/components/ro
 import { UsersStore } from "@/app/[locale]/(protected)/company/components/user/users.store";
 import { CompanyStore } from "@/app/[locale]/(protected)/company/components/company.store";
 import { ContactDetailStore } from "@/app/[locale]/(protected)/contacts/components/contact-detail.store";
+import { LeadConvertStore } from "@/app/[locale]/(protected)/leads/components/lead-convert.store";
+import { WebFormSourceModalStore } from "@/app/[locale]/(protected)/company/components/webform/web-form-source-modal.store";
+import { WebFormSourcesStore } from "@/app/[locale]/(protected)/company/components/webform/web-form-sources.store";
 import { LeadDetailStore } from "@/app/[locale]/(protected)/leads/components/lead-detail.store";
 import { LeadsStore } from "@/app/[locale]/(protected)/leads/components/leads.store";
 import { OrganizationDetailStore } from "@/app/[locale]/(protected)/organizations/components/organization-detail.store";
@@ -147,6 +150,9 @@ export class RootStore {
   private _dealDetailStore?: DealDetailStore;
   private _deleteConfirmationModalStore?: DeleteConfirmationModalStore;
   private _globalSearchModalStore?: GlobalSearchModalStore;
+  private _leadConvertStore?: LeadConvertStore;
+  private _webFormSourcesStore?: WebFormSourcesStore;
+  private _webFormSourceModalStore?: WebFormSourceModalStore;
   private _leadDetailStore?: LeadDetailStore;
   private _organizationDetailStore?: OrganizationDetailStore;
   private _roleModalStore?: RoleModalStore;
@@ -378,6 +384,18 @@ export class RootStore {
 
   get contactDetailStore() {
     return (this._contactDetailStore ??= new ContactDetailStore(this));
+  }
+
+  get leadConvertStore() {
+    return (this._leadConvertStore ??= new LeadConvertStore(this));
+  }
+
+  get webFormSourcesStore() {
+    return (this._webFormSourcesStore ??= new WebFormSourcesStore(this));
+  }
+
+  get webFormSourceModalStore() {
+    return (this._webFormSourceModalStore ??= new WebFormSourceModalStore(this));
   }
 
   get leadDetailStore() {

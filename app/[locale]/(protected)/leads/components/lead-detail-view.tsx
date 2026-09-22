@@ -20,6 +20,7 @@ import { useRootStore } from "@/core/stores/root-store.provider";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 
 import { LEAD_DETAIL_FIELD, LEAD_DETAIL_SECTION } from "./lead-detail-personalization";
+import { LeadConvertAction } from "./lead-convert-action";
 
 type Props = {
   layout?: "drawer" | "page";
@@ -47,6 +48,8 @@ export const LeadDetailView = observer(({ layout = "drawer" }: Props) => {
   const content =
     layout === "drawer" ? (
       <>
+        <LeadConvertAction lead={fetchedEntity} />
+
         <EntityDetailField fieldId={LEAD_DETAIL_FIELD.title}>
           <FormInput autoFocus required id="title" />
         </EntityDetailField>
@@ -91,6 +94,8 @@ export const LeadDetailView = observer(({ layout = "drawer" }: Props) => {
       </>
     ) : (
       <EntityDetailSectionGroup>
+        <LeadConvertAction lead={fetchedEntity} />
+
         <EntityDetailSection label={t("EntityDetail.sections.base")} sectionId={LEAD_DETAIL_SECTION.base}>
           <EntityDetailField fieldId={LEAD_DETAIL_FIELD.title}>
             <FormInput

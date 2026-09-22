@@ -192,6 +192,11 @@ import { ProcessWebFormSubmissionInteractor } from "@/features/webform/process/p
 import { CreateWebFormSourceInteractor } from "@/features/webform/upsert/create-web-form-source.interactor";
 import { RotateWebFormSecretInteractor } from "@/features/webform/upsert/rotate-web-form-secret.interactor";
 import { GetWebFormSourcesInteractor } from "@/features/webform/get/get-web-form-sources.interactor";
+import { GetWebFormSourceByIdInteractor } from "@/features/webform/get/get-web-form-source-by-id.interactor";
+import { UpdateWebFormSourceInteractor } from "@/features/webform/upsert/update-web-form-source.interactor";
+import { DeleteWebFormSourceInteractor } from "@/features/webform/delete/delete-web-form-source.interactor";
+import { WebFormSourceWritePrecheckInteractor } from "@/features/webform/upsert/web-form-source-write-precheck.interactor";
+import { ValidateWebFormSourceIdsInteractor } from "@/core/validation/validators/validate-web-form-source-ids.interactor";
 
 import { LeadCreatedNotificationListener } from "@/features/leads/listener/lead-created-notification.listener";
 
@@ -208,6 +213,7 @@ import { GetLeadByIdInteractor } from "@/features/leads/get/get-lead-by-id.inter
 import { CreateLeadInteractor } from "@/features/leads/upsert/create-lead.interactor";
 import { UpdateLeadInteractor } from "@/features/leads/upsert/update-lead.interactor";
 import { DeleteLeadInteractor } from "@/features/leads/delete/delete-lead.interactor";
+import { ConvertLeadToDealInteractor } from "@/features/leads/convert/convert-lead-to-deal.interactor";
 
 // Services interactors
 import { GetServicesInteractor } from "@/features/services/get/get-services.interactor";
@@ -945,7 +951,24 @@ export const getCreateWebFormSourceInteractor = () => new CreateWebFormSourceInt
 
 export const getRotateWebFormSecretInteractor = () => new RotateWebFormSecretInteractor(getWebFormRepo());
 
-export const getGetWebFormSourcesInteractor = () => new GetWebFormSourcesInteractor(getWebFormRepo());
+export const getWebFormSourceIdsValidator = () => new ValidateWebFormSourceIdsInteractor(getWebFormRepo());
+
+export const getWebFormSourceWritePrecheck = () =>
+  new WebFormSourceWritePrecheckInteractor(getWebFormSourceIdsValidator(), getUserIdsValidator());
+
+export const getGetWebFormSourcesInteractor = () =>
+  new GetWebFormSourcesInteractor(getWebFormRepo(), getP13nRepo(), "interactive", getQueryParamsPrecheck());
+
+export const getGetWebFormSourcesApiInteractor = () =>
+  new GetWebFormSourcesInteractor(getWebFormRepo(), getP13nRepo(), "api", getQueryParamsPrecheck());
+
+export const getGetWebFormSourceByIdInteractor = () => new GetWebFormSourceByIdInteractor(getWebFormRepo());
+
+export const getUpdateWebFormSourceInteractor = () =>
+  new UpdateWebFormSourceInteractor(getWebFormRepo(), getWebFormSourceWritePrecheck());
+
+export const getDeleteWebFormSourceInteractor = () =>
+  new DeleteWebFormSourceInteractor(getWebFormRepo(), getWebFormSourceWritePrecheck());
 
 export const getGetLeadsInteractor = () =>
   new GetLeadsInteractor(getLeadRepo(), getP13nRepo(), "interactive", getQueryParamsPrecheck());
@@ -962,6 +985,9 @@ export const getCreateLeadInteractor = () => new CreateLeadInteractor(getLeadRep
 export const getUpdateLeadInteractor = () => new UpdateLeadInteractor(getLeadRepo(), getEventService());
 
 export const getDeleteLeadInteractor = () => new DeleteLeadInteractor(getLeadRepo(), getEventService());
+
+export const getConvertLeadToDealInteractor = () =>
+  new ConvertLeadToDealInteractor(getLeadRepo(), getDealRepo(), getEventService(), getLeadWritePrecheck());
 
 export const getCreateManyLeadsInteractor = () =>
   new CreateManyLeadsInteractor(getLeadRepo(), getEventService(), getLeadWritePrecheck());

@@ -1071,6 +1071,7 @@
       "invalidJsonBody": "The request body is not valid JSON.",
       "invalidSortField": "Sort field not found or not accessible. Available fields: {validValues}.",
       "invalidUrl": "Enter a valid URL.",
+      "leadAlreadyConverted": "This lead has already been converted to a deal.",
       "leadNotFound": "Lead ID not found or not accessible.",
       "legalNoticeNotDelivered": "The current legal update has not been delivered to this workspace yet.",
       "linkedinInboxUnavailable": "This LinkedIn account has no {product} inbox. Connect the account with {product} linked to use it.",
@@ -1151,6 +1152,7 @@
       "userNotFound": "User ID not found or not accessible.",
       "userPlatformOperatorStatusForbidden": "This account belongs to a platform operator and cannot be deactivated here. Use the operator console.",
       "userSelfAdminUpdateForbidden": "You cannot update your own account through team administration.",
+      "webFormSourceNotFound": "Web form source ID not found or not accessible.",
       "webFormSourceSlugTaken": "A web form source with this address already exists. Choose a different one.",
       "webhookDeliveryNotFound": "Webhook delivery ID not found or not accessible.",
       "webhookEventsRequired": "Select at least one event.",
@@ -1491,12 +1493,14 @@
         "credits": "Credits",
         "customFieldValues": "Custom fields",
         "deals": "Deals",
+        "defaultLabels": "Default labels",
         "description": "Description",
         "displayName": "Display name",
         "dueAt": "Due date",
         "email": "E-Mail",
         "emailAddress": "Email address",
         "enabled": "Enabled",
+        "endpointPath": "Endpoint",
         "entity": "Element",
         "entityId": "Element ID",
         "entityType": "Record type",
@@ -2554,6 +2558,7 @@
     "subject": "New lead: {leadTitle}"
   },
   "LeadDetail": {
+    "convert": "Convert to deal",
     "owner": "Owner",
     "source": "Source",
     "title": "Lead"
@@ -3451,6 +3456,30 @@
     "resendSuccess": "Verification email sent successfully.",
     "subtitle": "Verify your email address to continue.",
     "title": "Email Verification"
+  },
+  "WebFormSourceModal": {
+    "active": "Accepting submissions",
+    "defaultLabels": "Default labels",
+    "inactive": "Paused",
+    "mappingDescription": "Dot paths into the submitted payload, for example fields.email or data.contact.first_name. Leave a field blank to ignore it.",
+    "mappingTitle": "Field mapping",
+    "message": "Message",
+    "phone": "Phone",
+    "rotateSecret": "Rotate signing secret",
+    "secretRevealedDescription": "Copy it now. It is shown once and cannot be retrieved again.",
+    "secretRevealedTitle": "Signing secret",
+    "slug": "Slug",
+    "slugDescription": "Lowercase letters, numbers and hyphens. It becomes the public endpoint path.",
+    "slugImmutable": "The slug cannot change, because a live form already posts to this endpoint.",
+    "title": "Web form source",
+    "titleTemplate": "Lead title template",
+    "titleTemplateDescription": "Placeholders are replaced from the mapped fields, for example '{organizationName}' — '{form_title}'."
+  },
+  "WebFormSourcesCard": {
+    "emptyBody": "Create a source to get an endpoint and a signing secret for your website form.",
+    "emptyTitle": "No web forms yet",
+    "endpoint": "Endpoint",
+    "title": "Web forms"
   },
   "WebhookDeliveriesCard": {
     "emptyBody": "Delivery attempts appear here once a webhook fires.",

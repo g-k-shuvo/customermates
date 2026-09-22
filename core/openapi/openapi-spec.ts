@@ -24,6 +24,9 @@ import { updateManyOrganizationsOperation } from "@/features/organizations/upser
 import { webhookOrganizationCreatedOperation } from "@/features/organizations/upsert/organization-created.openapi";
 import { webhookOrganizationUpdatedOperation } from "@/features/organizations/upsert/organization-updated.openapi";
 import { webhookOrganizationDeletedOperation } from "@/features/organizations/delete/organization-deleted.openapi";
+import { getWebFormSourceByIdOperation } from "@/features/webform/get/get-web-form-source-by-id.openapi";
+import { updateWebFormSourceOperation } from "@/features/webform/upsert/update-web-form-source.openapi";
+import { deleteWebFormSourceOperation } from "@/features/webform/delete/delete-web-form-source.openapi";
 import { getWebFormSourcesOperation } from "@/features/webform/get/get-web-form-sources.openapi";
 import { createWebFormSourceOperation } from "@/features/webform/upsert/create-web-form-source.openapi";
 import { rotateWebFormSecretOperation } from "@/features/webform/upsert/rotate-web-form-secret.openapi";
@@ -35,6 +38,7 @@ import { getLeadByIdOperation } from "@/features/leads/get/get-lead-by-id.openap
 import { createLeadOperation } from "@/features/leads/upsert/create-lead.openapi";
 import { updateLeadOperation } from "@/features/leads/upsert/update-lead.openapi";
 import { deleteLeadOperation } from "@/features/leads/delete/delete-lead.openapi";
+import { convertLeadToDealOperation } from "@/features/leads/convert/convert-lead-to-deal.openapi";
 import { getDealsOperation } from "@/features/deals/get/get-deals.openapi";
 import { getDealsConfigurationOperation } from "@/features/deals/get/get-deals-configuration.openapi";
 import { getDealByIdOperation } from "@/features/deals/get/get-deal-by-id.openapi";
@@ -169,6 +173,7 @@ import { RotateWebFormSecretSchema } from "@/features/webform/upsert/rotate-web-
 import { CreateLeadSchema } from "@/features/leads/upsert/create-lead.interactor";
 import { UpdateLeadSchema } from "@/features/leads/upsert/update-lead.interactor";
 import { DeleteLeadSchema } from "@/features/leads/delete/delete-lead.interactor";
+import { ConvertLeadToDealSchema } from "@/features/leads/convert/convert-lead-to-deal.interactor";
 import { GetLeadByIdSchema } from "@/features/leads/get/get-lead-by-id.interactor";
 import { CreateDealSchema } from "@/features/deals/upsert/create-deal.interactor";
 import { CreateManyDealsSchema } from "@/features/deals/upsert/create-many-deals.interactor";
@@ -288,6 +293,11 @@ export function generateOpenApiSpec() {
         get: getWebFormSourcesOperation,
         post: createWebFormSourceOperation,
       },
+      "/v1/webform-sources/{id}": {
+        get: getWebFormSourceByIdOperation,
+        put: updateWebFormSourceOperation,
+        delete: deleteWebFormSourceOperation,
+      },
       "/v1/webform-sources/{id}/rotate-secret": {
         post: rotateWebFormSecretOperation,
       },
@@ -308,6 +318,9 @@ export function generateOpenApiSpec() {
         get: getLeadByIdOperation,
         put: updateLeadOperation,
         delete: deleteLeadOperation,
+      },
+      "/v1/leads/{id}/convert": {
+        post: convertLeadToDealOperation,
       },
       "/v1/deals": {
         post: createDealOperation,
@@ -629,6 +642,7 @@ export function generateOpenApiSpec() {
         CreateWebFormSourceSchema,
         RotateWebFormSecretSchema,
         DeleteLeadSchema,
+        ConvertLeadToDealSchema,
         GetLeadByIdSchema,
         CreateLeadSchema,
         UpdateLeadSchema,

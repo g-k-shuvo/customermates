@@ -7,16 +7,23 @@ import type {
   WebFormSourceRecord,
 } from "./ingest/ingest-web-form-submission.repo";
 
+import type { GetQueryParams } from "@/core/base/base-get.schema";
 import type { CreateWebFormSourceRepo } from "./upsert/create-web-form-source.repo";
+import type { DeleteWebFormSourceRepo } from "./delete/delete-web-form-source.repo";
+import type { GetWebFormSourceByIdRepo } from "./get/get-web-form-source-by-id.interactor";
+import type { FindWebFormSourcesByIdsRepo } from "./find-web-form-sources-by-ids.repo";
 import type { GetWebFormSourcesRepo } from "./get/get-web-form-sources.interactor";
 import type { RotateWebFormSecretRepo } from "./upsert/rotate-web-form-secret.repo";
+import type { UpdateWebFormSourceRepo } from "./upsert/update-web-form-source.repo";
 
 import { randomBytes } from "node:crypto";
 
-import { type WebFormSourceList, type WebFormSourceWithSecret } from "./webform-source.schema";
+import { type WebFormSourceDto, type WebFormSourceWithSecret } from "./webform-source.schema";
 import { WebFormFieldMappingSchema } from "./ingest/field-mapping";
 
 import { BaseRepository } from "@/core/base/base-repository";
+import { FilterFieldKey } from "@/core/types/filter-field-key";
+import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
 import { BypassTenantGuard } from "@/core/decorators/bypass-tenant.decorator";
 import { Transaction } from "@/core/decorators/transaction.decorator";
 
@@ -37,7 +44,15 @@ function newSigningSecret(): string {
 
 export class PrismaWebFormRepo
   extends BaseRepository
-  implements IngestWebFormSubmissionRepo, CreateWebFormSourceRepo, GetWebFormSourcesRepo, RotateWebFormSecretRepo
+  implements
+    IngestWebFormSubmissionRepo,
+    CreateWebFormSourceRepo,
+    UpdateWebFormSourceRepo,
+    DeleteWebFormSourceRepo,
+    GetWebFormSourcesRepo,
+    GetWebFormSourceByIdRepo,
+    FindWebFormSourcesByIdsRepo,
+    RotateWebFormSecretRepo
 {
   private get sourceSelect() {
     return {
@@ -78,14 +93,94 @@ export class PrismaWebFormRepo
     return existing !== null;
   }
 
-  async getWebFormSources(): Promise<WebFormSourceList> {
-    const rows = await this.prisma.webFormSource.findMany({
-      where: { companyId: this.companyId },
+  getSearchableFields() {
+    return [{ field: "name" }, { field: "slug" }];
+  }
+
+  getSortableFields() {
+    return [
+      { field: "name", resolvedFields: ["name"] },
+      { field: "slug", resolvedFields: ["slug"] },
+      { field: "createdAt", resolvedFields: ["createdAt"] },
+      { field: "updatedAt", resolvedFields: ["updatedAt"] },
+    ];
+  }
+
+  getFilterableFields() {
+    return Promise.resolve([
+      { field: FilterFieldKey.updatedAt, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.updatedAt] },
+      { field: FilterFieldKey.createdAt, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.createdAt] },
+    ]);
+  }
+
+  async getItems(params: GetQueryParams): Promise<WebFormSourceDto[]> {
+    const args = await this.buildQueryArgs(params, { companyId: this.companyId });
+
+    const rows = await this.prisma.webFormSource.findMany({ ...args, select: this.sourceSelect });
+
+    return rows.map((row) => this.toSourceDto(row));
+  }
+
+  async getCount(params: GetQueryParams): Promise<number> {
+    const { where } = await this.buildQueryArgs(params, { companyId: this.companyId });
+
+    return this.prisma.webFormSource.count({ where });
+  }
+
+  async getWebFormSourceById(id: string): Promise<WebFormSourceDto | null> {
+    const row = await this.prisma.webFormSource.findFirst({
+      where: { companyId: this.companyId, id },
       select: this.sourceSelect,
-      orderBy: { createdAt: "desc" },
     });
 
-    return { sources: rows.map((row) => this.toSourceDto(row)) };
+    return row ? this.toSourceDto(row) : null;
+  }
+
+  async findIds(ids: Set<string>): Promise<Set<string>> {
+    if (ids.size === 0) return new Set<string>();
+
+    const rows = await this.prisma.webFormSource.findMany({
+      where: { companyId: this.companyId, id: { in: Array.from(ids) } },
+      select: { id: true },
+    });
+
+    return new Set(rows.map((row) => row.id));
+  }
+
+  @Transaction()
+  async updateWebFormSourceOrThrow(
+    args: RepoArgs<UpdateWebFormSourceRepo, "updateWebFormSourceOrThrow">,
+  ): Promise<WebFormSourceDto> {
+    const { id, ...rest } = args;
+
+    await this.prisma.webFormSource.updateMany({
+      where: { companyId: this.companyId, id },
+      data: {
+        ...(rest.name === undefined ? {} : { name: rest.name }),
+        ...(rest.active === undefined ? {} : { active: rest.active }),
+        ...(rest.defaultOwnerId === undefined ? {} : { defaultOwnerId: rest.defaultOwnerId }),
+        ...(rest.defaultLabels === undefined ? {} : { defaultLabels: rest.defaultLabels }),
+        ...(rest.fieldMapping === undefined ? {} : { fieldMapping: rest.fieldMapping }),
+      },
+    });
+
+    return this.getWebFormSourceOrThrowCompanyWide(id);
+  }
+
+  async getWebFormSourceOrThrowCompanyWide(id: string): Promise<WebFormSourceDto> {
+    const row = await this.prisma.webFormSource.findFirstOrThrow({
+      where: { companyId: this.companyId, id },
+      select: this.sourceSelect,
+    });
+
+    return this.toSourceDto(row);
+  }
+
+  @Transaction()
+  async deleteWebFormSourceOrThrow(id: string): Promise<string> {
+    await this.prisma.webFormSource.deleteMany({ where: { companyId: this.companyId, id } });
+
+    return id;
   }
 
   @Transaction()

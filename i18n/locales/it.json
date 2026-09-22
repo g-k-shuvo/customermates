@@ -1071,6 +1071,7 @@
       "invalidJsonBody": "Il corpo della richiesta non è un JSON valido.",
       "invalidSortField": "Campo di ordinamento non trovato o non accessibile. Campi disponibili: {validValues}.",
       "invalidUrl": "Inserisci un URL valido.",
+      "leadAlreadyConverted": "Questo lead è già stato convertito in una trattativa.",
       "leadNotFound": "ID lead non trovato o non accessibile.",
       "legalNoticeNotDelivered": "L’aggiornamento legale corrente non è ancora stato consegnato a questo spazio di lavoro.",
       "linkedinInboxUnavailable": "Questo account LinkedIn non ha una posta in arrivo {product}. Collega l'account con {product} associato per usarla.",
@@ -1151,6 +1152,7 @@
       "userNotFound": "ID utente non trovato o non accessibile.",
       "userPlatformOperatorStatusForbidden": "Questo account appartiene a un operatore della piattaforma e non può essere disattivato qui. Usa la console operatore.",
       "userSelfAdminUpdateForbidden": "Non puoi aggiornare il tuo account dall’amministrazione del team.",
+      "webFormSourceNotFound": "ID origine modulo web non trovato o non accessibile.",
       "webFormSourceSlugTaken": "Esiste già un'origine modulo web con questo indirizzo. Scegline un'altra.",
       "webhookDeliveryNotFound": "ID consegna del webhook non trovato o non accessibile.",
       "webhookEventsRequired": "Seleziona almeno un evento.",
@@ -1491,12 +1493,14 @@
         "credits": "Crediti",
         "customFieldValues": "Campi personalizzati",
         "deals": "Trattative",
+        "defaultLabels": "Etichette predefinite",
         "description": "Descrizione",
         "displayName": "Nome visualizzato",
         "dueAt": "Data di scadenza",
         "email": "E-mail",
         "emailAddress": "Indirizzo e-mail",
         "enabled": "Attivato",
+        "endpointPath": "Endpoint",
         "entity": "Elemento",
         "entityId": "ID dell'elemento",
         "entityType": "Tipo di record",
@@ -2554,6 +2558,7 @@
     "subject": "Nuovo lead: {leadTitle}"
   },
   "LeadDetail": {
+    "convert": "Converti in trattativa",
     "owner": "Responsabile",
     "source": "Origine",
     "title": "Lead"
@@ -3451,6 +3456,30 @@
     "resendSuccess": "E-mail di verifica inviata correttamente.",
     "subtitle": "Verifica il tuo indirizzo e-mail per continuare.",
     "title": "Verifica dell'e-mail"
+  },
+  "WebFormSourceModal": {
+    "active": "Accetta invii",
+    "defaultLabels": "Etichette predefinite",
+    "inactive": "In pausa",
+    "mappingDescription": "Percorsi con punti nei dati inviati, ad esempio fields.email o data.contact.first_name. Lascia vuoto un campo per ignorarlo.",
+    "mappingTitle": "Mappatura dei campi",
+    "message": "Messaggio",
+    "phone": "Telefono",
+    "rotateSecret": "Rigenera il segreto di firma",
+    "secretRevealedDescription": "Copialo ora. Viene mostrato una sola volta e non può essere recuperato.",
+    "secretRevealedTitle": "Segreto di firma",
+    "slug": "Slug",
+    "slugDescription": "Lettere minuscole, numeri e trattini. Diventa il percorso pubblico dell'endpoint.",
+    "slugImmutable": "Lo slug non può cambiare, perché un modulo attivo invia già a questo endpoint.",
+    "title": "Origine modulo web",
+    "titleTemplate": "Modello del titolo del lead",
+    "titleTemplateDescription": "I segnaposto vengono sostituiti dai campi mappati, ad esempio '{organizationName}' — '{form_title}'."
+  },
+  "WebFormSourcesCard": {
+    "emptyBody": "Crea un'origine per ottenere un endpoint e un segreto di firma per il modulo del tuo sito.",
+    "emptyTitle": "Nessun modulo web",
+    "endpoint": "Endpoint",
+    "title": "Moduli web"
   },
   "WebhookDeliveriesCard": {
     "emptyBody": "I tentativi di consegna appariranno qui quando viene attivato un webhook.",

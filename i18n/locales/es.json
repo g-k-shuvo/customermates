@@ -1071,6 +1071,7 @@
       "invalidJsonBody": "El cuerpo de la solicitud no es JSON válido.",
       "invalidSortField": "Campo de ordenación no encontrado o no accesible. Campos disponibles: {validValues}.",
       "invalidUrl": "Introduce una URL válida.",
+      "leadAlreadyConverted": "Este lead ya se ha convertido en una oportunidad.",
       "leadNotFound": "ID de lead no encontrado o no accesible.",
       "legalNoticeNotDelivered": "La actualización legal actual aún no se ha entregado a este espacio de trabajo.",
       "linkedinInboxUnavailable": "Esta cuenta de LinkedIn no tiene bandeja de entrada {product}. Conecta la cuenta con {product} asociado para usarla.",
@@ -1151,6 +1152,7 @@
       "userNotFound": "ID de usuario no encontrado o no accesible.",
       "userPlatformOperatorStatusForbidden": "Esta cuenta pertenece a un operador de plataforma y no se puede desactivar aquí. Usa la consola de operador.",
       "userSelfAdminUpdateForbidden": "No puedes actualizar tu propia cuenta desde la administración del equipo.",
+      "webFormSourceNotFound": "ID de origen de formulario web no encontrado o no accesible.",
       "webFormSourceSlugTaken": "Ya existe un origen de formulario web con esta dirección. Elige otra.",
       "webhookDeliveryNotFound": "ID de entrega de webhook no encontrado o no accesible.",
       "webhookEventsRequired": "Selecciona al menos un evento.",
@@ -1491,12 +1493,14 @@
         "credits": "Créditos",
         "customFieldValues": "Campos personalizados",
         "deals": "Oportunidades",
+        "defaultLabels": "Etiquetas predeterminadas",
         "description": "Descripción",
         "displayName": "Nombre para mostrar",
         "dueAt": "Fecha de vencimiento",
         "email": "Correo electrónico",
         "emailAddress": "Dirección de correo",
         "enabled": "Activado",
+        "endpointPath": "Endpoint",
         "entity": "Elemento",
         "entityId": "ID del elemento",
         "entityType": "Tipo de registro",
@@ -2554,6 +2558,7 @@
     "subject": "Nuevo prospecto: {leadTitle}"
   },
   "LeadDetail": {
+    "convert": "Convertir en oportunidad",
     "owner": "Responsable",
     "source": "Origen",
     "title": "Lead"
@@ -3451,6 +3456,30 @@
     "resendSuccess": "Correo de verificación enviado correctamente.",
     "subtitle": "Verifica tu dirección de correo para continuar.",
     "title": "Verificación del correo"
+  },
+  "WebFormSourceModal": {
+    "active": "Acepta envíos",
+    "defaultLabels": "Etiquetas predeterminadas",
+    "inactive": "En pausa",
+    "mappingDescription": "Rutas con puntos dentro del contenido enviado, por ejemplo fields.email o data.contact.first_name. Deja un campo vacío para ignorarlo.",
+    "mappingTitle": "Asignación de campos",
+    "message": "Mensaje",
+    "phone": "Teléfono",
+    "rotateSecret": "Rotar el secreto de firma",
+    "secretRevealedDescription": "Cópialo ahora. Se muestra una sola vez y no se puede recuperar.",
+    "secretRevealedTitle": "Secreto de firma",
+    "slug": "Slug",
+    "slugDescription": "Minúsculas, números y guiones. Se convierte en la ruta pública del endpoint.",
+    "slugImmutable": "El slug no se puede cambiar, porque un formulario activo ya envía a este endpoint.",
+    "title": "Origen de formulario web",
+    "titleTemplate": "Plantilla del título del lead",
+    "titleTemplateDescription": "Los marcadores se sustituyen con los campos asignados, por ejemplo '{organizationName}' — '{form_title}'."
+  },
+  "WebFormSourcesCard": {
+    "emptyBody": "Crea un origen para obtener un endpoint y un secreto de firma para el formulario de tu sitio web.",
+    "emptyTitle": "Aún no hay formularios web",
+    "endpoint": "Endpoint",
+    "title": "Formularios web"
   },
   "WebhookDeliveriesCard": {
     "emptyBody": "Los intentos de entrega aparecerán aquí cuando se active un webhook.",
