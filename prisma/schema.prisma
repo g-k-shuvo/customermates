@@ -198,6 +198,7 @@ model User {
   agentCreditAdjustments          AgentCreditAdjustment[]
   adAttributions                  AdAttribution[]
   dealStageHistories              DealStageHistory[]
+  ownedLeads                      Lead[]
 
   @@index([companyId])
   @@index([companyId, status])
@@ -268,6 +269,8 @@ model Company {
   agentTurnRequests           AgentTurnRequest[]
   agentApprovals              AgentApproval[]
   agentUiCommandResults       AgentUiCommandResult[]
+  leads                       Lead[]
+  webFormSources              WebFormSource[]
 }
 
 model EntityTerminology {
@@ -390,6 +393,7 @@ model Contact {
   tasks             TaskContact[]
   customFieldValues CustomFieldValue[]
   identifiers       ContactIdentifier[]
+  leads             Lead[]
 
   @@index([companyId])
   @@index([firstName])
@@ -409,6 +413,7 @@ model Organization {
   users             OrganizationUser[]
   tasks             TaskOrganization[]
   customFieldValues CustomFieldValue[]
+  leads             Lead[]
 
   @@index([companyId])
   @@index([name])
@@ -1211,6 +1216,66 @@ enum StageKind {
   open
   won
   lost
+}
+
+model Lead {
+  id              String         @id @default(uuid())
+  companyId       String
+  title           String
+  status          LeadStatus     @default(new)
+  sourceOrigin    String         @default("manual")
+  sourceId        String?
+  contactId       String?
+  organizationId  String?
+  ownerUserId     String?
+  labels          String[]       @default([])
+  value           Float?
+  notes           Json?
+  convertedDealId String?
+  convertedAt     DateTime?
+  archivedAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  company         Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  source          WebFormSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  contact         Contact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  organization    Organization?  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  owner           User?          @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([companyId, status, createdAt])
+  @@index([companyId, ownerUserId])
+  @@index([contactId])
+  @@index([organizationId])
+  @@index([sourceId])
+}
+
+model WebFormSource {
+  id             String   @id @default(uuid())
+  companyId      String
+  name           String
+  slug           String
+  signingSecret  String
+  active         Boolean  @default(true)
+  defaultOwnerId String?
+  defaultLabels  String[] @default([])
+  fieldMapping   Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  leads          Lead[]
+
+  @@unique([companyId, slug])
+  @@index([companyId])
+}
+
+enum LeadStatus {
+  new
+  working
+  qualified
+  unqualified
+  converted
+  archived
 }
 
 enum DealStatus {
