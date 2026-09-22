@@ -14,6 +14,7 @@ import { DEFAULT_SYNC_FOLDER } from "./select-sync-folders";
 import { MailboxTransportError } from "./mailbox-transport";
 
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
+import { BULK_WRITE_TRANSACTION } from "@/core/decorators/transaction.decorator";
 import { Write } from "@/core/decorators/write.decorator";
 import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
 import { CustomErrorCode } from "@/core/validation/validation.types";
@@ -34,6 +35,7 @@ export class SyncMailboxInteractor extends AuthenticatedInteractor<SyncMailboxDa
   @Write({
     input: SyncMailboxSchema,
     output: MailboxSyncOutcomeSchema,
+    tx: BULK_WRITE_TRANSACTION,
   })
   async invoke(data: SyncMailboxData): Validated<MailboxSyncOutcome> {
     const service = this.service;
