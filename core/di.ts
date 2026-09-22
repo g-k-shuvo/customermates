@@ -48,6 +48,8 @@ import { SendReplyInteractor } from "@/features/mailbox/outbound/send-reply.inte
 import { SendReplyService } from "@/features/mailbox/outbound/send-reply.service";
 import { PrismaServiceRepo } from "@/features/services/prisma-service.repository";
 import { PrismaLeadRepo } from "@/features/leads/prisma-lead.repository";
+import { PrismaWebFormRepo } from "@/features/webform/prisma-webform.repository";
+import { PrismaProcessWebFormSubmissionRepo } from "@/features/webform/process/prisma-process-web-form-submission.repository";
 import { PrismaTaskRepo } from "@/features/tasks/prisma-task.repository";
 import { PrismaUserRepo } from "@/features/user/prisma-user.repository";
 import { PrismaCompanyRepo } from "@/features/company/prisma-company.repository";
@@ -184,6 +186,10 @@ import { GetLostReasonByIdInteractor } from "@/features/lost-reasons/get/get-los
 import { CreateLostReasonInteractor } from "@/features/lost-reasons/upsert/create-lost-reason.interactor";
 import { UpdateLostReasonInteractor } from "@/features/lost-reasons/upsert/update-lost-reason.interactor";
 import { DeleteLostReasonInteractor } from "@/features/lost-reasons/delete/delete-lost-reason.interactor";
+// Web form interactors
+import { IngestWebFormSubmissionInteractor } from "@/features/webform/ingest/ingest-web-form-submission.interactor";
+import { ProcessWebFormSubmissionInteractor } from "@/features/webform/process/process-web-form-submission.interactor";
+
 // Leads interactors
 import { GetLeadsInteractor } from "@/features/leads/get/get-leads.interactor";
 import { GetLeadByIdInteractor } from "@/features/leads/get/get-lead-by-id.interactor";
@@ -428,6 +434,8 @@ export const getPipelineStageIdsRepo = () => new PrismaPipelineStageRepo();
 export const getLostReasonRepo = () => new PrismaLostReasonRepo();
 export const getServiceRepo = () => new PrismaServiceRepo();
 export const getLeadRepo = () => new PrismaLeadRepo();
+export const getWebFormRepo = () => new PrismaWebFormRepo();
+export const getProcessWebFormSubmissionRepo = () => new PrismaProcessWebFormSubmissionRepo();
 export const getTaskRepo = () => new PrismaTaskRepo();
 export const getUserRepo = () => new PrismaUserRepo();
 export const getCompanyRepo = () => new PrismaCompanyRepo();
@@ -896,6 +904,12 @@ export const getGetServicesApiInteractor = () =>
 export const getGetServicesConfigurationInteractor = () => new GetServicesConfigurationInteractor(getServiceRepo());
 
 export const getGetServiceByIdInteractor = () => new GetServiceByIdInteractor(getServiceRepo(), getCustomColumnRepo());
+
+export const getIngestWebFormSubmissionInteractor = () =>
+  new IngestWebFormSubmissionInteractor(getWebFormRepo(), getBackgroundTaskService());
+
+export const getProcessWebFormSubmissionInteractor = () =>
+  new ProcessWebFormSubmissionInteractor(getProcessWebFormSubmissionRepo());
 
 export const getGetLeadsInteractor = () => new GetLeadsInteractor(getLeadRepo());
 

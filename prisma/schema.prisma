@@ -272,6 +272,7 @@ model Company {
   leads                       Lead[]
   webFormSources              WebFormSource[]
   webFormSubmissions          WebFormSubmission[]
+  webFormRateLimits           WebFormRateLimit[]
 }
 
 model EntityTerminology {
@@ -1252,6 +1253,20 @@ model Lead {
   @@index([sourceId])
 }
 
+model WebFormRateLimit {
+  id          String        @id @default(uuid())
+  companyId   String
+  sourceId    String        @unique
+  windowStart DateTime
+  count       Int           @default(0)
+  updatedAt   DateTime      @updatedAt
+  company     Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  source      WebFormSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([windowStart])
+}
+
 model WebFormSubmission {
   id          String        @id @default(uuid())
   companyId   String
@@ -1288,6 +1303,7 @@ model WebFormSource {
   company        Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
   leads          Lead[]
   submissions    WebFormSubmission[]
+  rateLimit      WebFormRateLimit?
 
   @@unique([companyId, slug])
   @@index([companyId])
