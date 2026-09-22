@@ -38,7 +38,17 @@ needs no migration but has no index supporting it.
 
 **Plan: skip domain matching in the first pass.** Match on exact name, else create. Ship
 domain matching as a follow-up once there is real data showing how often it would fire.
-The free-mail exclusion list the PRD calls for is still required whenever it does land.
+The free-mail exclusion list the PRD calls for is still required whenever it does land, and
+nothing in the codebase has one today.
+
+This costs a named acceptance criterion, so say so rather than discover it during sign-off.
+The PRD's own findings list a footer callback form on `jackimwoods.com` whose fields are
+First Name, Last Name, Email, Phone, Message — no company field at all. With name matching
+only, every lead from that form has a null organization forever. The criterion "submitting
+each live form creates exactly one Lead with the contact and organization correctly matched
+or created" cannot pass for it until domain matching ships. Either accept a null
+organization for company-less forms and reword the criterion, or move domain matching into
+the first pass and pay for `Organization.domain` up front.
 
 ### `channelClass` is required, and its helper lives in `ee/`
 
@@ -96,6 +106,13 @@ forgotten. Nothing checks the rest:
 | `core/base/base-repository.ts` | `ModelWhereInputMap` (16-23), `modelToResourceMap` (51-58), `resourceOwnWhereMap` (98-116) | tsc, once one is touched |
 | `app/components/app-sidebar.tsx` | nav gate (206-239) and quick-add entry (339-363) | nothing |
 | `prisma/seeds/roles.ts` | grants in `salesManagerGrants` / `customerSuccessGrants` (41-64) | nothing |
+| `tests/conventions/access-where-composition.test.ts` | an `accessWhere("lead")` entry in `HELPER_KEYS` (15-29) | nothing |
+
+That last row is the one an adversarial review of this plan added, and it fails the same
+way the others do. `helperFor()` returns `undefined` for any `accessWhere` call the map
+does not name, and the scan then skips it — so a `LeadRepository` calling
+`accessWhere("lead")` gets no tenant-scoping check at all, silently. It only applies if
+leads use `accessWhere`, which the own/all/none read options imply they will.
 
 The order matters. `UpsertRoleData["permissions"]` is inferred from the Zod schema, so once
 `leads` is added there, TypeScript forces both store objects — a missing key and an excess
@@ -108,10 +125,19 @@ failure: an API client that POSTs `permissions.leads` against a schema without t
 gets a success response with the value discarded. That is an argument for adding the Zod
 block first, not for distrusting the compiler.
 
-**Add the missing enforcement.** A convention test that reads `role-modal.tsx` with the
-TypeScript AST, collects the `renderResourcePermissions(Resource.x)` arguments and compares
-them to `Object.values(Resource)` closes the one gap the compiler cannot. Several existing
-convention tests already parse TSX this way.
+**Add the missing enforcement — the cheap test first.** `UpsertRoleSchema.shape.permissions`
+is a real `ZodObject` at runtime, so a test can import it and diff
+`Object.keys(schema.shape.permissions.shape)` against `Object.values(Resource)` with no
+parsing at all. That guards the entry which drops data rather than merely hiding a row, and
+it is a handful of lines.
+
+Then the modal: a test that reads `role-modal.tsx` with the TypeScript AST, collects the
+`renderResourcePermissions(Resource.x)` arguments and compares them to the enum. Realistic —
+fourteen convention tests already parse TSX with `ts.createSourceFile(..., ts.ScriptKind.TSX)`,
+several doing heavier analysis than finding one call expression.
+
+Write the Zod one first. An earlier draft of this plan proposed only the modal test, which
+guards the cosmetic failure and leaves the silent one open.
 
 ### The enum change needs two migrations, not one
 
@@ -177,8 +203,8 @@ events and the listener's `handlers` map disagree.
 
 Adding `DomainEvent.LEAD_CREATED` also means deciding two opt-ins that are easy to
 half-wire: `AUDIT_LOG_EXCLUDED_EVENTS` (omission means it *is* audit-logged) and
-`WEBHOOK_EVENTS` in `features/webhook/webhook.schema.ts` (omission means it is *not*
-webhook-deliverable).
+`WEBHOOK_EVENTS` in `features/webhook/webhook-event-registry.ts`, which `webhook.schema.ts`
+imports (omission means it is *not* webhook-deliverable).
 
 ### The M5 dependency is already satisfied
 
@@ -217,9 +243,33 @@ silently drops every lead is the worst possible expression of this bug.
 
 Work in this order. Each phase is independently shippable and leaves the tree green.
 
-**Phase 0 — make async failure loud.** Document the `WORKFLOW_*` variables in
-`.env.selfhost.template`; add the startup assertion. Small, and everything downstream
-depends on it being true.
+**Phase 0 — make async failure loud. Done in `3f35afdf`.** The four `WORKFLOW_*` variables
+are documented in `.env.selfhost.template`, and `instrumentation.ts` now throws at startup
+when the world is unresolved in a self-hosted deployment rather than accepting jobs it will
+never run.
+
+**`Lead.source` is a forward reference — resolve it before Phase 2.** The PRD's `Lead`
+declares `sourceId String?` with `source WebFormSource? @relation(...)`, but `WebFormSource`
+is a T8.2 model that this plan does not build until Phase 5. Prisma cannot compile a
+relation to a model that does not exist, so Phase 2 cannot ship the Lead schema as the PRD
+writes it.
+
+Two honest options, and the plan has to pick one rather than discover this mid-phase:
+
+1. **Move `WebFormSource` into Phase 2** — define both models in the first migration, and
+   leave the source-management UI and the endpoint in Phases 5 and 6. The table sits empty
+   until then, which costs nothing.
+2. **Ship `Lead` without the source columns** and add `sourceId` plus its relation in the
+   Phase 5 migration.
+
+Take option 1. Option 2 means a second migration altering a table that already has rows,
+and it tempts exactly the bare-`String?`-without-`@relation` shortcut this plan criticises
+in `WebFormSubmission.leadId`.
+
+The same issue applies to `DomainEvent.LEAD_CREATED`, which T8.4 publishes in Phase 5-6 but
+this plan introduces in Phase 7. That one is harmless — `DomainEvent` is a TypeScript enum,
+so adding the member is a one-line change with no migration. Add it whenever the publishing
+code first needs it.
 
 **Phase 1 — the `leads` resource.** The eight-file `Resource` ripple in one commit, plus
 the convention test that derives the modal's list from the enum. No feature code yet; this
@@ -229,16 +279,18 @@ is the part that fails silently if rushed.
 the 35 the old CLAUDE.md claimed), the migration, DI registration, `/v1/leads*` routes with
 their colocated `.openapi.ts`, unit tests. Ends with leads creatable over REST.
 
-**Phase 3 — the leads UI.** `/leads` list view, ~9 files modelled on
+**Phase 3 — the leads UI.** `/leads` list view modelled on
 `app/[locale]/(protected)/organizations/` — the cleanest comparable, since deals' 37 files
-are inflated by close/reopen/pipeline UI. Bump `page-state-contract.test.ts` and its
+are inflated by close/reopen/pipeline UI. That directory is 15 files, 13 of them outside
+`[id]/`; budget the list view against those 13, not against a detail page this phase does
+not build. Bump `page-state-contract.test.ts` and its
 `collectionViews` array. Five locales throughout.
 
 **Phase 4 — convert to deal.** `ConvertLeadToDealInteractor` plus its action route,
 mirroring the shape of deals' `won`/`lost`/`reopen` routes.
 
-**Phase 5 — sources and submissions.** `WebFormSource`, `WebFormSubmission`, the mapping
-JSON, and the source-management UI. No public endpoint yet; seed a source by hand and
+**Phase 5 — submissions and source management.** `WebFormSubmission`, the mapping JSON,
+and the source-management UI (`WebFormSource` itself ships in Phase 2, see above). No public endpoint yet; seed a source by hand and
 drive processing from a test.
 
 **Phase 6 — the public endpoint.** `POST /api/webforms/[slug]`, HMAC verification copied
@@ -263,6 +315,9 @@ The PRD also bundles three unlike bodies of work under one number: an in-repo CR
 an in-repo ingestion and security surface, and an out-of-repo WordPress plugin that none of
 the 77 convention tests, the five-locale system or the OpenAPI generator can verify.
 `features/mailbox` — 87 files, the largest slice in the repo and the closest comparable —
-had no new `Resource` value, no inbound matching logic and no external plugin.
+had no new `Resource` value and no external plugin. Its inbound matching
+(`findContactMatches`, `prisma-mailbox.repository.ts:409`) matches addresses against
+existing `ContactIdentifier` rows but never creates a contact, resolves an organization or
+excludes free-mail domains, so T8.4 is the larger job.
 
 Estimate the phases separately, and the plugin separately again.

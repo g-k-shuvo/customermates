@@ -14,6 +14,7 @@ import { toastZodErrorTree } from "@/core/utils/toast-zod-error-tree";
 function defaultRolePermissions() {
   return {
     contacts: { canManage: "no", readAccess: "own" },
+    leads: { canManage: "no", readAccess: "own" },
     deals: { canManage: "no", readAccess: "own" },
     pipelines: { canManage: "no", readAccess: "own" },
     organizations: { canManage: "no", readAccess: "own" },
@@ -120,6 +121,7 @@ export class RoleModalStore extends BaseModalStore<UpsertRoleData> {
 
     const permissions: UpsertRoleData["permissions"] = {
       contacts: { canManage: "no", readAccess: "none" },
+      leads: { canManage: "no", readAccess: "none" },
       deals: { canManage: "no", readAccess: "none" },
       pipelines: { canManage: "no", readAccess: "none" },
       organizations: { canManage: "no", readAccess: "none" },

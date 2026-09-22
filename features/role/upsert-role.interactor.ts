@@ -15,12 +15,16 @@ import { zx, type Validated } from "@/core/validation/validation.utils";
 import { calculateChanges } from "@/core/utils/calculate-changes";
 import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
 
-const Schema = z.object({
+export const UpsertRoleSchema = z.object({
   id: z.uuid().optional(),
   name: zx.nonBlankText(255),
   description: zx.nonBlankText(500),
   permissions: z.object({
     contacts: z.object({
+      canManage: z.enum(["yes", "no"]),
+      readAccess: z.enum(["none", "own", "all"]),
+    }),
+    leads: z.object({
       canManage: z.enum(["yes", "no"]),
       readAccess: z.enum(["none", "own", "all"]),
     }),
@@ -64,7 +68,7 @@ const Schema = z.object({
     }),
   }),
 });
-export type UpsertRoleData = Data<typeof Schema>;
+export type UpsertRoleData = Data<typeof UpsertRoleSchema>;
 
 export abstract class UpsertRoleRepo {
   abstract isSystemRoleOrThrow(id: string): Promise<boolean>;
@@ -89,7 +93,7 @@ export class UpsertRoleInteractor extends AuthenticatedInteractor<UpsertRoleData
   }
 
   @Write({
-    input: Schema,
+    input: UpsertRoleSchema,
     output: RoleDtoSchema,
     precheck: (self, data, ctx) => self.precheck(data, ctx),
   })

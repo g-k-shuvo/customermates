@@ -171,6 +171,8 @@ export const RoleModal = observer(({ store }: Props) => {
 
               {renderResourcePermissions(Resource.contacts)}
 
+              {renderResourcePermissions(Resource.leads)}
+
               {renderResourcePermissions(Resource.organizations)}
 
               {renderResourcePermissions(Resource.deals)}

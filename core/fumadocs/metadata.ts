@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ROUTE_SOURCE_MAP } from "./route-source-map";
 
 import { env } from "@/env";
+import { applyBrand } from "@/i18n/brand-messages";
 import { buildAlternateLanguages } from "@/core/seo/alternates";
 import { CONTENT_LOCALES, buildLocalePath, isContentLocale } from "@/i18n/locale-registry";
 import { isNoindexPublicRoute } from "@/i18n/routing";
@@ -37,9 +38,9 @@ export function generateMetadataFromMeta({
     throw new Error(`No content page backs ${route} in locale ${locale}; it would ship with no canonical`);
   }
 
-  const baseTitle = page.data.title?.trim() || "";
+  const baseTitle = applyBrand(page.data.title?.trim() || "");
   const title = titleSuffix ? `${baseTitle} - ${titleSuffix}` : baseTitle;
-  const baseDescription = page.data.description?.trim() || "";
+  const baseDescription = applyBrand(page.data.description?.trim() || "");
   const description =
     descriptionSuffix && baseDescription ? `${baseDescription} - ${descriptionSuffix}` : baseDescription;
 

@@ -920,6 +920,7 @@ model OperatorAuditEvent {
 
 enum Resource {
   contacts
+  leads
   deals
   organizations
   services

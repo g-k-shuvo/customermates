@@ -40,6 +40,7 @@ function permissionFixtures(roleId: string, offset: number, grants: readonly Rol
 
 const salesManagerGrants = [
   [Resource.contacts, manageAll],
+  [Resource.leads, manageAll],
   [Resource.organizations, manageAll],
   [Resource.deals, manageAll],
   [Resource.pipelines, manageAll],
@@ -53,6 +54,7 @@ const salesManagerGrants = [
 
 const customerSuccessGrants = [
   [Resource.contacts, manageAll],
+  [Resource.leads, manageAll],
   [Resource.organizations, manageAll],
   [Resource.tasks, manageAll],
   [Resource.inboxMessages, manageAll],
