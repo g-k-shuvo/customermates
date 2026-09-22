@@ -279,7 +279,31 @@ is the part that fails silently if rushed.
 the 35 the old CLAUDE.md claimed), the migration, DI registration, `/v1/leads*` routes with
 their colocated `.openapi.ts`, unit tests. Ends with leads creatable over REST.
 
-**Phase 3 — the leads UI.** `/leads` list view modelled on
+**Phase 3 — the leads UI. Deferred, and larger than this plan first said.** Every entity
+list page is built on the DataView stack, and that stack is keyed by `EntityType`, which
+has only `contact | organization | deal | service | task`. `organizations-page-view.tsx`
+calls `useEntityTerminology`, `useOpenEntity` and `importWizardStore.openForEntity`, all of
+which take an `EntityType`. Reusing those components therefore means adding `lead` to that
+enum, and that is not a list page's worth of work:
+
+- `CustomFieldValue` carries one nullable foreign key per entity — `contactId`,
+  `organizationId`, `dealId` and so on — so leads need a `leadId` column, its relation and
+  an entry in `entityIdFieldByType`. That is another migration.
+- 216 files reference `EntityType`, and at least ten are compiler-enforced
+  `Record<EntityType, ...>` maps across the dashboard widget modal, custom columns,
+  filterable fields and permission mapping.
+- Terminology overrides, import and export wiring, and the entity detail drawers all key
+  off it too.
+
+That is comparable in size to the whole leads slice. Leads are already creatable and
+readable over REST, so Phases 5 to 7 do not need it, and the decision is better made once
+real submissions exist to look at. Revisit after Phase 7.
+
+The original estimate below assumed the DataView components could simply be reused. They
+can, but only after joining the `EntityType` club, which the PRD's "reusing the existing
+data-view components" does not hint at.
+
+**Phase 3 as originally written — the leads UI.** `/leads` list view modelled on
 `app/[locale]/(protected)/organizations/` — the cleanest comparable, since deals' 37 files
 are inflated by close/reopen/pipeline UI. That directory is 15 files, 13 of them outside
 `[id]/`; budget the list view against those 13, not against a detail page this phase does

@@ -271,6 +271,7 @@ model Company {
   agentUiCommandResults       AgentUiCommandResult[]
   leads                       Lead[]
   webFormSources              WebFormSource[]
+  webFormSubmissions          WebFormSubmission[]
 }
 
 model EntityTerminology {
@@ -1219,28 +1220,29 @@ enum StageKind {
 }
 
 model Lead {
-  id              String         @id @default(uuid())
+  id              String              @id @default(uuid())
   companyId       String
   title           String
-  status          LeadStatus     @default(new)
-  sourceOrigin    String         @default("manual")
+  status          LeadStatus          @default(new)
+  sourceOrigin    String              @default("manual")
   sourceId        String?
   contactId       String?
   organizationId  String?
   ownerUserId     String?
-  labels          String[]       @default([])
+  labels          String[]            @default([])
   value           Float?
   notes           Json?
   convertedDealId String?
   convertedAt     DateTime?
   archivedAt      DateTime?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  company         Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  source          WebFormSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
-  contact         Contact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
-  organization    Organization?  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
-  owner           User?          @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  company         Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  source          WebFormSource?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  contact         Contact?            @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  organization    Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  owner           User?               @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  submissions     WebFormSubmission[]
 
   @@index([companyId])
   @@index([companyId, status, createdAt])
@@ -1250,20 +1252,42 @@ model Lead {
   @@index([sourceId])
 }
 
+model WebFormSubmission {
+  id          String        @id @default(uuid())
+  companyId   String
+  sourceId    String
+  externalId  String?
+  rawPayload  Json
+  status      String        @default("received")
+  error       String?
+  leadId      String?
+  receivedAt  DateTime      @default(now())
+  processedAt DateTime?
+  company     Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  source      WebFormSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  lead        Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@unique([sourceId, externalId])
+  @@index([companyId, receivedAt])
+  @@index([status])
+  @@index([leadId])
+}
+
 model WebFormSource {
-  id             String   @id @default(uuid())
+  id             String              @id @default(uuid())
   companyId      String
   name           String
   slug           String
   signingSecret  String
-  active         Boolean  @default(true)
+  active         Boolean             @default(true)
   defaultOwnerId String?
-  defaultLabels  String[] @default([])
+  defaultLabels  String[]            @default([])
   fieldMapping   Json
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  company        Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
   leads          Lead[]
+  submissions    WebFormSubmission[]
 
   @@unique([companyId, slug])
   @@index([companyId])
