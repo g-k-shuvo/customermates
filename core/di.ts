@@ -47,6 +47,7 @@ import { LinkThreadDealInteractor } from "@/features/mailbox/link/link-thread-de
 import { SendReplyInteractor } from "@/features/mailbox/outbound/send-reply.interactor";
 import { SendReplyService } from "@/features/mailbox/outbound/send-reply.service";
 import { PrismaServiceRepo } from "@/features/services/prisma-service.repository";
+import { PrismaLeadRepo } from "@/features/leads/prisma-lead.repository";
 import { PrismaTaskRepo } from "@/features/tasks/prisma-task.repository";
 import { PrismaUserRepo } from "@/features/user/prisma-user.repository";
 import { PrismaCompanyRepo } from "@/features/company/prisma-company.repository";
@@ -183,6 +184,13 @@ import { GetLostReasonByIdInteractor } from "@/features/lost-reasons/get/get-los
 import { CreateLostReasonInteractor } from "@/features/lost-reasons/upsert/create-lost-reason.interactor";
 import { UpdateLostReasonInteractor } from "@/features/lost-reasons/upsert/update-lost-reason.interactor";
 import { DeleteLostReasonInteractor } from "@/features/lost-reasons/delete/delete-lost-reason.interactor";
+// Leads interactors
+import { GetLeadsInteractor } from "@/features/leads/get/get-leads.interactor";
+import { GetLeadByIdInteractor } from "@/features/leads/get/get-lead-by-id.interactor";
+import { CreateLeadInteractor } from "@/features/leads/upsert/create-lead.interactor";
+import { UpdateLeadInteractor } from "@/features/leads/upsert/update-lead.interactor";
+import { DeleteLeadInteractor } from "@/features/leads/delete/delete-lead.interactor";
+
 // Services interactors
 import { GetServicesInteractor } from "@/features/services/get/get-services.interactor";
 import { GetServicesConfigurationInteractor } from "@/features/services/get/get-services-configuration.interactor";
@@ -419,6 +427,7 @@ export const getPipelineRepo = () => new PrismaPipelineRepo();
 export const getPipelineStageIdsRepo = () => new PrismaPipelineStageRepo();
 export const getLostReasonRepo = () => new PrismaLostReasonRepo();
 export const getServiceRepo = () => new PrismaServiceRepo();
+export const getLeadRepo = () => new PrismaLeadRepo();
 export const getTaskRepo = () => new PrismaTaskRepo();
 export const getUserRepo = () => new PrismaUserRepo();
 export const getCompanyRepo = () => new PrismaCompanyRepo();
@@ -887,6 +896,16 @@ export const getGetServicesApiInteractor = () =>
 export const getGetServicesConfigurationInteractor = () => new GetServicesConfigurationInteractor(getServiceRepo());
 
 export const getGetServiceByIdInteractor = () => new GetServiceByIdInteractor(getServiceRepo(), getCustomColumnRepo());
+
+export const getGetLeadsInteractor = () => new GetLeadsInteractor(getLeadRepo());
+
+export const getGetLeadByIdInteractor = () => new GetLeadByIdInteractor(getLeadRepo());
+
+export const getCreateLeadInteractor = () => new CreateLeadInteractor(getLeadRepo(), getEventService());
+
+export const getUpdateLeadInteractor = () => new UpdateLeadInteractor(getLeadRepo(), getEventService());
+
+export const getDeleteLeadInteractor = () => new DeleteLeadInteractor(getLeadRepo(), getEventService());
 
 export const getCreateServiceInteractor = () =>
   new CreateServiceInteractor(

@@ -20,6 +20,7 @@ export type ModelWhereInputMap = {
   deal: Prisma.DealWhereInput;
   service: Prisma.ServiceWhereInput;
   task: Prisma.TaskWhereInput;
+  lead: Prisma.LeadWhereInput;
 };
 
 export type SummableModel = keyof ModelWhereInputMap;
@@ -55,6 +56,7 @@ export abstract class BaseRepository<
       deal: Resource.deals,
       service: Resource.services,
       task: Resource.tasks,
+      lead: Resource.leads,
     };
 
     const permissionResource = modelToResourceMap[resource];
@@ -113,6 +115,7 @@ export abstract class BaseRepository<
       users: { some: { userId } },
     }),
     task: (companyId, userId) => ({ companyId, users: { some: { userId } } }),
+    lead: (companyId, userId) => ({ companyId, ownerUserId: userId }),
   };
 
   async sumNumericFields<F extends string>(opts: {

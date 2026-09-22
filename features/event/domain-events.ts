@@ -1,6 +1,7 @@
 import type { ContactDto } from "@/features/contacts/contact.schema";
 import type { OrganizationDto } from "@/features/organizations/organization.schema";
 import type { DealDto } from "@/features/deals/deal.schema";
+import type { LeadDto } from "@/features/leads/lead.schema";
 import type { ServiceDto } from "@/features/services/service.schema";
 import type { TaskDto } from "@/features/tasks/task.schema";
 import type { RoleDto } from "@/features/role/role.schema";
@@ -20,6 +21,9 @@ export enum DomainEvent {
   ORGANIZATION_CREATED = "organization.created",
   ORGANIZATION_UPDATED = "organization.updated",
   ORGANIZATION_DELETED = "organization.deleted",
+  LEAD_CREATED = "lead.created",
+  LEAD_UPDATED = "lead.updated",
+  LEAD_DELETED = "lead.deleted",
   DEAL_CREATED = "deal.created",
   DEAL_UPDATED = "deal.updated",
   DEAL_DELETED = "deal.deleted",
@@ -144,6 +148,27 @@ export type DomainEventMap = {
     companyId: string;
     entityId: string;
     payload: OrganizationDto;
+  };
+  [DomainEvent.LEAD_CREATED]: {
+    userId: string;
+    companyId: string;
+    entityId: string;
+    payload: LeadDto;
+  };
+  [DomainEvent.LEAD_UPDATED]: {
+    userId: string;
+    companyId: string;
+    entityId: string;
+    payload: {
+      lead: LeadDto;
+      changes: Record<string, { previous: unknown; current: unknown }>;
+    };
+  };
+  [DomainEvent.LEAD_DELETED]: {
+    userId: string;
+    companyId: string;
+    entityId: string;
+    payload: LeadDto;
   };
   [DomainEvent.DEAL_CREATED]: {
     userId: string;

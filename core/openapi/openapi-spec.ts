@@ -24,6 +24,11 @@ import { updateManyOrganizationsOperation } from "@/features/organizations/upser
 import { webhookOrganizationCreatedOperation } from "@/features/organizations/upsert/organization-created.openapi";
 import { webhookOrganizationUpdatedOperation } from "@/features/organizations/upsert/organization-updated.openapi";
 import { webhookOrganizationDeletedOperation } from "@/features/organizations/delete/organization-deleted.openapi";
+import { getLeadsOperation } from "@/features/leads/get/get-leads.openapi";
+import { getLeadByIdOperation } from "@/features/leads/get/get-lead-by-id.openapi";
+import { createLeadOperation } from "@/features/leads/upsert/create-lead.openapi";
+import { updateLeadOperation } from "@/features/leads/upsert/update-lead.openapi";
+import { deleteLeadOperation } from "@/features/leads/delete/delete-lead.openapi";
 import { getDealsOperation } from "@/features/deals/get/get-deals.openapi";
 import { getDealsConfigurationOperation } from "@/features/deals/get/get-deals-configuration.openapi";
 import { getDealByIdOperation } from "@/features/deals/get/get-deal-by-id.openapi";
@@ -153,6 +158,11 @@ import { UpdateOrganizationSchema } from "@/features/organizations/upsert/update
 import { UpdateManyOrganizationsSchema } from "@/features/organizations/upsert/update-many-organizations.interactor";
 import { DeleteManyOrganizationsSchema } from "@/features/organizations/delete/delete-many-organizations.interactor";
 import { GetOrganizationByIdSchema } from "@/features/organizations/get/get-organization-by-id.interactor";
+import { CreateLeadSchema } from "@/features/leads/upsert/create-lead.interactor";
+import { UpdateLeadSchema } from "@/features/leads/upsert/update-lead.interactor";
+import { DeleteLeadSchema } from "@/features/leads/delete/delete-lead.interactor";
+import { GetLeadByIdSchema } from "@/features/leads/get/get-lead-by-id.interactor";
+import { GetLeadsSchema } from "@/features/leads/get/get-leads.interactor";
 import { CreateDealSchema } from "@/features/deals/upsert/create-deal.interactor";
 import { CreateManyDealsSchema } from "@/features/deals/upsert/create-many-deals.interactor";
 import { UpdateDealSchema } from "@/features/deals/upsert/update-deal.interactor";
@@ -266,6 +276,17 @@ export function generateOpenApiSpec() {
         get: getOrganizationByIdOperation,
         put: updateOrganizationOperation,
         delete: deleteOrganizationOperation,
+      },
+      "/v1/leads": {
+        post: createLeadOperation,
+      },
+      "/v1/leads/search": {
+        post: getLeadsOperation,
+      },
+      "/v1/leads/{id}": {
+        get: getLeadByIdOperation,
+        put: updateLeadOperation,
+        delete: deleteLeadOperation,
       },
       "/v1/deals": {
         post: createDealOperation,
@@ -584,6 +605,11 @@ export function generateOpenApiSpec() {
         UpdateOrganizationSchema,
         UpdateManyOrganizationsSchema,
         GetOrganizationByIdSchema,
+        DeleteLeadSchema,
+        GetLeadByIdSchema,
+        GetLeadsSchema,
+        CreateLeadSchema,
+        UpdateLeadSchema,
         DeleteDealSchema,
         DeleteManyDealsSchema,
         CreateDealSchema,
