@@ -1,3 +1,4 @@
+import type { LeadDto } from "@/features/leads/lead.schema";
 import type { Prisma } from "@/generated/prisma";
 import type {
   CreateLeadFromSubmissionArgs,
@@ -142,6 +143,32 @@ export class PrismaProcessWebFormSubmissionRepo extends BaseRepository implement
     await this.prisma.webFormSubmission.updateMany({
       where: { id: submissionId },
       data: { status: "failed", error: error.slice(0, 2000) },
+    });
+  }
+
+  @BypassTenantGuard
+  async findLeadForEventUnscoped(leadId: string): Promise<LeadDto> {
+    return this.prisma.lead.findFirstOrThrow({
+      where: { id: leadId },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        sourceOrigin: true,
+        labels: true,
+        value: true,
+        notes: true,
+        convertedDealId: true,
+        convertedAt: true,
+        archivedAt: true,
+        createdAt: true,
+        updatedAt: true,
+        contact: { select: { id: true, firstName: true, lastName: true } },
+        organization: { select: { id: true, name: true } },
+        owner: { select: { id: true, firstName: true, lastName: true, email: true } },
+        source: { select: { id: true, name: true, slug: true } },
+        customFieldValues: { select: { columnId: true, value: true } },
+      },
     });
   }
 }

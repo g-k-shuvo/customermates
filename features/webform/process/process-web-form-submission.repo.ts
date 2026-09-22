@@ -1,3 +1,4 @@
+import type { LeadDto } from "@/features/leads/lead.schema";
 import type { WebFormFieldMapping } from "../ingest/field-mapping";
 
 export type PendingSubmission = {
@@ -41,4 +42,5 @@ export abstract class ProcessWebFormSubmissionRepo {
   abstract createLeadFromSubmissionUnscoped(args: CreateLeadFromSubmissionArgs): Promise<string>;
   abstract markSubmissionProcessedUnscoped(submissionId: string, leadId: string): Promise<void>;
   abstract markSubmissionFailedUnscoped(submissionId: string, error: string): Promise<void>;
+  abstract findLeadForEventUnscoped(leadId: string): Promise<LeadDto>;
 }

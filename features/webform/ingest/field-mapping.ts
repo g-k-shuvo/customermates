@@ -36,12 +36,25 @@ export function readDotPath(payload: unknown, path: string): string | null {
   return null;
 }
 
+export function splitFullName(firstName: string | null, lastName: string | null): [string | null, string | null] {
+  if (lastName?.trim()) return [firstName, lastName];
+
+  const whole = firstName?.trim();
+  if (!whole) return [firstName, lastName];
+
+  const separator = whole.search(/\s/);
+  if (separator === -1) return [whole, lastName];
+
+  return [whole.slice(0, separator), whole.slice(separator + 1).trim() || null];
+}
+
 export function mapWebFormFields(payload: unknown, mapping: WebFormFieldMapping): WebFormMappedFields {
   const read = (path: string | undefined) => (path ? readDotPath(payload, path) : null);
+  const [firstName, lastName] = splitFullName(read(mapping.firstName), read(mapping.lastName));
 
   return {
-    firstName: read(mapping.firstName),
-    lastName: read(mapping.lastName),
+    firstName,
+    lastName,
     email: read(mapping.email),
     phone: read(mapping.phone),
     organizationName: read(mapping.organizationName),

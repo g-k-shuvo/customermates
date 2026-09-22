@@ -1,8 +1,11 @@
 import type { ProcessWebFormSubmissionRepo } from "./process-web-form-submission.repo";
+import type { EventService } from "@/features/event/event.service";
 import type { Data, Validated } from "@/core/validation/validation.utils";
 
 import { z } from "zod";
 
+import { DomainEvent } from "@/features/event/domain-events";
+import { runAsBackgroundTenant } from "@/core/decorators/background-tenant";
 import { SystemInteractor } from "@/core/decorators/system-interactor.decorator";
 import { Validate } from "@/core/decorators/validate.decorator";
 import { ValidateOutput } from "@/core/decorators/validate-output.decorator";
@@ -21,7 +24,28 @@ export type ProcessWebFormSubmissionOutcome = Data<typeof ProcessWebFormSubmissi
 
 @SystemInteractor
 export class ProcessWebFormSubmissionInteractor {
-  constructor(private repo: ProcessWebFormSubmissionRepo) {}
+  constructor(
+    private repo: ProcessWebFormSubmissionRepo,
+    private eventService: EventService,
+  ) {}
+
+  private async publishLeadCreated(leadId: string, companyId: string, ownerUserId: string | null): Promise<void> {
+    const lead = await this.repo.findLeadForEventUnscoped(leadId);
+
+    if (!ownerUserId) {
+      await this.eventService.publish(
+        DomainEvent.LEAD_CREATED,
+        { entityId: lead.id, payload: lead },
+        { systemCompanyId: companyId },
+      );
+
+      return;
+    }
+
+    await runAsBackgroundTenant(ownerUserId, () =>
+      this.eventService.publish(DomainEvent.LEAD_CREATED, { entityId: lead.id, payload: lead }),
+    );
+  }
 
   @Validate(ProcessWebFormSubmissionSchema)
   @ValidateOutput(ProcessWebFormSubmissionOutcomeSchema)
@@ -61,6 +85,8 @@ export class ProcessWebFormSubmissionInteractor {
       });
 
       await this.repo.markSubmissionProcessedUnscoped(submission.id, leadId);
+
+      await this.publishLeadCreated(leadId, submission.companyId, submission.defaultOwnerId);
 
       return { ok: true as const, data: { leadId, skipped: false } };
     } catch (error) {

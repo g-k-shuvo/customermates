@@ -952,7 +952,7 @@ export const getIngestWebFormSubmissionInteractor = () =>
   new IngestWebFormSubmissionInteractor(getWebFormRepo(), getBackgroundTaskService());
 
 export const getProcessWebFormSubmissionInteractor = () =>
-  new ProcessWebFormSubmissionInteractor(getProcessWebFormSubmissionRepo());
+  new ProcessWebFormSubmissionInteractor(getProcessWebFormSubmissionRepo(), getEventService());
 
 export const getCreateWebFormSourceInteractor = () => new CreateWebFormSourceInteractor(getWebFormRepo());
 
