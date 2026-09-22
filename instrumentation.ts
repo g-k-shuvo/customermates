@@ -23,6 +23,14 @@ export async function register() {
     } satisfies Sentry.NodeOptions);
   }
 
+  if (env.NEXT_RUNTIME === "nodejs" && !env.WORKFLOW_TARGET_WORLD) {
+    const message =
+      "[instrumentation] WORKFLOW_TARGET_WORLD is unset, so the workflow runtime falls back to an in-process world, starts no worker, and accepts background jobs without ever running them. Set WORKFLOW_TARGET_WORLD=@workflow/world-postgres, WORKFLOW_POSTGRES_URL and WORKFLOW_LOCAL_BASE_URL. See .env.selfhost.template.";
+
+    console.error(message);
+    if (env.APP_MODE === "self-hosted") throw new Error(message);
+  }
+
   if (env.NEXT_RUNTIME === "nodejs" && env.WORKFLOW_TARGET_WORLD) {
     try {
       const { getWorld } = await import("workflow/runtime");

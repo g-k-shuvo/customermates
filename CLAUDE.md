@@ -5,7 +5,7 @@ Prisma 7, PostgreSQL, better-auth, Tailwind v4, MobX, TanStack Table). We are ex
 into a Pipedrive replacement for a client.
 
 **Read this file completely before writing any code.** This codebase enforces its
-architecture with ~76 automated convention tests under `tests/conventions/`. Code that
+architecture with 77 automated convention tests under `tests/conventions/`. Code that
 ignores the rules below will fail CI even when it compiles and works.
 
 ---
@@ -65,7 +65,8 @@ features/<entity>/
   __tests__/
 ```
 
-For scale: `features/deals` is 35 files, `features/services` 33, `features/tasks` 38.
+For scale: `features/deals` is 54 files, `features/services` 33, `features/tasks` 55,
+`features/mailbox` 87.
 A new entity is not a small change — budget accordingly.
 
 ### Interactors
@@ -113,14 +114,16 @@ Extend `BaseRepository` (`core/base/base-repository.ts`).
 
 ### Dependency injection
 
-`core/di.ts` — 1,514 lines, 273 hand-written factory functions, no container. Register
+`core/di.ts` — 1,877 lines, 369 hand-written factory functions, no container. Register
 every new interactor and repository here. It is the one file allowed to contain comments.
 
 ### OpenAPI
 
 - One `.openapi.ts` per operation, **in the same directory as its `.interactor.ts`**
   (`openapi-colocation.test.ts`).
-- Every route module must be represented in the spec (`rest-openapi-coverage.test.ts`).
+- Every route module under `app/api/v1` must be represented in the spec
+  (`rest-openapi-coverage.test.ts` walks only that directory; routes outside it, such as
+  `app/api/webhooks` and `app/api/cron`, are not scanned).
 - Regenerate with `yarn openapi:generate` and commit the result.
 
 ### Prisma
@@ -149,7 +152,7 @@ inline in the interactor that caused them.
 ## Licence boundaries — do not cross these
 
 - Everything outside `ee/` is **AGPL-3.0-only**. Our changes go here.
-- **`ee/` is proprietary** (335 files, Customermates Commercial License). Do not modify
+- **`ee/` is proprietary** (393 files, Customermates Commercial License). Do not modify
   anything under `ee/`, and do not make an Enterprise feature operational — unified inbox,
   connected accounts, SSO, white-labelling. `tests/conventions/open-core-license.test.ts`
   guards this.

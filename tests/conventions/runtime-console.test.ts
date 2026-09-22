@@ -10,7 +10,7 @@ const ALLOWED_CALLS = new Map<string, string[]>([
   ["features/email/email.service.ts", ["log"]],
   ["features/event/event.service.ts", ["log"]],
   ["instrumentation-client.ts", ["error"]],
-  ["instrumentation.ts", ["error", "error"]],
+  ["instrumentation.ts", ["error", "error", "error"]],
   ["workflows/capture-failure.ts", ["error", "error", "warn", "error"]],
 ]);
 
