@@ -53,6 +53,7 @@ export class PrismaCustomColumnRepo
     [EntityType.deal]: "dealId",
     [EntityType.service]: "serviceId",
     [EntityType.task]: "taskId",
+    [EntityType.lead]: "leadId",
   };
 
   readonly operatorsByType: Record<CustomColumnType, FilterOperatorKey[]> = {
@@ -431,6 +432,7 @@ export class PrismaCustomColumnRepo
       [EntityType.deal]: () => this.prisma.deal.findMany({ where: { companyId }, select: { id: true } }),
       [EntityType.service]: () => this.prisma.service.findMany({ where: { companyId }, select: { id: true } }),
       [EntityType.task]: () => this.prisma.task.findMany({ where: { companyId }, select: { id: true } }),
+      [EntityType.lead]: () => this.prisma.lead.findMany({ where: { companyId }, select: { id: true } }),
     } satisfies Record<EntityType, () => Promise<{ id: string }[]>>;
 
     const entities = await entityConfig[entityType]();

@@ -17,7 +17,7 @@ import type { Prisma } from "@/generated/prisma";
 import { Action, DealStatus, EntityType, Resource, StageKind, WidgetGroupByType } from "@/generated/prisma";
 
 import { BaseRepository } from "@/core/base/base-repository";
-import { getContactRepo, getOrganizationRepo, getDealRepo, getServiceRepo, getTaskRepo } from "@/core/di";
+import { getContactRepo, getLeadRepo, getOrganizationRepo, getDealRepo, getServiceRepo, getTaskRepo } from "@/core/di";
 import { requiresRawDimensionQuery } from "../widget-aggregation";
 
 const CUSTOM_FIELD_RELATION: Record<EntityType, keyof Prisma.CustomFieldValueWhereInput> = {
@@ -26,6 +26,7 @@ const CUSTOM_FIELD_RELATION: Record<EntityType, keyof Prisma.CustomFieldValueWhe
   [EntityType.deal]: "deal",
   [EntityType.service]: "service",
   [EntityType.task]: "task",
+  [EntityType.lead]: "lead",
 };
 
 type RawDurationRow = {
@@ -129,6 +130,8 @@ export class WidgetDataFetcher extends BaseRepository {
         return await getServiceRepo().getCount({ filters });
       case EntityType.task:
         return await getTaskRepo().getCount({ filters });
+      case EntityType.lead:
+        return await getLeadRepo().getCount({ filters });
     }
   }
 
@@ -144,6 +147,8 @@ export class WidgetDataFetcher extends BaseRepository {
         return (await getServiceRepo().buildQueryArgs({ filters }, this.accessWhere("service"))).where;
       case EntityType.task:
         return (await getTaskRepo().buildQueryArgs({ filters }, this.accessWhere("task"))).where;
+      case EntityType.lead:
+        return (await getLeadRepo().buildQueryArgs({ filters }, this.accessWhere("lead"))).where;
     }
   }
 
@@ -163,6 +168,7 @@ export class WidgetDataFetcher extends BaseRepository {
       case EntityType.deal:
         return { companyId, AND: [dealWhere, entityWhere as Prisma.DealWhereInput] };
       case EntityType.task:
+      case EntityType.lead:
         return { companyId, id: { in: [] } };
     }
   }
@@ -753,6 +759,8 @@ export class WidgetDataFetcher extends BaseRepository {
         });
       case EntityType.task:
         return this.prisma.task.count({ where: { ...(entityWhere as Prisma.TaskWhereInput), customFieldValues } });
+      case EntityType.lead:
+        return this.prisma.lead.count({ where: { ...(entityWhere as Prisma.LeadWhereInput), customFieldValues } });
     }
   }
 
@@ -778,7 +786,16 @@ export class WidgetDataFetcher extends BaseRepository {
         const tasks = await this.getTasks(filters);
         return tasks.map((t) => ({ id: t.id, name: t.name }));
       }
+      case EntityType.lead: {
+        const leads = await this.getLeads(filters);
+        return leads.map((l) => ({ id: l.id, name: l.title }));
+      }
     }
+  }
+
+  private async getLeads(filters: Filter[] | undefined) {
+    const { where, orderBy } = await getLeadRepo().buildQueryArgs({ filters }, this.accessWhere("lead"));
+    return await this.prisma.lead.findMany({ where, orderBy, select: { id: true, title: true } });
   }
 
   private async getContacts(filters: Filter[] | undefined) {

@@ -64,6 +64,7 @@ const NOT_FOUND_FAILURE_CODES = new Set<CustomErrorCode>([
   CustomErrorCode.customColumnNotFound,
   CustomErrorCode.customColumnIdNotFound,
   CustomErrorCode.dealNotFound,
+  CustomErrorCode.leadNotFound,
   CustomErrorCode.lostReasonNotFound,
   CustomErrorCode.organizationNotFound,
   CustomErrorCode.pipelineNotFound,

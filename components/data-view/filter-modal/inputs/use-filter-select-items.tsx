@@ -11,6 +11,7 @@ import {
   CustomColumnType,
   DealStatus,
   EntityType,
+  LeadStatus,
   MessagingProvider,
   MessagingThreadState,
   Status,
@@ -446,6 +447,14 @@ export function useFilterSelectItems(
           { key: DealStatus.won, value: DealStatus.won, textValue: t("Common.dealStatuses.won") },
           { key: DealStatus.lost, value: DealStatus.lost, textValue: t("Common.dealStatuses.lost") },
         ];
+      }
+
+      case FilterFieldKey.leadStatus: {
+        return Object.values(LeadStatus).map((status) => ({
+          key: status,
+          value: status,
+          textValue: t(`Common.leadStatuses.${status}`),
+        }));
       }
 
       case FilterFieldKey.rotting: {

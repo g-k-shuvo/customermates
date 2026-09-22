@@ -450,7 +450,8 @@ export class WidgetGroupingService extends BaseRepository {
         return this.accumulateCustomColumnValues(items, valueByServiceId, optionsMap);
       }
 
-      case EntityType.task: {
+      case EntityType.task:
+      case EntityType.lead: {
         return [];
       }
     }
@@ -557,6 +558,7 @@ export class WidgetGroupingService extends BaseRepository {
       case EntityType.service:
         return entity.name || entity.id;
       case EntityType.task:
+      case EntityType.lead:
         return entity.name || entity.id;
     }
   }

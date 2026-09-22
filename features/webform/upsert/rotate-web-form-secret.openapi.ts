@@ -16,6 +16,11 @@ export const rotateWebFormSecretOperation: ZodOpenApiOperationObject = {
   requestParams: {
     path: RotateWebFormSecretSchema,
   },
+  requestBody: {
+    required: false,
+    description: "This action takes no request body; the source is identified by the path.",
+    content: {},
+  },
   responses: {
     "200": {
       description: "The secret was rotated successfully.",

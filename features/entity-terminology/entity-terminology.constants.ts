@@ -17,6 +17,7 @@ export const CONFIGURABLE_TERMINOLOGY_ENTITY_TYPES = [
   EntityType.deal,
   EntityType.service,
   EntityType.task,
+  EntityType.lead,
 ] as const;
 
 export const ENTITY_TERMINOLOGY_PRESETS: Record<EntityType, string[]> = {
@@ -25,6 +26,7 @@ export const ENTITY_TERMINOLOGY_PRESETS: Record<EntityType, string[]> = {
   [EntityType.deal]: ["deal", "opportunity", "project", "job"],
   [EntityType.service]: ["service", "product", "offering", "package"],
   [EntityType.task]: ["task", "todo", "actionItem", "followUp"],
+  [EntityType.lead]: ["lead", "enquiry", "prospect", "request"],
 };
 
 export const CANONICAL_TERMINOLOGY_PRESET_KEY: Record<EntityType, string> = {
@@ -33,6 +35,7 @@ export const CANONICAL_TERMINOLOGY_PRESET_KEY: Record<EntityType, string> = {
   [EntityType.deal]: "deal",
   [EntityType.service]: "service",
   [EntityType.task]: "task",
+  [EntityType.lead]: "lead",
 };
 
 export const TERMINOLOGY_ENTITY_RESOURCE: Record<EntityType, Resource> = {
@@ -41,6 +44,7 @@ export const TERMINOLOGY_ENTITY_RESOURCE: Record<EntityType, Resource> = {
   [EntityType.deal]: Resource.deals,
   [EntityType.service]: Resource.services,
   [EntityType.task]: Resource.tasks,
+  [EntityType.lead]: Resource.leads,
 };
 
 export function isConfigurableTerminologyEntityType(entityType: EntityType): boolean {

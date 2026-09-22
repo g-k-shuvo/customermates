@@ -3,8 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { LeadStatus } from "@/generated/prisma";
 
 import { BaseCreateLeadSchema } from "../upsert/create-lead-base.schema";
-import { GetLeadsSchema } from "../get/get-leads.interactor";
+import { CreateManyLeadsSchema } from "../upsert/create-many-leads.interactor";
 import { UpdateLeadSchema } from "../upsert/update-lead.interactor";
+import { UpdateManyLeadsSchema } from "../upsert/update-many-leads.interactor";
 
 vi.mock("@/core/di", () => ({}));
 
@@ -48,15 +49,38 @@ describe("update lead schema", () => {
   });
 });
 
-describe("get leads schema", () => {
-  it("defaults the page window", () => {
-    const parsed = GetLeadsSchema.parse({});
-
-    expect(parsed.skip).toBe(0);
-    expect(parsed.take).toBe(50);
+describe("create many leads schema", () => {
+  it("rejects an empty batch", () => {
+    expect(CreateManyLeadsSchema.safeParse({ leads: [] }).success).toBe(false);
   });
 
-  it("caps the page size", () => {
-    expect(GetLeadsSchema.safeParse({ take: 500 }).success).toBe(false);
+  it("caps a batch at one hundred leads", () => {
+    const leads = Array.from({ length: 101 }, () => ({ title }));
+
+    expect(CreateManyLeadsSchema.safeParse({ leads }).success).toBe(false);
+  });
+
+  it("applies the single-lead defaults to every row", () => {
+    const parsed = CreateManyLeadsSchema.parse({ leads: [{ title }, { title, status: LeadStatus.qualified }] });
+
+    expect(parsed.leads[0].status).toBe(LeadStatus.new);
+    expect(parsed.leads[1].status).toBe(LeadStatus.qualified);
+  });
+});
+
+describe("update many leads schema", () => {
+  it("requires an id on every row", () => {
+    expect(UpdateManyLeadsSchema.safeParse({ leads: [{ title }] }).success).toBe(false);
+  });
+
+  it("accepts a partial row alongside a full one", () => {
+    const parsed = UpdateManyLeadsSchema.safeParse({
+      leads: [
+        { id: "3f4a1a52-6d0e-4f6f-9c29-3f6f0f7f5a11", status: LeadStatus.qualified },
+        { id: "5c1b2d63-7e1f-4a70-8d3a-4a7b1c8d9e22", title, value: 250 },
+      ],
+    });
+
+    expect(parsed.success).toBe(true);
   });
 });

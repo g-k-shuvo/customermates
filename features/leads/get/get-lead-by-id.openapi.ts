@@ -1,6 +1,6 @@
 import type { ZodOpenApiOperationObject } from "zod-openapi";
 
-import { LeadDtoSchema } from "../lead.schema";
+import { LeadByIdResponseSchema } from "../lead.schema";
 
 import { GetLeadByIdSchema } from "./get-lead-by-id.interactor";
 
@@ -20,7 +20,7 @@ export const getLeadByIdOperation: ZodOpenApiOperationObject = {
       description: "The lead was retrieved successfully.",
       content: {
         "application/json": {
-          schema: LeadDtoSchema.nullable(),
+          schema: LeadByIdResponseSchema,
         },
       },
     },

@@ -16,7 +16,7 @@ import type { GlobalSearchResultItem } from "@/features/search/global-search.int
 
 export type EntityDto = {
   id: string;
-  users: Array<{ id: string }>;
+  users?: Array<{ id: string }>;
   customFieldValues: CustomFieldValueDto[];
 };
 

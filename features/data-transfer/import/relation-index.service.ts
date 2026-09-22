@@ -4,7 +4,15 @@ import { EntityType } from "@/generated/prisma";
 
 import { RELATION_INDEX_LIMIT, RELATION_INDEX_PAGE_SIZE, USER_RELATION_KEY } from "../data-transfer.schema";
 import { BaseRepository } from "@/core/base/base-repository";
-import { getContactRepo, getOrganizationRepo, getDealRepo, getServiceRepo, getTaskRepo, getUserRepo } from "@/core/di";
+import {
+  getContactRepo,
+  getLeadRepo,
+  getOrganizationRepo,
+  getDealRepo,
+  getServiceRepo,
+  getTaskRepo,
+  getUserRepo,
+} from "@/core/di";
 
 type LabelledRecord = {
   id: string;
@@ -67,6 +75,8 @@ export class ImportRelationIndex extends BaseRepository {
         return (skip, take) => getServiceRepo().exportItems({ skip, take });
       case EntityType.task:
         return (skip, take) => getTaskRepo().exportItems({ skip, take });
+      case EntityType.lead:
+        return (skip, take) => getLeadRepo().exportItems({ skip, take });
     }
   }
 

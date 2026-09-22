@@ -1071,6 +1071,7 @@
       "invalidJsonBody": "The request body is not valid JSON.",
       "invalidSortField": "Sort field not found or not accessible. Available fields: {validValues}.",
       "invalidUrl": "Enter a valid URL.",
+      "leadNotFound": "Lead ID not found or not accessible.",
       "legalNoticeNotDelivered": "The current legal update has not been delivered to this workspace yet.",
       "linkedinInboxUnavailable": "This LinkedIn account has no {product} inbox. Connect the account with {product} linked to use it.",
       "linkedinProductRequiresLinkedin": "InMail and LinkedIn product options require a LinkedIn account.",
@@ -1201,6 +1202,11 @@
         "deleted": "Deal Deleted",
         "updated": "Deal Updated"
       },
+      "lead": {
+        "created": "Lead Created",
+        "deleted": "Lead Deleted",
+        "updated": "Lead Updated"
+      },
       "legal": {
         "documents_accepted": "Legal Documents Accepted",
         "notice_sent": "Legal Notice Sent"
@@ -1279,6 +1285,7 @@
         "event": "Event",
         "isPlatformOperator": "Platform operator",
         "lastActiveAt": "Last active",
+        "leadStatus": "Lead status",
         "lostReasonId": "Lost reason",
         "nextActivity": "Next activity",
         "overdue": "Overdue",
@@ -1377,6 +1384,7 @@
       "formattingLocale": "Formatting Locale",
       "groupByValue": "Grouping",
       "label": "Label",
+      "labels": "Labels",
       "lastName": "Last Name",
       "message": "Message",
       "name": "Name",
@@ -1395,12 +1403,22 @@
       "secret": "Secret",
       "status": "Status",
       "theme": "Theme",
+      "title": "Title",
       "type": "Type",
       "unavailableSelection": "Selection unavailable",
       "url": "URL",
-      "userIds": "Assigned"
+      "userIds": "Assigned",
+      "value": "Value"
     },
     "language": "Language",
+    "leadStatuses": {
+      "archived": "Archived",
+      "converted": "Converted",
+      "new": "New",
+      "qualified": "Qualified",
+      "unqualified": "Unqualified",
+      "working": "Working"
+    },
     "locales": {
       "de": "German",
       "en": "English",
@@ -1467,6 +1485,7 @@
         "avatarUrl": "Avatar",
         "channels": "Channels",
         "completedAt": "Completed",
+        "contact": "Contact",
         "contacts": "Contacts",
         "createdAt": "Created at",
         "credits": "Credits",
@@ -1499,6 +1518,7 @@
         "notes": "Notes",
         "operator": "Operator",
         "options": "Options",
+        "organization": "Organization",
         "organizations": "Organizations",
         "owner": "Owner",
         "permissions": "Permissions",
@@ -1516,6 +1536,7 @@
         "tags": "Tags",
         "target": "Target",
         "tasks": "Tasks",
+        "title": "Title",
         "totalQuantity": "Service Quantity",
         "totalValue": "Deal Value",
         "trialEnd": "Trial ends",
@@ -1524,6 +1545,7 @@
         "url": "URL",
         "user": "User",
         "users": "Assigned",
+        "value": "Value",
         "weightedValue": "Weighted Value",
         "workspace": "Workspace"
       },
@@ -2177,6 +2199,24 @@
           "singular": "Project"
         }
       },
+      "lead": {
+        "enquiry": {
+          "plural": "Enquiries",
+          "singular": "Enquiry"
+        },
+        "lead": {
+          "plural": "Leads",
+          "singular": "Lead"
+        },
+        "prospect": {
+          "plural": "Prospects",
+          "singular": "Prospect"
+        },
+        "request": {
+          "plural": "Requests",
+          "singular": "Request"
+        }
+      },
       "organization": {
         "account": {
           "plural": "Accounts",
@@ -2512,6 +2552,11 @@
     "person": "From: {personName}",
     "preview": "A new lead arrived from {sourceName}",
     "subject": "New lead: {leadTitle}"
+  },
+  "LeadDetail": {
+    "owner": "Owner",
+    "source": "Source",
+    "title": "Lead"
   },
   "LegalDocumentNotice": {
     "contractBody": "We updated the legal documents listed below. Please review them for the business customer and arrange electronic acceptance by an authorised system administrator.",

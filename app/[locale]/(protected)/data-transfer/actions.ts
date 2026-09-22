@@ -18,11 +18,13 @@ import { serializeResult, serializeRowResult } from "@/core/utils/action-result"
 import {
   getCreateManyContactsInteractor,
   getCreateManyDealsInteractor,
+  getCreateManyLeadsInteractor,
   getCreateManyOrganizationsInteractor,
   getCreateManyServicesInteractor,
   getCreateManyTasksInteractor,
   getDryRunImportContactsInteractor,
   getDryRunImportDealsInteractor,
+  getDryRunImportLeadsInteractor,
   getDryRunImportOrganizationsInteractor,
   getDryRunImportServicesInteractor,
   getDryRunImportTasksInteractor,
@@ -30,6 +32,7 @@ import {
   getMatchImportKeysInteractor,
   getUpdateManyContactsInteractor,
   getUpdateManyDealsInteractor,
+  getUpdateManyLeadsInteractor,
   getUpdateManyOrganizationsInteractor,
   getUpdateManyServicesInteractor,
   getUpdateManyTasksInteractor,
@@ -62,6 +65,8 @@ function dryRunInvoker(entityType: EntityType): DryRunInvoker {
       return (data) => getDryRunImportServicesInteractor().invoke(data);
     case EntityType.task:
       return (data) => getDryRunImportTasksInteractor().invoke(data);
+    case EntityType.lead:
+      return (data) => getDryRunImportLeadsInteractor().invoke(data);
   }
 }
 
@@ -96,6 +101,11 @@ function commitInvoker(entityType: EntityType, mode: ImportMode): RowsInvoker {
         mode === "create"
           ? getCreateManyTasksInteractor().invoke(collectionPayload(entityType, rows))
           : getUpdateManyTasksInteractor().invoke(collectionPayload(entityType, rows));
+    case EntityType.lead:
+      return (rows) =>
+        mode === "create"
+          ? getCreateManyLeadsInteractor().invoke(collectionPayload(entityType, rows))
+          : getUpdateManyLeadsInteractor().invoke(collectionPayload(entityType, rows));
   }
 }
 

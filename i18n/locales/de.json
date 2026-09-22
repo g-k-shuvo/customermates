@@ -1071,6 +1071,7 @@
       "invalidJsonBody": "Der Request-Body ist kein gültiges JSON.",
       "invalidSortField": "Sortierfeld nicht gefunden oder nicht zugänglich. Verfügbare Felder: {validValues}.",
       "invalidUrl": "Gib eine gültige URL ein.",
+      "leadNotFound": "Lead-ID nicht gefunden oder nicht zugänglich.",
       "legalNoticeNotDelivered": "Die aktuelle rechtliche Änderung wurde diesem Workspace noch nicht zugestellt.",
       "linkedinInboxUnavailable": "Dieses LinkedIn-Konto hat keinen {product}-Posteingang. Verbinde das Konto mit {product}, um ihn zu nutzen.",
       "linkedinProductRequiresLinkedin": "InMail- und LinkedIn-Produktoptionen brauchen ein LinkedIn-Konto.",
@@ -1201,6 +1202,11 @@
         "deleted": "Deal gelöscht",
         "updated": "Deal aktualisiert"
       },
+      "lead": {
+        "created": "Lead erstellt",
+        "deleted": "Lead gelöscht",
+        "updated": "Lead aktualisiert"
+      },
       "legal": {
         "documents_accepted": "Rechtsdokumente angenommen",
         "notice_sent": "Rechtsmitteilung versandt"
@@ -1279,6 +1285,7 @@
         "event": "Ereignis",
         "isPlatformOperator": "Plattform-Operator",
         "lastActiveAt": "Zuletzt aktiv",
+        "leadStatus": "Lead-Status",
         "lostReasonId": "Verlustgrund",
         "nextActivity": "Nächste Aktivität",
         "overdue": "Überfällig",
@@ -1377,6 +1384,7 @@
       "formattingLocale": "Regionales Format",
       "groupByValue": "Gruppierung",
       "label": "Bezeichnung",
+      "labels": "Labels",
       "lastName": "Nachname",
       "message": "Nachricht",
       "name": "Name",
@@ -1395,12 +1403,22 @@
       "secret": "Secret",
       "status": "Status",
       "theme": "Darstellung",
+      "title": "Titel",
       "type": "Typ",
       "unavailableSelection": "Auswahl nicht verfügbar",
       "url": "URL",
-      "userIds": "Zugewiesen"
+      "userIds": "Zugewiesen",
+      "value": "Wert"
     },
     "language": "Sprache",
+    "leadStatuses": {
+      "archived": "Archiviert",
+      "converted": "Konvertiert",
+      "new": "Neu",
+      "qualified": "Qualifiziert",
+      "unqualified": "Nicht qualifiziert",
+      "working": "In Bearbeitung"
+    },
     "locales": {
       "de": "Deutsch",
       "en": "Englisch",
@@ -1467,6 +1485,7 @@
         "avatarUrl": "Avatar",
         "channels": "Kanäle",
         "completedAt": "Abgeschlossen",
+        "contact": "Kontakt",
         "contacts": "Kontakte",
         "createdAt": "Erstellt am",
         "credits": "Guthaben",
@@ -1499,6 +1518,7 @@
         "notes": "Notizen",
         "operator": "Operator",
         "options": "Optionen",
+        "organization": "Organisation",
         "organizations": "Organisationen",
         "owner": "Inhaber",
         "permissions": "Berechtigungen",
@@ -1516,6 +1536,7 @@
         "tags": "Schlagwörter",
         "target": "Ziel",
         "tasks": "Aufgaben",
+        "title": "Titel",
         "totalQuantity": "Service-Anzahl",
         "totalValue": "Deal-Wert",
         "trialEnd": "Testphase endet",
@@ -1524,6 +1545,7 @@
         "url": "URL",
         "user": "Benutzer",
         "users": "Zugewiesen",
+        "value": "Wert",
         "weightedValue": "Gewichteter Wert",
         "workspace": "Arbeitsbereich"
       },
@@ -2177,6 +2199,24 @@
           "singular": "Projekt"
         }
       },
+      "lead": {
+        "enquiry": {
+          "plural": "Anfragen",
+          "singular": "Anfrage"
+        },
+        "lead": {
+          "plural": "Leads",
+          "singular": "Lead"
+        },
+        "prospect": {
+          "plural": "Interessenten",
+          "singular": "Interessent"
+        },
+        "request": {
+          "plural": "Kontaktanfragen",
+          "singular": "Kontaktanfrage"
+        }
+      },
       "organization": {
         "account": {
           "plural": "Accounts",
@@ -2512,6 +2552,11 @@
     "person": "Von: {personName}",
     "preview": "Ein neuer Lead ist über {sourceName} eingegangen",
     "subject": "Neuer Lead: {leadTitle}"
+  },
+  "LeadDetail": {
+    "owner": "Zuständig",
+    "source": "Quelle",
+    "title": "Lead"
   },
   "LegalDocumentNotice": {
     "contractBody": "Wir haben die unten aufgeführten Rechtsdokumente aktualisiert. Bitte prüfen Sie diese für den Geschäftskunden und veranlassen Sie die elektronische Annahme durch einen berechtigten Systemadministrator.",

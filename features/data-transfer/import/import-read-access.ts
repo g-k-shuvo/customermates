@@ -8,6 +8,7 @@ export const IMPORT_READ_RESOURCE: Record<EntityType, Resource> = {
   [EntityType.deal]: Resource.deals,
   [EntityType.service]: Resource.services,
   [EntityType.task]: Resource.tasks,
+  [EntityType.lead]: Resource.leads,
 };
 
 export async function assertImportReadable(userService: UserService, entityType: EntityType): Promise<void> {

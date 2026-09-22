@@ -42,6 +42,13 @@ import {
   TASK_DETAIL_SECTION,
 } from "@/app/[locale]/(protected)/tasks/components/task-detail-personalization";
 import { getSystemTaskNameTranslationKey } from "@/app/[locale]/(protected)/tasks/components/system-task.config";
+import { LeadDetailView } from "@/app/[locale]/(protected)/leads/components/lead-detail-view";
+import { LeadDetailSummary } from "@/app/[locale]/(protected)/leads/components/lead-detail-summary";
+import {
+  LEAD_DETAIL_FIELD,
+  LEAD_DETAIL_P13N_ID,
+  LEAD_DETAIL_SECTION,
+} from "@/app/[locale]/(protected)/leads/components/lead-detail-personalization";
 
 type Translate = (key: string) => string;
 type AnyDetailStore = BaseCustomColumnEntityModalStore<any, any>;
@@ -232,5 +239,25 @@ export const ENTITY_DETAIL: Record<EntityType, EntityDetailConfig> = {
       return { name: key ? t(key) : task.name || fallbackName };
     },
     canDelete: (store) => Boolean((store as { isCustomTask?: boolean }).isCustomTask),
+  },
+  [EntityType.lead]: {
+    store: (root) => root.leadDetailStore,
+    DetailView: LeadDetailView,
+    DetailSummary: LeadDetailSummary,
+    personalization: (customColumns, canAccess) =>
+      detailPersonalization({
+        p13nId: LEAD_DETAIL_P13N_ID,
+        builtInFieldIds: Object.values(LEAD_DETAIL_FIELD),
+        defaultBuiltInFieldIds: [LEAD_DETAIL_FIELD.status, LEAD_DETAIL_FIELD.source, LEAD_DETAIL_FIELD.ownerUserId],
+        gatedResources: {
+          [LEAD_DETAIL_FIELD.contactId]: Resource.contacts,
+          [LEAD_DETAIL_FIELD.organizationId]: Resource.organizations,
+          [LEAD_DETAIL_FIELD.ownerUserId]: Resource.users,
+        },
+        customColumns,
+        sectionIds: Object.values(LEAD_DETAIL_SECTION),
+        canAccess,
+      }),
+    identity: (lead, _t, fallbackName) => ({ name: lead.title || fallbackName }),
   },
 };

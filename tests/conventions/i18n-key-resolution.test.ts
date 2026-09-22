@@ -11,6 +11,7 @@ import {
   AggregationType,
   ConnectedAccountStatus,
   CustomColumnType,
+  LeadStatus,
   MessagingProvider,
   MessagingThreadState,
   Resource,
@@ -105,6 +106,9 @@ const ENTITLEMENT_DENIAL_KEYS = [
 ] as const;
 const FORM_FIELD_INPUT_KEYS = [
   "Common.inputs.amount",
+  "Common.inputs.labels",
+  "Common.inputs.title",
+  "Common.inputs.value",
   "Common.inputs.avatarUrl",
   "Common.inputs.company",
   "Common.inputs.confirmEmail",
@@ -158,6 +162,7 @@ const TABLE_COLUMN_KEYS = [
   "Common.table.columns.weightedValue",
   "Common.table.columns.avatarUrl",
   "Common.table.columns.channels",
+  "Common.table.columns.contact",
   "Common.table.columns.contacts",
   "Common.table.columns.createdAt",
   "Common.table.columns.credits",
@@ -184,8 +189,11 @@ const TABLE_COLUMN_KEYS = [
   "Common.table.columns.lastRequest",
   "Common.table.columns.lostReason",
   "Common.table.columns.name",
+  "Common.table.columns.title",
+  "Common.table.columns.value",
   "Common.table.columns.notes",
   "Common.table.columns.options",
+  "Common.table.columns.organization",
   "Common.table.columns.organizations",
   "Common.table.columns.permissions",
   "Common.table.columns.provider",
@@ -222,6 +230,7 @@ const TABLE_COLUMN_KEYS = [
 const PROVIDER_KEYS = Object.values(MessagingProvider).map((provider) => `Common.providers.${provider}`);
 const IMPORT_ISSUE_KEYS = IMPORT_ISSUE_CODES.map((code) => `DataTransfer.import.issues.${code}`);
 const USER_STATUS_KEYS = Object.values(Status).map((status) => `Common.userStatuses.${status}`);
+const LEAD_STATUS_KEYS = Object.values(LeadStatus).map((status) => `Common.leadStatuses.${status}`);
 const LOCALE_KEYS = [...ROUTING_LOCALES, "system"].map((locale) => `Common.locales.${locale}`);
 const THEME_KEYS = Object.values(Theme).map((theme) => `Common.themes.${theme}`);
 const FILTER_OPERATOR_KEYS = Object.values(FilterOperatorKey).map((operator) => `Common.filters.operators.${operator}`);
@@ -447,6 +456,7 @@ const DYNAMIC_TEMPLATE_CONSUMERS = new Map<string, readonly string[]>([
   ["Common.providers.${*}", PROVIDER_KEYS],
   ["DataTransfer.import.issues.${*}", IMPORT_ISSUE_KEYS],
   ["Common.themes.${*}", THEME_KEYS],
+  ["Common.leadStatuses.${*}", LEAD_STATUS_KEYS],
   ["Common.userStatuses.${*}", USER_STATUS_KEYS],
   ["ConnectedAccountsCard.statusLabels.${*}", CONNECTED_ACCOUNT_STATUS_KEYS],
   ["Dashboard.displayTypes.${*}", DISPLAY_TYPE_KEYS],
@@ -524,6 +534,10 @@ const DYNAMIC_SITE_CONSUMERS = new Map<string, readonly string[]>([
 const ENFORCED = true;
 
 export const DYNAMIC_KEY_SITES = [
+  "app/[locale]/(protected)/leads/components/lead-detail-summary.tsx :: t :: Common.leadStatuses.${fetchedEntity.status}",
+  "app/[locale]/(protected)/leads/components/lead-detail-view.tsx :: t :: Common.leadStatuses.${status}",
+  "app/[locale]/(protected)/leads/components/use-lead-columns.tsx :: t :: Common.leadStatuses.${row.original.status}",
+  "components/data-view/filter-modal/inputs/use-filter-select-items.tsx :: t :: Common.leadStatuses.${status}",
   "app/[locale]/(protected)/operator/components/workspaces/operator-workspace-modal.tsx :: t :: Common.providers.${channel.provider}",
   "app/[locale]/(protected)/operator/components/users/use-operator-user-columns.tsx :: t :: Common.userStatuses.${row.original.status}",
   "app/[locale]/(protected)/operator/components/users/use-operator-user-columns.tsx :: t :: Subscription.planNames.${row.original.plan}",

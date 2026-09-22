@@ -27,6 +27,7 @@ import {
   ShieldCheck,
   TrendingUp,
   UserCircle,
+  UserPlus,
   Users,
 } from "lucide-react";
 import { Resource, Theme as ThemeEnum } from "@/generated/prisma";
@@ -208,6 +209,13 @@ const FullAppSidebar = observer(
           label: t("NavigationBar.crm"),
           items: [
             {
+              key: "leads",
+              title: plural(EntityType.lead),
+              href: "/leads",
+              icon: UserPlus,
+              visible: canAccess(Resource.leads),
+            },
+            {
               key: "contacts",
               title: plural(EntityType.contact),
               href: "/contacts",
@@ -337,6 +345,14 @@ const FullAppSidebar = observer(
         ];
 
     const addItems = [
+      {
+        resource: Resource.leads,
+        key: "add_lead",
+        label: t("NavigationBar.addEntity", {
+          entity: singular(EntityType.lead),
+        }),
+        entity: EntityType.lead,
+      },
       {
         resource: Resource.contacts,
         key: "add_contact",

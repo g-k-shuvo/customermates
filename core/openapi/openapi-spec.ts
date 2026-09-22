@@ -28,6 +28,9 @@ import { getWebFormSourcesOperation } from "@/features/webform/get/get-web-form-
 import { createWebFormSourceOperation } from "@/features/webform/upsert/create-web-form-source.openapi";
 import { rotateWebFormSecretOperation } from "@/features/webform/upsert/rotate-web-form-secret.openapi";
 import { getLeadsOperation } from "@/features/leads/get/get-leads.openapi";
+import { getLeadsConfigurationOperation } from "@/features/leads/get/get-leads-configuration.openapi";
+import { createManyLeadsOperation } from "@/features/leads/upsert/create-many-leads.openapi";
+import { updateManyLeadsOperation } from "@/features/leads/upsert/update-many-leads.openapi";
 import { getLeadByIdOperation } from "@/features/leads/get/get-lead-by-id.openapi";
 import { createLeadOperation } from "@/features/leads/upsert/create-lead.openapi";
 import { updateLeadOperation } from "@/features/leads/upsert/update-lead.openapi";
@@ -167,7 +170,6 @@ import { CreateLeadSchema } from "@/features/leads/upsert/create-lead.interactor
 import { UpdateLeadSchema } from "@/features/leads/upsert/update-lead.interactor";
 import { DeleteLeadSchema } from "@/features/leads/delete/delete-lead.interactor";
 import { GetLeadByIdSchema } from "@/features/leads/get/get-lead-by-id.interactor";
-import { GetLeadsSchema } from "@/features/leads/get/get-leads.interactor";
 import { CreateDealSchema } from "@/features/deals/upsert/create-deal.interactor";
 import { CreateManyDealsSchema } from "@/features/deals/upsert/create-many-deals.interactor";
 import { UpdateDealSchema } from "@/features/deals/upsert/update-deal.interactor";
@@ -292,8 +294,15 @@ export function generateOpenApiSpec() {
       "/v1/leads": {
         post: createLeadOperation,
       },
+      "/v1/leads/many": {
+        post: createManyLeadsOperation,
+        put: updateManyLeadsOperation,
+      },
       "/v1/leads/search": {
         post: getLeadsOperation,
+      },
+      "/v1/leads/configuration": {
+        get: getLeadsConfigurationOperation,
       },
       "/v1/leads/{id}": {
         get: getLeadByIdOperation,
@@ -621,7 +630,6 @@ export function generateOpenApiSpec() {
         RotateWebFormSecretSchema,
         DeleteLeadSchema,
         GetLeadByIdSchema,
-        GetLeadsSchema,
         CreateLeadSchema,
         UpdateLeadSchema,
         DeleteDealSchema,

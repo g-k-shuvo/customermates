@@ -13,6 +13,7 @@ import {
   getExportDealsPageInteractor,
   getExportOrganizationsPageInteractor,
   getExportServicesPageInteractor,
+  getExportLeadsPageInteractor,
   getExportTasksPageInteractor,
 } from "@/core/di";
 import {
@@ -50,6 +51,8 @@ function invokerFor(entityType: EntityType): PageInvoker {
       return (data) => getExportServicesPageInteractor().invoke(data);
     case EntityType.task:
       return (data) => getExportTasksPageInteractor().invoke(data);
+    case EntityType.lead:
+      return (data) => getExportLeadsPageInteractor().invoke(data);
   }
 }
 

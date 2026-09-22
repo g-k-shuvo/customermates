@@ -7,7 +7,7 @@ import { BaseRepository } from "@/core/base/base-repository";
 import { channelClass } from "@/ee/messaging/provider";
 import { normalizeChannelValue } from "@/features/contacts/channel-value";
 
-type KeyModel = "contact" | "organization" | "deal" | "service" | "task";
+type KeyModel = "contact" | "organization" | "deal" | "service" | "task" | "lead";
 
 type KeyedRow = { id: string } & Record<string, unknown>;
 
@@ -17,6 +17,7 @@ const KEY_MODEL: Record<EntityType, KeyModel> = {
   [EntityType.deal]: "deal",
   [EntityType.service]: "service",
   [EntityType.task]: "task",
+  [EntityType.lead]: "lead",
 };
 
 function valuesByComparable(values: string[]): Map<string, string[]> {
@@ -103,6 +104,7 @@ export class ImportKeyMatcher extends BaseRepository {
         dealId: true,
         serviceId: true,
         taskId: true,
+        leadId: true,
       },
     });
 
@@ -111,6 +113,7 @@ export class ImportKeyMatcher extends BaseRepository {
       if (entityType === EntityType.organization) return row.organizationId;
       if (entityType === EntityType.deal) return row.dealId;
       if (entityType === EntityType.service) return row.serviceId;
+      if (entityType === EntityType.lead) return row.leadId;
 
       return row.taskId;
     };
@@ -137,6 +140,8 @@ export class ImportKeyMatcher extends BaseRepository {
         return { service: this.accessWhere("service") };
       case EntityType.task:
         return { task: this.accessWhere("task") };
+      case EntityType.lead:
+        return { lead: this.accessWhere("lead") };
     }
   }
 

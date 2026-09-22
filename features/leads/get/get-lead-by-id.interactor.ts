@@ -1,10 +1,11 @@
 import type { Data, Validated } from "@/core/validation/validation.utils";
 
 import { z } from "zod";
-import { Resource, Action } from "@/generated/prisma";
+import { Resource, Action, EntityType } from "@/generated/prisma";
 
-import { type LeadDto, LeadDtoSchema } from "../lead.schema";
+import { type LeadDto, type LeadByIdResponse, LeadByIdResponseSchema } from "../lead.schema";
 
+import { type CustomColumnDto } from "@/features/custom-column/custom-column.schema";
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
 import { AllowInDemoMode } from "@/core/decorators/allow-in-demo-mode.decorator";
 import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
@@ -20,6 +21,10 @@ export abstract class GetLeadByIdRepo {
   abstract getLeadById(id: string): Promise<LeadDto | null>;
 }
 
+export abstract class LeadCustomColumnRepo {
+  abstract findByEntityType(entityType: EntityType): Promise<CustomColumnDto[]>;
+}
+
 @AllowInDemoMode
 @TenantInteractor({
   permissions: [
@@ -28,14 +33,22 @@ export abstract class GetLeadByIdRepo {
   ],
   condition: "OR",
 })
-export class GetLeadByIdInteractor extends AuthenticatedInteractor<GetLeadByIdData, LeadDto | null> {
-  constructor(private repo: GetLeadByIdRepo) {
+export class GetLeadByIdInteractor extends AuthenticatedInteractor<GetLeadByIdData, LeadByIdResponse> {
+  constructor(
+    private repo: GetLeadByIdRepo,
+    private customColumnsRepo: LeadCustomColumnRepo,
+  ) {
     super();
   }
 
   @Validate(GetLeadByIdSchema)
-  @ValidateOutput(LeadDtoSchema.nullable())
-  async invoke(data: GetLeadByIdData): Validated<LeadDto | null> {
-    return { ok: true as const, data: await this.repo.getLeadById(data.id) };
+  @ValidateOutput(LeadByIdResponseSchema)
+  async invoke(data: GetLeadByIdData): Validated<LeadByIdResponse> {
+    const [lead, customColumns] = await Promise.all([
+      this.repo.getLeadById(data.id),
+      this.customColumnsRepo.findByEntityType(EntityType.lead),
+    ]);
+
+    return { ok: true as const, data: { lead, customColumns } };
   }
 }

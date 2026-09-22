@@ -1071,6 +1071,7 @@
       "invalidJsonBody": "Il corpo della richiesta non è un JSON valido.",
       "invalidSortField": "Campo di ordinamento non trovato o non accessibile. Campi disponibili: {validValues}.",
       "invalidUrl": "Inserisci un URL valido.",
+      "leadNotFound": "ID lead non trovato o non accessibile.",
       "legalNoticeNotDelivered": "L’aggiornamento legale corrente non è ancora stato consegnato a questo spazio di lavoro.",
       "linkedinInboxUnavailable": "Questo account LinkedIn non ha una posta in arrivo {product}. Collega l'account con {product} associato per usarla.",
       "linkedinProductRequiresLinkedin": "Le opzioni InMail e prodotto LinkedIn richiedono un account LinkedIn.",
@@ -1201,6 +1202,11 @@
         "deleted": "Trattativa eliminata",
         "updated": "Trattativa aggiornata"
       },
+      "lead": {
+        "created": "Lead creato",
+        "deleted": "Lead eliminato",
+        "updated": "Lead aggiornato"
+      },
       "legal": {
         "documents_accepted": "Documenti legali accettati",
         "notice_sent": "Avviso legale inviato"
@@ -1279,6 +1285,7 @@
         "event": "Evento",
         "isPlatformOperator": "Operatore di piattaforma",
         "lastActiveAt": "Ultima attività",
+        "leadStatus": "Stato del lead",
         "lostReasonId": "Motivo di perdita",
         "nextActivity": "Prossima attività",
         "overdue": "In ritardo",
@@ -1377,6 +1384,7 @@
       "formattingLocale": "Formato regionale",
       "groupByValue": "Raggruppamento",
       "label": "Etichetta",
+      "labels": "Etichette",
       "lastName": "Cognome",
       "message": "Messaggio",
       "name": "Nome",
@@ -1395,12 +1403,22 @@
       "secret": "Segreto",
       "status": "Stato",
       "theme": "Tema",
+      "title": "Titolo",
       "type": "Tipo",
       "unavailableSelection": "Selezione non disponibile",
       "url": "URL",
-      "userIds": "Assegnato a"
+      "userIds": "Assegnato a",
+      "value": "Valore"
     },
     "language": "Lingua",
+    "leadStatuses": {
+      "archived": "Archiviato",
+      "converted": "Convertito",
+      "new": "Nuovo",
+      "qualified": "Qualificato",
+      "unqualified": "Non qualificato",
+      "working": "In lavorazione"
+    },
     "locales": {
       "de": "Tedesco",
       "en": "Inglese",
@@ -1467,6 +1485,7 @@
         "avatarUrl": "Avatar",
         "channels": "Canali",
         "completedAt": "Completata",
+        "contact": "Contatto",
         "contacts": "Contatti",
         "createdAt": "Creato il",
         "credits": "Crediti",
@@ -1499,6 +1518,7 @@
         "notes": "Note",
         "operator": "Operatore",
         "options": "Opzioni",
+        "organization": "Organizzazione",
         "organizations": "Organizzazioni",
         "owner": "Proprietario",
         "permissions": "Autorizzazioni",
@@ -1516,6 +1536,7 @@
         "tags": "Etichette",
         "target": "Destinazione",
         "tasks": "Attività",
+        "title": "Titolo",
         "totalQuantity": "Quantità di servizi",
         "totalValue": "Valore della trattativa",
         "trialEnd": "Fine prova",
@@ -1524,6 +1545,7 @@
         "url": "URL",
         "user": "Utente",
         "users": "Assegnato a",
+        "value": "Valore",
         "weightedValue": "Valore ponderato",
         "workspace": "Area di lavoro"
       },
@@ -2177,6 +2199,24 @@
           "singular": "Progetto"
         }
       },
+      "lead": {
+        "enquiry": {
+          "plural": "Richieste",
+          "singular": "Richiesta"
+        },
+        "lead": {
+          "plural": "Lead",
+          "singular": "Lead"
+        },
+        "prospect": {
+          "plural": "Potenziali clienti",
+          "singular": "Potenziale cliente"
+        },
+        "request": {
+          "plural": "Contatti in entrata",
+          "singular": "Contatto in entrata"
+        }
+      },
       "organization": {
         "account": {
           "plural": "Account",
@@ -2512,6 +2552,11 @@
     "person": "Da: {personName}",
     "preview": "È arrivato un nuovo lead da {sourceName}",
     "subject": "Nuovo lead: {leadTitle}"
+  },
+  "LeadDetail": {
+    "owner": "Responsabile",
+    "source": "Origine",
+    "title": "Lead"
   },
   "LegalDocumentNotice": {
     "contractBody": "Abbiamo aggiornato i documenti legali elencati di seguito. Esaminali per il cliente aziendale e fai in modo che un amministratore di sistema autorizzato li accetti elettronicamente.",

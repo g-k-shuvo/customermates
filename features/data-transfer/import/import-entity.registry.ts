@@ -65,6 +65,7 @@ export const IMPORT_KEY_FIELDS: Record<EntityType, string[]> = {
   [EntityType.deal]: ["name"],
   [EntityType.service]: ["name"],
   [EntityType.task]: ["name"],
+  [EntityType.lead]: ["title"],
 };
 
 export const IMPORT_ENTITIES: Record<EntityType, ImportEntityDescriptor> = {
@@ -141,6 +142,16 @@ export const IMPORT_ENTITIES: Record<EntityType, ImportEntityDescriptor> = {
       relation("organizationIds", "organization", "Common.table.columns.organizations"),
       relation("dealIds", "deal", "Common.table.columns.deals"),
       relation("serviceIds", "service", "Common.table.columns.services"),
+    ],
+  },
+  [EntityType.lead]: {
+    entityType: EntityType.lead,
+    collectionKey: "leads",
+    supportsIdentifiers: false,
+    fields: [
+      { key: "title", labelKey: "Common.table.columns.title", kind: "text", requiredOnCreate: true },
+      NOTES_FIELD,
+      { key: "value", labelKey: "Common.table.columns.value", kind: "number", requiredOnCreate: false },
     ],
   },
 };

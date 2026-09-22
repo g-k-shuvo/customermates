@@ -209,6 +209,7 @@ const ChartWidgetInputSchema = z
         [EntityType.deal]: WidgetGroupByType.deal,
         [EntityType.service]: WidgetGroupByType.service,
         [EntityType.task]: undefined,
+        [EntityType.lead]: undefined,
       };
 
       if (data.entityType === EntityType.task) {

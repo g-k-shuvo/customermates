@@ -165,6 +165,7 @@ export class UpsertCustomColumnInteractor extends AuthenticatedInteractor<Upsert
       [EntityType.deal]: Resource.deals,
       [EntityType.service]: Resource.services,
       [EntityType.task]: Resource.tasks,
+      [EntityType.lead]: Resource.leads,
     };
 
     const action = data.id ? Action.update : Action.create;

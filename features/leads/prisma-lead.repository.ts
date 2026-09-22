@@ -1,19 +1,40 @@
+import type { Prisma } from "@/generated/prisma";
 import type { RepoArgs } from "@/core/utils/types";
+import type { ExportPageParams, ExportRecordsRepo } from "@/core/base/base-export-records-page.interactor";
+import type { GetConfigurationRepo } from "@/core/base/base-get-configuration.interactor";
+import type { GetQueryParams } from "@/core/base/base-get.schema";
 import type { GetLeadByIdRepo } from "./get/get-lead-by-id.interactor";
 import type { GetLeadsRepo } from "./get/get-leads.interactor";
+import type { GetWidgetFilterableFieldsLeadRepo } from "../widget/get-widget-filterable-fields.interactor";
 import type { CreateLeadRepo } from "./upsert/create-lead.repo";
 import type { UpdateLeadRepo } from "./upsert/update-lead.repo";
 import type { DeleteLeadRepo } from "./delete/delete-lead.repo";
+import type { FindLeadsByIdsRepo } from "./find-leads-by-ids.repo";
 import type { LeadNotificationRecipient, LeadNotificationRepo } from "./listener/lead-notification.repo";
 
-import { type LeadDto, type LeadListResponse } from "./lead.schema";
+import { EntityType, Resource } from "@/generated/prisma";
+
+import { type LeadDto } from "./lead.schema";
 
 import { BaseRepository } from "@/core/base/base-repository";
 import { Transaction } from "@/core/decorators/transaction.decorator";
+import { FilterFieldKey } from "@/core/types/filter-field-key";
+import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
+import { getCustomColumnRepo } from "@/core/di";
 
 export class PrismaLeadRepo
   extends BaseRepository
-  implements GetLeadByIdRepo, GetLeadsRepo, CreateLeadRepo, UpdateLeadRepo, DeleteLeadRepo, LeadNotificationRepo
+  implements
+    GetLeadByIdRepo,
+    GetLeadsRepo,
+    GetConfigurationRepo,
+    GetWidgetFilterableFieldsLeadRepo,
+    CreateLeadRepo,
+    UpdateLeadRepo,
+    DeleteLeadRepo,
+    FindLeadsByIdsRepo,
+    LeadNotificationRepo,
+    ExportRecordsRepo<LeadDto>
 {
   private get leadSelect() {
     return {
@@ -33,7 +54,77 @@ export class PrismaLeadRepo
       organization: { select: { id: true, name: true } },
       owner: { select: { id: true, firstName: true, lastName: true, email: true } },
       source: { select: { id: true, name: true, slug: true } },
-    };
+      customFieldValues: { select: { columnId: true, value: true } },
+    } as const;
+  }
+
+  getSearchableFields() {
+    return [{ field: "title" }];
+  }
+
+  getSortableFields() {
+    return [
+      { field: "title", resolvedFields: ["title"] },
+      { field: "status", resolvedFields: ["status"] },
+      { field: "value", resolvedFields: ["value"] },
+      { field: "createdAt", resolvedFields: ["createdAt"] },
+      { field: "updatedAt", resolvedFields: ["updatedAt"] },
+    ];
+  }
+
+  async getFilterableFields() {
+    if (!this.canAccess(Resource.leads)) return [];
+
+    const customFields = await getCustomColumnRepo().getFilterableCustomFields(EntityType.lead);
+
+    return [
+      { field: FilterFieldKey.leadStatus, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.leadStatus] },
+      ...customFields,
+      { field: FilterFieldKey.updatedAt, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.updatedAt] },
+      { field: FilterFieldKey.createdAt, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.createdAt] },
+    ];
+  }
+
+  async getCustomColumns() {
+    return getCustomColumnRepo().findByEntityType(EntityType.lead);
+  }
+
+  async getItems(params: GetQueryParams) {
+    return this.list({
+      model: "lead",
+      baseWhere: this.accessWhere("lead"),
+      select: this.leadSelect,
+      params,
+      map: (lead: Prisma.LeadGetPayload<{ select: PrismaLeadRepo["leadSelect"] }>) => lead,
+    });
+  }
+
+  async getCount(params: GetQueryParams) {
+    const { where } = await this.buildQueryArgs(params, this.accessWhere("lead"));
+
+    return this.prisma.lead.count({ where });
+  }
+
+  private exportWhere(selectedIds?: string[]): Prisma.LeadWhereInput {
+    const scoped = this.accessWhere("lead");
+
+    return selectedIds && selectedIds.length > 0 ? { ...scoped, id: { in: selectedIds } } : scoped;
+  }
+
+  async exportItems(params: ExportPageParams) {
+    return this.list({
+      model: "lead",
+      baseWhere: this.exportWhere(params.selectedIds),
+      select: this.leadSelect,
+      params,
+      map: (lead: Prisma.LeadGetPayload<{ select: PrismaLeadRepo["leadSelect"] }>) => lead,
+    });
+  }
+
+  async exportCount(params: ExportPageParams) {
+    const { where } = await this.buildQueryArgs(params, this.exportWhere(params.selectedIds));
+
+    return this.prisma.lead.count({ where });
   }
 
   async getLeadById(id: string): Promise<LeadDto | null> {
@@ -43,26 +134,15 @@ export class PrismaLeadRepo
     });
   }
 
-  async getLeads(args: RepoArgs<GetLeadsRepo, "getLeads">): Promise<LeadListResponse> {
-    const where = {
-      ...this.accessWhere("lead"),
-      ...(args.status ? { status: args.status } : {}),
-      ...(args.ownerUserId ? { ownerUserId: args.ownerUserId } : {}),
-      ...(args.sourceId ? { sourceId: args.sourceId } : {}),
-    };
+  async findIds(ids: Set<string>) {
+    if (ids.size === 0) return new Set<string>();
 
-    const [leads, total] = await Promise.all([
-      this.prisma.lead.findMany({
-        where,
-        select: this.leadSelect,
-        orderBy: { createdAt: "desc" },
-        skip: args.skip,
-        take: args.take,
-      }),
-      this.prisma.lead.count({ where }),
-    ]);
+    const leads = await this.prisma.lead.findMany({
+      where: { id: { in: Array.from(ids) }, ...this.accessWhere("lead") },
+      select: { id: true },
+    });
 
-    return { leads, total };
+    return new Set(leads.map((lead) => lead.id));
   }
 
   async findLeadOwnerCompanyWide(leadId: string): Promise<LeadNotificationRecipient | null> {
@@ -83,7 +163,7 @@ export class PrismaLeadRepo
 
   @Transaction()
   async createLeadOrThrow(args: RepoArgs<CreateLeadRepo, "createLeadOrThrow">): Promise<LeadDto> {
-    return this.prisma.lead.create({
+    const created = await this.prisma.lead.create({
       data: {
         companyId: this.companyId,
         title: args.title,
@@ -97,8 +177,12 @@ export class PrismaLeadRepo
         value: args.value ?? null,
         notes: args.notes ?? undefined,
       },
-      select: this.leadSelect,
+      select: { id: true },
     });
+
+    await getCustomColumnRepo().writeValuesForCreate(EntityType.lead, created.id, args.customFieldValues);
+
+    return this.getOrThrowCompanyWide(created.id);
   }
 
   @Transaction()
@@ -120,6 +204,9 @@ export class PrismaLeadRepo
         ...(rest.notes === undefined ? {} : { notes: rest.notes }),
       },
     });
+
+    if (rest.customFieldValues !== undefined)
+      await getCustomColumnRepo().replaceValuesForEntity(EntityType.lead, id, rest.customFieldValues);
 
     return this.getOrThrowCompanyWide(id);
   }

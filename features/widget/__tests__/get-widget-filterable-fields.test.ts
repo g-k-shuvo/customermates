@@ -63,6 +63,7 @@ function makeInteractor(args: { canReadMessaging: boolean; entitlementDenied: bo
       chartRepos[2],
       chartRepos[3],
       chartRepos[4],
+      chartRepos[5],
       activityRepo,
       funnelRepo,
       entitlements as never,

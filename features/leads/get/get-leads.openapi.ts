@@ -1,22 +1,23 @@
 import type { ZodOpenApiOperationObject } from "zod-openapi";
 
-import { LeadListResponseSchema } from "../lead.schema";
+import { z } from "zod";
 
-import { GetLeadsSchema } from "./get-leads.interactor";
+import { LeadDtoSchema } from "../lead.schema";
 
+import { GetQueryParamsApiSchema, GetResultSchema } from "@/core/base/base-get.schema";
 import { CommonApiResponses } from "@/core/api/interactor-handler";
 
 export const getLeadsOperation: ZodOpenApiOperationObject = {
   operationId: "getLeads",
-  summary: "Search leads",
-  description: "Returns leads the caller may read, optionally filtered by status, owner or source.",
+  summary: "Get leads",
+  description: "Retrieves a list of leads with optional filtering, sorting, and pagination.",
   tags: ["leads"],
   security: [{ apiKeyAuth: [] }],
   requestBody: {
     required: true,
     content: {
       "application/json": {
-        schema: GetLeadsSchema,
+        schema: GetQueryParamsApiSchema,
       },
     },
   },
@@ -25,7 +26,9 @@ export const getLeadsOperation: ZodOpenApiOperationObject = {
       description: "The leads were retrieved successfully.",
       content: {
         "application/json": {
-          schema: LeadListResponseSchema,
+          schema: GetResultSchema.extend({
+            items: z.array(LeadDtoSchema),
+          }),
         },
       },
     },

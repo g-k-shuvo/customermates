@@ -160,11 +160,23 @@ inline in the interactor that caused them.
   `/profile/connected-accounts` and `/company/subscription`. Do not build features that
   depend on `ConnectedAccount` — it is unavailable in our deployment.
 
-**The one agreed exception.** `ee/agent-chat/__tests__/provider-safe-schema.test.ts` pins an
-exact census of MCP tool schema formats (`{ uuid: N, email: 6, uri: 4 }`). Every uuid field we
-add to an MCP tool input raises that count, so the constant must be bumped with the change or
-`yarn test` fails. Bump the number; never remove fields to satisfy it. This is the only edit
-sanctioned under `ee/`, and it will conflict on rebase.
+**The agreed exceptions.** Two, both of the same kind: a compiler- or test-enforced census
+under `ee/` that a core change is forced to bump. Both conflict on rebase. Neither makes an
+Enterprise Feature operational.
+
+1. `ee/agent-chat/__tests__/provider-safe-schema.test.ts` pins an exact census of MCP tool
+   schema formats (`{ uuid: N, email: 6, uri: 4 }`). Every uuid field we add to an MCP tool
+   input raises that count, so the constant must be bumped with the change or `yarn test`
+   fails. Bump the number; never remove fields to satisfy it.
+
+2. `ee/messaging/activities/` consumes `EntityType` exhaustively, so adding a member to that
+   Prisma enum breaks it — at runtime as well as at compile time, since
+   `activityFilterableFieldsForViewer` walks `Object.values(EntityType)`. Adding `lead` in
+   M8 required `ACTIVITY_FILTER_FIELD_BY_ENTITY_TYPE` to become
+   `Partial<Record<EntityType, FilterFieldKey>>` with the consumer skipping absent entries,
+   and an early return for `lead` in `findAccessibleAuditEntityIds` before its local
+   `NamedModel` union. Any further `EntityType` member needs the same two edits. Widen the
+   map and skip; never add a wrong FilterFieldKey to satisfy the type.
 
 ---
 

@@ -4,6 +4,7 @@ import { FILTER_FIELD_DEFAULT_OPERATORS } from "./filter-field-operators";
 
 import {
   DealStatus,
+  LeadStatus,
   MessagingProvider,
   MessagingThreadState,
   Status,
@@ -60,6 +61,7 @@ export const DEFAULT_FILTER_VALUE_KIND: Record<FilterFieldKey, FilterValueKind> 
   [FilterFieldKey.url]: { kind: "string" },
   [FilterFieldKey.status]: { kind: "enum", values: enumValues(Status) },
   [FilterFieldKey.dealStatus]: { kind: "enum", values: enumValues(DealStatus) },
+  [FilterFieldKey.leadStatus]: { kind: "enum", values: enumValues(LeadStatus) },
   [FilterFieldKey.rotting]: { kind: "enum", values: BOOLEAN_FILTER_VALUES },
   [FilterFieldKey.overdue]: { kind: "enum", values: BOOLEAN_FILTER_VALUES },
   [FilterFieldKey.nextActivity]: { kind: "enum", values: BOOLEAN_FILTER_VALUES },

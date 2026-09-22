@@ -55,6 +55,7 @@ export class CustomColumnModalStore extends BaseModalStore<UpsertCustomColumnDat
       [EntityType.deal]: Resource.deals,
       [EntityType.service]: Resource.services,
       [EntityType.task]: Resource.tasks,
+      [EntityType.lead]: Resource.leads,
     };
 
     const resource = entityTypeToResource[this.form.entityType];
@@ -86,6 +87,7 @@ export class CustomColumnModalStore extends BaseModalStore<UpsertCustomColumnDat
       deal: this.rootStore.dealsStore,
       service: this.rootStore.servicesStore,
       task: this.rootStore.tasksStore,
+      lead: this.rootStore.leadsStore,
     } as const;
   }
 
@@ -96,6 +98,7 @@ export class CustomColumnModalStore extends BaseModalStore<UpsertCustomColumnDat
       deal: this.rootStore.dealDetailStore,
       service: this.rootStore.serviceDetailStore,
       task: this.rootStore.taskDetailStore,
+      lead: this.rootStore.leadDetailStore,
     } as const;
   }
 

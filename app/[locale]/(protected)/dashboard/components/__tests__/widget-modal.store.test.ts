@@ -243,6 +243,7 @@ function setChartFilterableFields(store: WidgetModalStore) {
     ],
     [EntityType.service]: [],
     [EntityType.task]: [],
+    [EntityType.lead]: [],
   });
 }
 

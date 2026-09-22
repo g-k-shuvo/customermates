@@ -1,28 +1,19 @@
-import type { Data, Validated } from "@/core/validation/validation.utils";
+import type { P13nRepo } from "@/core/base/base-get.interactor";
+import type { QueryParamsPrecheckInteractor } from "@/core/base/query-params-precheck.interactor";
 
-import { z } from "zod";
-import { Resource, Action, LeadStatus } from "@/generated/prisma";
+import { EntityType, Resource, Action } from "@/generated/prisma";
 
-import { type LeadListResponse, LeadListResponseSchema } from "../lead.schema";
+import { type LeadDto } from "../lead.schema";
 
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
 import { AllowInDemoMode } from "@/core/decorators/allow-in-demo-mode.decorator";
-import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
+import { BaseGetInteractor, BaseGetRepo } from "@/core/base/base-get.interactor";
+import { GetQueryParamsSchema, type GetQueryParams, createGetResultSchema } from "@/core/base/base-get.schema";
 import { Validate } from "@/core/decorators/validate.decorator";
 import { ValidateOutput } from "@/core/decorators/validate-output.decorator";
+import { LeadDtoSchema } from "../lead.schema";
 
-export const GetLeadsSchema = z.object({
-  status: z.enum(LeadStatus).optional(),
-  ownerUserId: z.uuid().optional(),
-  sourceId: z.uuid().optional(),
-  skip: z.number().int().min(0).optional().default(0),
-  take: z.number().int().min(1).max(200).optional().default(50),
-});
-export type GetLeadsData = Data<typeof GetLeadsSchema>;
-
-export abstract class GetLeadsRepo {
-  abstract getLeads(args: GetLeadsData): Promise<LeadListResponse>;
-}
+export abstract class GetLeadsRepo extends BaseGetRepo<LeadDto> {}
 
 @AllowInDemoMode
 @TenantInteractor({
@@ -32,14 +23,26 @@ export abstract class GetLeadsRepo {
   ],
   condition: "OR",
 })
-export class GetLeadsInteractor extends AuthenticatedInteractor<GetLeadsData, LeadListResponse> {
-  constructor(private repo: GetLeadsRepo) {
-    super();
+export class GetLeadsInteractor extends BaseGetInteractor<LeadDto> {
+  constructor(
+    repo: GetLeadsRepo,
+    p13nRepo: P13nRepo,
+    mode: "interactive" | "api",
+    queryParamsPrecheck: QueryParamsPrecheckInteractor,
+  ) {
+    super(
+      repo,
+      p13nRepo,
+      mode,
+      EntityType.lead,
+      { sortDescriptor: { field: "createdAt", direction: "desc" } },
+      queryParamsPrecheck,
+    );
   }
 
-  @Validate(GetLeadsSchema)
-  @ValidateOutput(LeadListResponseSchema)
-  async invoke(data: GetLeadsData): Validated<LeadListResponse> {
-    return { ok: true as const, data: await this.repo.getLeads(data) };
+  @Validate(GetQueryParamsSchema)
+  @ValidateOutput(createGetResultSchema(LeadDtoSchema))
+  async invoke(params: GetQueryParams = {}) {
+    return await super.invoke(params);
   }
 }

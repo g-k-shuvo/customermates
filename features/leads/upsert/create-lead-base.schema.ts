@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { LeadStatus } from "@/generated/prisma";
 
-import { NotesSchema } from "@/core/base/base-entity.schema";
+import { CustomFieldValueInputSchema, NotesSchema } from "@/core/base/base-entity.schema";
 import { zx } from "@/core/validation/validation.utils";
 
 export const BaseCreateLeadSchema = z.object({
@@ -15,4 +15,5 @@ export const BaseCreateLeadSchema = z.object({
   labels: z.array(zx.nonBlankText(64)).optional().default([]),
   value: z.number().min(0).optional(),
   notes: NotesSchema,
+  customFieldValues: z.array(CustomFieldValueInputSchema).optional().default([]),
 });

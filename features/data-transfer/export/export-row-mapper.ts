@@ -20,12 +20,14 @@ type ServiceReference = { id: string; name: string; amount: number; quantity?: n
 export type ExportableRecord = {
   id: string;
   name?: string;
+  title?: string;
   firstName?: string;
   lastName?: string;
   notes?: unknown;
   createdAt: Date;
   updatedAt: Date;
   amount?: number;
+  value?: number | null;
   totalValue?: number;
   totalQuantity?: number;
   weightedValue?: number | null;
@@ -55,6 +57,7 @@ export const ENTITY_SHEET_NAME: Record<EntityType, string> = {
   [EntityType.deal]: "Deals",
   [EntityType.service]: "Services",
   [EntityType.task]: "Tasks",
+  [EntityType.lead]: "Leads",
 };
 
 const RELATION_HEADERS = {
@@ -99,6 +102,8 @@ function standardCell(record: ExportableRecord, key: string): WorkbookCellValue 
   switch (key) {
     case RECORD_ID_COLUMN_KEY:
       return record.id;
+    case "title":
+      return record.title ?? null;
     case "name":
       return record.name ?? `${record.firstName ?? ""} ${record.lastName ?? ""}`.trim();
     case "firstName":
@@ -113,6 +118,8 @@ function standardCell(record: ExportableRecord, key: string): WorkbookCellValue 
       return record.updatedAt;
     case "amount":
       return record.amount ?? null;
+    case "value":
+      return record.value ?? null;
     case "totalValue":
       return record.totalValue ?? null;
     case "totalQuantity":
@@ -295,5 +302,7 @@ export function relationSheetNamesFor(entityType: EntityType): string[] {
         RELATION_SHEET_NAMES.services,
         RELATION_SHEET_NAMES.users,
       ];
+    case EntityType.lead:
+      return [];
   }
 }

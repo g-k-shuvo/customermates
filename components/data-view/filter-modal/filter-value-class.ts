@@ -28,6 +28,7 @@ const RELATION_FILTER_FIELDS = [
   FilterFieldKey.event,
   FilterFieldKey.status,
   FilterFieldKey.dealStatus,
+  FilterFieldKey.leadStatus,
   FilterFieldKey.rotting,
   FilterFieldKey.overdue,
   FilterFieldKey.nextActivity,

@@ -197,6 +197,13 @@ import { LeadCreatedNotificationListener } from "@/features/leads/listener/lead-
 
 // Leads interactors
 import { GetLeadsInteractor } from "@/features/leads/get/get-leads.interactor";
+import { GetLeadsConfigurationInteractor } from "@/features/leads/get/get-leads-configuration.interactor";
+import { CreateManyLeadsInteractor } from "@/features/leads/upsert/create-many-leads.interactor";
+import { UpdateManyLeadsInteractor } from "@/features/leads/upsert/update-many-leads.interactor";
+import { LeadWritePrecheckInteractor } from "@/features/leads/upsert/lead-write-precheck.interactor";
+import { ValidateLeadIdsInteractor } from "@/core/validation/validators/validate-lead-ids.interactor";
+import { DryRunImportLeadsInteractor } from "@/features/data-transfer/import/dry-run-import-leads.interactor";
+import { ExportLeadsPageInteractor } from "@/features/data-transfer/export/export-leads-page.interactor";
 import { GetLeadByIdInteractor } from "@/features/leads/get/get-lead-by-id.interactor";
 import { CreateLeadInteractor } from "@/features/leads/upsert/create-lead.interactor";
 import { UpdateLeadInteractor } from "@/features/leads/upsert/update-lead.interactor";
@@ -630,6 +637,18 @@ export const getDealWritePrecheck = () =>
     getLostReasonIdsValidator(),
   );
 
+export const getLeadIdsValidator = () => new ValidateLeadIdsInteractor(getLeadRepo());
+
+export const getLeadWritePrecheck = () =>
+  new LeadWritePrecheckInteractor(
+    getLeadIdsValidator(),
+    getContactIdsValidator(),
+    getOrganizationIdsValidator(),
+    getUserIdsValidator(),
+    getCustomFieldValuesValidator(),
+    getAssigneeGuardValidator(),
+  );
+
 export const getServiceWritePrecheck = () =>
   new ServiceWritePrecheckInteractor(
     getUserIdsValidator(),
@@ -928,15 +947,27 @@ export const getRotateWebFormSecretInteractor = () => new RotateWebFormSecretInt
 
 export const getGetWebFormSourcesInteractor = () => new GetWebFormSourcesInteractor(getWebFormRepo());
 
-export const getGetLeadsInteractor = () => new GetLeadsInteractor(getLeadRepo());
+export const getGetLeadsInteractor = () =>
+  new GetLeadsInteractor(getLeadRepo(), getP13nRepo(), "interactive", getQueryParamsPrecheck());
 
-export const getGetLeadByIdInteractor = () => new GetLeadByIdInteractor(getLeadRepo());
+export const getGetLeadsApiInteractor = () =>
+  new GetLeadsInteractor(getLeadRepo(), getP13nRepo(), "api", getQueryParamsPrecheck());
+
+export const getGetLeadsConfigurationInteractor = () => new GetLeadsConfigurationInteractor(getLeadRepo());
+
+export const getGetLeadByIdInteractor = () => new GetLeadByIdInteractor(getLeadRepo(), getCustomColumnRepo());
 
 export const getCreateLeadInteractor = () => new CreateLeadInteractor(getLeadRepo(), getEventService());
 
 export const getUpdateLeadInteractor = () => new UpdateLeadInteractor(getLeadRepo(), getEventService());
 
 export const getDeleteLeadInteractor = () => new DeleteLeadInteractor(getLeadRepo(), getEventService());
+
+export const getCreateManyLeadsInteractor = () =>
+  new CreateManyLeadsInteractor(getLeadRepo(), getEventService(), getLeadWritePrecheck());
+
+export const getUpdateManyLeadsInteractor = () =>
+  new UpdateManyLeadsInteractor(getLeadRepo(), getEventService(), getLeadWritePrecheck());
 
 export const getCreateServiceInteractor = () =>
   new CreateServiceInteractor(
@@ -1200,6 +1231,7 @@ export const getGetWidgetFilterableFieldsInteractor = () =>
     getDealRepo(),
     getServiceRepo(),
     getTaskRepo(),
+    getLeadRepo(),
     getActivitiesRepo(),
     getWidgetRepo(),
     getEntitlementService(),
@@ -1840,6 +1872,8 @@ export const getExportServicesPageInteractor = () =>
 
 export const getExportTasksPageInteractor = () => new ExportTasksPageInteractor(getTaskRepo(), getEventService());
 
+export const getExportLeadsPageInteractor = () => new ExportLeadsPageInteractor(getLeadRepo(), getEventService());
+
 export const getDryRunImportContactsInteractor = () => new DryRunImportContactsInteractor(getContactWritePrecheck());
 
 export const getImportRelationIndex = () => new ImportRelationIndex();
@@ -1858,6 +1892,8 @@ export const getDryRunImportOrganizationsInteractor = () =>
 export const getDryRunImportDealsInteractor = () => new DryRunImportDealsInteractor(getDealWritePrecheck());
 
 export const getDryRunImportServicesInteractor = () => new DryRunImportServicesInteractor(getServiceWritePrecheck());
+
+export const getDryRunImportLeadsInteractor = () => new DryRunImportLeadsInteractor(getLeadWritePrecheck());
 
 export const getDryRunImportTasksInteractor = () => new DryRunImportTasksInteractor(getTaskWritePrecheck());
 

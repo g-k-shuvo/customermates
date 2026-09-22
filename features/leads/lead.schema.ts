@@ -3,7 +3,8 @@ import type { Data } from "@/core/validation/validation.utils";
 import { z } from "zod";
 import { LeadStatus } from "@/generated/prisma";
 
-import { NotesSchema } from "@/core/base/base-entity.schema";
+import { CustomFieldValueSchema, NotesSchema } from "@/core/base/base-entity.schema";
+import { CustomColumnDtoSchema } from "@/features/custom-column/custom-column.schema";
 
 export const LeadReferenceSchema = z.object({
   id: z.uuid(),
@@ -51,6 +52,11 @@ export const LeadDtoSchema = z.object({
   organization: LeadOrganizationSchema.nullable(),
   owner: LeadOwnerSchema.nullable(),
   source: LeadSourceSchema.nullable(),
+  customFieldValues: z
+    .array(CustomFieldValueSchema)
+    .describe(
+      "Custom field values for this lead. Query available custom field configurations via GET /v1/leads/configuration, which returns customColumns with their definitions.",
+    ),
 });
 
 export type LeadDto = Data<typeof LeadDtoSchema>;
@@ -61,3 +67,10 @@ export const LeadListResponseSchema = z.object({
 });
 
 export type LeadListResponse = Data<typeof LeadListResponseSchema>;
+
+export const LeadByIdResponseSchema = z.object({
+  lead: LeadDtoSchema.nullable(),
+  customColumns: z.array(CustomColumnDtoSchema),
+});
+
+export type LeadByIdResponse = Data<typeof LeadByIdResponseSchema>;

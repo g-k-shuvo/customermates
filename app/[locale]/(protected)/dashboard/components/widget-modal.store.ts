@@ -149,6 +149,7 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
     [EntityType.deal]: [],
     [EntityType.service]: [],
     [EntityType.task]: [],
+    [EntityType.lead]: [],
   };
   public customColumnsByEntityType: Record<EntityType, CustomColumnDto[]> = {
     [EntityType.contact]: [],
@@ -156,6 +157,7 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
     [EntityType.deal]: [],
     [EntityType.service]: [],
     [EntityType.task]: [],
+    [EntityType.lead]: [],
   };
 
   private readonly entityTypeToGroupByType: Record<EntityType, WidgetGroupByType | undefined> = {
@@ -164,6 +166,7 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
     [EntityType.deal]: WidgetGroupByType.deal,
     [EntityType.service]: WidgetGroupByType.service,
     [EntityType.task]: undefined,
+    [EntityType.lead]: undefined,
   };
 
   private readonly entityTypeToResource: Record<EntityType, Resource> = {
@@ -172,6 +175,7 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
     [EntityType.deal]: Resource.deals,
     [EntityType.service]: Resource.services,
     [EntityType.task]: Resource.tasks,
+    [EntityType.lead]: Resource.leads,
   };
 
   private readonly groupByTypeToResource: Record<WidgetGroupByType, Resource | null> = {
@@ -662,6 +666,7 @@ export class WidgetModalStore extends BaseModalStore<WidgetModalForm> {
       [EntityType.deal]: [],
       [EntityType.service]: [],
       [EntityType.task]: [],
+      [EntityType.lead]: [],
     };
 
     customColumns.forEach((col) => byEntityType[col.entityType].push(col));

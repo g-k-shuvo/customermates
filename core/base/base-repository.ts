@@ -207,4 +207,4 @@ export abstract class BaseRepository<
   }
 }
 
-type ListableModel = "deal" | "contact" | "organization" | "service" | "task" | "messagingThread";
+type ListableModel = "deal" | "contact" | "organization" | "service" | "task" | "lead" | "messagingThread";

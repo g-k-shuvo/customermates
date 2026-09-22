@@ -107,6 +107,7 @@ export enum CustomErrorCode {
   lostReasonHasDeals = "lostReasonHasDeals",
   serviceNotFound = "serviceNotFound",
   contactNotFound = "contactNotFound",
+  leadNotFound = "leadNotFound",
   taskNotFound = "taskNotFound",
   widgetNotFound = "widgetNotFound",
   webhookNotFound = "webhookNotFound",

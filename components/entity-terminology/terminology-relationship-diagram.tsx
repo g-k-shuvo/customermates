@@ -2,7 +2,7 @@
 
 import type { LucideIcon } from "lucide-react";
 
-import { Building2, CheckCircle2, Package, TrendingUp, Users } from "lucide-react";
+import { Building2, CheckCircle2, Package, TrendingUp, UserPlus, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { EntityType } from "@/generated/prisma";
 
@@ -50,6 +50,11 @@ const ENTITY_STYLE: Record<EntityType, EntityStyle> = {
     icon: CheckCircle2,
     square: "bg-cyan-500/10",
     glyph: "text-cyan-600 dark:text-cyan-400",
+  },
+  [EntityType.lead]: {
+    icon: UserPlus,
+    square: "bg-rose-500/10",
+    glyph: "text-rose-600 dark:text-rose-400",
   },
 };
 

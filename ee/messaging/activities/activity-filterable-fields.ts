@@ -6,7 +6,7 @@ import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operat
 import { Action, EntityType, Resource } from "@/generated/prisma";
 import { TERMINOLOGY_ENTITY_RESOURCE } from "@/features/entity-terminology/entity-terminology.constants";
 
-export const ACTIVITY_FILTER_FIELD_BY_ENTITY_TYPE: Record<EntityType, FilterFieldKey> = {
+export const ACTIVITY_FILTER_FIELD_BY_ENTITY_TYPE: Partial<Record<EntityType, FilterFieldKey>> = {
   [EntityType.contact]: FilterFieldKey.contactIds,
   [EntityType.organization]: FilterFieldKey.organizationIds,
   [EntityType.deal]: FilterFieldKey.dealIds,
@@ -27,9 +27,9 @@ export function activityFilterableFieldsFor(args: {
   canReadMessages: boolean;
   readableEntityTypes: EntityType[];
 }): FilterableField[] {
-  const relationshipFields: FilterableField[] = args.readableEntityTypes.map((entityType) => {
+  const relationshipFields: FilterableField[] = args.readableEntityTypes.flatMap((entityType) => {
     const field = ACTIVITY_FILTER_FIELD_BY_ENTITY_TYPE[entityType];
-    return { field, operators: FILTER_FIELD_DEFAULT_OPERATORS[field] };
+    return field ? [{ field, operators: FILTER_FIELD_DEFAULT_OPERATORS[field] }] : [];
   });
   const sourceFields: FilterableField[] = [
     {

@@ -562,6 +562,8 @@ export class PrismaActivitiesRepo
   }
 
   private async findAccessibleAuditEntityIds(entityType: EntityType): Promise<string[]> {
+    if (entityType === EntityType.lead) return [];
+
     if (entityType === EntityType.contact) {
       const rows = await this.prisma.contact.findMany({
         where: this.accessWhere("contact"),

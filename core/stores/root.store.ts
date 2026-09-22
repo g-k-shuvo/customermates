@@ -18,6 +18,8 @@ import { RoleModalStore } from "@/app/[locale]/(protected)/company/components/ro
 import { UsersStore } from "@/app/[locale]/(protected)/company/components/user/users.store";
 import { CompanyStore } from "@/app/[locale]/(protected)/company/components/company.store";
 import { ContactDetailStore } from "@/app/[locale]/(protected)/contacts/components/contact-detail.store";
+import { LeadDetailStore } from "@/app/[locale]/(protected)/leads/components/lead-detail.store";
+import { LeadsStore } from "@/app/[locale]/(protected)/leads/components/leads.store";
 import { OrganizationDetailStore } from "@/app/[locale]/(protected)/organizations/components/organization-detail.store";
 import { OrganizationsStore } from "@/app/[locale]/(protected)/organizations/components/organizations.store";
 import { AiConnectionStore } from "@/components/ai-connection/ai-connection.store";
@@ -102,6 +104,7 @@ export class RootStore {
   private _layoutStore?: LayoutStore;
   private _loadingOverlayStore?: LoadingOverlayStore;
   private _localeStore?: LocaleStore;
+  private _leadsStore?: LeadsStore;
   private _organizationsStore?: OrganizationsStore;
   private _rolesStore?: RolesStore;
   private _servicesStore?: ServicesStore;
@@ -144,6 +147,7 @@ export class RootStore {
   private _dealDetailStore?: DealDetailStore;
   private _deleteConfirmationModalStore?: DeleteConfirmationModalStore;
   private _globalSearchModalStore?: GlobalSearchModalStore;
+  private _leadDetailStore?: LeadDetailStore;
   private _organizationDetailStore?: OrganizationDetailStore;
   private _roleModalStore?: RoleModalStore;
   private _serviceDetailStore?: ServiceDetailStore;
@@ -234,6 +238,10 @@ export class RootStore {
 
   get addChannelStore() {
     return (this._addChannelStore ??= new AddChannelStore(this));
+  }
+
+  get leadsStore() {
+    return (this._leadsStore ??= new LeadsStore(this));
   }
 
   get organizationsStore() {
@@ -370,6 +378,10 @@ export class RootStore {
 
   get contactDetailStore() {
     return (this._contactDetailStore ??= new ContactDetailStore(this));
+  }
+
+  get leadDetailStore() {
+    return (this._leadDetailStore ??= new LeadDetailStore(this));
   }
 
   get organizationDetailStore() {

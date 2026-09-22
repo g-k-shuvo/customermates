@@ -33,6 +33,10 @@ export abstract class GetWidgetFilterableFieldsTaskRepo {
   abstract getFilterableFields(): Promise<FilterableField[]>;
 }
 
+export abstract class GetWidgetFilterableFieldsLeadRepo {
+  abstract getFilterableFields(): Promise<FilterableField[]>;
+}
+
 export abstract class GetWidgetActivityFilterableFieldsRepo {
   abstract canReadMessagingSources(): boolean;
   abstract getFilterableFields(): Promise<FilterableField[]>;
@@ -65,6 +69,7 @@ export class GetWidgetFilterableFieldsInteractor extends AuthenticatedInteractor
     private dealRepo: GetWidgetFilterableFieldsDealRepo,
     private serviceRepo: GetWidgetFilterableFieldsServiceRepo,
     private taskRepo: GetWidgetFilterableFieldsTaskRepo,
+    private leadRepo: GetWidgetFilterableFieldsLeadRepo,
     private activityRepo: GetWidgetActivityFilterableFieldsRepo,
     private funnelRepo: GetWidgetFunnelPipelinesRepo,
     private entitlements: EntitlementService,
@@ -78,16 +83,25 @@ export class GetWidgetFilterableFieldsInteractor extends AuthenticatedInteractor
     const entitlementDenied = canReadMessagingSources ? await this.entitlements.require("messaging") : null;
     this.activityRepo.setMessagingSourcesEnabled(canReadMessagingSources && !entitlementDenied);
 
-    const [contactFields, organizationFields, dealFields, serviceFields, taskFields, activityTimeline, funnel] =
-      await Promise.all([
-        this.contactRepo.getFilterableFields(),
-        this.organizationRepo.getFilterableFields(),
-        this.dealRepo.getFilterableFields(),
-        this.serviceRepo.getFilterableFields(),
-        this.taskRepo.getFilterableFields(),
-        this.activityRepo.getFilterableFields(),
-        this.funnelRepo.getFunnelPipelines(),
-      ]);
+    const [
+      contactFields,
+      organizationFields,
+      dealFields,
+      serviceFields,
+      taskFields,
+      leadFields,
+      activityTimeline,
+      funnel,
+    ] = await Promise.all([
+      this.contactRepo.getFilterableFields(),
+      this.organizationRepo.getFilterableFields(),
+      this.dealRepo.getFilterableFields(),
+      this.serviceRepo.getFilterableFields(),
+      this.taskRepo.getFilterableFields(),
+      this.leadRepo.getFilterableFields(),
+      this.activityRepo.getFilterableFields(),
+      this.funnelRepo.getFunnelPipelines(),
+    ]);
 
     return {
       ok: true,
@@ -100,6 +114,7 @@ export class GetWidgetFilterableFieldsInteractor extends AuthenticatedInteractor
           [EntityType.deal]: dealFields,
           [EntityType.service]: serviceFields,
           [EntityType.task]: taskFields,
+          [EntityType.lead]: leadFields,
         },
       },
     };

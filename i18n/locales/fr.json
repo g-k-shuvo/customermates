@@ -1071,6 +1071,7 @@
       "invalidJsonBody": "Le corps de la requête n'est pas un JSON valide.",
       "invalidSortField": "Champ de tri introuvable ou inaccessible. Champs disponibles : {validValues}.",
       "invalidUrl": "Saisissez une URL valide.",
+      "leadNotFound": "ID de piste introuvable ou inaccessible.",
       "legalNoticeNotDelivered": "La mise à jour juridique actuelle n’a pas encore été remise à cet espace de travail.",
       "linkedinInboxUnavailable": "Ce compte LinkedIn n'a pas de boîte de réception {product}. Connectez le compte avec {product} associé pour l'utiliser.",
       "linkedinProductRequiresLinkedin": "Les options InMail et produit LinkedIn nécessitent un compte LinkedIn.",
@@ -1201,6 +1202,11 @@
         "deleted": "Affaire supprimée",
         "updated": "Affaire mise à jour"
       },
+      "lead": {
+        "created": "Piste créée",
+        "deleted": "Piste supprimée",
+        "updated": "Piste mise à jour"
+      },
       "legal": {
         "documents_accepted": "Documents juridiques acceptés",
         "notice_sent": "Notification juridique envoyée"
@@ -1279,6 +1285,7 @@
         "event": "Évènement",
         "isPlatformOperator": "Opérateur de plateforme",
         "lastActiveAt": "Dernière activité",
+        "leadStatus": "Statut de la piste",
         "lostReasonId": "Motif de perte",
         "nextActivity": "Prochaine activité",
         "overdue": "En retard",
@@ -1377,6 +1384,7 @@
       "formattingLocale": "Format régional",
       "groupByValue": "Regroupement",
       "label": "Libellé",
+      "labels": "Étiquettes",
       "lastName": "Nom",
       "message": "Message",
       "name": "Nom",
@@ -1395,12 +1403,22 @@
       "secret": "Secret",
       "status": "Statut",
       "theme": "Thème",
+      "title": "Titre",
       "type": "Type",
       "unavailableSelection": "Sélection indisponible",
       "url": "URL",
-      "userIds": "Assigné à"
+      "userIds": "Assigné à",
+      "value": "Valeur"
     },
     "language": "Langue",
+    "leadStatuses": {
+      "archived": "Archivé",
+      "converted": "Converti",
+      "new": "Nouveau",
+      "qualified": "Qualifié",
+      "unqualified": "Non qualifié",
+      "working": "En cours"
+    },
     "locales": {
       "de": "Allemand",
       "en": "Anglais",
@@ -1467,6 +1485,7 @@
         "avatarUrl": "Avatar",
         "channels": "Canaux",
         "completedAt": "Terminée",
+        "contact": "Contact",
         "contacts": "Contacts",
         "createdAt": "Créé le",
         "credits": "Crédits",
@@ -1499,6 +1518,7 @@
         "notes": "Notes",
         "operator": "Opérateur",
         "options": "Options",
+        "organization": "Organisation",
         "organizations": "Organisations",
         "owner": "Propriétaire",
         "permissions": "Autorisations",
@@ -1516,6 +1536,7 @@
         "tags": "Étiquettes",
         "target": "Cible",
         "tasks": "Tâches",
+        "title": "Titre",
         "totalQuantity": "Quantité de services",
         "totalValue": "Valeur de l'affaire",
         "trialEnd": "Fin d'essai",
@@ -1524,6 +1545,7 @@
         "url": "URL",
         "user": "Utilisateur",
         "users": "Assigné à",
+        "value": "Valeur",
         "weightedValue": "Valeur pondérée",
         "workspace": "Espace de travail"
       },
@@ -2177,6 +2199,24 @@
           "singular": "Projet"
         }
       },
+      "lead": {
+        "enquiry": {
+          "plural": "Demandes",
+          "singular": "Demande"
+        },
+        "lead": {
+          "plural": "Pistes",
+          "singular": "Piste"
+        },
+        "prospect": {
+          "plural": "Prospects",
+          "singular": "Prospect"
+        },
+        "request": {
+          "plural": "Sollicitations",
+          "singular": "Sollicitation"
+        }
+      },
       "organization": {
         "account": {
           "plural": "Comptes",
@@ -2512,6 +2552,11 @@
     "person": "De : {personName}",
     "preview": "Un nouveau prospect est arrivé via {sourceName}",
     "subject": "Nouveau prospect : {leadTitle}"
+  },
+  "LeadDetail": {
+    "owner": "Responsable",
+    "source": "Source",
+    "title": "Piste"
   },
   "LegalDocumentNotice": {
     "contractBody": "Nous avons mis à jour les documents juridiques indiqués ci-dessous. Veuillez les examiner pour le client professionnel et faire procéder à leur acceptation électronique par un administrateur système habilité.",
