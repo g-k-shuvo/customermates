@@ -178,7 +178,9 @@ export class PrismaProcessWebFormSubmissionRepo extends BaseRepository implement
       where: {
         companyId,
         status: "active",
-        role: { permissions: { some: { resource: "tasks", action: "create" } } },
+        role: {
+          OR: [{ isSystemRole: true }, { permissions: { some: { resource: "tasks", action: "create" } } }],
+        },
       },
       orderBy: { createdAt: "asc" },
       select: { id: true },
