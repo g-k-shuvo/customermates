@@ -1,5 +1,6 @@
 import type { GetWidgetFilterableFieldsTaskRepo } from "../widget/get-widget-filterable-fields.interactor";
 import type { TaskRepo as TaskWorkerRepo } from "./listener/user-pending-authorization-task.listener";
+import type { LeadFollowUpTaskRepo } from "@/features/leads/listener/lead-follow-up-task.repo";
 import type { GetTasksRepo } from "@/features/tasks/get/get-tasks.interactor";
 import type { GetConfigurationRepo } from "@/core/base/base-get-configuration.interactor";
 import type { CountTasksRepo } from "@/features/tasks/count-user-tasks.interactor";
@@ -16,7 +17,7 @@ import type { UncompleteTaskRepo } from "@/features/tasks/complete/uncomplete-ta
 import type { FindNextActivitiesRepo } from "@/features/tasks/find-next-activities.repo";
 import type { ActivityCountsRepo } from "@/features/tasks/get/get-activity-counts.interactor";
 
-import { EntityType, TaskType, Resource, Action } from "@/generated/prisma";
+import { ActivityKind, EntityType, TaskType, Resource, Action } from "@/generated/prisma";
 
 import type { Prisma } from "@/generated/prisma";
 import type { ExportPageParams, ExportRecordsRepo } from "@/core/base/base-export-records-page.interactor";
@@ -82,6 +83,7 @@ export class PrismaTaskRepo
   extends BaseRepository<Prisma.TaskWhereInput>
   implements
     TaskWorkerRepo,
+    LeadFollowUpTaskRepo,
     GetTasksRepo,
     GetConfigurationRepo,
     CountTasksRepo,
@@ -338,6 +340,47 @@ export class PrismaTaskRepo
   }
 
   @Transaction
+  @Transaction
+  async createLeadFollowUpTaskOrThrow(args: RepoArgs<LeadFollowUpTaskRepo, "createLeadFollowUpTaskOrThrow">) {
+    const { companyId } = this.user;
+
+    const task = await this.prisma.task.create({
+      data: {
+        type: TaskType.custom,
+        activityKind: ActivityKind.task,
+        companyId,
+        name: args.name,
+        dueAt: args.dueAt,
+      },
+      select: { id: true },
+    });
+
+    const promises: Promise<unknown>[] = [];
+
+    if (args.ownerUserId)
+      promises.push(this.prisma.taskUser.create({ data: { taskId: task.id, userId: args.ownerUserId, companyId } }));
+
+    if (args.contactId) {
+      promises.push(
+        this.prisma.taskContact.create({ data: { taskId: task.id, contactId: args.contactId, companyId } }),
+      );
+    }
+
+    if (args.organizationId) {
+      promises.push(
+        this.prisma.taskOrganization.create({
+          data: { taskId: task.id, organizationId: args.organizationId, companyId },
+        }),
+      );
+    }
+
+    promises.push(getCustomColumnRepo().writeValuesForCreate(EntityType.task, task.id, []));
+
+    await Promise.all(promises);
+
+    return task;
+  }
+
   async create(args: Parameters<TaskWorkerRepo["create"]>[0]) {
     const { companyId } = this.user;
     const task = await this.prisma.task.create({

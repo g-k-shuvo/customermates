@@ -199,6 +199,7 @@ import { WebFormSourceWritePrecheckInteractor } from "@/features/webform/upsert/
 import { ValidateWebFormSourceIdsInteractor } from "@/core/validation/validators/validate-web-form-source-ids.interactor";
 
 import { LeadCreatedNotificationListener } from "@/features/leads/listener/lead-created-notification.listener";
+import { LeadCreatedFollowUpTaskListener } from "@/features/leads/listener/lead-created-follow-up-task.listener";
 
 // Leads interactors
 import { GetLeadsInteractor } from "@/features/leads/get/get-leads.interactor";
@@ -490,6 +491,8 @@ export const getUserPendingAuthorizationTaskListener = () => new UserPendingAuth
 export const getDealStageHistoryListener = () => new DealStageHistoryListener(getDealRepo());
 export const getLeadCreatedNotificationListener = () =>
   new LeadCreatedNotificationListener(getLeadRepo(), getEmailService());
+export const getLeadCreatedFollowUpTaskListener = () =>
+  new LeadCreatedFollowUpTaskListener(getTaskRepo(), getLeadRepo());
 
 const EXPECTED_EVENT_LISTENERS = [
   {
@@ -502,6 +505,10 @@ const EXPECTED_EVENT_LISTENERS = [
   },
   {
     factory: getLeadCreatedNotificationListener,
+    events: [DomainEvent.LEAD_CREATED],
+  },
+  {
+    factory: getLeadCreatedFollowUpTaskListener,
     events: [DomainEvent.LEAD_CREATED],
   },
 ] as const;

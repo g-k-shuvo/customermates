@@ -345,3 +345,45 @@ existing `ContactIdentifier` rows but never creates a contact, resolves an organ
 excludes free-mail domains, so T8.4 is the larger job.
 
 Estimate the phases separately, and the plugin separately again.
+
+---
+
+## What shipped
+
+All eight phases are in. Notes worth carrying forward:
+
+**Phase 3 cost more than the plan allowed.** Joining the `EntityType` club meant filling 28
+compiler-enforced `Record<EntityType, …>` maps across 17 files, and it broke
+`ee/messaging/activities/` at runtime as well as at compile time. That became the second
+sanctioned `ee/` exception, recorded in `CLAUDE.md`.
+
+**Phase 4 requires two permissions.** `ConvertLeadToDealInteractor` is gated on
+`leads.update` AND `deals.create`, so a role that works leads but cannot open deals cannot
+convert one. Conversion writes the deal and flips the lead in a single transaction, and a
+second attempt returns `leadAlreadyConverted` rather than creating a duplicate deal.
+
+**Phase 5 made the source list a DataView.** `GetWebFormSourcesInteractor` moved onto
+`BaseGetInteractor`, so `GET /v1/webform-sources` now returns the shared result shape rather
+than `{ sources: [...] }`. The slug is immutable once created — a live form already posts to
+that endpoint — and the signing secret is revealed only on create and on rotate.
+
+**Phase 7's follow-up task is due one business day out at 09:00 server time.** That is a
+deliberate simplification: the CRM stores no per-user timezone, so "09:00" means 09:00
+wherever the server runs. Revisit if the client's reps are not in the deployment's timezone.
+
+**Phase 8 lives outside the TypeScript surface.** The plugin is in `wordpress/`, the backfill
+in `scripts/backfill-fluent-forms.ts`. Neither is covered by the 77 convention tests, the
+five-locale system or the OpenAPI generator, so the wire contract was verified by signing a
+payload with PHP and posting it at the running endpoint: 202 accepted, 200 duplicate on
+replay, 401 on a tampered body, 401 on a ten-minute-old timestamp, 404 on an unknown slug.
+
+**Two defects reached `main` only because a browser was opened.** The `leadStatus` filter
+returned a 500 — `applyFieldFilter` builds its clause from `filter.field`, and
+`RELATION_FIELD_MAPPING` is not consulted for non-relation fields, so `leadStatus` became a
+Prisma column that does not exist. And three i18n keys were wrong in ways no test checks:
+unescaped ICU braces, and two column ids with no `Common.table.columns` entry. The convention
+suite passed throughout. Open the page.
+
+**A stale dev server cost time twice.** Both the `leadStatus` fix and the Phase 7 listener
+appeared not to work until `next dev` was restarted; editing `core/di.ts` in particular does
+not reliably hot-reload. Restart before concluding that a fix failed.

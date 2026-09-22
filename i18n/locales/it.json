@@ -2563,6 +2563,9 @@
     "source": "Origine",
     "title": "Lead"
   },
+  "LeadFollowUpTask": {
+    "name": "Ricontattare: {leadTitle}"
+  },
   "LegalDocumentNotice": {
     "contractBody": "Abbiamo aggiornato i documenti legali elencati di seguito. Esaminali per il cliente aziendale e fai in modo che un amministratore di sistema autorizzato li accetti elettronicamente.",
     "contractDeadlineLabel": "Termine per l’opposizione e l’accettazione",

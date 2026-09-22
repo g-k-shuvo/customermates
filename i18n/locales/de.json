@@ -2563,6 +2563,9 @@
     "source": "Quelle",
     "title": "Lead"
   },
+  "LeadFollowUpTask": {
+    "name": "Nachfassen: {leadTitle}"
+  },
   "LegalDocumentNotice": {
     "contractBody": "Wir haben die unten aufgeführten Rechtsdokumente aktualisiert. Bitte prüfen Sie diese für den Geschäftskunden und veranlassen Sie die elektronische Annahme durch einen berechtigten Systemadministrator.",
     "contractDeadlineLabel": "Widerspruchs- und Annahmefrist",

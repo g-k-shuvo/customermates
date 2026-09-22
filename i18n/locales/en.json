@@ -2563,6 +2563,9 @@
     "source": "Source",
     "title": "Lead"
   },
+  "LeadFollowUpTask": {
+    "name": "Follow up: {leadTitle}"
+  },
   "LegalDocumentNotice": {
     "contractBody": "We updated the legal documents listed below. Please review them for the business customer and arrange electronic acceptance by an authorised system administrator.",
     "contractDeadlineLabel": "Objection and acceptance deadline",

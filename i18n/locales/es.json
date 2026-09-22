@@ -2563,6 +2563,9 @@
     "source": "Origen",
     "title": "Lead"
   },
+  "LeadFollowUpTask": {
+    "name": "Seguimiento: {leadTitle}"
+  },
   "LegalDocumentNotice": {
     "contractBody": "Hemos actualizado los documentos legales que se indican a continuación. Revísalos en nombre del cliente empresarial y organiza su aceptación electrónica por parte de un administrador del sistema autorizado.",
     "contractDeadlineLabel": "Fecha límite de objeción y aceptación",

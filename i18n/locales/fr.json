@@ -2563,6 +2563,9 @@
     "source": "Source",
     "title": "Piste"
   },
+  "LeadFollowUpTask": {
+    "name": "Relancer : {leadTitle}"
+  },
   "LegalDocumentNotice": {
     "contractBody": "Nous avons mis à jour les documents juridiques indiqués ci-dessous. Veuillez les examiner pour le client professionnel et faire procéder à leur acceptation électronique par un administrateur système habilité.",
     "contractDeadlineLabel": "Date limite d’opposition et d’acceptation",
