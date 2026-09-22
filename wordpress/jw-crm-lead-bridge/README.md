@@ -23,6 +23,23 @@ forwarded, which is how you stage a rollout one form at a time:
 7 = contact-us
 ```
 
+## Finding the forms you missed
+
+An unlisted form is dropped silently, which is the failure mode that loses leads: a form
+added after the mapping was written looks exactly like a form that is working.
+
+So the plugin records every submission from a form with no mapping and lists them on the
+settings screen with their id, title, submission count and when they were last seen. Mapping
+a form removes it from that list; rows older than 30 days age out.
+
+That makes installation a discovery step. Install it, submit each form on the site once, then
+read the list — it is the authoritative form inventory, which is more reliable than working
+from a page-by-page audit. Nobody currently knows how many forms the site has: three are
+confirmed, and between eight and twelve are suspected.
+
+Only the form id, title and a count are kept. The submitted values are not, because an
+unmapped form is by definition one nobody has agreed to store yet.
+
 ## How delivery works
 
 The plugin hooks `fluentform/submission_inserted` at priority 20, after Fluent Forms' own

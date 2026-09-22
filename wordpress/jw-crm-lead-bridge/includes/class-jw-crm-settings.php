@@ -14,11 +14,13 @@ final class JW_CRM_Settings
 {
     private const PAGE_SLUG = 'jw-crm-lead-bridge';
     private const NONCE = 'jw_crm_save_settings';
+    private const CLEAR_NONCE = 'jw_crm_clear_unmapped';
 
     public static function boot(): void
     {
         add_action('admin_menu', [self::class, 'register_page']);
         add_action('admin_post_jw_crm_save_settings', [self::class, 'handle_save']);
+        add_action('admin_post_jw_crm_clear_unmapped', [self::class, 'handle_clear_unmapped']);
     }
 
     public static function register_page(): void
@@ -58,6 +60,74 @@ final class JW_CRM_Settings
         wp_safe_redirect(add_query_arg('updated', 'true', admin_url('options-general.php?page=' . self::PAGE_SLUG)));
 
         exit;
+    }
+
+    public static function handle_clear_unmapped(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to change these settings.', 'jw-crm-lead-bridge'));
+        }
+
+        check_admin_referer(self::CLEAR_NONCE);
+
+        JW_CRM_Unmapped::clear();
+
+        wp_safe_redirect(admin_url('options-general.php?page=' . self::PAGE_SLUG));
+
+        exit;
+    }
+
+    private static function render_unmapped(): void
+    {
+        $unmapped = JW_CRM_Unmapped::all();
+
+        if ($unmapped === []) {
+            return;
+        }
+        ?>
+        <div class="notice notice-warning">
+            <h2><?php esc_html_e('Forms submitted without a mapping', 'jw-crm-lead-bridge'); ?></h2>
+
+            <p><?php esc_html_e('These forms fired but are not listed in the mapping below, so nothing was sent to the CRM. Add the ones that should create leads.', 'jw-crm-lead-bridge'); ?></p>
+
+            <table class="widefat striped" style="margin-bottom:1em;">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e('Form id', 'jw-crm-lead-bridge'); ?></th>
+                        <th><?php esc_html_e('Title', 'jw-crm-lead-bridge'); ?></th>
+                        <th><?php esc_html_e('Submissions', 'jw-crm-lead-bridge'); ?></th>
+                        <th><?php esc_html_e('Last seen', 'jw-crm-lead-bridge'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($unmapped as $formId => $row) : ?>
+                        <tr>
+                            <td><code><?php echo esc_html((string) $formId); ?></code></td>
+                            <td><?php echo esc_html($row['title']); ?></td>
+                            <td><?php echo esc_html((string) $row['count']); ?></td>
+                            <td>
+                                <?php
+                                echo esc_html(
+                                    sprintf(
+                                        /* translators: %s: a human readable interval such as "2 hours". */
+                                        __('%s ago', 'jw-crm-lead-bridge'),
+                                        human_time_diff($row['last'], time())
+                                    )
+                                );
+                                ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-bottom:1em;">
+                <input type="hidden" name="action" value="jw_crm_clear_unmapped" />
+                <?php wp_nonce_field(self::CLEAR_NONCE); ?>
+                <button type="submit" class="button"><?php esc_html_e('Clear this list', 'jw-crm-lead-bridge'); ?></button>
+            </form>
+        </div>
+        <?php
     }
 
     /**
@@ -132,6 +202,8 @@ final class JW_CRM_Settings
                 );
                 ?>
             </p>
+
+            <?php self::render_unmapped(); ?>
 
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="jw_crm_save_settings" />

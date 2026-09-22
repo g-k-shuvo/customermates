@@ -30,6 +30,7 @@ define('JW_CRM_REQUEST_TIMEOUT', 8);
 require_once JW_CRM_PLUGIN_DIR . 'includes/class-jw-crm-queue.php';
 require_once JW_CRM_PLUGIN_DIR . 'includes/class-jw-crm-client.php';
 require_once JW_CRM_PLUGIN_DIR . 'includes/class-jw-crm-settings.php';
+require_once JW_CRM_PLUGIN_DIR . 'includes/class-jw-crm-unmapped.php';
 
 register_activation_hook(__FILE__, ['JW_CRM_Queue', 'activate']);
 register_deactivation_hook(__FILE__, ['JW_CRM_Queue', 'deactivate']);
@@ -48,8 +49,12 @@ add_action('fluentform/submission_inserted', static function ($submissionId, $fo
     $formId = (int) $form->id;
 
     if (empty($map[$formId])) {
+        JW_CRM_Unmapped::record($formId, (string) $form->title);
+
         return;
     }
+
+    JW_CRM_Unmapped::forget($formId);
 
     $slug = (string) $map[$formId];
 
