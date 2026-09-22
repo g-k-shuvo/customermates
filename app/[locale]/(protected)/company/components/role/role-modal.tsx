@@ -175,9 +175,11 @@ export const RoleModal = observer(({ store }: Props) => {
 
               {renderResourcePermissions(Resource.deals)}
 
+              {renderResourcePermissions(Resource.pipelines)}
+
               {renderResourcePermissions(Resource.services)}
 
-              {store.rootStore.appMode !== "self-hosted" && renderResourcePermissions(Resource.inboxMessages)}
+              {renderResourcePermissions(Resource.inboxMessages)}
             </div>
           </AppCardBody>
 
