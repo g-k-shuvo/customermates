@@ -44,6 +44,7 @@ export const AppTopBar = observer(({ operatorConsoleVisible }: { operatorConsole
   const { plural } = useEntityTerminology();
 
   const entityLabels: Record<string, string> = {
+    leads: plural(EntityType.lead),
     contacts: plural(EntityType.contact),
     organizations: plural(EntityType.organization),
     deals: plural(EntityType.deal),
