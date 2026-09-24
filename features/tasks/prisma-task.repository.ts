@@ -299,7 +299,8 @@ export class PrismaTaskRepo
 
   async countAssignedActivities(args: { now: Date; dayEndsAt: Date }) {
     const assigned = {
-      AND: [this.accessWhere("task"), { users: { some: { userId: this.userId } } }],
+      ...this.accessWhere("task"),
+      AND: [{ users: { some: { userId: this.userId } } }],
       completedAt: null,
     };
 
