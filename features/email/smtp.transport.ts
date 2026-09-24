@@ -2,6 +2,7 @@ import { render } from "@react-email/components";
 import { createTransport } from "nodemailer";
 
 import { env } from "@/env";
+import { reportApplicationError } from "@/core/errors/report-application-error";
 
 import type { EmailMessage, EmailTransport } from "./email-transport";
 
@@ -27,6 +28,14 @@ export class SmtpTransport implements EmailTransport {
       html,
     });
 
-    return receipt.accepted.length > 0;
+    if (receipt.accepted.length === 0) {
+      reportApplicationError(
+        new Error(`SMTP accepted no recipient for a message to ${message.to} from ${message.from}`),
+      );
+
+      return false;
+    }
+
+    return true;
   }
 }

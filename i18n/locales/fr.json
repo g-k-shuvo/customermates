@@ -2105,6 +2105,7 @@
   "EmailVerification": {
     "notVerified": "Adresse e-mail non vérifiée",
     "resend": "Renvoyer l'e-mail de vérification",
+    "resendFailure": "L'e-mail de vérification n'a pas pu être envoyé. Veuillez réessayer plus tard.",
     "resendSuccess": "E-mail de vérification envoyé.",
     "verified": "Adresse e-mail vérifiée"
   },

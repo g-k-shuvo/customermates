@@ -160,7 +160,12 @@ export const auth = betterAuth({
       verificationUrl.searchParams.set("callbackURL", "/onboarding/wizard");
 
       const { getAuthService } = await import("@/core/di");
-      await getAuthService().sendVerificationEmail({ to: user.email, url: verificationUrl.toString() });
+      const sent = await getAuthService().sendVerificationEmail({
+        to: user.email,
+        url: verificationUrl.toString(),
+      });
+
+      if (!sent) throw new Error(`The verification email to ${user.email} was rejected by the mail transport`);
     },
   },
 

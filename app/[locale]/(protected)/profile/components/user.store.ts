@@ -34,6 +34,7 @@ export class UserStore extends BaseStore {
     await this.rootStore.loadingOverlayStore.withLoading(async () => {
       const result = await resendVerificationEmailFromAppAction();
       if (result.ok) this.toastSuccess("EmailVerification.resendSuccess");
+      else this.toastError("EmailVerification.resendFailure");
     });
   };
 

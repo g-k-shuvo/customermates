@@ -159,12 +159,12 @@ export class AuthService {
     if (!options?.keepSession) await auth.api.signOut({ headers: await headers() });
   }
 
-  async sendVerificationEmail(args: { to: string; url: string }): Promise<void> {
+  async sendVerificationEmail(args: { to: string; url: string }): Promise<boolean> {
     const t = await getTranslations();
     const locale = await getRequestAppLocale();
     const layoutCopy = await getEmailLayoutCopy(locale);
 
-    await this.emailService.send({
+    return this.emailService.send({
       to: args.to,
       subject: t("VerifyEmail.subject"),
       react: React.createElement(VerifyEmail, {

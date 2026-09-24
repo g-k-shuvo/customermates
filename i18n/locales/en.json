@@ -2105,6 +2105,7 @@
   "EmailVerification": {
     "notVerified": "Email not verified",
     "resend": "Resend verification email",
+    "resendFailure": "The verification email could not be sent. Please try again later.",
     "resendSuccess": "Verification email sent.",
     "verified": "Email verified"
   },

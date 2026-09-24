@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 
 import { env } from "@/env";
+import { reportApplicationError } from "@/core/errors/report-application-error";
 
 import type { EmailMessage, EmailTransport } from "./email-transport";
 
@@ -17,6 +18,14 @@ export class ResendTransport implements EmailTransport {
       react: message.react,
     });
 
-    return error === null;
+    if (error) {
+      reportApplicationError(
+        new Error(`Resend rejected a message to ${message.to} from ${message.from}: ${error.name}: ${error.message}`),
+      );
+
+      return false;
+    }
+
+    return true;
   }
 }
