@@ -30,6 +30,7 @@ COPY --from=builder /app/env.ts ./env.ts
 COPY --from=builder /app/core ./core
 COPY --from=builder /app/components ./components
 COPY --from=builder /app/content ./content
+COPY --from=builder /app/features ./features
 COPY --from=builder /app/i18n ./i18n
 COPY --from=builder /app/instrumentation.ts ./instrumentation.ts
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
