@@ -94,4 +94,15 @@ export const DATA_VIEW_SURFACES: Record<DataViewSurfaceKey, SurfaceDescriptor> =
     path: DATA_VIEW_PATHS[SURFACE.routines],
     resource: Resource.routines,
   },
+  [SURFACE.leads]: {
+    label: "Leads",
+    path: DATA_VIEW_PATHS[SURFACE.leads],
+    resource: Resource.leads,
+    entityType: EntityType.lead,
+  },
+  [SURFACE.webFormSources]: {
+    label: "Web forms",
+    path: DATA_VIEW_PATHS[SURFACE.webFormSources],
+    resource: Resource.leads,
+  },
 };

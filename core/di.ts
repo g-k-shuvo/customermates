@@ -1869,6 +1869,8 @@ export const getManageDataViewsInteractor = () =>
       [SURFACE.messagingThreads]: getMessagingRepo(),
       [SURFACE.entityTimeline]: getActivitiesRepo(),
       [SURFACE.routines]: getRoutineRepo(),
+      [SURFACE.leads]: getLeadRepo(),
+      [SURFACE.webFormSources]: getWebFormRepo(),
     },
     getDataViewStateRepo(),
     getUpsertDataViewInteractor(),

@@ -3872,7 +3872,6 @@
     "buttonLabel": "Registrati con {provider}",
     "inviteSubtitle": "Hai ricevuto un invito a unirti a un team su {brandName}. Scegli il tuo metodo di accesso per accettare l’invito.",
     "inviteTitle": "Accetta l'invito aziendale",
-    "newCompanySubtitle": "Registra una nuova azienda e prova {brand} gratis per {days} giorni. Nessuna carta di credito richiesta.",
     "or": "OPPURE",
     "signUpCta": "Crea un account",
     "switchToSignIn": "Hai già un account? <signInLink>Accedi</signInLink>",

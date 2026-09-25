@@ -55,7 +55,7 @@ class StubRepo extends BaseGetRepo<Item> {
         model: "deal",
         field: STAGE_GROUPING_KEY,
         column: STAGE_GROUPING_FIELD,
-        labelKey: "Common.filters.fields.stageId",
+        labelKey: "DataView.groupByStage",
         stages: [{ value: RENEWAL_STAGE_ID, label: "Renewal due" }],
       }),
     ]);

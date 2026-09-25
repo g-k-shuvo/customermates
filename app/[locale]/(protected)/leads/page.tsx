@@ -5,6 +5,7 @@ import { LeadsPageView } from "./components/leads-page-view";
 import { getGetLeadsInteractor } from "@/core/di";
 import { requireAccess } from "@/features/auth/next/require";
 import { decodeGetParams } from "@/core/utils/get-params";
+import { SURFACE } from "@/core/data-view/data-view-keys";
 import { PageContainer } from "@/components/shared/page-container";
 import { unwrapValidated } from "@/core/validation/validation.utils";
 
@@ -23,7 +24,7 @@ export default async function LeadsPage({ searchParams }: Props) {
   const leads = await unwrapValidated(
     getGetLeadsInteractor().invoke({
       ...leadParams,
-      p13nId: "leads-card-store",
+      p13nId: SURFACE.leads,
     }),
   );
 

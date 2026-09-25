@@ -3872,7 +3872,6 @@
     "buttonLabel": "S'inscrire avec {provider}",
     "inviteSubtitle": "Vous avez été invité à rejoindre une équipe sur {brandName}. Choisissez votre méthode de connexion pour accepter l'invitation.",
     "inviteTitle": "Accepter l'invitation de l'entreprise",
-    "newCompanySubtitle": "Enregistrez une nouvelle entreprise et testez {brand} gratuitement pendant {days} jours. Sans carte bancaire.",
     "or": "OU",
     "signUpCta": "Créer un compte",
     "switchToSignIn": "Vous avez déjà un compte ? <signInLink>Connectez-vous</signInLink>",

@@ -5,6 +5,7 @@ import { WebFormSourcesPageView } from "../components/webform/web-form-sources-p
 import { getGetWebFormSourcesInteractor } from "@/core/di";
 import { requireAccess } from "@/features/auth/next/require";
 import { decodeGetParams } from "@/core/utils/get-params";
+import { SURFACE } from "@/core/data-view/data-view-keys";
 import { PageContainer } from "@/components/shared/page-container";
 import { unwrapValidated } from "@/core/validation/validation.utils";
 
@@ -19,7 +20,7 @@ export default async function CompanyWebFormsPage({ searchParams }: Props) {
   const sourceParams = decodeGetParams(params);
 
   const sources = await unwrapValidated(
-    getGetWebFormSourcesInteractor().invoke({ ...sourceParams, p13nId: "web-form-sources-card-store" }),
+    getGetWebFormSourcesInteractor().invoke({ ...sourceParams, p13nId: SURFACE.webFormSources }),
   );
 
   return (

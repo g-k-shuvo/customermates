@@ -17,6 +17,8 @@ export const DATA_VIEW_PATHS: Readonly<Record<DataViewSurfaceKey, string | null>
   [SURFACE.operatorWorkspaces]: "/operator/workspaces",
   [SURFACE.operatorAudit]: "/operator/audit",
   [SURFACE.routines]: "/routines",
+  [SURFACE.leads]: "/leads",
+  [SURFACE.webFormSources]: "/company/web-forms",
 });
 
 export const ENTITY_TIMELINE_PARENT_PATHS = Object.freeze(

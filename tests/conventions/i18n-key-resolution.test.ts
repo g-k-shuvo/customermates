@@ -11,6 +11,7 @@ import {
   AggregationType,
   ConnectedAccountStatus,
   CustomColumnType,
+  DealStatus,
   LeadStatus,
   MessagingProvider,
   MessagingThreadState,
@@ -285,6 +286,7 @@ const PROVIDER_KEYS = Object.values(MessagingProvider).map((provider) => `Common
 const IMPORT_ISSUE_KEYS = IMPORT_ISSUE_CODES.map((code) => `DataTransfer.import.issues.${code}`);
 const USER_STATUS_KEYS = Object.values(Status).map((status) => `Common.userStatuses.${status}`);
 const LEAD_STATUS_KEYS = Object.values(LeadStatus).map((status) => `Common.leadStatuses.${status}`);
+const DEAL_STATUS_KEYS = Object.values(DealStatus).map((status) => `Common.dealStatuses.${status}`);
 const LOCALE_KEYS = [...ROUTING_LOCALES, "system"].map((locale) => `Common.locales.${locale}`);
 const THEME_KEYS = Object.values(Theme).map((theme) => `Common.themes.${theme}`);
 const FILTER_OPERATOR_KEYS = Object.values(FilterOperatorKey).map((operator) => `Common.filters.operators.${operator}`);
@@ -530,6 +532,7 @@ const DYNAMIC_TEMPLATE_CONSUMERS = new Map<string, readonly string[]>([
   ["DataTransfer.import.issues.${*}", IMPORT_ISSUE_KEYS],
   ["Common.themes.${*}", THEME_KEYS],
   ["Common.leadStatuses.${*}", LEAD_STATUS_KEYS],
+  ["Common.dealStatuses.${*}", DEAL_STATUS_KEYS],
   ["Common.userStatuses.${*}", USER_STATUS_KEYS],
   ["ConnectedAccountsCard.statusLabels.${*}", CONNECTED_ACCOUNT_STATUS_KEYS],
   ["ConnectedAccountsCard.signatureTemplates.${*}", SIGNATURE_TEMPLATE_KEYS],
@@ -612,6 +615,7 @@ export const DYNAMIC_KEY_SITES = [
   "app/[locale]/(protected)/leads/components/lead-detail-summary.tsx :: t :: Common.leadStatuses.${fetchedEntity.status}",
   "app/[locale]/(protected)/leads/components/lead-detail-view.tsx :: t :: Common.leadStatuses.${status}",
   "app/[locale]/(protected)/leads/components/use-lead-columns.tsx :: t :: Common.leadStatuses.${row.original.status}",
+  "components/data-view/filter-modal/inputs/use-filter-select-items.tsx :: t :: Common.dealStatuses.${status}",
   "components/data-view/filter-modal/inputs/use-filter-select-items.tsx :: t :: Common.leadStatuses.${status}",
   "app/[locale]/(protected)/operator/components/workspaces/operator-workspace-modal.tsx :: t :: Common.providers.${channel.provider}",
   "app/[locale]/(protected)/operator/components/users/use-operator-user-columns.tsx :: t :: Common.userStatuses.${row.original.status}",

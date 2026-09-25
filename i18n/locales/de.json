@@ -3872,7 +3872,6 @@
     "buttonLabel": "Registrieren mit {provider}",
     "inviteSubtitle": "Du wurdest eingeladen, einem Team auf {brandName} beizutreten. Wähle deine Anmeldemethode, um die Einladung anzunehmen.",
     "inviteTitle": "Firmeneinladung annehmen",
-    "newCompanySubtitle": "Registriere ein neues Unternehmen und teste {brand} kostenlos für {days} Tage. Keine Kreditkarte erforderlich.",
     "or": "ODER",
     "signUpCta": "Konto erstellen",
     "switchToSignIn": "Bereits ein Konto? <signInLink>Anmelden</signInLink>",

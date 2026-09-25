@@ -391,7 +391,7 @@ export class PrismaDealRepo
         model: "deal",
         field: STAGE_GROUPING_KEY,
         column: STAGE_GROUPING_FIELD,
-        labelKey: "Common.filters.fields.stageId",
+        labelKey: "DataView.groupByStage",
         stages: await this.getGroupOptions(filters ? [...filters] : undefined),
       }),
       ...customSelectGroupables(EntityType.deal, customColumns ?? (await this.getCustomColumns())),

@@ -19,6 +19,8 @@ const LOCATIONS: Record<
   [SURFACE.auditLogs]: { labelKey: "AuditLogsCard.title" },
   [SURFACE.messagingThreads]: { labelKey: "NavigationBar.inbox" },
   [SURFACE.routines]: { labelKey: "NavigationBar.routines" },
+  [SURFACE.leads]: { entity: "lead" },
+  [SURFACE.webFormSources]: { labelKey: "WebFormSourcesCard.title" },
 };
 
 export function viewAiTypeLabel(
