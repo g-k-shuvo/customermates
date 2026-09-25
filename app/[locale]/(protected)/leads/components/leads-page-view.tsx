@@ -40,7 +40,7 @@ export const LeadsPageView = observer(function LeadsPageView({ leads }: Props) {
   const { singular } = useEntityTerminology();
   const t = useTranslations();
 
-  const view = resolveDataViewView(leadsStore.viewMode, leadsStore.groupingColumnId);
+  const view = resolveDataViewView(leadsStore.viewMode, leadsStore.isGrouped);
   const hasActiveQuery = Boolean(leadsStore.searchTerm?.trim()) || (leadsStore.filters?.length ?? 0) > 0;
   const pageState = resolveDataViewPageState({
     explicitlyUnpaginated: false,

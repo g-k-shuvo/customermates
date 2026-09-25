@@ -11,7 +11,7 @@ import { ROTTING_FILTER_FIELD, isRottingFilterActive, toggleRottingDealsFilter }
 
 export const DealRottingFilterChip = observer(function DealRottingFilterChip() {
   const t = useTranslations();
-  const { dealsStore, editFiltersModalStore } = useRootStore();
+  const { dealsStore } = useRootStore();
 
   if (!dealsStore.isReady) return null;
   if (!dealsStore.filterableFields.some((field) => field.field === ROTTING_FILTER_FIELD)) return null;
@@ -27,7 +27,6 @@ export const DealRottingFilterChip = observer(function DealRottingFilterChip() {
       variant={isActive ? "default" : "secondary"}
       onClick={() => {
         dealsStore.setQueryOptions({ filters: toggleRottingDealsFilter(dealsStore.filters) });
-        editFiltersModalStore.syncDraftFromTable(dealsStore);
       }}
     >
       <Hourglass className="size-3.5" />

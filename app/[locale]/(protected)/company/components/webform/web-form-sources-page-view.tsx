@@ -31,7 +31,7 @@ export const WebFormSourcesPageView = observer(function WebFormSourcesPageView({
   const columns = useWebFormSourceColumns();
   const t = useTranslations();
 
-  const view = resolveDataViewView(webFormSourcesStore.viewMode, webFormSourcesStore.groupingColumnId);
+  const view = resolveDataViewView(webFormSourcesStore.viewMode, webFormSourcesStore.isGrouped);
   const pageState = resolveDataViewPageState({
     explicitlyUnpaginated: false,
     hasActiveQuery: Boolean(webFormSourcesStore.searchTerm?.trim()) || (webFormSourcesStore.filters?.length ?? 0) > 0,

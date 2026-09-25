@@ -15,7 +15,7 @@ import {
 
 export const DealNextActivityFilterChip = observer(function DealNextActivityFilterChip() {
   const t = useTranslations();
-  const { dealsStore, editFiltersModalStore } = useRootStore();
+  const { dealsStore } = useRootStore();
 
   if (!dealsStore.isReady) return null;
   if (!dealsStore.filterableFields.some((field) => field.field === NEXT_ACTIVITY_FILTER_FIELD)) return null;
@@ -31,7 +31,6 @@ export const DealNextActivityFilterChip = observer(function DealNextActivityFilt
       variant={isActive ? "default" : "secondary"}
       onClick={() => {
         dealsStore.setQueryOptions({ filters: toggleNoNextActivityFilter(dealsStore.filters) });
-        editFiltersModalStore.syncDraftFromTable(dealsStore);
       }}
     >
       <CalendarOff className="size-3.5" />

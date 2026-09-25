@@ -11,7 +11,7 @@ export const ALL_PIPELINES_VALUE = "all";
 
 export const DealPipelineSwitcher = observer(function DealPipelineSwitcher() {
   const t = useTranslations();
-  const { dealsStore, editFiltersModalStore } = useRootStore();
+  const { dealsStore } = useRootStore();
 
   if (!dealsStore.isReady) return null;
   if (dealsStore.pipelines.length < 2) return null;
@@ -25,7 +25,6 @@ export const DealPipelineSwitcher = observer(function DealPipelineSwitcher() {
       value={dealsStore.selectedPipelineId ?? ALL_PIPELINES_VALUE}
       onValueChange={(next) => {
         dealsStore.selectPipeline(next === ALL_PIPELINES_VALUE ? null : next);
-        editFiltersModalStore.syncDraftFromTable(dealsStore);
       }}
     >
       <SelectTrigger aria-label={t("DealModal.pipeline.switcherLabel")} className="min-w-36 gap-1.5" size="sm">
