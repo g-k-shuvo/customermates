@@ -13,6 +13,10 @@ vi.mock("@/core/di", () => createMockDiModule(() => mockUser));
 vi.mock("@/features/search/entity-list-executors", () => ({
   entityListExecutors: { deal: spies.listDeals },
   entityNameExtractors: { deal: (item: { name: string }) => item.name },
+  LISTABLE_ENTITY_TYPES: ["deal"],
+  isListableEntityType: (entityType: string) => entityType === "deal",
+  requireEntityListExecutor: () => spies.listDeals,
+  extractEntityName: (_entityType: string, item: { name?: string }) => String(item?.name ?? ""),
 }));
 
 import { listRecordsTool } from "../entity-generic.mcp-tools";

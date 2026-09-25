@@ -18,6 +18,7 @@ const expectedPresetMatrix = {
   [EntityType.deal]: ["deal", "opportunity", "project", "job"],
   [EntityType.service]: ["service", "product", "offering", "package"],
   [EntityType.task]: ["task", "todo", "actionItem", "followUp"],
+  [EntityType.lead]: ["lead", "enquiry", "prospect", "request"],
 } as const;
 
 describe("entity terminology catalogs", () => {

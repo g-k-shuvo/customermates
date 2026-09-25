@@ -7,6 +7,7 @@ import { z } from "zod";
 import {
   CustomColumnType,
   EntityType,
+  LeadStatus,
   Status,
   SubscriptionPlan,
   SubscriptionStatus,
@@ -16,7 +17,7 @@ import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { AUDIT_SOURCE_FILTER_VALUES } from "@/core/types/filter-field-value-kind";
 import { DATE_BUCKETS, GroupingSchema } from "./grouping.schema";
 
-export const ENTITY_GROUPABLE_MODELS = ["contact", "deal", "organization", "service", "task"] as const;
+export const ENTITY_GROUPABLE_MODELS = ["contact", "deal", "lead", "organization", "service", "task"] as const;
 export const OPERATOR_GROUPABLE_MODELS = ["user", "company", "operatorAudit"] as const;
 export const AUTOMATION_GROUPABLE_MODELS = ["routine"] as const;
 export const GROUPABLE_MODELS = [
@@ -38,9 +39,10 @@ export const ENTITY_CUSTOM_FIELD_RELATION = {
   [EntityType.task]: "task",
 } satisfies Record<EntityType, string>;
 
-export const GROUPABLE_MODEL_BY_ENTITY_TYPE: Partial<Record<EntityType, EntityGroupableModel>> = {
+export const GROUPABLE_MODEL_BY_ENTITY_TYPE: Record<EntityType, EntityGroupableModel> = {
   [EntityType.contact]: "contact",
   [EntityType.deal]: "deal",
+  [EntityType.lead]: "lead",
   [EntityType.organization]: "organization",
   [EntityType.service]: "service",
   [EntityType.task]: "task",
@@ -256,6 +258,26 @@ export const GROUPING_JOIN = {
       targetRelation: "user",
     },
   },
+  lead: {
+    contactIds: {
+      via: "column",
+      column: "contactId",
+      targetModel: "contact",
+      targetRelation: "contact",
+    },
+    organizationIds: {
+      via: "column",
+      column: "organizationId",
+      targetModel: "organization",
+      targetRelation: "organization",
+    },
+    userIds: {
+      via: "column",
+      column: "ownerUserId",
+      targetModel: "user",
+      targetRelation: "owner",
+    },
+  },
   user: {},
   company: {},
   operatorAudit: {},
@@ -288,6 +310,15 @@ const SUBSCRIPTION_STATUS_WIRING: EnumWiring = {
 export const GROUPING_ENUM = {
   contact: {},
   deal: {},
+  lead: {
+    leadStatus: {
+      column: "status",
+      values: Object.values(LeadStatus),
+      nullable: false,
+      labelKey: "Common.filters.fields.leadStatus",
+      valueLabelKey: (value: string) => `Common.leadStatuses.${value}`,
+    },
+  },
   organization: {},
   service: {},
   task: {

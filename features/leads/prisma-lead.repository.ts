@@ -15,6 +15,7 @@ import type { LeadNotificationRecipient, LeadNotificationRepo } from "./listener
 
 import { EntityType, LeadStatus, Resource } from "@/generated/prisma";
 
+import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
 import type { Filter } from "@/core/base/base-get.schema";
 
 import { type LeadDto } from "./lead.schema";
@@ -25,6 +26,12 @@ import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
 import { getCustomColumnRepo } from "@/core/di";
+import {
+  customSelectGroupables,
+  dateGroupables,
+  enumGroupables,
+  relationGroupables,
+} from "@/core/base/grouping/groupable-field";
 
 const LEAD_STATUS_VALUES = new Set<string>(Object.values(LeadStatus));
 
@@ -150,6 +157,21 @@ export class PrismaLeadRepo
 
   async getCustomColumns() {
     return getCustomColumnRepo().findByEntityType(EntityType.lead);
+  }
+
+  async getGroupableFields(customColumns?: readonly CustomColumnDto[]) {
+    if (!this.canAccess(Resource.leads)) return [];
+
+    return [
+      ...customSelectGroupables(EntityType.lead, customColumns ?? (await this.getCustomColumns())),
+      ...enumGroupables("lead", { leadStatus: true }),
+      ...relationGroupables("lead", {
+        contactIds: this.canAccess(Resource.contacts),
+        organizationIds: this.canAccess(Resource.organizations),
+        userIds: this.canAccess(Resource.users),
+      }),
+      ...dateGroupables("lead", { createdAt: true, updatedAt: true }),
+    ];
   }
 
   async getItems(params: GetQueryParams) {

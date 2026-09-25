@@ -48,6 +48,7 @@ describe("terminology selection helpers", () => {
       EntityType.deal,
       EntityType.service,
       EntityType.task,
+      EntityType.lead,
     ]);
     expect(defaultTerminologySelections()).toEqual({
       contact: "contact",
@@ -55,10 +56,11 @@ describe("terminology selection helpers", () => {
       deal: "deal",
       service: "service",
       task: "task",
+      lead: "lead",
     });
   });
 
-  it("hydrates legacy four-entry overrides with a canonical Task and serializes five ordered entries", () => {
+  it("hydrates legacy four-entry overrides with a canonical Task and Lead, and serializes six ordered entries", () => {
     const selections = terminologySelectionsFromOverrides([
       { entityType: EntityType.contact, presetKey: "client" },
       { entityType: EntityType.organization, presetKey: "company" },
@@ -71,6 +73,7 @@ describe("terminology selection helpers", () => {
       deal: "opportunity",
       service: "product",
       task: "task",
+      lead: "lead",
     });
 
     selections[EntityType.task] = "followUp";
@@ -80,6 +83,7 @@ describe("terminology selection helpers", () => {
       { entityType: EntityType.deal, presetKey: "opportunity" },
       { entityType: EntityType.service, presetKey: "product" },
       { entityType: EntityType.task, presetKey: "followUp" },
+      { entityType: EntityType.lead, presetKey: "lead" },
     ]);
   });
 
@@ -90,6 +94,7 @@ describe("terminology selection helpers", () => {
       deal: "deal",
       service: "service",
       task: "task",
+      lead: "lead",
     });
   });
 });
