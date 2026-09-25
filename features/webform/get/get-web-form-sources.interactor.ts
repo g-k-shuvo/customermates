@@ -1,4 +1,4 @@
-import type { GetResult, P13nRepo } from "@/core/base/base-get.interactor";
+import type { GetResult, DataViewStateRepo } from "@/core/base/base-get.interactor";
 import type { QueryParamsPrecheckInteractor } from "@/core/base/query-params-precheck.interactor";
 import type { Validated } from "@/core/validation/validation.utils";
 
@@ -26,7 +26,7 @@ export abstract class GetWebFormSourcesRepo extends BaseGetRepo<WebFormSourceDto
 export class GetWebFormSourcesInteractor extends BaseGetInteractor<WebFormSourceDto> {
   constructor(
     repo: GetWebFormSourcesRepo,
-    p13nRepo: P13nRepo,
+    p13nRepo: DataViewStateRepo,
     mode: "interactive" | "api",
     queryParamsPrecheck: QueryParamsPrecheckInteractor,
   ) {

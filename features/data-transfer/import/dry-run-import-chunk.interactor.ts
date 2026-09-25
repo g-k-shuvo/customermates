@@ -3,6 +3,7 @@ import type { DryRunImportOrganizationsInteractor } from "./dry-run-import-organ
 import type { DryRunImportDealsInteractor } from "./dry-run-import-deals.interactor";
 import type { DryRunImportServicesInteractor } from "./dry-run-import-services.interactor";
 import type { DryRunImportTasksInteractor } from "./dry-run-import-tasks.interactor";
+import type { DryRunImportLeadsInteractor } from "./dry-run-import-leads.interactor";
 import type { ImportChunkData } from "../data-transfer.schema";
 import type { Validated } from "@/core/validation/validation.utils";
 
@@ -20,6 +21,7 @@ export class DryRunImportChunkInteractor extends AuthenticatedInteractor<ImportC
     private readonly deals: DryRunImportDealsInteractor,
     private readonly services: DryRunImportServicesInteractor,
     private readonly tasks: DryRunImportTasksInteractor,
+    private readonly leads: DryRunImportLeadsInteractor,
   ) {
     super();
   }
@@ -38,6 +40,8 @@ export class DryRunImportChunkInteractor extends AuthenticatedInteractor<ImportC
         return await this.services.invoke(input);
       case EntityType.task:
         return await this.tasks.invoke(input);
+      case EntityType.lead:
+        return await this.leads.invoke(input);
     }
   }
 }

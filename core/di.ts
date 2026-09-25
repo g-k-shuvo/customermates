@@ -2141,6 +2141,7 @@ export const getDryRunImportChunkInteractor = () =>
     getDryRunImportDealsInteractor(),
     getDryRunImportServicesInteractor(),
     getDryRunImportTasksInteractor(),
+    getDryRunImportLeadsInteractor(),
   );
 
 export const getCommitImportChunkInteractor = () =>
@@ -2155,6 +2156,8 @@ export const getCommitImportChunkInteractor = () =>
     getUpdateManyServicesInteractor(),
     getCreateManyTasksInteractor(),
     getUpdateManyTasksInteractor(),
+    getCreateManyLeadsInteractor(),
+    getUpdateManyLeadsInteractor(),
   );
 
 export const getGetImportRelationIndexInteractor = () =>

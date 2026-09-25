@@ -391,7 +391,9 @@ export function useFilterSelectItems(
     if (isCustom) return NO_FILTER_OPTIONS;
 
     const enumValue = filterFieldKeyOf(field);
-    return enumValue ? filterOptionSources(t, activityQueryRef)[enumValue] : NO_FILTER_OPTIONS;
+    if (!enumValue) return NO_FILTER_OPTIONS;
+
+    return filterOptionSources(t, activityQueryRef)[enumValue] ?? NO_FILTER_OPTIONS;
   }, [field, isCustom, t, timelineScopeKey]);
 
   const getItems = source && "getItems" in source ? source.getItems : undefined;

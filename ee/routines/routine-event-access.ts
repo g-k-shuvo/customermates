@@ -97,7 +97,7 @@ const INTRINSIC_FILTER_FIELDS = {
       operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.name],
     },
   ],
-} satisfies Partial<Record<EntityType, FilterableField[]>>;
+} as Partial<Record<EntityType, FilterableField[]>>;
 
 const MESSAGE_EVENTS = new Set<string>([
   DomainEvent.MESSAGING_MESSAGE_RECEIVED,

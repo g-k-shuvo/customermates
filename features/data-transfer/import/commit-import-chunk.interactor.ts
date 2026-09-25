@@ -8,6 +8,8 @@ import type { CreateManyServicesInteractor } from "@/features/services/upsert/cr
 import type { UpdateManyServicesInteractor } from "@/features/services/upsert/update-many-services.interactor";
 import type { CreateManyTasksInteractor } from "@/features/tasks/upsert/create-many-tasks.interactor";
 import type { UpdateManyTasksInteractor } from "@/features/tasks/upsert/update-many-tasks.interactor";
+import type { CreateManyLeadsInteractor } from "@/features/leads/upsert/create-many-leads.interactor";
+import type { UpdateManyLeadsInteractor } from "@/features/leads/upsert/update-many-leads.interactor";
 import type { ImportChunkData } from "../data-transfer.schema";
 import type { Validated } from "@/core/validation/validation.utils";
 
@@ -31,6 +33,8 @@ export class CommitImportChunkInteractor extends AuthenticatedInteractor<ImportC
     private readonly updateServices: UpdateManyServicesInteractor,
     private readonly createTasks: CreateManyTasksInteractor,
     private readonly updateTasks: UpdateManyTasksInteractor,
+    private readonly createLeads: CreateManyLeadsInteractor,
+    private readonly updateLeads: UpdateManyLeadsInteractor,
   ) {
     super();
   }
@@ -58,6 +62,10 @@ export class CommitImportChunkInteractor extends AuthenticatedInteractor<ImportC
         return data.mode === "create"
           ? await this.createTasks.invoke(collectionPayload(data.entityType, data.rows))
           : await this.updateTasks.invoke(collectionPayload(data.entityType, data.rows));
+      case EntityType.lead:
+        return data.mode === "create"
+          ? await this.createLeads.invoke(collectionPayload(data.entityType, data.rows))
+          : await this.updateLeads.invoke(collectionPayload(data.entityType, data.rows));
     }
   }
 }

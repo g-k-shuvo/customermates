@@ -37,7 +37,7 @@ import {
 import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { getCustomColumnRepo, getPipelineRepo } from "@/core/di";
-import { computeWeightedValue, effectiveProbability } from "./deal-weighting";
+import { computeWeightedValue, effectiveProbability, readOptionWeights } from "./deal-weighting";
 import { computeRottingAt, isRotting } from "./deal-rotting";
 import { dealStageMove, lostTransition, reopenTransition, wonTransition } from "./close/closing-transition";
 

@@ -31,9 +31,12 @@ export const ROUTINE_CHANGE_FIELDS: Partial<Record<EntityType, string[]>> = {
 };
 
 export function routineChangeFields(entityType: EntityType | null): string[] {
-  return entityType ? ROUTINE_CHANGE_FIELDS[entityType] : [];
+  return (entityType ? ROUTINE_CHANGE_FIELDS[entityType] : []) ?? [];
 }
 
 export function routineChangeFieldSchema(entityType: EntityType): ZodObject {
-  return DTO_SCHEMA_BY_ENTITY_TYPE[entityType];
+  const schema = DTO_SCHEMA_BY_ENTITY_TYPE[entityType];
+  if (!schema) throw new Error(`No routine change field schema is registered for ${entityType}`);
+
+  return schema;
 }

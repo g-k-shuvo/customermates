@@ -38,13 +38,13 @@ export const ENTITY_CUSTOM_FIELD_RELATION = {
   [EntityType.task]: "task",
 } satisfies Record<EntityType, string>;
 
-export const GROUPABLE_MODEL_BY_ENTITY_TYPE = {
+export const GROUPABLE_MODEL_BY_ENTITY_TYPE: Partial<Record<EntityType, EntityGroupableModel>> = {
   [EntityType.contact]: "contact",
   [EntityType.deal]: "deal",
   [EntityType.organization]: "organization",
   [EntityType.service]: "service",
   [EntityType.task]: "task",
-} satisfies Partial<Record<EntityType, EntityGroupableModel>>;
+};
 
 export type GroupingKind = "customSingleSelect" | "enum" | "relation" | "dateBucket";
 
@@ -392,6 +392,7 @@ export function customSelectGroupables(
   columns: readonly CustomColumnDto[],
 ): GroupableFieldSpec[] {
   const model = GROUPABLE_MODEL_BY_ENTITY_TYPE[entityType];
+  if (!model) return [];
 
   return columns
     .filter(

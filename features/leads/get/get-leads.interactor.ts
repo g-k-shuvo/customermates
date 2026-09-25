@@ -1,4 +1,4 @@
-import type { P13nRepo } from "@/core/base/base-get.interactor";
+import type { DataViewStateRepo } from "@/core/base/base-get.interactor";
 import type { QueryParamsPrecheckInteractor } from "@/core/base/query-params-precheck.interactor";
 
 import { EntityType, Resource, Action } from "@/generated/prisma";
@@ -26,7 +26,7 @@ export abstract class GetLeadsRepo extends BaseGetRepo<LeadDto> {}
 export class GetLeadsInteractor extends BaseGetInteractor<LeadDto> {
   constructor(
     repo: GetLeadsRepo,
-    p13nRepo: P13nRepo,
+    p13nRepo: DataViewStateRepo,
     mode: "interactive" | "api",
     queryParamsPrecheck: QueryParamsPrecheckInteractor,
   ) {
