@@ -347,7 +347,7 @@ describe("WidgetModalStore chart combinations", () => {
     expect(store.aggregationTypeOptions.map(({ key }) => key)).toContain(AggregationType.dealWeightedValue);
   });
 
-  it("offers custom grouping for every entity and relation grouping only for non-count metrics", () => {
+  it("offers custom grouping for every entity, and relation grouping only where a matching group by exists", () => {
     const store = createStore();
     const columns = Object.values(EntityType).map((entityType, index) => singleSelectColumn(entityType, index + 1));
     store.setCustomColumns(columns);
@@ -363,7 +363,7 @@ describe("WidgetModalStore chart combinations", () => {
         `custom:${columns.find((column) => column.entityType === entityType)?.id}`,
       ]);
 
-      if (entityType === EntityType.task) continue;
+      if (entityType === EntityType.task || entityType === EntityType.lead) continue;
       store.onChange(
         "aggregationType",
         entityType === EntityType.service ? AggregationType.dealQuantity : AggregationType.dealValue,

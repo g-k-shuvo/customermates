@@ -67,6 +67,13 @@ const customerSuccessGrants = [
   [Resource.company, companyVisibility],
 ] as const satisfies readonly RoleGrant[];
 
+const salesManagerPermissions = permissionFixtures(SEED_IDS.salesManagerRole, 1, salesManagerGrants);
+const customerSuccessPermissions = permissionFixtures(
+  SEED_IDS.customerSuccessRole,
+  1 + salesManagerPermissions.length,
+  customerSuccessGrants,
+);
+
 export const SYNTHETIC_ROLE_DEFINITIONS = [
   {
     id: SEED_IDS.role,
@@ -82,7 +89,7 @@ export const SYNTHETIC_ROLE_DEFINITIONS = [
     description: "Manages the sales pipeline, team workload, and customer conversations",
     isSystemRole: false,
     name: "Sales Manager",
-    permissions: permissionFixtures(SEED_IDS.salesManagerRole, 1, salesManagerGrants),
+    permissions: salesManagerPermissions,
   },
   {
     id: SEED_IDS.customerSuccessRole,
@@ -90,7 +97,7 @@ export const SYNTHETIC_ROLE_DEFINITIONS = [
     description: "Manages customer relationships, follow-ups, and shared conversations",
     isSystemRole: false,
     name: "Customer Success",
-    permissions: permissionFixtures(SEED_IDS.customerSuccessRole, 30, customerSuccessGrants),
+    permissions: customerSuccessPermissions,
   },
 ] satisfies readonly SyntheticRoleDefinition[];
 

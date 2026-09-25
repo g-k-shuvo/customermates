@@ -33,7 +33,7 @@ const savedOverrides = [
 ];
 
 describe("CompanySettingsStore terminology", () => {
-  it("initialises legacy saved overrides with a canonical Task and stays clean", () => {
+  it("initialises legacy saved overrides with a canonical Task and Lead, and stays clean", () => {
     const store = new CompanySettingsStore(makeRootStore());
     store.initTerminology(savedOverrides);
 
@@ -43,6 +43,7 @@ describe("CompanySettingsStore terminology", () => {
       deal: "project",
       service: "service",
       task: "task",
+      lead: "lead",
     });
     expect(store.hasUnsavedChanges).toBe(false);
   });
@@ -72,7 +73,7 @@ describe("CompanySettingsStore terminology", () => {
     expect(store.hasUnsavedChanges).toBe(true);
   });
 
-  it("submits all five entries, refreshes terminology, and becomes clean", async () => {
+  it("submits all six entries, refreshes terminology, and becomes clean", async () => {
     const rootStore = makeRootStore();
     const store = new CompanySettingsStore(rootStore);
     store.initTerminology(savedOverrides);
@@ -92,6 +93,7 @@ describe("CompanySettingsStore terminology", () => {
         { entityType: EntityType.deal, presetKey: "project" },
         { entityType: EntityType.service, presetKey: "service" },
         { entityType: EntityType.task, presetKey: "todo" },
+        { entityType: EntityType.lead, presetKey: "lead" },
       ],
     });
     expect(rootStore.terminologyStore.refresh).toHaveBeenCalledOnce();
