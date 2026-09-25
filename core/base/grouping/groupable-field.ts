@@ -258,26 +258,7 @@ export const GROUPING_JOIN = {
       targetRelation: "user",
     },
   },
-  lead: {
-    contactIds: {
-      via: "column",
-      column: "contactId",
-      targetModel: "contact",
-      targetRelation: "contact",
-    },
-    organizationIds: {
-      via: "column",
-      column: "organizationId",
-      targetModel: "organization",
-      targetRelation: "organization",
-    },
-    userIds: {
-      via: "column",
-      column: "ownerUserId",
-      targetModel: "user",
-      targetRelation: "owner",
-    },
-  },
+  lead: {},
   user: {},
   company: {},
   operatorAudit: {},

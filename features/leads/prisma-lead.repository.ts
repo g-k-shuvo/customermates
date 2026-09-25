@@ -30,7 +30,6 @@ import {
   customSelectGroupables,
   dateGroupables,
   enumGroupables,
-  relationGroupables,
 } from "@/core/base/grouping/groupable-field";
 
 const LEAD_STATUS_VALUES = new Set<string>(Object.values(LeadStatus));
@@ -165,11 +164,6 @@ export class PrismaLeadRepo
     return [
       ...customSelectGroupables(EntityType.lead, customColumns ?? (await this.getCustomColumns())),
       ...enumGroupables("lead", { leadStatus: true }),
-      ...relationGroupables("lead", {
-        contactIds: this.canAccess(Resource.contacts),
-        organizationIds: this.canAccess(Resource.organizations),
-        userIds: this.canAccess(Resource.users),
-      }),
       ...dateGroupables("lead", { createdAt: true, updatedAt: true }),
     ];
   }

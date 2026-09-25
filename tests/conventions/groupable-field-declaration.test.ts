@@ -20,7 +20,7 @@ const DECLARATION_METHOD = "getGroupableFields";
 const RELATION_FACTORY = "relationGroupables";
 const ENUM_FACTORY = "enumGroupables";
 const DATE_FACTORY = "dateGroupables";
-const FACTORIES = new Set([RELATION_FACTORY, ENUM_FACTORY, DATE_FACTORY, "customSelectGroupables"]);
+const FACTORIES = new Set([RELATION_FACTORY, ENUM_FACTORY, DATE_FACTORY, "customSelectGroupables", "stageGroupable"]);
 const DATE_FIELDS = ["createdAt", "updatedAt"];
 
 type WiredEnum = { values: readonly string[]; valueLabelKey: (value: string) => string };
@@ -188,9 +188,10 @@ describe("groupable field declarations", () => {
     ];
 
     for (const field of fields)
-      expect([field, Boolean(FILTER_FIELD_TERMINOLOGY[field]) || resolvesInEveryBundle(`Common.filters.fields.${field}`)]).toEqual(
-        [field, true],
-      );
+      expect([
+        field,
+        Boolean(FILTER_FIELD_TERMINOLOGY[field]) || resolvesInEveryBundle(`Common.filters.fields.${field}`),
+      ]).toEqual([field, true]);
   });
 
   it("resolves every wired enum label and every claimed enum value label in all bundles", () => {

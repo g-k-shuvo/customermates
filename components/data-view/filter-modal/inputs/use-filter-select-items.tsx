@@ -9,7 +9,9 @@ import { z } from "zod";
 import {
   ConnectedAccountStatus,
   CustomColumnType,
+  DealStatus,
   EntityType,
+  LeadStatus,
   MessagingProvider,
   MessagingThreadState,
   Status,
@@ -27,9 +29,14 @@ import { TIMELINE_KIND_VIEW_VALUES } from "@/core/types/filter-field-value-kind"
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { type ChipColor } from "@/constants/chip-colors";
 import { USER_STATUS_COLORS_MAP } from "@/constants/user-statuses";
+import { LEAD_STATUS_CHIP_COLOR } from "@/app/[locale]/(protected)/leads/components/lead-status-colors";
 import { SUBSCRIPTION_STATUS_COLOR_MAP } from "@/app/[locale]/(protected)/company/components/subscription/subscription-panel";
 import { OPERATOR_AUDIT_SOURCE } from "@/ee/operator/operator-lists.schema";
-import { getUsersAction } from "@/app/[locale]/(protected)/company/actions";
+import {
+  getLostReasonsAction,
+  getPipelinesAction,
+  getUsersAction,
+} from "@/app/[locale]/(protected)/company/actions";
 import { getContactsAction } from "@/app/[locale]/(protected)/contacts/actions";
 import { getOrganizationsAction } from "@/app/[locale]/(protected)/organizations/actions";
 import { getDealsAction } from "@/app/[locale]/(protected)/deals/actions";
@@ -109,6 +116,11 @@ function validActivityFilters(filters: Filter[] | undefined): NonNullable<Activi
     return parsed.success ? [parsed.data] : [];
   });
 }
+
+const booleanItems = (whenTrue: string, whenFalse: string) => [
+  { key: "true", value: "true", textValue: whenTrue },
+  { key: "false", value: "false", textValue: whenFalse },
+];
 
 const SELF_IDENTIFYING_FILTER_FIELDS = new Set<FilterFieldKey>([FilterFieldKey.workspaceId]);
 
@@ -218,6 +230,65 @@ export function filterOptionSources(
               textValue: label,
             };
           }),
+        })),
+    },
+    [FilterFieldKey.dealStatus]: {
+      items: () =>
+        Object.values(DealStatus).map((status) => ({
+          key: status,
+          value: status,
+          textValue: t(`Common.dealStatuses.${status}`),
+        })),
+    },
+    [FilterFieldKey.leadStatus]: {
+      items: () =>
+        Object.values(LeadStatus).map((status) => ({
+          key: status,
+          value: status,
+          textValue: t(`Common.leadStatuses.${status}`),
+          color: LEAD_STATUS_CHIP_COLOR[status],
+        })),
+    },
+    [FilterFieldKey.rotting]: {
+      items: () => booleanItems(t("Common.filters.rottingValues.rotting"), t("Common.filters.rottingValues.healthy")),
+    },
+    [FilterFieldKey.overdue]: {
+      items: () => booleanItems(t("Common.filters.overdueValues.overdue"), t("Common.filters.overdueValues.onTrack")),
+    },
+    [FilterFieldKey.nextActivity]: {
+      items: () =>
+        booleanItems(t("Common.filters.nextActivityValues.scheduled"), t("Common.filters.nextActivityValues.none")),
+    },
+    [FilterFieldKey.lostReasonId]: {
+      getItems: () =>
+        getLostReasonsAction().then((lostReasons) => ({
+          items: lostReasons.map((lostReason) => ({
+            key: lostReason.id,
+            value: lostReason.id,
+            textValue: lostReason.name,
+          })),
+        })),
+    },
+    [FilterFieldKey.pipelineId]: {
+      getItems: () =>
+        getPipelinesAction().then((pipelines) => ({
+          items: pipelines.map((pipeline) => ({
+            key: pipeline.id,
+            value: pipeline.id,
+            textValue: pipeline.name,
+          })),
+        })),
+    },
+    [FilterFieldKey.stageId]: {
+      getItems: () =>
+        getPipelinesAction().then((pipelines) => ({
+          items: pipelines.flatMap((pipeline) =>
+            pipeline.stages.map((stage) => ({
+              key: stage.id,
+              value: stage.id,
+              textValue: `${pipeline.name} · ${stage.name}`,
+            })),
+          ),
         })),
     },
     [FilterFieldKey.updatedAt]: NO_FILTER_OPTIONS,
