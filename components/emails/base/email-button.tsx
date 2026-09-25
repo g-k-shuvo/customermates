@@ -12,7 +12,7 @@ export function EmailButton({ href, children, className }: Props) {
   return (
     <Button
       className={cn(
-        "rounded-lg px-4 min-w-20 h-10 bg-primary-400 hover:bg-primary-500 active:bg-primary-600 text-white no-underline inline-flex items-center justify-center",
+        "rounded-lg px-5 py-3 bg-primary-400 hover:bg-primary-500 active:bg-primary-600 text-white no-underline inline-block text-center text-sm font-medium leading-none",
         className,
       )}
       href={href}
