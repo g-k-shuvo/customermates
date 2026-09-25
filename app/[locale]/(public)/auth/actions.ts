@@ -4,6 +4,7 @@ import type { EmailSignInData } from "@/features/auth/sign-in-with-email.interac
 import type { EmailSignUpData } from "@/features/auth/sign-up-with-email.interactor";
 import type { RequestPasswordResetData } from "@/features/auth/request-password-reset.interactor";
 import type { ResetPasswordData } from "@/features/auth/reset-password.interactor";
+import type { ResendVerificationEmailData } from "@/features/auth/resend-verification-email.interactor";
 import type { DecideMcpConsentData } from "@/features/auth/decide-mcp-consent.interactor";
 
 import { getTranslations } from "next-intl/server";
@@ -18,10 +19,13 @@ import {
   getResendVerificationEmailInteractor,
   getDecideMcpConsentInteractor,
 } from "@/core/di";
+import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { branding } from "@/core/config/branding";
 import { createZodError } from "@/core/validation/validation.utils";
 import { serializeResult } from "@/core/utils/action-result";
 import { isRedirect } from "@/features/auth/auth-outcome";
+import { buildLocalePath } from "@/i18n/locale-registry";
 
 async function socialLoginUnavailable() {
   const t = await getTranslations();
@@ -80,7 +84,10 @@ export async function continueWithMicrosoftAction(callbackURL?: string, errorCal
 }
 
 export async function signUpWithEmailAction(data: EmailSignUpData) {
-  return serializeResult(getSignUpWithEmailInteractor().invoke(data));
+  const result = await getSignUpWithEmailInteractor().invoke(data);
+  if (isRedirect(result)) redirect(buildLocalePath(await getLocale(), result.redirect));
+
+  return serializeResult(result);
 }
 
 export async function requestPasswordResetAction(data: RequestPasswordResetData) {
@@ -91,10 +98,10 @@ export async function resetPasswordAction(data: ResetPasswordData) {
   return serializeResult(getResetPasswordInteractor().invoke(data));
 }
 
-export async function resendVerificationEmailFromAuthAction(): Promise<{
+export async function resendVerificationEmailFromAuthAction(data: ResendVerificationEmailData = {}): Promise<{
   ok: boolean;
 }> {
-  return await getResendVerificationEmailInteractor().invoke();
+  return await getResendVerificationEmailInteractor().invoke(data);
 }
 
 export async function decideMcpConsentAction(data: DecideMcpConsentData) {

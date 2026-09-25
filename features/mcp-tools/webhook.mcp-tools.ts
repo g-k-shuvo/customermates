@@ -1,16 +1,18 @@
 import { z } from "zod";
 
 import {
+  customMcpFailure,
   encodeToToon,
-  mcpInteractorFailure,
-  mcpValidationFailure,
-  runInteractor,
   enumHint,
+  filtersDescription,
   formatDatesInResponse,
+  MCP_PAGE_SIZE_DESCRIPTION,
+  mcpInteractorFailure,
+  mcpOptionalPageSize,
   mcpPage,
   mcpPageSize,
-  customMcpFailure,
-  filtersDescription,
+  mcpValidationFailure,
+  runInteractor,
   sortDescription,
   toonResult,
 } from "./utils";
@@ -39,7 +41,7 @@ const ListWebhooksSchema = z.object({
     .describe(filtersDescription(filterFieldsHint([FilterFieldKey.createdAt, FilterFieldKey.updatedAt]))),
   sortDescriptor: SortDescriptorSchema.optional().describe(sortDescription("name, createdAt, updatedAt")),
   page: mcpPage(),
-  pageSize: mcpPageSize(100, "Results per page: 5, 10, 25, or 100 (default 100)"),
+  pageSize: mcpPageSize(25),
 });
 
 const CreateWebhookSchema = z.object({
@@ -50,6 +52,20 @@ const CreateWebhookSchema = z.object({
     .min(1)
     .describe(`Event types to subscribe to. Each value ${enumHint(WebhookEventSchema.options)}`),
   secret: z.string().optional().describe("Shared secret used to sign outgoing requests"),
+  headers: z
+    .record(z.string(), z.string())
+    .nullable()
+    .optional()
+    .describe(
+      "Extra HTTP headers sent with every delivery, for receivers that require their own authentication. create: optional object. update: omit to keep the current headers, pass null to clear them, pass an object to replace them. Values are write-only and never returned; get reports headerNames. Content-Type, Host and X-Webhook-Signature cannot be overridden, and a webhook carrying headers must use an HTTPS endpoint.",
+    ),
+  bodyTemplate: z
+    .string()
+    .nullable()
+    .optional()
+    .describe(
+      "JSON template for the request body, for receivers that need a fixed shape. Use {{event}}, {{timestamp}}, {{data.entityId}}, {{data.companyId}}, {{data.userId}} or {{data.payload}} placeholders; substituted values are JSON-escaped and a placeholder must sit inside a JSON string. Must render to a JSON object. update: omit to keep, pass null to clear. Omit to send the default envelope.",
+    ),
   enabled: z.boolean().default(true),
 });
 
@@ -67,6 +83,20 @@ const UpdateWebhookSchema = z.object({
     .nullable()
     .optional()
     .describe("Omit to keep the current secret. Pass null to clear it. Pass a string to set a new one."),
+  headers: z
+    .record(z.string(), z.string())
+    .nullable()
+    .optional()
+    .describe(
+      "Extra HTTP headers sent with every delivery, for receivers that require their own authentication. create: optional object. update: omit to keep the current headers, pass null to clear them, pass an object to replace them. Values are write-only and never returned; get reports headerNames. Content-Type, Host and X-Webhook-Signature cannot be overridden, and a webhook carrying headers must use an HTTPS endpoint.",
+    ),
+  bodyTemplate: z
+    .string()
+    .nullable()
+    .optional()
+    .describe(
+      "JSON template for the request body, for receivers that need a fixed shape. Use {{event}}, {{timestamp}}, {{data.entityId}}, {{data.companyId}}, {{data.userId}} or {{data.payload}} placeholders; substituted values are JSON-escaped and a placeholder must sit inside a JSON string. Must render to a JSON object. update: omit to keep, pass null to clear. Omit to send the default envelope.",
+    ),
   enabled: z.boolean().optional(),
 });
 
@@ -81,7 +111,7 @@ const GetWebhookSchema = z.object({
 const ListWebhookDeliveriesSchema = z.object({
   searchTerm: z.string().optional().describe("Free-text search against url and event name"),
   page: mcpPage(),
-  pageSize: mcpPageSize(25, "Results per page: 5, 10, 25, or 100 (default 25)"),
+  pageSize: mcpPageSize(25),
   filters: z
     .array(FilterSchema)
     .optional()
@@ -96,7 +126,9 @@ const ResendWebhookDeliverySchema = z.object({
 const ManageWebhooksSchema = z.object({
   action: z
     .enum(["create", "update", "delete", "get", "list", "list_deliveries", "resend_delivery"])
-    .describe("Webhook operation to perform"),
+    .describe(
+      "Webhook operation. Keys per action: create = url, events, then optional description, secret, headers, bodyTemplate, enabled; update = id plus any of url, description, events, secret, headers, bodyTemplate, enabled; get and delete = id; list = optional searchTerm, filters, sortDescriptor, page, pageSize; list_deliveries = optional id (webhook), searchTerm, filters, sortDescriptor, page, pageSize; resend_delivery = id (delivery).",
+    ),
   id: z
     .uuid()
     .optional()
@@ -123,6 +155,20 @@ const ManageWebhooksSchema = z.object({
     .describe(
       "Shared secret used to sign outgoing requests. create: optional string. update: omit to keep the current secret, pass null to clear it, pass a string to set a new one.",
     ),
+  headers: z
+    .record(z.string(), z.string())
+    .nullable()
+    .optional()
+    .describe(
+      "Extra HTTP headers sent with every delivery, for receivers that require their own authentication. create: optional object. update: omit to keep the current headers, pass null to clear them, pass an object to replace them. Values are write-only and never returned; get reports headerNames. Content-Type, Host and X-Webhook-Signature cannot be overridden, and a webhook carrying headers must use an HTTPS endpoint.",
+    ),
+  bodyTemplate: z
+    .string()
+    .nullable()
+    .optional()
+    .describe(
+      "JSON template for the request body, for receivers that need a fixed shape. Use {{event}}, {{timestamp}}, {{data.entityId}}, {{data.companyId}}, {{data.userId}} or {{data.payload}} placeholders; substituted values are JSON-escaped and a placeholder must sit inside a JSON string. Must render to a JSON object. update: omit to keep, pass null to clear. Omit to send the default envelope.",
+    ),
   enabled: z.boolean().optional().describe("create (default true) and update."),
   searchTerm: z
     .string()
@@ -141,10 +187,7 @@ const ManageWebhooksSchema = z.object({
     "list and list_deliveries only. " + sortDescription("list: name, createdAt, updatedAt; list_deliveries: createdAt"),
   ),
   page: mcpPage(),
-  pageSize: z
-    .preprocess((v) => (typeof v === "string" && v.trim() !== "" ? Number(v) : v), z.literal([5, 10, 25, 100]))
-    .optional()
-    .describe("Results per page: 5, 10, 25, or 100. Default 100 for list, 25 for list_deliveries."),
+  pageSize: mcpOptionalPageSize(`${MCP_PAGE_SIZE_DESCRIPTION} Default 25 for list and list_deliveries.`),
 });
 
 const ManageWebhooksOutputSchema = z
@@ -171,11 +214,11 @@ export const manageWebhooksTool = {
     "action create requires url and events. " +
     "action update requires id; events REPLACES the full subscription list; secret: omit to keep, null to clear, string to set. " +
     "action delete is IRREVERSIBLE. " +
-    "action get returns one webhook (the signing secret itself is never returned). " +
+    "action get returns one webhook (the signing secret and header values are never returned; get reports headerNames instead). " +
     "action list supports searchTerm, filters, sort, paging. " +
     "action list_deliveries returns delivery attempts newest first; without `id` it spans the whole workspace, with `id` it is scoped to that webhook's CURRENT url (deliveries made while a different url was configured are not matched); narrow further with searchTerm or filters. " +
     "action resend_delivery re-sends a past delivery as a NEW delivery record; pass the delivery id from list_deliveries.",
-  annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
+  annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
   inputSchema: ManageWebhooksSchema,
   outputSchema: ManageWebhooksOutputSchema,
   execute: async (params: z.infer<typeof ManageWebhooksSchema>) => {
@@ -201,7 +244,8 @@ export const manageWebhooksTool = {
               updatedAt: webhook.updatedAt,
             })),
           );
-          return { text: encodeToToon(items), structuredContent: { items } };
+          const payload = { total: data.pagination?.total ?? items.length, page: parsed.data.page, items };
+          return { text: encodeToToon(payload), structuredContent: payload };
         },
       );
     }
@@ -222,6 +266,8 @@ export const manageWebhooksTool = {
           description: parsed.data.description,
           events: parsed.data.events,
           secret: parsed.data.secret,
+          headers: parsed.data.headers,
+          bodyTemplate: parsed.data.bodyTemplate,
           enabled: parsed.data.enabled,
         }),
         (data) =>
@@ -251,6 +297,8 @@ export const manageWebhooksTool = {
           createdAt: webhook.createdAt,
           updatedAt: webhook.updatedAt,
           hasSecret: webhook.secret != null && webhook.secret !== "",
+          headerNames: Object.keys(webhook.headers ?? {}),
+          bodyTemplate: webhook.bodyTemplate,
         }),
       );
     }
@@ -286,9 +334,9 @@ export const manageWebhooksTool = {
         }),
         (data) =>
           toonResult({
-            items: formatDatesInResponse(data.items),
             total: data.pagination?.total ?? data.items.length,
             page: parsed.data.page,
+            items: formatDatesInResponse(data.items),
           }),
       );
     }

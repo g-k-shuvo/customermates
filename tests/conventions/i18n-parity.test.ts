@@ -32,10 +32,7 @@ const PRODUCT_NAMES = [
   "WhatsApp",
 ];
 
-const ALLOWED_LOCALIZED_NUMBERS = new Set([
-  "fr:ContactPage.description",
-  "fr:HomepagePricing.cloud.featureBusiness",
-]);
+const ALLOWED_LOCALIZED_NUMBERS = new Set(["fr:ContactPage.description", "fr:HomepagePricing.cloud.featureBusiness"]);
 
 const PROTECTED_SOURCE_TERMS = ["open core"];
 
@@ -75,6 +72,14 @@ const REQUIRED_TRANSLATION_FRAGMENTS: Record<string, Record<string, readonly str
 };
 
 const ALLOWED_SOURCE_IDENTICAL_TRANSLATIONS = new Set([
+  // The localized view type and name use the same colon syntax in these languages.
+  "de:AgentChat.context.viewLabel",
+  "es:AgentChat.context.viewLabel",
+  "it:AgentChat.context.viewLabel",
+  "de:ConnectedAccountsCard.emailLogoPlaceholder",
+  "es:ConnectedAccountsCard.emailLogoPlaceholder",
+  "fr:ConnectedAccountsCard.emailLogoPlaceholder",
+  "it:ConnectedAccountsCard.emailLogoPlaceholder",
   "de:OperatorUsers.modal.identity",
   "es:OperatorUsers.modal.identity",
   "fr:OperatorUsers.modal.identity",
@@ -112,6 +117,7 @@ const ALLOWED_SOURCE_IDENTICAL_TRANSLATIONS = new Set([
   "de:RoleModal.resources.api",
   "de:Subscription.planStatusLabel",
   "fr:AgplGithubBadge.label",
+  "fr:RoutineDetail.triggerThread",
   "fr:Common.defaultData.deal.options.qualification",
   "fr:Common.inputs.defaultOption",
   "fr:Common.filters.fields.participants",
@@ -240,9 +246,7 @@ describe("i18n parity", () => {
     expect(icuStructure("{count, plural, one {One} other {#}}", "en")).not.toBe(
       icuStructure("{count, plural, other {#}}", "en"),
     );
-    expect(icuStructure("<strong>{name}</strong>", "en")).not.toBe(
-      icuStructure("{name}<strong></strong>", "en"),
-    );
+    expect(icuStructure("<strong>{name}</strong>", "en")).not.toBe(icuStructure("{name}<strong></strong>", "en"));
   });
 
   it.skipIf(!ENFORCED && !process.env.AUDIT_REPORT)("has every default-locale leaf key in every routing locale", () => {

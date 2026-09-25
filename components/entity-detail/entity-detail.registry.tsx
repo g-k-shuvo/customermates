@@ -11,35 +11,30 @@ import { ContactDetailSummary } from "@/app/[locale]/(protected)/contacts/compon
 import {
   CONTACT_DETAIL_FIELD,
   CONTACT_DETAIL_P13N_ID,
-  CONTACT_DETAIL_SECTION,
 } from "@/app/[locale]/(protected)/contacts/components/contact-detail-personalization";
 import { OrganizationDetailView } from "@/app/[locale]/(protected)/organizations/components/organization-detail-view";
 import { OrganizationDetailSummary } from "@/app/[locale]/(protected)/organizations/components/organization-detail-summary";
 import {
   ORGANIZATION_DETAIL_FIELD,
   ORGANIZATION_DETAIL_P13N_ID,
-  ORGANIZATION_DETAIL_SECTION,
 } from "@/app/[locale]/(protected)/organizations/components/organization-detail-personalization";
 import { DealDetailView } from "@/app/[locale]/(protected)/deals/components/deal-detail-view";
 import { DealDetailSummary } from "@/app/[locale]/(protected)/deals/components/deal-detail-summary";
 import {
   DEAL_DETAIL_FIELD,
   DEAL_DETAIL_P13N_ID,
-  DEAL_DETAIL_SECTION,
 } from "@/app/[locale]/(protected)/deals/components/deal-detail-personalization";
 import { ServiceDetailView } from "@/app/[locale]/(protected)/services/components/service-detail-view";
 import { ServiceDetailSummary } from "@/app/[locale]/(protected)/services/components/service-detail-summary";
 import {
   SERVICE_DETAIL_FIELD,
   SERVICE_DETAIL_P13N_ID,
-  SERVICE_DETAIL_SECTION,
 } from "@/app/[locale]/(protected)/services/components/service-detail-personalization";
 import { TaskDetailView } from "@/app/[locale]/(protected)/tasks/components/task-detail-view";
 import { TaskDetailSummary } from "@/app/[locale]/(protected)/tasks/components/task-detail-summary";
 import {
   TASK_DETAIL_FIELD,
   TASK_DETAIL_P13N_ID,
-  TASK_DETAIL_SECTION,
 } from "@/app/[locale]/(protected)/tasks/components/task-detail-personalization";
 import { getSystemTaskNameTranslationKey } from "@/app/[locale]/(protected)/tasks/components/system-task.config";
 import { LeadDetailView } from "@/app/[locale]/(protected)/leads/components/lead-detail-view";
@@ -75,7 +70,6 @@ function detailPersonalization({
   defaultBuiltInFieldIds,
   gatedResources,
   customColumns,
-  sectionIds,
   canAccess,
 }: {
   p13nId: string;
@@ -83,7 +77,6 @@ function detailPersonalization({
   defaultBuiltInFieldIds: string[];
   gatedResources: Partial<Record<string, Resource>>;
   customColumns: CustomColumnDto[] | undefined;
-  sectionIds: string[];
   canAccess?: CanAccess;
 }): EntityDetailPersonalizationConfig {
   const availableBuiltInFieldIds = builtInFieldIds.filter((fieldId) => {
@@ -100,8 +93,6 @@ function detailPersonalization({
       ...customFieldIds.slice(0, 2),
     ],
     availableFieldIds: customColumns === undefined ? undefined : [...availableBuiltInFieldIds, ...customFieldIds],
-    defaultCollapsedSectionIds: sectionIds.slice(1),
-    sectionIds,
   };
 }
 
@@ -126,7 +117,6 @@ export const ENTITY_DETAIL: Record<EntityType, EntityDetailConfig> = {
           [CONTACT_DETAIL_FIELD.userIds]: Resource.users,
         },
         customColumns,
-        sectionIds: Object.values(CONTACT_DETAIL_SECTION),
         canAccess,
       }),
     identity: (c, _t, fallbackName) => ({
@@ -154,7 +144,6 @@ export const ENTITY_DETAIL: Record<EntityType, EntityDetailConfig> = {
           [ORGANIZATION_DETAIL_FIELD.userIds]: Resource.users,
         },
         customColumns,
-        sectionIds: Object.values(ORGANIZATION_DETAIL_SECTION),
         canAccess,
       }),
     identity: (o, _t, fallbackName) => ({
@@ -185,7 +174,6 @@ export const ENTITY_DETAIL: Record<EntityType, EntityDetailConfig> = {
           [DEAL_DETAIL_FIELD.userIds]: Resource.users,
         },
         customColumns,
-        sectionIds: Object.values(DEAL_DETAIL_SECTION),
         canAccess,
       }),
     identity: (d, _t, fallbackName) => ({ name: d.name || fallbackName }),
@@ -209,7 +197,6 @@ export const ENTITY_DETAIL: Record<EntityType, EntityDetailConfig> = {
           [SERVICE_DETAIL_FIELD.userIds]: Resource.users,
         },
         customColumns,
-        sectionIds: Object.values(SERVICE_DETAIL_SECTION),
         canAccess,
       }),
     identity: (s, _t, fallbackName) => ({ name: s.name || fallbackName }),
@@ -231,7 +218,6 @@ export const ENTITY_DETAIL: Record<EntityType, EntityDetailConfig> = {
           [TASK_DETAIL_FIELD.userIds]: Resource.users,
         },
         customColumns,
-        sectionIds: Object.values(TASK_DETAIL_SECTION),
         canAccess,
       }),
     identity: (task, t, fallbackName) => {

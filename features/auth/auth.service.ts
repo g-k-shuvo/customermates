@@ -8,6 +8,7 @@ import { nanoid } from "nanoid";
 import { headers } from "next/headers";
 import { getTranslations } from "next-intl/server";
 
+import AccountAccessRevoked from "@/components/emails/account-access-revoked";
 import ResetPassword from "@/components/emails/reset-password";
 import VerifyEmail from "@/components/emails/verify-email";
 import NewUserNotification from "@/components/emails/new-user-notification";
@@ -15,7 +16,6 @@ import { DEFAULT_EMAIL_LAYOUT_COPY, getEmailLayoutCopy } from "@/components/emai
 import { auth } from "@/core/auth/better-auth";
 import { prisma } from "@/prisma/db";
 import { runWithoutTenant } from "@/core/decorators/tenant-context";
-import { mustVerifyEmail } from "./email-verification-grace";
 import { redirectTo } from "./auth-outcome";
 import { CustomErrorCode } from "@/core/validation/validation.types";
 import { env } from "@/env";
@@ -32,7 +32,6 @@ type AuthResult = { ok: true; user: AuthUser } | { ok: false; error: CustomError
 
 type Session = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
 export type InteractiveSession = Session;
-type SessionOrRedirect = { session: Session } | Redirect;
 type ApiKeyExpirationError = CustomErrorCode.apiKeyMinExpiration | CustomErrorCode.apiKeyMaxExpiration;
 type CreatedApiKey = Awaited<ReturnType<typeof auth.api.createApiKey>>;
 type CreateApiKeyResult = { ok: true; data: CreatedApiKey } | { ok: false; error: ApiKeyExpirationError };
@@ -83,18 +82,6 @@ export class AuthService {
     }
   }
 
-  async resolveSession(): Promise<SessionOrRedirect> {
-    const headersList = await headers();
-
-    if (!this.hasAuthToken(headersList)) return redirectTo("/auth/signin");
-
-    const session = await auth.api.getSession({ headers: headersList });
-    if (!session) return redirectTo("/auth/signin");
-    if (mustVerifyEmail(session.user)) return redirectTo("/auth/verify-email");
-
-    return { session };
-  }
-
   async signInWithEmail(args: {
     email: string;
     password: string;
@@ -139,10 +126,10 @@ export class AuthService {
     }
   }
 
-  async requestPasswordReset(email: string): Promise<void> {
+  async requestPasswordReset(email: string, redirectTo = "/auth/reset-password"): Promise<void> {
     await auth.api.requestPasswordReset({
       headers: await headers(),
-      body: { email, redirectTo: "/auth/reset-password" },
+      body: { email, redirectTo },
     });
   }
 
@@ -150,21 +137,32 @@ export class AuthService {
     await auth.api.resetPassword({ headers: await headers(), body: args });
   }
 
-  async resendVerificationEmail(email: string, options?: { keepSession?: boolean }): Promise<void> {
+  async resendVerificationEmail(
+    email: string,
+    options?: { callbackURL?: string; keepSession?: boolean },
+  ): Promise<void> {
     await auth.api.sendVerificationEmail({
       headers: await headers(),
-      body: { email, callbackURL: "/" },
+      body: { email, callbackURL: options?.callbackURL ?? "/" },
     });
 
     if (!options?.keepSession) await auth.api.signOut({ headers: await headers() });
   }
 
-  async sendVerificationEmail(args: { to: string; url: string }): Promise<boolean> {
+  async isEmailPendingVerification(email: string): Promise<boolean> {
+    const authUser = await runWithoutTenant(() =>
+      prisma.authUser.findFirst({ where: { email: email.toLowerCase() }, select: { emailVerified: true } }),
+    );
+
+    return authUser !== null && !authUser.emailVerified;
+  }
+
+  async sendVerificationEmail(args: { to: string; url: string }): Promise<void> {
     const t = await getTranslations();
     const locale = await getRequestAppLocale();
     const layoutCopy = await getEmailLayoutCopy(locale);
 
-    return this.emailService.send({
+    const sent = await this.emailService.send({
       to: args.to,
       subject: t("VerifyEmail.subject"),
       react: React.createElement(VerifyEmail, {
@@ -176,6 +174,29 @@ export class AuthService {
         cta: t("VerifyEmail.cta"),
         fallback: t("VerifyEmail.fallback"),
         securityNotice: t("VerifyEmail.securityNotice"),
+      }),
+    });
+
+    if (!sent) throw new Error("The verification email was rejected by the mail provider");
+  }
+
+  async sendAccountAccessRevokedEmail(args: { to: string }): Promise<void> {
+    const t = await getTranslations();
+    const locale = await getRequestAppLocale();
+    const layoutCopy = await getEmailLayoutCopy(locale);
+
+    await this.emailService.send({
+      to: args.to,
+      subject: t("AccountAccessRevoked.subject"),
+      react: React.createElement(AccountAccessRevoked, {
+        locale,
+        layoutCopy,
+        greeting: t("AccountAccessRevoked.greeting"),
+        body: t("AccountAccessRevoked.body"),
+        cta: t("AccountAccessRevoked.cta"),
+        signoff: t("AccountAccessRevoked.signoff"),
+        subject: t("AccountAccessRevoked.subject"),
+        title: t("AccountAccessRevoked.title"),
       }),
     });
   }

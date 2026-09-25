@@ -16,7 +16,7 @@ import { filterFieldsHint } from "@/core/types/filter-field-value-kind";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 import {
   getGetCompanySettingsInteractor,
-  getGetMyConnectedAccountsInteractor,
+  getGetMyConnectedAccountsContextInteractor,
   getGetRolesApiInteractor,
   getGetUserDetailsInteractor,
   getGetUsersApiInteractor,
@@ -30,6 +30,8 @@ const WorkspaceContextOutputSchema = z.looseObject({
 });
 
 const ListUsersOutputSchema = z.object({
+  total: z.number(),
+  page: z.number(),
   items: z.array(
     z.object({
       id: z.string(),
@@ -40,7 +42,6 @@ const ListUsersOutputSchema = z.object({
       status: z.string(),
     }),
   ),
-  total: z.number(),
 });
 
 export const getWorkspaceContextTool = {
@@ -63,7 +64,7 @@ export const getWorkspaceContextTool = {
       getGetUserDetailsInteractor().invoke(),
       getGetCompanySettingsInteractor().invoke(),
       getGetRolesApiInteractor().invoke({ pagination: { page: 1, pageSize: 100 } }),
-      getGetMyConnectedAccountsInteractor().invoke(),
+      getGetMyConnectedAccountsContextInteractor().invoke(),
     ]);
     if (!rolesResult.ok) return mcpInteractorFailure(rolesResult.error);
     if (!accountsResult.ok) return mcpInteractorFailure(accountsResult.error);
@@ -95,7 +96,7 @@ const ListUsersSchema = z.object({
     ),
   sortDescriptor: SortDescriptorSchema.optional().describe(sortDescription("name, createdAt, updatedAt")),
   page: mcpPage(),
-  pageSize: mcpPageSize(100, "Results per page: 5, 10, 25, or 100 (default 100)"),
+  pageSize: mcpPageSize(25),
 });
 
 export const listUsersTool = {
@@ -118,6 +119,8 @@ export const listUsersTool = {
       }),
       (data) =>
         toonResult({
+          total: data.pagination?.total ?? data.items.length,
+          page: params.page,
           items: data.items.map((item) => ({
             id: item.id,
             firstName: item.firstName,
@@ -126,7 +129,6 @@ export const listUsersTool = {
             roleId: item.roleId,
             status: item.status,
           })),
-          total: data.pagination?.total ?? data.items.length,
         }),
     ),
 };

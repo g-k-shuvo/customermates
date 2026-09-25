@@ -20,8 +20,8 @@ describe("agent interface commands", () => {
     expect(toAgentUiCommandInput("list_ui_targets", { query: "deals" })).toBeNull();
   });
 
-  it("sends only the target id for the tools that act on one control", () => {
-    for (const name of ["navigate", "highlight_element", "click_ui_target"]) {
+  it("sends only the target id for the tools that locate one interface target", () => {
+    for (const name of ["navigate", "highlight_element"]) {
       expect(toAgentUiCommandInput(name, { targetId: "nav-deals", extra: "dropped" })).toEqual({
         targetId: "nav-deals",
       });
@@ -34,12 +34,16 @@ describe("agent interface commands", () => {
     });
   });
 
-  it("passes a record request through whole, because the panel needs every field", () => {
-    expect(toAgentUiCommandInput("open_record", { entity: "contact", recordId: "new", view: "drawer" })).toEqual({
-      entity: "contact",
-      recordId: "new",
-      view: "drawer",
+  it("sends entity and record id when navigate opens one record's page", () => {
+    expect(toAgentUiCommandInput("navigate", { entity: "deal", recordId: "id", presentation: "drawer" })).toEqual({
+      entity: "deal",
+      recordId: "id",
     });
+  });
+
+  it("no longer knows the removed open_record tool", () => {
+    expect(isAgentPanelTool("open_record")).toBe(false);
+    expect(toAgentUiCommandInput("open_record", { entity: "contact", recordId: "new" })).toBeNull();
   });
 
   it("refuses to build a command for a tool it does not know", () => {

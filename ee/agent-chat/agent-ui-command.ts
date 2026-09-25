@@ -1,10 +1,4 @@
-export const AGENT_PANEL_TOOL_NAMES = [
-  "navigate",
-  "highlight_element",
-  "start_tour",
-  "click_ui_target",
-  "open_record",
-] as const;
+export const AGENT_PANEL_TOOL_NAMES = ["navigate", "highlight_element", "start_tour"] as const;
 
 export const AGENT_UI_TOOL_NAMES = ["list_ui_targets", ...AGENT_PANEL_TOOL_NAMES] as const;
 
@@ -23,13 +17,13 @@ export function toAgentUiCommandInput(toolName: string, input: unknown): Record<
 
   switch (toolName) {
     case "navigate":
+      return record.entity !== undefined || record.recordId !== undefined
+        ? { entity: record.entity, recordId: record.recordId }
+        : { targetId: record.targetId };
     case "highlight_element":
-    case "click_ui_target":
       return { targetId: record.targetId };
     case "start_tour":
       return { steps: record.steps };
-    case "open_record":
-      return record;
     default:
       return null;
   }

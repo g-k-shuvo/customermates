@@ -61,7 +61,7 @@ import { PipelinesStore } from "@/app/[locale]/(protected)/company/components/pi
 import { DeleteStageModalStore } from "@/app/[locale]/(protected)/company/components/pipelines/delete-stage-modal.store";
 import { LostReasonsStore } from "@/app/[locale]/(protected)/company/components/lost-reasons/lost-reasons.store";
 import { CustomColumnModalStore } from "@/components/data-view/custom-columns/custom-column-modal.store";
-import { EditFiltersModalStore } from "@/components/data-view/filter-modal/edit-filters-modal.store";
+import { FilterPaletteStore } from "@/components/data-view/filter-palette/filter-palette.store";
 import { DeleteConfirmationModalStore } from "@/components/modal/delete-confirmation-modal.store";
 import { DealCloseStore } from "@/app/[locale]/(protected)/deals/components/deal-close.store";
 import { DealDetailStore } from "@/app/[locale]/(protected)/deals/components/deal-detail.store";
@@ -70,6 +70,8 @@ import { ResetPasswordStore } from "@/app/[locale]/(public)/auth/reset-password/
 import { GlobalSearchModalStore } from "@/app/components/global-search-modal.store";
 import { ImportWizardStore } from "@/components/data-transfer/import-wizard.store";
 import { WebhookModalStore } from "@/app/[locale]/(protected)/company/components/webhook/webhook-modal.store";
+import { RoutinesStore } from "@/app/[locale]/(protected)/routines/components/routines.store";
+import { RoutineModalStore } from "@/app/[locale]/(protected)/routines/components/routine-modal.store";
 import { WebhooksStore } from "@/app/[locale]/(protected)/company/components/webhook/webhooks.store";
 import { WebhookDeliveriesStore } from "@/app/[locale]/(protected)/company/components/webhook/webhook-deliveries.store";
 import { WebhookDeliveryModalStore } from "@/app/[locale]/(protected)/company/components/webhook/webhook-delivery-modal.store";
@@ -116,6 +118,7 @@ export class RootStore {
   private _usersStore?: UsersStore;
   private _webhookDeliveriesStore?: WebhookDeliveriesStore;
   private _webhooksStore?: WebhooksStore;
+  private _routinesStore?: RoutinesStore;
   private _widgetsGridStore?: WidgetsStore;
   private _pipelinesStore?: PipelinesStore;
   private _deleteStageModalStore?: DeleteStageModalStore;
@@ -162,13 +165,15 @@ export class RootStore {
   private _userModalStore?: UserModalStore;
   private _webhookDeliveryModalStore?: WebhookDeliveryModalStore;
   private _webhookModalStore?: WebhookModalStore;
+  private _routineModalStore?: RoutineModalStore;
+  private _routineRunChatStore?: AgentChatStore;
   private _importWizardStore?: ImportWizardStore;
   private _widgetModalStore?: WidgetModalStore;
   private _auditLogModalStore?: AuditLogModalStore;
   private _feedbackModalStore?: FeedbackModalStore;
   private _timelineDetailModalStore?: TimelineDetailModalStore;
   private _customColumnModalStore?: CustomColumnModalStore;
-  private _editFiltersModalStore?: EditFiltersModalStore;
+  private _filterPaletteStore?: FilterPaletteStore;
   private _agentChatStore?: AgentChatStore;
   private _agentUiControlStore?: AgentUiControlStore;
 
@@ -266,8 +271,8 @@ export class RootStore {
     return (this._customColumnModalStore ??= new CustomColumnModalStore(this));
   }
 
-  get editFiltersModalStore() {
-    return (this._editFiltersModalStore ??= new EditFiltersModalStore(this));
+  get filterPaletteStore() {
+    return (this._filterPaletteStore ??= new FilterPaletteStore(this));
   }
 
   get widgetsStore() {
@@ -436,6 +441,18 @@ export class RootStore {
 
   get globalSearchModalStore() {
     return (this._globalSearchModalStore ??= new GlobalSearchModalStore(this));
+  }
+
+  get routineModalStore() {
+    return (this._routineModalStore ??= new RoutineModalStore(this));
+  }
+
+  get routineRunChatStore() {
+    return (this._routineRunChatStore ??= new AgentChatStore(this, { persistOpenState: false }));
+  }
+
+  get routinesStore() {
+    return (this._routinesStore ??= new RoutinesStore(this));
   }
 
   get webhookModalStore() {

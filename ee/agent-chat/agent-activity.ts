@@ -1,10 +1,19 @@
 import { z } from "zod";
+import { SurfaceKeySchema, ViewKeySchema } from "@/core/data-view/data-view-identity.schema";
+import { dataViewNavigationHref } from "@/core/data-view/data-view-links";
 
 import { approvalFreeActionsForTool, readOnlyActionsForTool } from "./gated-tools";
 import type { AgentToolIdentity } from "./tool-identity";
 import { internalToolIdentity, isInternalToolIdentity } from "./tool-identity";
 
 import { sanitizeAgentVisibleText } from "./agent-output-safety";
+import { LOAD_TOOLSET_TOOL_NAME } from "./agent-toolset-routing";
+
+const ViewMutationActionSchema = z.enum(["create", "update", "select", "delete"]);
+const DataViewNavigationHrefSchema = z
+  .string()
+  .refine((value) => dataViewNavigationHref(value) !== null)
+  .transform((value) => dataViewNavigationHref(value) as string);
 
 export type AgentTranslator = (key: string, values?: Record<string, string | number>) => string;
 
@@ -19,6 +28,9 @@ export const AGENT_ACTIVITY_KINDS = [
   "customFields.update",
   "customFields.delete",
   "customFields.configure",
+  "views.read",
+  "views.configure",
+  "views.delete",
   "widgets.read",
   "widgets.create",
   "widgets.update",
@@ -45,6 +57,12 @@ export const AGENT_ACTIVITY_KINDS = [
   "interface.navigate",
   "interface.tour",
   "interface.interact",
+  "tools.load",
+  "routines.read",
+  "routines.create",
+  "routines.update",
+  "routines.delete",
+  "routines.configure",
   "support.escalate",
   "generic",
 ] as const;
@@ -71,6 +89,7 @@ export const AGENT_CONSEQUENCE_ACTIONS = [
   "draft.save",
   "draft.discard",
   "thread.update",
+  "thread.move",
   "support.request",
   "team.invite",
   "team.update",
@@ -79,6 +98,9 @@ export const AGENT_CONSEQUENCE_ACTIONS = [
   "webhook.delete",
   "webhook.resend",
   "webhook.inspect",
+  "routine.pause",
+  "routine.run",
+  "routine.delete",
   "records.delete",
   "records.link",
   "workspace.configure",
@@ -110,14 +132,20 @@ export const AgentActivityDescriptorSchema = z.preprocess(
     const descriptor = value as Record<string, unknown>;
     return descriptor.kind === "interface.configure" ? { ...descriptor, kind: "interface.interact" } : value;
   },
-  z.object({
-    kind: z.enum(AGENT_ACTIVITY_KINDS),
-    resource: z.enum(AGENT_ACTIVITY_RESOURCES).optional(),
-    affectedResources: z.array(z.enum(AGENT_ACTIVITY_RESOURCES)).max(8),
-    risk: z.enum(["read", "write", "sensitive"]),
-    count: z.number().int().min(1).max(100).optional(),
-    consequence: AgentActivityConsequenceSchema.optional(),
-  }),
+  z
+    .object({
+      kind: z.enum(AGENT_ACTIVITY_KINDS),
+      resource: z.enum(AGENT_ACTIVITY_RESOURCES).optional(),
+      affectedResources: z.array(z.enum(AGENT_ACTIVITY_RESOURCES)).max(8),
+      risk: z.enum(["read", "write", "sensitive"]),
+      count: z.number().int().min(1).max(100).optional(),
+      consequence: AgentActivityConsequenceSchema.optional(),
+      viewSurfaceKey: SurfaceKeySchema.optional(),
+      viewAction: ViewMutationActionSchema.optional(),
+      viewKey: ViewKeySchema.optional(),
+      viewHref: DataViewNavigationHrefSchema.optional(),
+    })
+    .refine((descriptor) => !descriptor.viewHref || descriptor.kind === "views.configure"),
 );
 
 export type AgentActivityDescriptor = z.infer<typeof AgentActivityDescriptorSchema>;
@@ -145,6 +173,7 @@ const TOOL_RESOURCE: Record<string, AgentActivityResource | undefined> = {
   save_message_draft: "messages",
   discard_message_draft: "messages",
   update_messaging_thread: "messages",
+  move_email_thread: "messages",
 };
 
 function entityResource(input: unknown): AgentActivityResource | undefined {
@@ -225,11 +254,11 @@ export function describeAgentTool(identity: AgentToolIdentity, input: unknown): 
   const details = inputRecord(input);
 
   if (toolName === "list_ui_targets") return descriptor("interface.inspect", undefined, "read");
+  if (toolName === LOAD_TOOLSET_TOOL_NAME) return descriptor("tools.load", undefined, "read");
   if (toolName === "get_workspace_context") return descriptor("workspace.inspect", undefined, "read");
-  if (toolName === "navigate" || toolName === "highlight_element" || toolName === "open_record")
+  if (toolName === "navigate" || toolName === "highlight_element")
     return descriptor("interface.navigate", undefined, "read");
-  if (toolName === "click_ui_target" || toolName === "configure_view")
-    return descriptor("interface.interact", undefined, "read");
+  if (toolName === "configure_view") return descriptor("interface.interact", undefined, "read");
   if (toolName === "start_tour") return descriptor("interface.tour", undefined, "read");
   if (toolName === "request_support") {
     return descriptor("support.escalate", undefined, "sensitive", [], {
@@ -252,6 +281,22 @@ export function describeAgentTool(identity: AgentToolIdentity, input: unknown): 
               : "customFields.configure";
     return descriptor(kind, resource, action === "list" ? "read" : multiplexedRisk(toolName, details));
   }
+  if (toolName === "manage_data_views") {
+    const surface = SurfaceKeySchema.safeParse(details.surfaceKey);
+    const action = ViewMutationActionSchema.safeParse(details.action);
+    const view = ViewKeySchema.safeParse(details.viewKey);
+    const read = isMultiplexedRead(toolName, details);
+    return {
+      ...descriptor(
+        read ? "views.read" : details.action === "delete" ? "views.delete" : "views.configure",
+        undefined,
+        read ? "read" : multiplexedRisk(toolName, details),
+      ),
+      ...(surface.success ? { viewSurfaceKey: surface.data } : {}),
+      ...(action.success ? { viewAction: action.data } : {}),
+      ...(view.success ? { viewKey: view.data } : {}),
+    };
+  }
   if (toolName === "manage_widgets") {
     const action = actionValue(details);
     const kind: AgentActivityKind =
@@ -269,6 +314,31 @@ export function describeAgentTool(identity: AgentToolIdentity, input: unknown): 
       "widgets",
       isMultiplexedRead(toolName, details) ? "read" : multiplexedRisk(toolName, details),
     );
+  }
+  if (toolName === "manage_routines") {
+    const action = actionValue(details);
+    const kind: AgentActivityKind =
+      action === "list" || action === "runs"
+        ? "routines.read"
+        : action === "create"
+          ? "routines.create"
+          : action === "update"
+            ? "routines.update"
+            : action === "delete"
+              ? "routines.delete"
+              : "routines.configure";
+    const consequenceAction =
+      action === "pause"
+        ? "routine.pause"
+        : action === "run_now"
+          ? "routine.run"
+          : action === "delete"
+            ? "routine.delete"
+            : undefined;
+    const risk = isMultiplexedRead(toolName, details) ? "read" : multiplexedRisk(toolName, details);
+    return consequenceAction
+      ? descriptor(kind, undefined, risk, [], { action: consequenceAction })
+      : descriptor(kind, undefined, risk);
   }
   if (isMultiplexedRead(toolName, details)) return descriptor("workspace.read", undefined, "read");
   if (toolName === "update_workspace_settings") {
@@ -326,14 +396,14 @@ export function describeAgentTool(identity: AgentToolIdentity, input: unknown): 
           : action === "cancel"
             ? "social.cancel"
             : "external.manage";
-    return descriptor("generic", undefined, "sensitive", [], {
+    return descriptor("generic", undefined, multiplexedRisk(toolName, details), [], {
       action: consequenceAction,
       target: safeText(details.targetLabel, 120),
       preview: action === "invite" ? safeText(details.message, 240) : undefined,
     });
   }
   if (toolName === "linkedin_manage_sales_lists") {
-    return descriptor("generic", undefined, "sensitive", [], {
+    return descriptor("generic", undefined, multiplexedRisk(toolName, details), [], {
       action: actionValue(details) === "save" ? "salesList.save" : "external.manage",
       target: safeText(details.targetLabel, 120),
       state: safeText(details.listLabel, 80),
@@ -344,7 +414,7 @@ export function describeAgentTool(identity: AgentToolIdentity, input: unknown): 
   if (toolName === "get_messaging_threads" || toolName === "get_activities" || toolName === "get_calendars")
     return descriptor("messages.read", "messages", "read");
   if (toolName === "send_email") {
-    return descriptor("messages.send", "messages", "sensitive", ["messages"], {
+    return descriptor("messages.send", "messages", "write", ["messages"], {
       action: "email.send",
       target: safeStringList(details.to),
       subject: safeText(details.subject, 200),
@@ -353,7 +423,7 @@ export function describeAgentTool(identity: AgentToolIdentity, input: unknown): 
     });
   }
   if (toolName === "send_chat_message") {
-    return descriptor("messages.send", "messages", "sensitive", ["messages"], {
+    return descriptor("messages.send", "messages", "write", ["messages"], {
       action: "chat.send",
       target: safeText(details.chatName, 120) ?? safeStringList(details.attendeeIdentifiers),
       subject: safeText(details.inmailSubject, 200),
@@ -369,7 +439,7 @@ export function describeAgentTool(identity: AgentToolIdentity, input: unknown): 
     });
   }
   if (toolName === "discard_message_draft") {
-    return descriptor("messages.discard", "messages", "sensitive", ["messages"], {
+    return descriptor("messages.discard", "messages", "write", ["messages"], {
       action: "draft.discard",
     });
   }
@@ -379,6 +449,9 @@ export function describeAgentTool(identity: AgentToolIdentity, input: unknown): 
       state: safeText(details.state, 80),
     });
   }
+  if (toolName === "move_email_thread")
+    return descriptor("messages.triage", "messages", "write", ["messages"], { action: "thread.move" });
+
   if (
     toolName === "get_record_schema" ||
     toolName === "list_records" ||
@@ -423,11 +496,32 @@ export function describeAgentTool(identity: AgentToolIdentity, input: unknown): 
 
 type ActivityCopy = {
   running: string;
+  approval: string;
   done: string;
   error: string;
   cancelled: string;
   detail?: string;
 };
+
+export const AGENT_APPROVAL_COPY_KINDS: readonly AgentActivityKind[] = [
+  "generic",
+  "records.delete",
+  "customFields.configure",
+  "customFields.delete",
+  "widgets.configure",
+  "widgets.delete",
+  "support.escalate",
+  "messages.discard",
+  "messages.draft",
+  "messages.send",
+  "messages.triage",
+  "team.manage",
+  "webhooks.manage",
+  "routines.configure",
+  "routines.delete",
+  "views.configure",
+  "views.delete",
+];
 
 function countedResourceCopy(
   count: number | undefined,
@@ -475,6 +569,14 @@ function agentConsequenceDetail(
       return compact([t("AgentChat.activity.consequence.draftSave"), subject, preview]);
     case "draft.discard":
       return t("AgentChat.activity.consequence.draftDiscard");
+    case "thread.move":
+      return t("AgentChat.activity.consequence.threadMove");
+    case "routine.pause":
+      return t("AgentChat.activity.consequence.routinePause");
+    case "routine.run":
+      return t("AgentChat.activity.consequence.routineRun");
+    case "routine.delete":
+      return t("AgentChat.activity.consequence.routineDelete");
     case "thread.update":
       return consequence.state
         ? t("AgentChat.activity.consequence.threadUpdateState", {
@@ -582,8 +684,17 @@ export function agentActivityCopy(
       target: mutationTarget,
     });
 
+  const approval = AGENT_APPROVAL_COPY_KINDS.includes(activity.kind)
+    ? t(`AgentChat.activity.approval.${activity.kind}`, {
+        count: activity.count ?? 0,
+        resource: resource ?? t("AgentChat.activity.yourRecords"),
+        target: mutationTarget,
+      })
+    : state("running");
+
   return {
     running: state("running"),
+    approval,
     done: state("done"),
     error: state("error"),
     cancelled: t("AgentChat.activity.cancelled"),

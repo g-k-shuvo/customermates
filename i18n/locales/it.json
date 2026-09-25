@@ -1,4 +1,18 @@
 {
+  "AccountAccessRevoked": {
+    "body": "Hai appena effettuato l'accesso senza password, e questo conferma che questo indirizzo e-mail è tuo. Fino a ora non era mai stato confermato, quindi non potevamo sapere con certezza chi avesse creato questo account. Per sicurezza abbiamo rimosso la vecchia password e tutto il resto che poteva aprire l'account, come app collegate o chiavi. I tuoi dati non sono cambiati e puoi continuare ad accedere esattamente come hai appena fatto.",
+    "cta": "Imposta una nuova password",
+    "greeting": "Ciao,",
+    "signoff": "Il pulsante qui sopra ti serve solo se preferisci accedere con una password. Se non sei stato tu ad accedere, contattaci subito.",
+    "subject": "La tua e-mail è confermata e abbiamo rimosso la vecchia password",
+    "title": "Il tuo indirizzo e-mail è confermato"
+  },
+  "AccountRemovalReason": {
+    "ownerInactive": "Proprietario disattivato",
+    "planDowngrade": "Piano ridotto",
+    "subscriptionLapsed": "Abbonamento scaduto",
+    "trialExpired": "Prova terminata"
+  },
   "AccountsRemovedNotice": {
     "body": "Il tuo piano è passato a {plan}, quindi ho rimosso i seguenti account collegati per rientrare nel limite del piano: {accounts}. I tuoi messaggi e i tuoi contatti sono ancora tutti lì. Puoi ricollegare questi account quando vuoi dalla pagina degli account collegati.",
     "cta": "Vedi gli account collegati",
@@ -65,6 +79,43 @@
   },
   "AgentChat": {
     "activity": {
+      "approval": {
+        "customFields": {
+          "configure": "Pronto a modificare i campi personalizzati",
+          "delete": "Pronto a eliminare definitivamente un campo personalizzato"
+        },
+        "generic": "Pronto a eseguire una modifica che richiede la tua approvazione",
+        "messages": {
+          "discard": "Pronto a scartare la bozza",
+          "draft": "Pronto a salvare una bozza",
+          "send": "Pronto a inviare un messaggio reale",
+          "triage": "Pronto a cambiare lo stato della conversazione"
+        },
+        "records": {
+          "delete": "{count, plural, one {Pronto a eliminare definitivamente {target}} other {Pronto a eliminare definitivamente {target}}}"
+        },
+        "routines": {
+          "configure": "Pronto a mettere in pausa o eseguire la routine",
+          "delete": "Pronto a eliminare la routine e la sua cronologia"
+        },
+        "support": {
+          "escalate": "Pronto a inviare la tua richiesta all’assistenza via e-mail"
+        },
+        "team": {
+          "manage": "Pronto a modificare l’accesso del team"
+        },
+        "views": {
+          "configure": "Pronto a modificare la vista salvata",
+          "delete": "Pronto a eliminare definitivamente la vista salvata"
+        },
+        "webhooks": {
+          "manage": "Pronto a modificare la consegna dei webhook"
+        },
+        "widgets": {
+          "configure": "Pronto a modificare i widget della dashboard",
+          "delete": "Pronto a eliminare definitivamente un widget della dashboard"
+        }
+      },
       "cancelled": "Interrotto",
       "consequence": {
         "accountConnect": "Collegare un canale di messaggistica",
@@ -77,6 +128,9 @@
         "recordsDelete": "Questa azione non può essere annullata.",
         "recordsLink": "Collegare i record",
         "recordsUnlink": "Rimuovere i collegamenti",
+        "routineDelete": "Eliminare definitivamente la routine selezionata e la sua cronologia",
+        "routinePause": "Mettere in pausa la routine selezionata",
+        "routineRun": "Eseguire ora la routine selezionata",
         "salesListSave": "Aggiungere il potenziale cliente selezionato a un elenco Sales Navigator",
         "salesListSaveTarget": "Aggiungere {target} all'elenco Sales Navigator {list}",
         "socialAccept": "Accettare la richiesta di collegamento selezionata",
@@ -88,6 +142,7 @@
         "teamInvite": "Inviare email di invito alle persone selezionate",
         "teamInviteTarget": "Inviare {count} email di invito a: {target}",
         "teamUpdate": "Modificare il ruolo o lo stato del membro del team selezionato",
+        "threadMove": "Sposta la conversazione in un'altra cartella della casella",
         "threadUpdate": "Modificare lo stato della conversazione selezionata",
         "threadUpdateState": "Impostare lo stato della conversazione su «{state}»",
         "webhookCreate": "Creare un webhook",
@@ -204,12 +259,12 @@
           "discard": {
             "done": "Bozza scartata",
             "error": "Impossibile eliminare la bozza",
-            "running": "Pronto a eliminare la bozza"
+            "running": "Eliminazione della bozza"
           },
           "draft": {
             "done": "Bozza salvata",
             "error": "Impossibile salvare la bozza",
-            "running": "Pronto a salvare una bozza"
+            "running": "Salvataggio di una bozza"
           },
           "read": {
             "done": "Conversazioni controllate",
@@ -219,12 +274,12 @@
           "send": {
             "done": "Messaggio inviato",
             "error": "Impossibile inviare il messaggio",
-            "running": "Pronto a inviare un messaggio reale"
+            "running": "Invio del messaggio"
           },
           "triage": {
             "done": "Stato della conversazione modificato",
             "error": "Impossibile modificare lo stato della conversazione",
-            "running": "Pronto a cambiare lo stato della conversazione"
+            "running": "Modifica dello stato della conversazione"
           }
         },
         "profile": {
@@ -266,6 +321,33 @@
             "running": "{count, plural, one {Aggiornamento di {target}} other {Aggiornamento di {target}}}"
           }
         },
+        "routines": {
+          "configure": {
+            "done": "Pianificazione della routine modificata",
+            "error": "Impossibile modificare la pianificazione della routine",
+            "running": "Modifica della pianificazione della routine"
+          },
+          "create": {
+            "done": "Routine creata",
+            "error": "Impossibile creare la routine",
+            "running": "Creazione di una routine"
+          },
+          "delete": {
+            "done": "Routine rimossa",
+            "error": "Impossibile rimuovere la routine",
+            "running": "Rimozione della routine"
+          },
+          "read": {
+            "done": "Routine lette",
+            "error": "Impossibile leggere le routine",
+            "running": "Lettura delle routine"
+          },
+          "update": {
+            "done": "Routine aggiornata",
+            "error": "Impossibile aggiornare la routine",
+            "running": "Aggiornamento della routine"
+          }
+        },
         "support": {
           "escalate": {
             "done": "E-mail di assistenza accettata per l’invio",
@@ -277,14 +359,38 @@
           "manage": {
             "done": "Accesso del team modificato",
             "error": "Impossibile modificare gli accessi del team",
-            "running": "Pronto a modificare l’accesso del team"
+            "running": "Modifica dell’accesso del team"
+          }
+        },
+        "tools": {
+          "load": {
+            "done": "Altri strumenti caricati",
+            "error": "Impossibile caricare altri strumenti",
+            "running": "Caricamento di altri strumenti"
+          }
+        },
+        "views": {
+          "configure": {
+            "done": "Vista configurata",
+            "error": "Impossibile configurare la vista",
+            "running": "Configurazione della vista"
+          },
+          "delete": {
+            "done": "Vista eliminata",
+            "error": "Impossibile eliminare la vista",
+            "running": "Eliminazione della vista"
+          },
+          "read": {
+            "done": "Viste salvate verificate",
+            "error": "Impossibile verificare le viste salvate",
+            "running": "Verifica delle viste salvate"
           }
         },
         "webhooks": {
           "manage": {
             "done": "Azione sul webhook completata",
             "error": "Impossibile completare l’azione webhook",
-            "running": "Pronto a modificare la consegna dei webhook"
+            "running": "Modifica della consegna dei webhook"
           }
         },
         "widgets": {
@@ -353,10 +459,35 @@
       "resuming": "Decisione salvata — Mate continua…",
       "retryResume": "Mate non è ancora riuscito a riprendere. Riprova la stessa decisione.",
       "timeout": "Tempo scaduto senza risposta",
-      "title": "L’assistente vuole eseguire:"
+      "title": "Mate vuole eseguire:"
     },
     "askAi": "Chiedi all'IA",
     "askAiWorking": "Mate sta lavorando",
+    "context": {
+      "addAria": "Aggiungi contesto",
+      "addTooltip": "Aggiungi contesto o digita /",
+      "namedNewViewLabel": "Nuova {viewType}: {name}",
+      "newViewLabel": "Nuova {viewType}",
+      "noResults": "Nessun contesto corrispondente",
+      "onThisPage": "In questa pagina",
+      "records": "Record",
+      "remove": "Rimuovi {label}",
+      "searchError": "Impossibile cercare i record.",
+      "searchPlaceholder": "Cerca record…",
+      "starter": {
+        "appearance": "Modifica layout, raggruppamento o ordinamento di questa vista come segue: ",
+        "create": "Crea una nuova vista con queste specifiche: ",
+        "createNamed": "Crea la nuova vista “{name}” con queste specifiche: ",
+        "filters": "Modifica i filtri e la ricerca di questa vista come segue: ",
+        "timeline": "Modifica i filtri delle attività o l’ordinamento di questa vista come segue: ",
+        "update": "Aggiorna questa vista come segue: "
+      },
+      "surfaceViewType": "vista {location}",
+      "surfaceViewTypeStandalone": "Vista {location}",
+      "timelineViewType": "vista attività",
+      "timelineViewTypeStandalone": "Vista attività",
+      "viewLabel": "{viewType}: {name}"
+    },
     "credits": {
       "blocked": {
         "configuration_unavailable": "L’Assistente ospitato non è al momento disponibile. La cronologia resta accessibile.",
@@ -375,23 +506,26 @@
     "errors": {
       "approvalFailed": "Non è stato possibile inviare l’approvazione.",
       "limitReached": "Non restano abbastanza crediti IA per avviare un'altra richiesta.",
-      "sendFailed": "L’assistente non è riuscito a elaborare il messaggio.",
+      "sendFailed": "Mate non è riuscito a elaborare il messaggio.",
       "stopFailed": "Non è stato possibile fermare Mate. La connessione viene ripristinata per consentirti di riprovare.",
-      "turnFailed": "L’assistente ha riscontrato un errore."
+      "turnFailed": "Mate ha riscontrato un errore."
     },
     "greeting": {
       "headline": "Ciao, sono Mate",
       "subtitle": "Chiedimi qualsiasi cosa sul tuo workspace, oppure dimmi cosa fare e me ne occupo io.",
       "support": "Se qualcosa non va, posso inviare al nostro team via e-mail la conversazione recente e il team ti risponderà via e-mail."
     },
+    "openSavedView": "Apri vista salvata",
     "placeholder": "Chiedi al tuo CRM…",
     "runner": {
       "cancelled": "Questa risposta è stata interrotta.",
+      "contentFilter": "Il fornitore di IA ha bloccato parte di questa risposta. Non è stato modificato altro. Prova a riformulare la richiesta.",
       "creditLimit": "Ho completato una parte di questa richiesta, ma mi sono fermato perché i tuoi crediti Assistant sono esauriti. Il lavoro completato resta valido; i crediti si azzerano all'inizio del prossimo periodo.",
+      "creditLimitNoWrite": "Mi sono fermato prima di apportare modifiche perché i tuoi crediti Assistant sono esauriti. Non è stato creato, aggiornato o inviato nulla. I crediti si azzerano all'inizio del tuo prossimo periodo.",
       "emptyReply": "Non sono riuscito a generare una risposta. Riprova.",
       "hostedAiUnavailable": "L’IA ospitata è temporaneamente non disponibile. Riprova più tardi.",
-      "outputLimit": "Ho completato parte della risposta, ma ho raggiunto il limite di output di questo turno. Chiedimi di continuare e terminerò dal lavoro già completato.",
-      "safetyLimit": "Ho completato parte della richiesta, ma mi sono fermato perché gli ultimi passaggi si ripetevano, non riuscivano o avevano raggiunto un limite di sicurezza. Il lavoro completato resta invariato; controlla i passaggi precedenti prima di chiedermi di procedere.",
+      "policyBreach": "Il fornitore di IA ha superato il budget di crediti riservato, quindi l’esecuzione è stata interrotta. Non è stato avviato altro lavoro del provider.",
+      "providerError": "Il fornitore di IA ha restituito un errore prima che potessi finire. Non è stato modificato altro. Riprova.",
       "turnError": "Non sono riuscito a completare la richiesta. Riprova."
     },
     "send": "Invia",
@@ -608,6 +742,36 @@
             }
           }
         },
+        "routines": {
+          "data": {
+            "create-routine": {
+              "label": "Crea una routine",
+              "prompt": "Aiutami a creare una routine. Chiedimi che cosa voglio automatizzare, poi consiglia se deve essere eseguita secondo una pianificazione o attivata da un evento."
+            },
+            "routine-health": {
+              "label": "Controlla le mie routine",
+              "prompt": "Controlla le mie routine e segnala sovrapposizioni, lacune, routine in pausa ed esecuzioni recenti non riuscite. Non apportare modifiche."
+            },
+            "routines-tour-data": {
+              "label": "Spiega le mie routine",
+              "prompt": "Spiega che cosa fa ciascuna delle mie routine, quando viene eseguita e quali record o messaggi può influenzare."
+            }
+          },
+          "empty": {
+            "first-routine": {
+              "label": "Crea la mia prima routine",
+              "prompt": "Aiutami a creare la mia prima routine. Chiedimi che cosa voglio automatizzare, poi consiglia se deve essere eseguita secondo una pianificazione o attivata da un evento."
+            },
+            "routine-ideas": {
+              "label": "Suggerisci routine utili",
+              "prompt": "Esamina il mio spazio di lavoro e suggerisci tre routine utili per attività ricorrenti. Non creare ancora nulla."
+            },
+            "routines-tour": {
+              "label": "Scopri come funzionano",
+              "prompt": "Guidami nella pagina Routine e spiega pianificazioni, eventi di attivazione, test, crediti e cronologia delle esecuzioni. Non apportare modifiche."
+            }
+          }
+        },
         "services": {
           "data": {
             "create-service": {
@@ -701,7 +865,7 @@
       "archive": "Archivia chat",
       "archived": "Archiviato",
       "archivedChats": "Chat archiviate",
-      "assistantWorking": "L’assistente sta rispondendo",
+      "assistantWorking": "Mate sta rispondendo",
       "back": "Torna alla chat",
       "cancel": "Annulla",
       "chats": "Chat",
@@ -723,6 +887,7 @@
       "newChat": "Nuova chat",
       "noChats": "Ancora nessuna chat",
       "noChatsBody": "Avvia una chat per ritrovare in seguito le domande e il lavoro completato.",
+      "preparingAction": "Preparazione della prossima azione…",
       "queued": "In coda",
       "reconnecting": "Riconnessione a Mate…",
       "refreshHistoryFailed": "Non è stato possibile aggiornare la cronologia delle chat. Le chat esistenti restano visibili.",
@@ -732,13 +897,17 @@
       "retryTurn": "Riprova",
       "routeSyncRefreshing": "Aggiornamento della pagina…",
       "routeSyncWaiting": "L’aggiornamento della pagina attende il completamento delle modifiche…",
+      "startingRequest": "Avvio…",
       "stepsTook": "{steps, plural, one {# passaggio} other {# passaggi}} · {seconds}s",
       "stopping": "Arresto di Mate…",
       "tableCopied": "Tabella copiata",
       "thinking": "Sta pensando",
       "turnFailed": "Non è stato possibile completare questa risposta.",
+      "turnInterrupted": "La risposta è stata interrotta. Alcune modifiche potrebbero essere già state applicate. Controlla i record attuali prima di inviare una nuova richiesta.",
       "undo": "Annulla",
-      "untitled": "Nuova chat"
+      "untitled": "Nuova chat",
+      "waitElapsed": "{seconds} s trascorsi",
+      "workingOnRequest": "Elaborazione della tua richiesta…"
     }
   },
   "AgplGithubBadge": {
@@ -776,18 +945,28 @@
       "acceptanceType": "Tipo di accettazione",
       "acceptingEmail": "Accettato da",
       "changedDocuments": "Documenti modificati",
+      "changedFields": "Campi monitorati",
       "city": "Città",
       "country": "Paese",
+      "cronExpression": "Pianificazione",
       "currency": "Valuta",
       "dealStageWeights": "Probabilità di fase",
       "dealWeightingColumnId": "Campo della fase",
+      "debounceSeconds": "Ritardo",
+      "disabledReason": "Motivo disattivazione",
       "effectiveAt": "In vigore dal",
       "emails": "Indirizzi e-mail",
       "isNewCompany": "Prima persona nello spazio",
       "postalCode": "Codice postale",
+      "prompt": "Istruzioni",
       "recipientEmail": "Inviato a",
+      "removalReason": "Motivo rimozione",
       "street": "Via",
       "terminology": "Nomi dei record",
+      "timezone": "Fuso orario",
+      "triggerEvents": "Eventi di attivazione",
+      "triggerFilters": "Filtri di attivazione",
+      "triggerKind": "Attivazione",
       "versions": "Versioni dei documenti",
       "visibility": "Visibilità"
     },
@@ -807,7 +986,8 @@
   "AuthSocialErrors": {
     "accessDenied": "L'accesso è stato annullato presso il provider.",
     "accountAlreadyLinkedToDifferentUser": "Questo account social è già collegato a un altro utente.",
-    "accountNotLinked": "Esiste già un account con questa e-mail, ma l'indirizzo non è ancora verificato. Accedi con la password e verifica l'indirizzo, poi potrai usare l'accesso social.",
+    "accountNotLinked": "Il tuo provider non ha confermato questo indirizzo e-mail, quindi non abbiamo potuto collegarlo al tuo account esistente. Accedi invece con la password.",
+    "accountNotLinkedAction": "Reimposta password",
     "emailDoesNotMatch": "L'e-mail restituita dal provider non corrisponde a quella del tuo account.",
     "emailIsMissing": "Il provider non ha restituito alcun indirizzo e-mail.",
     "emailNotFound": "Non è stato trovato alcun indirizzo e-mail per questo account social.",
@@ -887,9 +1067,8 @@
       "hidePassword": "Nascondi password",
       "selectOption": "Seleziona un'opzione",
       "showPassword": "Mostra password",
-      "switchToCardView": "Passa alla vista schede",
-      "switchToKanbanView": "Passa alla vista kanban",
-      "switchToKanbanViewDisabled": "Aggiungi un campo personalizzato a scelta singola per attivare la vista kanban",
+      "switchToBoardView": "Passa alla vista board",
+      "switchToBoardViewDisabled": "Questo elenco non ha alcun campo per cui raggruppare",
       "switchToTableView": "Passa alla vista tabella",
       "themeSwitcher": "Selettore del tema",
       "tooltipFields": "Aspetto",
@@ -921,6 +1100,13 @@
     "customFieldHelp": {
       "immutableType": "Il tipo di campo è fisso dopo la creazione. Crea un nuovo campo personalizzato per usare un altro tipo.",
       "probabilityPermission": "Le probabilità di fase sono gestite in «{company}». Chiedi a un amministratore l’autorizzazione per modificarle."
+    },
+    "dateBuckets": {
+      "day": "Giorno",
+      "earlier": "Precedente",
+      "later": "Successivo",
+      "month": "Mese",
+      "week": "Settimana"
     },
     "datePresets": {
       "endTime": "Ora di fine",
@@ -1027,6 +1213,7 @@
       "apiKeyMaxExpiration": "La scadenza di una chiave API non può superare i 365 giorni.",
       "apiKeyMinExpiration": "La scadenza di una chiave API deve essere di almeno 1 giorno.",
       "assigneeRequired": "Devi assegnare questo elemento a te stesso. Nota che potrai vedere solo gli elementi assegnati a te.",
+      "billingPortalUnavailable": "Il portale di fatturazione non è disponibile per questo spazio di lavoro. Contatta l’assistenza per apportare modifiche.",
       "calendarEventNotFound": "ID evento del calendario non trovato o non accessibile.",
       "channelAlreadyLinked": "Questo canale è già collegato a un altro contatto.",
       "connectedAccountNotFound": "ID canale non trovato o non accessibile.",
@@ -1035,6 +1222,7 @@
       "customColumnIdNotFound": "ID colonna personalizzata non trovato o non accessibile.",
       "customColumnNotFound": "ID colonna personalizzata non trovato o non accessibile. Colonne disponibili: {validValues}.",
       "customColumnTypeMismatch": "Questa colonna personalizzata è di tipo {actualType}, non {expectedType}. Imposta il tipo su {actualType} per aggiornarla.",
+      "customColumnUsedByRoutineCannotDelete": "Questa colonna personalizzata è utilizzata in uno o più filtri delle routine. Rimuovila da queste routine prima di eliminarla.",
       "customFieldInvalidCurrency": "Il valore della valuta non è valido. Deve essere un numero valido.",
       "customFieldInvalidDate": "La data non è valida. Deve essere nel formato ISO 8601 (ad esempio 2024-01-15) o nel formato data-ora ISO 8601 (ad esempio 2024-01-15T00:00:00Z).",
       "customFieldInvalidDateRange": "L'intervallo di date non è valido. Deve contenere due date ISO 8601 separate da una virgola, con inizio precedente o uguale alla fine (ad esempio 2024-01-15,2024-01-22).",
@@ -1044,15 +1232,24 @@
       "customFieldInvalidPhone": "Il numero di telefono non è valido. Deve essere nel formato E.164 (ad esempio +491234567890). Per più numeri, separali con una virgola (ad esempio +491234567890, +499876543210).",
       "customFieldInvalidSingleSelect": "Il valore della scelta singola non è valido. Deve essere una delle opzioni consentite: {validValues}.",
       "customFieldInvalidUrl": "L'URL non è valido. Deve rispettare il formato di un URL (ad esempio https://example.com). Per più URL, separali con una virgola (ad esempio https://example.com, https://example.org).",
+      "dataViewAllNameImmutable": "La vista Tutte non può essere rinominata. Ometti name e aggiorna solo le impostazioni richieste in state. Consulta config per le impostazioni supportate e list per lo stato attuale prima di riprovare.",
+      "dataViewNotFound": "Questa vista salvata non è stata trovata.",
+      "dataViewUpdateEmpty": "Indica un nome o almeno un'impostazione della vista da aggiornare.",
       "dealAlreadyClosed": "Questa trattativa è già chiusa. Riaprila prima di contrassegnarla di nuovo come vinta o persa.",
       "dealNotClosed": "Questa trattativa è già aperta, quindi non c’è nulla da riaprire.",
       "dealNotFound": "ID trattativa non trovato o non accessibile.",
       "demoMode": "Questa azione non è disponibile in modalità demo. Accedi per usare tutte le funzionalità.",
       "draftMessageNotFound": "Questa bozza non è stata trovata. Potrebbe essere già stata inviata o scartata.",
+      "draftThreadNotSent": "Questa bozza non ha ancora una conversazione. Inviala dalla posta in arrivo.",
       "duplicateChannel": "Questo canale è presente più volte. Aggiungi ogni indirizzo e-mail, numero di telefono o handle una sola volta.",
       "duplicateOutboundSuppressed": "Un messaggio identico è stato inviato in questa conversazione poco fa. Modifica il testo o attendi un minuto prima di riprovare.",
       "duplicateWebhookEvents": "Gli eventi duplicati non sono consentiti.",
+      "duplicateWebhookHeaders": "Nomi di intestazione duplicati non sono consentiti.",
       "emailAlreadyExists": "Esiste già un account con questa e-mail.",
+      "emailFolderMoveUnsupported": "La posta di questo account non può essere archiviata da Customermates.",
+      "emailFolderNotFound": "Cartella non trovata per questo account.",
+      "emailFolderNotMovable": "Questa cartella non può ricevere email spostate.",
+      "emailLinkColourInvalid": "Inserisci # seguito da 6 caratteri esadecimali (0–9, A–F), ad esempio #1A2B3C.",
       "emailMismatch": "Gli indirizzi e-mail devono coincidere.",
       "emailNotVerified": "E-mail non verificata.",
       "enterpriseCheckoutUnavailable": "Gli spazi di lavoro Enterprise vengono fatturati manualmente e non possono avviare il pagamento self-service.",
@@ -1116,13 +1313,27 @@
       "pipelineStageLastInPipeline": "Una pipeline deve mantenere almeno una fase. Aggiungi un'altra fase prima di eliminare questa.",
       "pipelineStageMismatch": "La fase selezionata non appartiene alla pipeline selezionata.",
       "pipelineStageNotFound": "ID fase della pipeline non trovato o non accessibile.",
-      "presetNotFound": "Questo filtro salvato non è stato trovato.",
+      "privacyAcknowledgementRequired": "Conferma di aver letto l’Informativa sulla privacy.",
       "relationNotAllowed": "La relazione '{relation}' non è consentita su {entity}. Relazioni consentite: {allowed}.",
       "roleAssignedCannotDelete": "Un ruolo assegnato agli utenti non può essere eliminato.",
       "roleNotFound": "ID ruolo non trovato o non accessibile.",
       "roleSelfEditForbidden": "Non puoi modificare i permessi del ruolo che ti è assegnato.",
       "roleSystemImmutable": "I ruoli di sistema non possono essere modificati.",
       "roleSystemRequired": "Almeno un utente deve essere amministratore di sistema.",
+      "routineAdminRequired": "Solo un amministratore aziendale può sospendere o eliminare le routine.",
+      "routineDeleteHasRunningRun": "Attendi il completamento dell’esecuzione attiva prima di eliminare questa routine.",
+      "routineEditNotOwner": "Solo il proprietario può modificare la configurazione o l’attivazione di questa routine.",
+      "routineLimitReached": "Il tuo piano include {limit} routine per utente. Passa a un piano con un limite più alto.",
+      "routineNotFound": "ID routine non trovato o non accessibile.",
+      "routineOwnerIneligible": "Il proprietario della routine deve essere un membro attivo di questa azienda.",
+      "routineRunNotOwner": "Solo chi possiede questa routine può eseguirla, perché consuma i suoi crediti IA.",
+      "routineRunNowRequiresSchedule": "Solo le routine pianificate possono essere testate manualmente.",
+      "routineScheduleInvalid": "Questa pianificazione non è un'espressione cron valida.",
+      "routineScheduleRequired": "Scegli una pianificazione o una data singola per questa routine.",
+      "routineScheduleTooFrequent": "Questa pianificazione viene eseguita troppo spesso. Le routine possono essere eseguite al massimo ogni 15 minuti.",
+      "routineTestRequiresEnabled": "Attiva la routine prima di testarla.",
+      "routineTimeZoneInvalid": "Questo fuso orario non è supportato.",
+      "routineTriggerEventsRequired": "Seleziona almeno un evento per questa routine.",
       "salesNavigatorNotAvailable": "Questo account LinkedIn non ha Sales Navigator collegato.",
       "salesNavigatorRequiresLinkedin": "Sales Navigator richiede un account LinkedIn collegato, ma questo account è {provider}.",
       "sendEmailTargetRequired": "Seleziona una conversazione o un account da cui inviare.",
@@ -1154,8 +1365,15 @@
       "userSelfAdminUpdateForbidden": "Non puoi aggiornare il tuo account dall’amministrazione del team.",
       "webFormSourceNotFound": "ID origine modulo web non trovato o non accessibile.",
       "webFormSourceSlugTaken": "Esiste già un'origine modulo web con questo indirizzo. Scegline un'altra.",
+      "webhookBodyTemplateInvalid": "Il modello del corpo deve produrre un oggetto JSON valido.",
       "webhookDeliveryNotFound": "ID consegna del webhook non trovato o non accessibile.",
       "webhookEventsRequired": "Seleziona almeno un evento.",
+      "webhookHeaderNameInvalid": "I nomi delle intestazioni possono contenere solo lettere, cifre e caratteri token HTTP.",
+      "webhookHeaderNameReserved": "Questa intestazione viene impostata automaticamente e non può essere sovrascritta.",
+      "webhookHeadersRequireHttps": "Le intestazioni personalizzate richiedono un endpoint HTTPS.",
+      "webhookHeadersTooLarge": "Le intestazioni sono troppo grandi.",
+      "webhookHeadersTooMany": "Troppe intestazioni.",
+      "webhookHeaderValueInvalid": "I valori delle intestazioni possono contenere solo testo Latin-1, senza interruzioni di riga o caratteri di controllo.",
       "webhookNotFound": "ID webhook non trovato o non accessibile.",
       "widgetClosedDealAggregationCannotGroupByForecastMonth": "Il mese di chiusura previsto descrive le trattative aperte. Raggruppa le metriche sulle trattative chiuse per mese di chiusura.",
       "widgetClosedDealAggregationCannotGroupByLostOutcome": "Le trattative vinte non hanno un motivo di perdita né una fase al momento della perdita, quindi un tasso di successo raggruppato così sarebbe ovunque allo 0%. Usa invece un conteggio o un valore filtrato sulle trattative perse.",
@@ -1251,6 +1469,11 @@
         "deleted": "Ruolo eliminato",
         "updated": "Ruolo aggiornato"
       },
+      "routine": {
+        "created": "Routine creata",
+        "deleted": "Routine eliminata",
+        "updated": "Routine aggiornata"
+      },
       "service": {
         "created": "Servizio creato",
         "deleted": "Servizio eliminato",
@@ -1272,8 +1495,6 @@
       }
     },
     "filters": {
-      "clearAll": "Cancella tutto",
-      "clearSearch": "Cancella la ricerca",
       "daysPlaceholder": "Giorni",
       "daysPreset": "{count, plural, =1 {1 giorno} other {# giorni}}",
       "daysSuffix": "giorni",
@@ -1284,13 +1505,18 @@
         "connectedAccountId": "Canale",
         "createdAt": "Creato il",
         "dealStatus": "Stato",
+        "draft": "Bozza",
         "event": "Evento",
+        "firstName": "Nome",
         "isPlatformOperator": "Operatore di piattaforma",
         "lastActiveAt": "Ultima attività",
+        "lastName": "Cognome",
         "leadStatus": "Stato del lead",
         "lostReasonId": "Motivo di perdita",
+        "name": "Nome",
         "nextActivity": "Prossima attività",
         "overdue": "In ritardo",
+        "ownerUserId": "Proprietario",
         "participants": "Partecipanti",
         "pipelineId": "Pipeline",
         "plan": "Piano",
@@ -1329,23 +1555,35 @@
         "isNull": "è vuoto",
         "lt": "<",
         "lte": "≤",
-        "notIn": "non è uno di"
+        "notIn": "non è uno di",
+        "startsWith": "Inizia con"
       },
       "overdueValues": {
         "onTrack": "Non in ritardo",
         "overdue": "In ritardo"
       },
-      "presets": {
-        "add": "Salva come preimpostazione…",
-        "label": "Preimpostazione",
-        "namePlaceholder": "Nome della preimpostazione",
-        "none": "Nessuna preimpostazione"
+      "palette": {
+        "activeGroup": "Filtri attivi",
+        "addFilter": "Aggiungi filtro…",
+        "appliedCount": "{count, plural, =1 {1 filtro} other {# filtri}}",
+        "dateAfter": "Dopo…",
+        "dateBefore": "Prima…",
+        "dateBetween": "Tra…",
+        "dateCustom": "Intervallo personalizzato…",
+        "dateIncludes": "Include…",
+        "dateOnOrAfter": "Dal…",
+        "dateOnOrBefore": "Fino al…",
+        "editOperator": "Modifica condizione",
+        "editOperatorNamed": "Modifica condizione: {operator}",
+        "fieldsGroup": "Filtra per",
+        "limitReached": "Puoi applicare fino a {count} filtri.",
+        "removeFilter": "Rimuovi filtro",
+        "title": "Filtri"
       },
       "rottingValues": {
         "healthy": "Non in stallo",
         "rotting": "In stallo"
       },
-      "searchLabel": "Cerca",
       "selectionLimit": "Puoi selezionare fino a {count} valori.",
       "selectOperator": "Seleziona una condizione…",
       "unavailableValue": "Filtro non disponibile"
@@ -1360,6 +1598,8 @@
       "aggregationType": "Metrica",
       "amount": "Importo",
       "avatarUrl": "URL dell'avatar",
+      "bodyTemplate": "Modello del corpo",
+      "changedFields": "Campi modificati",
       "company": "Azienda",
       "confirmEmail": "Conferma l'e-mail",
       "confirmPassword": "Conferma la password",
@@ -1379,12 +1619,14 @@
       "email": "E-mail",
       "emails": "Indirizzi e-mail",
       "emptyContent": "Nessun risultato",
+      "enabled": "Attiva",
       "entityType": "Elemento",
       "events": "Eventi",
       "feedback": "Feedback",
       "firstName": "Nome",
       "formattingLocale": "Formato regionale",
       "groupByValue": "Raggruppamento",
+      "headers": "Intestazioni personalizzate",
       "label": "Etichetta",
       "labels": "Etichette",
       "lastName": "Cognome",
@@ -1401,11 +1643,18 @@
       "password": "Password",
       "periodDays": "Periodo",
       "pipelineId": "Pipeline",
+      "prompt": "Istruzioni",
       "roleId": "Ruolo",
+      "scheduleDayOfMonth": "Giorno del mese",
+      "schedulePreset": "Ripetizione",
+      "scheduleWeekday": "Giorno della settimana",
       "secret": "Segreto",
       "status": "Stato",
       "theme": "Tema",
       "title": "Titolo",
+      "triggerEvents": "Eventi",
+      "triggerFilters": "Filtri sui record",
+      "triggerKind": "Attivazione",
       "type": "Tipo",
       "unavailableSelection": "Selezione non disponibile",
       "url": "URL",
@@ -1515,10 +1764,12 @@
         "lastActiveAt": "Ultima attività",
         "lastName": "Cognome",
         "lastRequest": "Ultimo utilizzo",
+        "lastRunAt": "Ultima esecuzione",
         "lostReason": "Motivo di perdita",
         "members": "Membri",
         "name": "Nome",
         "nextActivity": "Prossima attività",
+        "nextRunAt": "Prossima esecuzione",
         "notes": "Note",
         "operator": "Operatore",
         "options": "Opzioni",
@@ -1544,6 +1795,7 @@
         "totalQuantity": "Quantità di servizi",
         "totalValue": "Valore della trattativa",
         "trialEnd": "Fine prova",
+        "trigger": "Attivazione",
         "type": "Tipo",
         "updatedAt": "Aggiornato il",
         "url": "URL",
@@ -1553,13 +1805,22 @@
         "weightedValue": "Valore ponderato",
         "workspace": "Area di lavoro"
       },
+      "fields": "Campi",
       "groupBy": "Raggruppa per",
       "layout": "Disposizione",
+      "layouts": {
+        "board": "Board",
+        "table": "Tabella"
+      },
       "nextPage": "Pagina successiva",
       "paginationEmpty": "0 di 0",
       "paginationRange": "{from}-{to} di {total}",
       "previousPage": "Pagina precedente",
       "search": "Cerca..."
+    },
+    "taskTypes": {
+      "custom": "Personalizzata",
+      "userPendingAuthorization": "Autorizzazione in sospeso"
     },
     "themes": {
       "dark": "Scuro",
@@ -1631,6 +1892,56 @@
     "disconnect": "Scollega",
     "disconnectedToastDescription": "Questo account non è più collegato presso il provider. Ricollegalo con le tue credenziali attuali.",
     "disconnectedToastTitle": "Account scollegato",
+    "emailAppearanceDescription": "Si applica a ogni e-mail composta da questo account.",
+    "emailAppearanceTitle": "Aspetto",
+    "emailDivider": "Separatore",
+    "emailDividers": {
+      "line": "Linea sottile",
+      "none": "Nessuno"
+    },
+    "emailFontFamilies": {
+      "monospace": "Monospaziato (Courier New)",
+      "sansSerif": "Senza grazie (Arial)",
+      "serif": "Con grazie (Georgia)"
+    },
+    "emailFontFamily": "Carattere",
+    "emailFontSize": "Dimensione del carattere",
+    "emailLayoutOptions": "Opzioni di layout",
+    "emailLinkColour": "Colore dei link",
+    "emailLinkColourLowContrast": "Contrasto basso: {light}:1 su chiaro, {dark}:1 su scuro. Alcuni destinatari faranno fatica a leggerlo.",
+    "emailLinkColourPicker": "Scegli il colore dei link",
+    "emailLinkColourPlaceholder": "#RRGGBB",
+    "emailLinkStyle": "Stile dei link",
+    "emailLinkStyles": {
+      "plain": "Senza sottolineatura",
+      "underlined": "Sottolineato"
+    },
+    "emailLogoHint": "Usa l'URL HTTPS pubblico di un'immagine accessibile ai destinatari.",
+    "emailLogoPlaceholder": "https://example.com/logo.png",
+    "emailLogoSize": "Dimensione del logo",
+    "emailLogoSizes": {
+      "large": "Grande",
+      "medium": "Medio",
+      "small": "Piccolo"
+    },
+    "emailLogoUrl": "URL del logo",
+    "emailPreviewDescription": "L'aspetto si applica a tutta l'e-mail; la firma viene aggiunta sotto.",
+    "emailPreviewLink": "Link di esempio",
+    "emailPreviewSample": "Ecco come apparirà il testo della tua e-mail.",
+    "emailPreviewTitle": "Anteprima",
+    "emailSave": "Salva impostazioni e-mail",
+    "emailSaved": "Impostazioni e-mail salvate",
+    "emailSignatureContent": "Contenuto della firma",
+    "emailSignatureDescription": "Viene aggiunta automaticamente alle e-mail inviate da questo account.",
+    "emailSignatureEnabled": "Aggiungi una firma",
+    "emailSignatureHint": "Supporta Markdown sicuro per e-mail: enfasi, link, elenchi, citazioni e separatori.",
+    "emailSignaturePlaceholder": "**Benjamin Wagner**\nFondatore di Customermates",
+    "emailSignatureTitle": "Firma",
+    "emailSpacing": "Spaziatura",
+    "emailSpacings": {
+      "comfortable": "Ampia",
+      "compact": "Compatta"
+    },
     "emptyState": "Non hai ancora collegato alcun canale.",
     "expiredLinkToastDescription": "Questo link di collegamento è scaduto. Generane uno nuovo da questa pagina e riprova.",
     "expiredLinkToastTitle": "Link scaduto",
@@ -1660,6 +1971,12 @@
     "sharedAccountsRequiresCloud": "Gli account condivisi sono disponibili su {brand} Cloud (piano Business o superiore).",
     "sharedOffToast": "L'account è ora privato",
     "sharedOnToast": "Account condiviso con il tuo spazio di lavoro",
+    "signatureTemplate": "Layout",
+    "signatureTemplates": {
+      "plain": "Solo testo",
+      "sideBySide": "Logo accanto",
+      "stacked": "Logo sopra"
+    },
     "status": "Stato",
     "statusLabels": {
       "connecting": "Collegamento in corso",
@@ -1675,6 +1992,12 @@
     "subTypeEmail": "E-mail",
     "syncing": "Sincronizzazione in background",
     "syncingTooltip": "I messaggi, le e-mail e gli eventi del calendario di questo account vengono importati in background. Di solito richiede qualche minuto, fino a un'ora per gli account di grandi dimensioni. Puoi continuare a lavorare nel frattempo; le nuove attività compaiono non appena arrivano.",
+    "tabs": {
+      "details": "Dettagli",
+      "email": "E-mail",
+      "foldersCount": "Cartelle {shown}/{total}",
+      "label": "Sezioni dell'account"
+    },
     "title": "Canali",
     "upgradeToBusinessForMoreAccounts": "Hai raggiunto il numero di account collegati incluso nel piano Pro. Passa a Business per collegarne altri.",
     "upsellDialogTitle": "Passa a un piano superiore per collegare più account",
@@ -1968,15 +2291,46 @@
     "menu": "Importa ed esporta"
   },
   "DataView": {
+    "board": {
+      "chooseField": "Raggruppa per campo",
+      "createField": "Crea un campo a scelta singola",
+      "promptBody": "Scegli un campo per cui raggruppare. Ogni valore diventa una colonna della board.",
+      "promptTitle": "Scegli come raggruppare questa board"
+    },
+    "collapseGroup": "Comprimi il gruppo {group}",
     "dragToReorder": "Trascina per riordinare",
     "editColumn": "Modifica colonna",
+    "expandGroup": "Espandi il gruppo {group}",
     "groupByStage": "Fase della pipeline",
+    "groupOverflow": "Vengono mostrati solo {count} gruppi",
     "noValue": "Nessun valore",
     "resizeColumn": "Ridimensiona la colonna «{column}». Trascina o usa i tasti freccia; tocca due volte o premi Invio per ripristinare.",
     "resizeHint": "Trascina per ridimensionare. Fai doppio clic per ripristinare.",
     "selectAllRows": "Seleziona tutte le righe",
-    "selectGroupingColumn": "Seleziona una colonna di raggruppamento per visualizzare la vista kanban.",
-    "selectRow": "Seleziona la riga {id}"
+    "selectGroup": "Seleziona il gruppo {group}",
+    "selectRow": "Seleziona la riga {id}",
+    "views": {
+      "aiLabel": "Chiedi all’IA della vista {name}",
+      "all": "Tutte",
+      "applied": "Visualizzazione di {name}",
+      "askAi": "Chiedi all'IA",
+      "copyLink": "Copia link",
+      "createTitle": "Nuova vista",
+      "createWithAi": "Crea con IA",
+      "createWithAiDescription": "Apri la chat IA con questa vista come contesto e descrivi ciò che vuoi vedere.",
+      "delete": "Elimina vista",
+      "duplicate": "Duplica come nuova vista",
+      "duplicateName": "{name} copia",
+      "editTitle": "Modifica vista",
+      "linkCopied": "Link copiato",
+      "menu": "Azioni vista",
+      "moveLeft": "Sposta a sinistra",
+      "moveRight": "Sposta a destra",
+      "name": "Nome",
+      "namePlaceholder": "Nome della vista",
+      "railLabel": "Viste salvate",
+      "recordCount": "{count, plural, one {# record} other {# record}}"
+    }
   },
   "DealModal": {
     "close": {
@@ -2050,6 +2404,7 @@
     "appOnboarding": "Procedura di configurazione",
     "appProfile": "Profilo",
     "appRecords": "Record",
+    "appRoutines": "Routine",
     "appSearch": "Ricerca globale",
     "architectureSecurity": "Architettura e sicurezza",
     "concepts": "Concetti chiave",
@@ -2077,6 +2432,7 @@
     "code": "Codice",
     "confirm": "Applica il link",
     "divider": "Separatore",
+    "formatting": "Formattazione",
     "heading1": "Titolo 1",
     "heading2": "Titolo 2",
     "image": "Immagine",
@@ -2143,25 +2499,17 @@
       "weightedValue": "{dealValue} × probabilità di chiusura del {percent}% per la fase corrente ({stage}). Modifica «{services}», quantità o fase; gestisci le probabilità in «{company}».",
       "weightedValueUnconfigured": "{dealValue} × probabilità di chiusura della fase selezionata. Configura le probabilità in «{company}» e seleziona una fase; modifica «{services}» o quantità."
     },
-    "customFieldsEmpty": {
-      "body": "I campi personalizzati contengono le informazioni aggiuntive che il tuo spazio di lavoro registra per questo tipo di record.",
-      "title": "Ancora nessun campo personalizzato"
-    },
     "donePersonalizing": "Fine",
     "fields": {
       "createdAt": "Creato il",
       "updatedAt": "Aggiornato il"
     },
     "hideField": "Nascondi {field} dai dettagli",
-    "moveFieldDown": "Sposta {field} in basso",
-    "moveFieldUp": "Sposta {field} in alto",
+    "overview": "Panoramica",
     "personalize": "Personalizza",
     "pinField": "Fissa {field} nella panoramica",
     "sections": {
-      "base": "Dati di base",
-      "customFields": "Campi personalizzati",
-      "notes": "Note",
-      "relations": "Relazioni"
+      "notes": "Note"
     },
     "showField": "Mostra {field} nei dettagli",
     "unpinField": "Togli {field} dalla panoramica"
@@ -2309,7 +2657,9 @@
     "demoModeError": "Il salvataggio, l'eliminazione e la modifica dei dati non sono disponibili in modalità demo. <link>Inizia gratuitamente</link> per accedere a tutte le funzionalità.",
     "inactiveUser": "Il tuo account è attualmente inattivo. Contatta il tuo amministratore per riattivarlo.",
     "invalidInviteLink": "Il link di invito che hai usato non è valido o potrebbe essere stato alterato. Contatta il tuo amministratore per richiedere un nuovo link valido e proseguire con la registrazione.",
+    "invalidOnboardingIntent": "Questo link di configurazione non è valido. Torna alla configurazione o riapri il link di invito originale.",
     "inviteLinkExpired": "Il link di invito che hai provato a usare è scaduto e non può più essere utilizzato. Contatta il tuo amministratore e chiedigli di generarne uno nuovo per completare la configurazione del tuo account.",
+    "onboardingSessionExpired": "Questa sessione di configurazione è scaduta. Riapri il link di invito originale o scegli di nuovo come iniziare.",
     "retry": "Riprova",
     "subtitle": "Ops! Si è verificato un errore",
     "title": "Che imbarazzo",
@@ -2378,7 +2728,7 @@
   },
   "GlobalSearch": {
     "clearRecent": "Cancella",
-    "emptyDescription": "Cerca {contacts}, {organizations}, {deals} e {services} in un unico posto.",
+    "emptyDescription": "Cerca {contacts}, {organizations}, {deals}, {services} e {tasks} in un unico posto.",
     "emptyTitle": "Trova tutto nel tuo spazio di lavoro",
     "groupRecent": "Aperti di recente",
     "hintNavigate": "Naviga",
@@ -2446,9 +2796,11 @@
       "ccBccToggle": "Cc/Ccn",
       "ccLabel": "Cc",
       "createContact": "Crea \"{query}\"",
+      "draftAttachmentsUnsupported": "Rimuovi gli allegati prima di salvare questa bozza.",
       "draftDiscard": "Scarta",
       "draftDiscardFailed": "Impossibile scartare la bozza",
       "draftEdit": "Modifica",
+      "draftSaved": "Bozza salvata. La trovi nella posta in arrivo.",
       "draftSendNow": "Invia la bozza",
       "emailContent": "Contenuto dell'e-mail",
       "emojiPicker": "Inserisci un’emoji",
@@ -2470,6 +2822,7 @@
       "updateDraft": "Aggiorna la bozza",
       "writeReply": "Scrivi una risposta..."
     },
+    "conversationRegion": "Conversazione",
     "dateToday": "Oggi",
     "dateYesterday": "Ieri",
     "edited": "(modificato)",
@@ -2482,10 +2835,16 @@
     "folders": {
       "current": "In {folder}",
       "hiddenTooltip": "In {folder}, che è nascosta nella tua posta in arrivo",
+      "moved": "Spostato in {folder}.",
+      "movedHidden": "Spostato in {folder}. Non appare più nella tua posta in arrivo.",
+      "moveNothing": "Niente da spostare in {folder}.",
+      "movePartial": "Parte di questa conversazione è stata spostata in {folder}. {failed} messaggio/i non è stato possibile spostarli.",
+      "moveRateLimited": "Archiviazione in {folder} interrotta perché il provider limita le richieste. Riprova il resto {retryAfter}.",
       "none": "Nessuna cartella"
     },
     "groupThread": "Gruppo ({count, plural, one {# membro} other {# membri}})",
     "hideQuotedText": "Nascondi il testo citato",
+    "jumpToLatest": "Vai al più recente",
     "learnMore": "Scopri di più",
     "linkedinContact": "Contatto LinkedIn",
     "loadMedia": "Carica il contenuto multimediale",
@@ -2548,6 +2907,39 @@
       "seek": "Modifica la posizione di riproduzione"
     },
     "youPrefix": "Tu:"
+  },
+  "InvitationCard": {
+    "inviter": "Invito da {inviterName}",
+    "joinAction": "Continua",
+    "joinBody": "Completa il tuo profilo e richiedi l'accesso. Un amministratore deve approvarti prima che tu possa entrare nello spazio di lavoro.",
+    "joinSubtitle": "Hai effettuato l'accesso come {email}",
+    "joinTitle": "Accetta l'invito",
+    "switchBody": "Questo account appartiene già a uno spazio di lavoro. Esci per continuare con un altro account.",
+    "switchSubtitle": "Hai effettuato l'accesso come {email}",
+    "switchTitle": "Hai già effettuato l'accesso"
+  },
+  "JoinWorkspace": {
+    "backAction": "Torna alle opzioni",
+    "emailLabel": "Indirizzo e-mail da invitare",
+    "safeBody": "Puoi lasciare questa pagina e tornare quando avrai ricevuto un invito.",
+    "safeTitle": "Non è stato creato alcuno spazio di lavoro",
+    "steps": {
+      "complete": {
+        "body": "Poi attendi che un amministratore dello spazio di lavoro approvi il tuo accesso.",
+        "title": "Completa il tuo profilo"
+      },
+      "open": {
+        "body": "Usa in questo browser il link ricevuto nell'e-mail di invito o un link di invito condiviso direttamente.",
+        "title": "Apri il link di invito"
+      },
+      "request": {
+        "body": "Invia questo indirizzo e-mail a un amministratore dello spazio di lavoro.",
+        "title": "Richiedi un invito"
+      }
+    },
+    "stepsTitle": "Come partecipare",
+    "subtitle": "Un amministratore dello spazio di lavoro deve invitare {email}.",
+    "title": "Entra in uno spazio di lavoro esistente"
   },
   "LeadCreatedNotice": {
     "cta": "Apri il lead",
@@ -2812,6 +3204,7 @@
       "taskManagement": "Gestione delle attività",
       "unifiedInbox": "Posta in arrivo unificata"
     },
+    "routines": "Routine",
     "search": "Cerca",
     "settings": "Impostazioni",
     "subscription": "Abbonamento",
@@ -2823,8 +3216,26 @@
     "subtitle": "Questa pagina è andata in vacanza senza avvisarci",
     "title": "Ops! Sei finito nel vuoto"
   },
+  "OnboardingChoice": {
+    "create": {
+      "description": "Configura uno spazio di lavoro separato per un'azienda che possiedi o gestisci.",
+      "note": "Gratis per {days} giorni",
+      "title": "Crea un nuovo spazio di lavoro"
+    },
+    "footnote": "Non viene creato alcuno spazio di lavoro finché non scegli Crea e completi il tuo profilo.",
+    "join": {
+      "description": "Entra in un team che usa già Customermates. Avrai bisogno dell'invito di un amministratore.",
+      "note": "Non verrà creato alcuno spazio di lavoro",
+      "title": "Entra in uno spazio di lavoro esistente"
+    },
+    "optionsLabel": "Opzioni di configurazione dello spazio di lavoro",
+    "signedInAs": "Accesso effettuato come {email}",
+    "subtitle": "Crea uno spazio di lavoro per la tua azienda o entra in un team che usa già Customermates.",
+    "title": "Come vuoi iniziare?"
+  },
   "OnboardingForm": {
     "agreeToTerms": "Dichiaro di avere l’autorizzazione ad agire per il cliente aziendale e accetto i <termsOfServiceLink>Termini</termsOfServiceLink> e il <dpaLink>DPA</dpaLink>. Ho letto l’<dataPrivacyLink>Informativa sulla privacy</dataPrivacyLink>.",
+    "invitationFrom": "Invito da {inviterName}",
     "invitedAgreeToTerms": "Accetto di rispettare i <termsOfServiceLink>Termini</termsOfServiceLink> e ho letto il <dpaLink>DPA</dpaLink> e l’<dataPrivacyLink>Informativa sulla privacy</dataPrivacyLink>."
   },
   "OnboardingWizard": {
@@ -2956,6 +3367,7 @@
         "title": "Invita il tuo team"
       },
       "profile": {
+        "invitedSubtitle": "Completa il tuo profilo per richiedere l'accesso allo spazio di lavoro indicato nell'invito.",
         "subtitle": "Dicci chi sei così possiamo configurare la tua area di lavoro.",
         "title": "Il tuo profilo"
       }
@@ -3261,6 +3673,7 @@
       "leads": "Lead",
       "organizations": "Organizzazioni",
       "pipelines": "Pipeline",
+      "routines": "Routine",
       "services": "Servizi",
       "tasks": "Attività",
       "users": "Utenti e ruoli"
@@ -3276,6 +3689,166 @@
     "system": "Sistema",
     "title": "Ruoli"
   },
+  "RoutineAdministration": {
+    "help": "Come amministratore aziendale, puoi sospendere o eliminare questa routine, ma non puoi modificarla, testarla né eseguirla.",
+    "pause": "Sospendi routine",
+    "pauseConfirmation": "Sospendere “{name}”? Le esecuzioni in coda verranno ignorate.",
+    "pauseTitle": "Sospendi routine",
+    "title": "Controlli di amministrazione"
+  },
+  "RoutineDetail": {
+    "credits": "Crediti",
+    "empty": {
+      "event": {
+        "actions": {
+          "calendarChanged": "Nel servizio di calendario esterno collegato a Customermates, crea, modifica o elimina un calendario.",
+          "calendarEventChanged": "Nel servizio di calendario esterno collegato a Customermates, crea, modifica o elimina un evento del calendario.",
+          "chatUpdated": "Modifica il nome, la descrizione o il tipo di una conversazione collegata.",
+          "emailReceived": "Ricevi una nuova e-mail non duplicata in una casella collegata.",
+          "messageDeleted": "Elimina un messaggio nel provider di messaggistica collegato.",
+          "messageReaction": "Aggiungi una reazione a un messaggio di una conversazione collegata.",
+          "messageReceived": "Ricevi un nuovo messaggio in arrivo non duplicato tramite un account collegato.",
+          "messageUpdated": "Modifica un messaggio nel provider di messaggistica collegato.",
+          "recordCreated": "Crea un record in Customermates: {entity}.",
+          "recordDeleted": "Elimina un record in Customermates: {entity}.",
+          "recordUpdated": "Apporta una modifica effettiva a un record in Customermates: {entity}.",
+          "relationCreated": "Fai accettare una richiesta di collegamento LinkedIn tramite un account collegato."
+        },
+        "conditions": {
+          "filters": "Il record deve inoltre corrispondere a tutti i filtri configurati.",
+          "filtersWithDeletion": "I filtri configurati si applicano ai record creati e modificati. I record eliminati usano l'istantanea di eliminazione e ignorano questi filtri.",
+          "ownerAccess": "Il proprietario della routine deve essere ancora attivo e poter accedere all'account collegato o al record.",
+          "paused": "Attiva e salva questa routine prima di generare un evento.",
+          "suppression": "Gli eventi causati da una routine non attivano alcuna routine.",
+          "unsaved": "Salva prima queste modifiche. Fino ad allora, gli eventi usano l'ultima configurazione salvata.",
+          "watchedFields": "Per gli eventi di modifica, deve cambiare realmente almeno un campo monitorato: {fields}."
+        },
+        "description": "Le routine basate su eventi non possono essere avviate manualmente. Esegui una delle azioni reali seguenti per creare i dati evento necessari alla routine.",
+        "instructionsLabel": "Modi per attivare questa routine"
+      },
+      "schedule": {
+        "activateFirst": "Attiva e salva la routine prima di usare Testa l'attivazione.",
+        "description": "Verrà eseguita con questa pianificazione:",
+        "ownerOnly": "Solo il proprietario della routine può usare Testa l'attivazione. La pianificazione viene comunque eseguita automaticamente mentre la routine è attiva.",
+        "saveFirst": "Salva queste modifiche prima di usare Testa l'attivazione.",
+        "testNow": "Usa Testa l'attivazione per avviare subito un'esecuzione oppure attendi il prossimo orario pianificato."
+      },
+      "title": "Nessuna esecuzione"
+    },
+    "never": "Mai",
+    "owner": "Proprietario",
+    "ownerOnlyEdit": "Questa routine è di sola lettura per te. Viene eseguita solo con l’identità di {owner}, che può modificarla o sospenderla. Gli amministratori aziendali possono solo sospenderla o eliminarla.",
+    "ownerPermissionReadOnly": "Il tuo ruolo ti consente di visualizzare questa routine e le sue esecuzioni, ma non di modificarla o testarla.",
+    "ownerUnavailable": "Proprietario non disponibile",
+    "ownerUnavailableReadOnly": "Questa routine non ha più un proprietario disponibile, quindi resta sospesa e di sola lettura. Un amministratore aziendale può eliminarla.",
+    "ranAs": "Eseguita come {owner}",
+    "readOnlyTitle": "Accesso in sola lettura",
+    "runDetails": "Dettagli dell'esecuzione",
+    "runNoTranscript": "Non è disponibile alcuna trascrizione per questa esecuzione.",
+    "runQueued": "Questa esecuzione è in coda. La trascrizione apparirà quando l'assistente inizierà.",
+    "runs": "Esecuzioni",
+    "runsLoadErrorDescription": "Non è stato possibile caricare la cronologia delle esecuzioni. Riprova.",
+    "runsLoadErrorTitle": "Impossibile caricare le esecuzioni",
+    "runStarting": "Questa esecuzione sta iniziando. La trascrizione apparirà a breve.",
+    "testTrigger": "Testa l'attivazione",
+    "testTriggerEnableFirst": "Attiva questa routine prima di testarla.",
+    "testTriggerEventUnavailable": "Le attivazioni basate su eventi richiedono dati reali. Genera un evento corrispondente nell'area di lavoro per testare questa routine.",
+    "testTriggerSaveFirst": "Salva le modifiche prima di testare questa routine.",
+    "testTriggerStarted": "Esecuzione di prova avviata.",
+    "testTriggerWarning": "Esegui subito questa routine. Utilizza i tuoi crediti IA e può svolgere le azioni indicate nelle istruzioni.",
+    "transcriptOwnerOnly": "Solo {owner}, che ha eseguito questa routine, può aprire la trascrizione completa.",
+    "trigger": "Attivatore",
+    "triggerChangedFields": "Campi modificati",
+    "triggerChangedFieldsMore": "e altri",
+    "triggerRecord": "Record",
+    "triggerThread": "Conversazione"
+  },
+  "RoutineModal": {
+    "at": "alle",
+    "changedFieldsHelp": "Lascia vuoto per eseguire a ogni modifica. Restringere fa risparmiare crediti.",
+    "configurationHeading": "Configurazione",
+    "customSchedule": "Questa routine usa una pianificazione personalizzata: {expression}",
+    "detailsTab": "Dettagli",
+    "disabled": "In pausa",
+    "enabled": "Attiva",
+    "enabledHelp": "Questa routine può essere eseguita al momento.",
+    "eventSuppressionNote": "Gli eventi causati dalle routine non attivano alcuna routine.",
+    "onMinute": "al minuto",
+    "pausedHelp": "Questa routine è attualmente in pausa e non verrà eseguita.",
+    "promptExampleEvent": "Leggi il record che è cambiato e rispondi con una frase su cosa significa.",
+    "promptExampleSchedule": "Riassumi ciò che è cambiato da ieri e rispondi con un breve elenco.",
+    "scheduleTimeZone": "Gli orari sono mostrati in {timezone}.",
+    "tabsLabel": "Sezioni della routine",
+    "title": "Routine",
+    "triggerFiltersHelp": "Lascia vuoto per eseguire su ogni record.",
+    "useSchedulePreset": "Passa a una frequenza predefinita"
+  },
+  "RoutineRunReason": {
+    "adminPaused": "Un amministratore aziendale ha sospeso la routine",
+    "agentAlreadyCompleted": "Questa esecuzione era già terminata",
+    "agentAlreadyRunning": "L’assistente era già impegnato con un’altra esecuzione",
+    "agentTurnConflict": "Un’altra esecuzione ha occupato per prima l’assistente",
+    "agentTurnFailed": "L’assistente non è riuscito ad avviare l’esecuzione",
+    "agentTurnUncertain": "L’assistente non è riuscito a confermare l’avvio dell’esecuzione",
+    "filtersNotMatched": "Il record non corrispondeva ai filtri",
+    "hourlyRunLimit": "È stato raggiunto il limite orario di esecuzioni",
+    "ownerInactive": "L’account del proprietario della routine non è più attivo",
+    "ownerPaused": "Il proprietario ha sospeso la routine",
+    "ownerUnavailable": "Il proprietario della routine non è più disponibile",
+    "routineDisabled": "La routine era in pausa",
+    "startAbandoned": "L’esecuzione è stata interrotta prima di iniziare",
+    "startFailed": "Non è stato possibile avviare l’esecuzione",
+    "unknownFailure": "Non è stato possibile completare l'esecuzione"
+  },
+  "RoutineRunStatus": {
+    "blocked": "Bloccata",
+    "failed": "Non riuscita",
+    "partial": "Parziale",
+    "queued": "In coda",
+    "running": "In esecuzione",
+    "skipped": "Saltata",
+    "succeeded": "Riuscita"
+  },
+  "RoutineRunStopReason": {
+    "cancelled": "L'esecuzione è stata annullata.",
+    "contentFilter": "Il provider IA ha bloccato parte di questa esecuzione, quindi non sono state apportate ulteriori modifiche.",
+    "creditLimit": "L'esecuzione si è fermata perché i crediti Assistente disponibili sono terminati.",
+    "hostedAiUnavailable": "L'IA ospitata non era più disponibile prima che l'esecuzione potesse terminare.",
+    "policyBreach": "Il provider IA ha superato il budget di crediti riservato, quindi l'esecuzione è stata interrotta.",
+    "providerError": "Il provider IA ha restituito un errore prima che l'esecuzione potesse terminare.",
+    "turnError": "L'assistente non è riuscito a completare questa esecuzione."
+  },
+  "RoutinesCard": {
+    "emptyBody": "Mate può lavorare mentre non ci sei. Per esempio: riassumere ogni mattina feriale ciò che è cambiato, oppure scrivere una email di ringraziamento quando qualcosa viene vinto.",
+    "emptyTitle": "Nessuna routine"
+  },
+  "RoutineSchedule": {
+    "daily": "Ogni giorno alle {time}",
+    "hourly": "Ogni ora al minuto :{minute}",
+    "monthly": "Il giorno {day} di ogni mese alle {time}",
+    "weekly": "Ogni {weekday} alle {time}"
+  },
+  "RoutineSchedulePreset": {
+    "daily": "Ogni giorno",
+    "every15Minutes": "Ogni 15 minuti",
+    "every30Minutes": "Ogni 30 minuti",
+    "hourly": "Ogni ora",
+    "monthly": "Ogni mese",
+    "weekly": "Ogni settimana"
+  },
+  "RoutineTriggerKind": {
+    "event": "Quando qualcosa cambia",
+    "schedule": "Secondo una pianificazione"
+  },
+  "RoutineWeekday": {
+    "friday": "Venerdì",
+    "monday": "Lunedì",
+    "saturday": "Sabato",
+    "sunday": "Domenica",
+    "thursday": "Giovedì",
+    "tuesday": "Martedì",
+    "wednesday": "Mercoledì"
+  },
   "ServiceModal": {
     "title": "Servizio"
   },
@@ -3283,6 +3856,7 @@
     "agreeToTerms": "Continuando, accetti i nostri <termsOfServiceLink>Termini</termsOfServiceLink> e dichiari di aver letto la nostra <dataPrivacyLink>Informativa sulla privacy</dataPrivacyLink>. Consulta il nostro <dpaLink>DPA</dpaLink>.",
     "buttonLabel": "Continua con {provider}",
     "forgotPassword": "Password dimenticata?",
+    "inviteSubtitle": "{inviterName} ti ha invitato a entrare nel suo spazio di lavoro. Accedi per controllare l'invito.",
     "or": "OPPURE",
     "rememberMe": "Ricordami",
     "signInCta": "Accedi",
@@ -3290,7 +3864,8 @@
     "switchToSignUp": "Non hai un account? <registerLink>Registrati</registerLink>"
   },
   "SignUpForm": {
-    "acceptInviteCta": "Accetta l'invito",
+    "acceptInviteCta": "Continua",
+    "accountSubtitle": "Crea prima il tuo account. Poi scegli se creare un nuovo spazio di lavoro o entrare in uno esistente.",
     "agreeToTerms": "Continuando, accetti i nostri <termsOfServiceLink>Termini</termsOfServiceLink> e dichiari di aver letto la nostra <dataPrivacyLink>Informativa sulla privacy</dataPrivacyLink>. Consulta il nostro <dpaLink>DPA</dpaLink>.",
     "buttonLabel": "Registrati con {provider}",
     "inviteSubtitle": "Hai ricevuto un invito a unirti a un team su {brandName}. Scegli il tuo metodo di accesso per accettare l’invito.",
@@ -3320,12 +3895,10 @@
       "planManage": "Sincronizzato con la fatturazione. Usa «{billing}» per apportare modifiche.",
       "planPicker": "Scegli un piano qui sotto per avviare o modificare l’abbonamento.",
       "planReadOnly": "Sincronizzato con la fatturazione. Chiedi le modifiche a un amministratore dell’area di lavoro.",
-      "planUnavailable": "Sincronizzato con la fatturazione. Contatta l’assistenza per apportare modifiche.",
       "quantity": "Sincronizzato con il numero di membri attivi dell’area di lavoro. Gli amministratori possono attivare o disattivare i membri in «{company}».",
       "trialEndsManage": "Definita dal periodo di prova. Usa «{billing}» per gestire l’abbonamento.",
       "trialEndsPicker": "Definita dal periodo di prova. Scegli un piano prima di questa data per continuare senza interruzioni.",
-      "trialEndsReadOnly": "Definita dal periodo di prova. Chiedi a un amministratore dell’area di lavoro di gestire l’abbonamento.",
-      "trialEndsUnavailable": "Definita dal periodo di prova. Contatta l’assistenza per gestire l’abbonamento."
+      "trialEndsReadOnly": "Definita dal periodo di prova. Chiedi a un amministratore dell’area di lavoro di gestire l’abbonamento."
     },
     "managedExternallyNote": "Questa area di lavoro usa un piano Enterprise con pagamento tramite fattura. Contatta il tuo account manager per apportare modifiche.",
     "manageWithLemonSqueezy": "Gestisci con Lemon Squeezy",
@@ -3344,7 +3917,9 @@
       },
       "hostedAiCredits": "{credits, number} crediti IA in hosting per utente attivo / mese",
       "mostPopular": "Il più scelto",
-      "perUserMonth": "per utente / mese"
+      "perUserMonth": "per utente / mese",
+      "routinesPerUser": "{routines, plural, one {# routine per utente} other {# routine per utente}}",
+      "unlimitedRoutinesPerUser": "Routine illimitate per utente"
     },
     "plan": "Piano",
     "planNames": {
@@ -3457,9 +4032,14 @@
   "VerifyEmailCard": {
     "body": "Ti abbiamo inviato un'e-mail di verifica. Controlla la tua posta in arrivo e clicca sul link per verificare il tuo indirizzo e-mail.",
     "ctaLabel": "Invia di nuovo l'e-mail di verifica",
+    "invitationFrom": "Invito da {inviterName}",
+    "linkExpired": "Questo link di verifica è scaduto.",
+    "linkInvalid": "Questo link di verifica non è valido.",
     "resendSuccess": "E-mail di verifica inviata correttamente.",
+    "signedOutBody": "Accedi al tuo account per richiedere una nuova e-mail di verifica.",
     "subtitle": "Verifica il tuo indirizzo e-mail per continuare.",
-    "title": "Verifica dell'e-mail"
+    "title": "Verifica dell'e-mail",
+    "verifiedSignIn": "Il tuo indirizzo e-mail è ora verificato. Accedi per continuare."
   },
   "WebFormSourceModal": {
     "active": "Accetta invii",
@@ -3500,7 +4080,7 @@
     },
     "entity": "Elemento",
     "event": "Evento",
-    "requestBody": "Corpo della richiesta",
+    "eventPayload": "Payload dell'evento",
     "resend": "Invia di nuovo",
     "responseMessage": "Messaggio di risposta",
     "statusCode": "Codice di stato",
@@ -3508,8 +4088,10 @@
     "url": "URL"
   },
   "WebhookModal": {
+    "bodyTemplateDescription": "Modello JSON facoltativo per il corpo della richiesta, per destinatari che si aspettano una forma fissa. Lascialo vuoto per inviare la busta evento standard.",
     "disabled": "Disattivato",
     "enabled": "Attivato",
+    "headersDescription": "Intestazioni facoltative inviate a ogni consegna, una per riga come Nome: valore. Usale per destinatari che richiedono la propria autenticazione. Content-Type e l'intestazione della firma non possono essere sovrascritti.",
     "secretDescription": "Chiave segreta facoltativa usata per generare una firma HMAC-SHA256 inviata nell'intestazione X-Webhook-Signature. Per verificarla, calcola l'hash del corpo della richiesta con questa chiave usando HMAC-SHA256 e confrontalo con il valore dell'intestazione.",
     "title": "Webhook",
     "urlDescription": "L'URL dell'endpoint a cui verranno inviati gli eventi webhook tramite richieste POST."

@@ -36,7 +36,37 @@ export type AgentContinuationActivitySummary = {
   resource?: AgentActivityResource;
   count?: number;
   action?: AgentActivityConsequence["action"];
+  resultDigest?: string;
 };
+
+export const AGENT_CONTINUATION_DIGEST_MAX_CHARS = 200;
+export const AGENT_CONTINUATION_DIGEST_CHECKPOINT_MAX_BYTES = 8 * 1024;
+
+const DIGEST_SCALARS = ["total", "page", "pageSize", "requested", "found", "failed", "updated", "deleted"] as const;
+
+export function digestAgentToolResult(output: unknown): string | null {
+  const record =
+    output && typeof output === "object" && !Array.isArray(output) ? (output as Record<string, unknown>) : null;
+  if (!record || record.ok !== true || typeof record.result !== "string") return null;
+  const lines = record.result.split("\n");
+  const facts: string[] = [];
+  for (const scalar of DIGEST_SCALARS) {
+    const match = lines.find((line) => line.startsWith(`${scalar}: `));
+    const value = match ? Number(match.slice(scalar.length + 2)) : Number.NaN;
+    if (Number.isFinite(value)) facts.push(`${scalar}=${value}`);
+  }
+  const itemsMatch = lines.map((line) => /^items\[(\d+)\]/.exec(line)).find((match) => match !== null);
+  if (itemsMatch) facts.push(`items=${itemsMatch[1]}`);
+  const sumsIndex = lines.indexOf("sums:");
+  if (sumsIndex >= 0) {
+    for (let index = sumsIndex + 1; index < lines.length; index += 1) {
+      const sum = /^ {2}([A-Za-z0-9_]+): (-?\d+(?:\.\d+)?)$/.exec(lines[index]);
+      if (!sum) break;
+      facts.push(`sums.${sum[1]}=${sum[2]}`);
+    }
+  }
+  return facts.length > 0 ? facts.join(" ").slice(0, AGENT_CONTINUATION_DIGEST_MAX_CHARS) : null;
+}
 
 export type AgentContinuationCheckpoint = {
   version: 1;
@@ -65,53 +95,16 @@ export type AgentContinuationContext = {
   retainedResponseSteps: number;
 };
 
-export type AgentContinuationAccounting = {
-  startedAtMs: number;
-  providerSteps: number;
-  writeActivities: number;
-  errors: number;
-  noProgressSteps: number;
-  repeatedActivityCalls: number;
-};
-
-export type AgentContinuationLimits = {
-  maxProviderSteps: number;
-  maxWriteActivities: number;
-  maxErrors: number;
-  maxNoProgressSteps: number;
-  maxRepeatedActivityCalls: number;
-  maxWallTimeMs: number;
-};
-
-export type AgentContinuationErrorReason =
-  | "step_limit"
-  | "write_limit"
-  | "error_limit"
-  | "no_progress"
-  | "repeated_activity"
-  | "wall_time_limit"
-  | "length"
-  | "content_filter"
-  | "provider_error";
+export type AgentContinuationErrorReason = "content_filter" | "provider_error";
 
 export type AgentContinuationDecision =
-  | { action: "continue"; accounting: AgentContinuationAccounting }
-  | { action: "complete"; accounting: AgentContinuationAccounting }
-  | {
-      action: "pause";
-      reason: "approval";
-      accounting: AgentContinuationAccounting;
-    }
-  | {
-      action: "error";
-      reason: AgentContinuationErrorReason;
-      accounting: AgentContinuationAccounting;
-    };
+  | { action: "continue" }
+  | { action: "complete" }
+  | { action: "pause"; reason: "approval" }
+  | { action: "error"; reason: AgentContinuationErrorReason };
 
 export type AgentContinuationRun = {
-  startedAtMs: number;
   steps: readonly AgentContinuationStep[];
-  observedAtMs: number;
   pendingApproval?: boolean;
 };
 
@@ -141,6 +134,7 @@ function projectActivity(
   input: unknown,
   status: AgentContinuationActivityStatus,
   trustedToolName: boolean,
+  resultDigest: string | null = null,
 ): AgentContinuationActivitySummary {
   const activity = describeAgentTool(internalToolIdentity(toolName), input);
   return {
@@ -152,10 +146,16 @@ function projectActivity(
     ...(activity.resource ? { resource: activity.resource } : {}),
     ...(activity.count === undefined ? {} : { count: activity.count }),
     ...(activity.consequence ? { action: activity.consequence.action } : {}),
+    ...(resultDigest && status === "done" ? { resultDigest } : {}),
   };
 }
 
-export function summarizeAgentContinuationStep(step: AgentContinuationStep): AgentContinuationActivitySummary[] {
+export type AgentContinuationSummaryOptions = { resultDigest?: boolean };
+
+export function summarizeAgentContinuationStep(
+  step: AgentContinuationStep,
+  options: AgentContinuationSummaryOptions = {},
+): AgentContinuationActivitySummary[] {
   const calls: Array<{
     id: string;
     toolName: string;
@@ -163,6 +163,7 @@ export function summarizeAgentContinuationStep(step: AgentContinuationStep): Age
     invalid: boolean;
   }> = [];
   const statusByCallId = new Map<string, AgentContinuationActivityStatus>();
+  const digestByCallId = new Map<string, string>();
   const pendingApprovals = new Set<string>();
 
   for (const rawPart of step.content) {
@@ -195,6 +196,10 @@ export function summarizeAgentContinuationStep(step: AgentContinuationStep): Age
               ? "error"
               : "done",
       );
+      if (options.resultDigest && part.type === "tool-result") {
+        const digest = digestAgentToolResult(part.output);
+        if (digest) digestByCallId.set(id, digest);
+      }
       continue;
     }
 
@@ -221,18 +226,22 @@ export function summarizeAgentContinuationStep(step: AgentContinuationStep): Age
       : pendingApprovals.has(call.id)
         ? "pending"
         : (statusByCallId.get(call.id) ?? "error");
-    return projectActivity(call.toolName, call.input, status, !call.invalid);
+    return projectActivity(call.toolName, call.input, status, !call.invalid, digestByCallId.get(call.id) ?? null);
   });
 }
 
 export function summarizeAgentContinuationSteps(
   steps: readonly AgentContinuationStep[],
+  options: AgentContinuationSummaryOptions = {},
 ): AgentContinuationActivitySummary[][] {
-  return steps.map(summarizeAgentContinuationStep);
+  return steps.map((step) => summarizeAgentContinuationStep(step, options));
 }
 
-function checkpointForSteps(steps: readonly AgentContinuationStep[]): AgentContinuationCheckpoint {
-  const activities = summarizeAgentContinuationSteps(steps).flat();
+function checkpointForSteps(
+  steps: readonly AgentContinuationStep[],
+  options: AgentContinuationSummaryOptions = {},
+): AgentContinuationCheckpoint {
+  const activities = summarizeAgentContinuationSteps(steps, options).flat();
   return {
     version: 1,
     detailPolicy: "progress_only",
@@ -268,7 +277,7 @@ export function serializeAgentContinuationCheckpoint(
   if (!Number.isSafeInteger(requestedMaxBytes) || requestedMaxBytes < AGENT_CONTINUATION_CHECKPOINT_MIN_BYTES)
     throw new Error("Agent continuation checkpoint byte limit is invalid.");
 
-  const maxBytes = Math.min(requestedMaxBytes, AGENT_CONTINUATION_CHECKPOINT_MAX_BYTES);
+  const maxBytes = Math.min(requestedMaxBytes, AGENT_CONTINUATION_DIGEST_CHECKPOINT_MAX_BYTES);
   let compact = {
     ...checkpoint,
     activities: checkpoint.activities.map((activity) => ({
@@ -298,6 +307,7 @@ export function compactAgentContinuationContext(args: {
   steps: readonly AgentContinuationStep[];
   checkpointMaxBytes?: number;
   retainedResponseSteps?: number;
+  resultDigest?: boolean;
 }): AgentContinuationContext {
   const responseMessages = responseMessagesByStep(args.steps);
   const retainedResponseSteps = args.retainedResponseSteps ?? AGENT_CONTINUATION_RETAINED_RESPONSE_STEPS;
@@ -316,7 +326,11 @@ export function compactAgentContinuationContext(args: {
     };
   }
 
-  const serialized = serializeAgentContinuationCheckpoint(checkpointForSteps(olderSteps), args.checkpointMaxBytes);
+  const serialized = serializeAgentContinuationCheckpoint(
+    checkpointForSteps(olderSteps, { resultDigest: args.resultDigest === true }),
+    args.checkpointMaxBytes ??
+      (args.resultDigest ? AGENT_CONTINUATION_DIGEST_CHECKPOINT_MAX_BYTES : AGENT_CONTINUATION_CHECKPOINT_MAX_BYTES),
+  );
   return {
     system: `${args.system}\n\n${serialized.text}`,
     messages,
@@ -326,108 +340,17 @@ export function compactAgentContinuationContext(args: {
   };
 }
 
-function assertPositiveSafeInteger(value: number, label: string) {
-  if (!Number.isSafeInteger(value) || value < 1) throw new Error(`${label} is invalid.`);
-}
-
-function validateLimits(limits: AgentContinuationLimits) {
-  assertPositiveSafeInteger(limits.maxProviderSteps, "Agent continuation step limit");
-  assertPositiveSafeInteger(limits.maxWriteActivities, "Agent continuation write limit");
-  assertPositiveSafeInteger(limits.maxErrors, "Agent continuation error limit");
-  assertPositiveSafeInteger(limits.maxNoProgressSteps, "Agent continuation no-progress limit");
-  assertPositiveSafeInteger(limits.maxRepeatedActivityCalls, "Agent continuation repeated-activity limit");
-  assertPositiveSafeInteger(limits.maxWallTimeMs, "Agent continuation wall-time limit");
-}
-
-function toolCallSignatures(step: AgentContinuationStep) {
-  return step.content.flatMap((rawPart) => {
-    const part = record(rawPart);
-    const toolName = part?.type === "tool-call" ? stringValue(part.toolName) : null;
-    if (!toolName) return [];
-    try {
-      return [JSON.stringify({ toolName, input: part?.input })];
-    } catch {
-      return [];
-    }
-  });
-}
-
-function accountActivities(
-  startedAtMs: number,
-  steps: readonly AgentContinuationStep[],
-  stepActivities: readonly AgentContinuationActivitySummary[][],
-): AgentContinuationAccounting {
-  let noProgressSteps = 0;
-  let repeatedActivityCalls = 0;
-  const toolCallCounts = new Map<string, number>();
-
-  for (const [index, step] of steps.entries()) {
-    const activities = stepActivities[index] ?? [];
-    const madeProgress = activities.some((activity) => activity.status === "done");
-    noProgressSteps = madeProgress ? 0 : noProgressSteps + 1;
-    for (const signature of toolCallSignatures(step)) {
-      const count = (toolCallCounts.get(signature) ?? 0) + 1;
-      toolCallCounts.set(signature, count);
-      repeatedActivityCalls = Math.max(repeatedActivityCalls, count);
-    }
-  }
-
-  const activities = stepActivities.flat();
-  return {
-    startedAtMs,
-    providerSteps: steps.length,
-    writeActivities: activities.filter((activity) => activity.status === "done" && activity.risk !== "read").length,
-    errors: activities.filter((activity) => activity.status === "error").length,
-    noProgressSteps,
-    repeatedActivityCalls,
-  };
-}
-
-function errorDecision(
-  accounting: AgentContinuationAccounting,
-  reason: AgentContinuationErrorReason,
-): AgentContinuationDecision {
-  return { action: "error", reason, accounting };
-}
-
-export function decideAgentContinuationLoop(
-  run: AgentContinuationRun,
-  limits: AgentContinuationLimits,
-): AgentContinuationDecision {
-  validateLimits(limits);
-  if (!Number.isSafeInteger(run.startedAtMs) || run.startedAtMs < 0)
-    throw new Error("Agent continuation start time is invalid.");
-  if (!Number.isSafeInteger(run.observedAtMs) || run.observedAtMs < run.startedAtMs)
-    throw new Error("Agent continuation observation time is invalid.");
-
-  const stepActivities = summarizeAgentContinuationSteps(run.steps);
-  const accounting = accountActivities(run.startedAtMs, run.steps, stepActivities);
+export function decideAgentContinuationLoop(run: AgentContinuationRun): AgentContinuationDecision {
   const lastStep = run.steps.at(-1);
   const pendingApproval =
-    run.pendingApproval === true || (stepActivities.at(-1)?.some((activity) => activity.status === "pending") ?? false);
+    run.pendingApproval === true ||
+    (lastStep ? summarizeAgentContinuationStep(lastStep).some((activity) => activity.status === "pending") : false);
 
-  if (accounting.providerSteps > limits.maxProviderSteps) return errorDecision(accounting, "step_limit");
-  if (accounting.writeActivities > limits.maxWriteActivities) return errorDecision(accounting, "write_limit");
-  if (accounting.errors > limits.maxErrors) return errorDecision(accounting, "error_limit");
-  if (run.observedAtMs - accounting.startedAtMs >= limits.maxWallTimeMs)
-    return errorDecision(accounting, "wall_time_limit");
-  if (pendingApproval) return { action: "pause", reason: "approval", accounting };
+  if (pendingApproval) return { action: "pause", reason: "approval" };
 
-  if (lastStep?.finishReason === "stop") return { action: "complete", accounting };
-  if (lastStep?.finishReason === "content-filter") return errorDecision(accounting, "content_filter");
+  if (lastStep?.finishReason === "stop") return { action: "complete" };
+  if (lastStep?.finishReason === "content-filter") return { action: "error", reason: "content_filter" };
   if (lastStep?.finishReason === "error" || lastStep?.finishReason === "other" || !lastStep)
-    return errorDecision(accounting, "provider_error");
-  if (lastStep.finishReason === "length") return errorDecision(accounting, "length");
-
-  if (accounting.providerSteps >= limits.maxProviderSteps) return errorDecision(accounting, "step_limit");
-  if (accounting.writeActivities >= limits.maxWriteActivities) return errorDecision(accounting, "write_limit");
-  if (accounting.errors >= limits.maxErrors) return errorDecision(accounting, "error_limit");
-  if (accounting.noProgressSteps >= limits.maxNoProgressSteps) return errorDecision(accounting, "no_progress");
-  if (accounting.repeatedActivityCalls >= limits.maxRepeatedActivityCalls)
-    return errorDecision(accounting, "repeated_activity");
-  return { action: "continue", accounting };
-}
-
-export function agentContinuationShouldStop(decision: AgentContinuationDecision) {
-  return decision.action !== "continue";
+    return { action: "error", reason: "provider_error" };
+  return { action: "continue" };
 }

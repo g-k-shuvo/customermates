@@ -10,6 +10,17 @@ const ENFORCED = true;
 
 const SCANNED_DIRECTORIES = ["core", "ee", "features", "workflows", "app"];
 const WRITE_OPERATIONS = new Set(["update", "updateMany", "upsert"]);
+
+// A @BypassTenantGuard method is exempt from the rule below because many of them are
+// legitimately cross-company. That exemption is per-method and repo-wide, so a file can
+// accumulate bypassed writes that carry no companyId at all. Files listed here opt out of
+// the exemption: every write in them must name its tenant, whether bypassed or not, on the
+// grounds that the guard is defence in depth and a row-id-keyed write should still say which
+// company it belongs to. deleteMany joins the checked operations for these files because it
+// takes the same where clause. Good candidates to add next: ee/agent-chat and the messaging
+// repositories.
+const STRICT_TENANT_WRITE_FILES = new Set(["ee/routines/prisma-routine.repository.ts"]);
+const STRICT_WRITE_OPERATIONS = new Set([...WRITE_OPERATIONS, "deleteMany"]);
 const PRISMA_TARGET = /(^|\.)prisma\.\w+$|^tx\.\w+$/;
 const ACCESS_WHERE_HELPER = /accessWhere|AccessWhere/;
 const BYPASS_DECORATOR = "BypassTenantGuard";
@@ -60,6 +71,7 @@ type WriteSite = {
   method: string;
   model: string;
   scoped: boolean;
+  bypassed: boolean;
 };
 
 function exemptionFor(site: WriteSite): Exemption | undefined {
@@ -167,7 +179,10 @@ function writeSites(): WriteSite[] {
 
   for (const file of sourceFiles()) {
     const text = readFileSync(file, "utf8");
-    if (!WRITE_OPERATIONS.values().some((operation) => text.includes(`.${operation}(`))) continue;
+    const relativePath = relative(REPO_ROOT, file);
+    const strict = STRICT_TENANT_WRITE_FILES.has(relativePath);
+    const operations = strict ? STRICT_WRITE_OPERATIONS : WRITE_OPERATIONS;
+    if (!operations.values().some((operation) => text.includes(`.${operation}(`))) continue;
 
     const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
     const bypassed = bypassedMethodNames(source);
@@ -179,11 +194,12 @@ function writeSites(): WriteSite[] {
 
         const model = target.split(".").pop() ?? "";
 
-        if (WRITE_OPERATIONS.has(operation) && PRISMA_TARGET.test(target) && !GUARD_EXEMPT_MODELS.has(model)) {
+        if (operations.has(operation) && PRISMA_TARGET.test(target) && !GUARD_EXEMPT_MODELS.has(model)) {
           const method = enclosingMethod(node);
           const methodName = method?.name.getText(source) ?? "";
           const relativePath = relative(REPO_ROOT, file).replaceAll("\\", "/");
           const line = source.getLineAndCharacterOfPosition(node.getStart()).line + 1;
+          const isBypassed = bypassed.has(methodName);
 
           if (!bypassed.has(methodName))
             sites.push({
@@ -193,6 +209,7 @@ function writeSites(): WriteSite[] {
               method: methodName === "" ? MODULE_SCOPE : methodName,
               model,
               scoped: carriesCompanyId(whereInitializer(node, source), operation, source),
+              bypassed: isBypassed,
             });
         }
       }
@@ -236,5 +253,13 @@ describe("tenant-scoped writes", () => {
     });
 
     expect(drift, drift.join("\n")).toEqual([]);
+  });
+
+  it("keeps every strict file pointed at code that the bypass exemption would otherwise hide", () => {
+    const withoutCover = [...STRICT_TENANT_WRITE_FILES].filter(
+      (file) => !sites.some((site) => site.file === file && site.bypassed),
+    );
+
+    expect(withoutCover).toEqual([]);
   });
 });

@@ -129,7 +129,9 @@ const DeleteCustomColumnSchema = z.object({
 const ManageCustomColumnsSchema = z.object({
   action: z
     .enum(["list", "upsert", "delete"])
-    .describe("list = read columns, upsert = create or update a column, delete = remove a column"),
+    .describe(
+      "list = read columns (optional entityType); upsert = create a column with intent create, entityType, type, label and selectOptions for singleSelect, or update one with intent update plus its existing id, entityType, type and unchanged label (entityType and type are required on every upsert and must match the stored column); delete = id.",
+    ),
   entityType: z
     .enum(EntityType)
     .optional()
@@ -215,6 +217,7 @@ export const manageCustomColumnsTool = {
   title: "Manage custom columns",
   description:
     "Use this when you need to list, create, update, or delete custom columns on an entity type. " +
+    "Do not create or change a custom column only to make an unsupported manage_data_views filter possible; report the unavailable saved-view filter instead. " +
     "action list returns { id, label, type, entityType, options } per column. " +
     "action upsert requires type, entityType, label. For CREATE, use intent=create and OMIT id (a null id is normalized to omission only for explicit creates; legacy callers may omit intent only when id is also omitted). For UPDATE, intent=update and an existing id are both required; mismatched intent/id pairs are rejected without writing. Label, type and entityType are immutable through this tool, so create a new column instead of repurposing an existing one. " +
     'For singleSelect, prefer top-level selectOptions; for example {"action":"upsert","intent":"create","entityType":"contact","type":"singleSelect","label":"Priority","selectOptions":[{"label":"High"}]}. Legacy options.options remains accepted, but never pass both. The list REPLACES every option: keep an existing option\'s stable value uuid to preserve stored records, use a fresh uuid for new options; dropping one deletes its stored values. ' +
@@ -234,10 +237,10 @@ export const manageCustomColumnsTool = {
           entityType: params.entityType,
         });
         if (!byEntity.ok) return mcpInteractorFailure(byEntity.error);
-        return toonResult({ items: byEntity.data });
+        return toonResult({ total: byEntity.data.length, items: byEntity.data });
       }
       const all = await getGetCustomColumnsInteractor().invoke();
-      return toonResult({ items: all.data });
+      return toonResult({ total: all.data.length, items: all.data });
     }
     if (params.action === "upsert") {
       const normalizedParams = params.intent === "create" && params.id === null ? { ...params, id: undefined } : params;

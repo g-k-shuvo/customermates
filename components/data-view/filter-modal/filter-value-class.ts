@@ -1,7 +1,9 @@
 import type { Filter } from "@/core/base/base-get.schema";
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
+import type { FilterValueKind } from "@/core/types/filter-field-value-kind";
 
 import { hasValidFilterConfiguration, isCustomField } from "@/components/data-view/table-view.utils";
+import { filterValueKind } from "@/core/types/filter-field-value-kind";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { FilterOperatorKey, isStandaloneOperator } from "@/core/base/base-query-builder";
 
@@ -65,6 +67,49 @@ function dateValueClass(operator: FilterOperatorKey): FilterValueClass {
   return operator === FilterOperatorKey.between ? "isoRange" : "isoDate";
 }
 
+function comparisonValueClass(kind: FilterValueKind["kind"] | undefined): FilterValueClass {
+  switch (kind) {
+    case "date":
+      return "isoDate";
+    case "entityId":
+    case "enum":
+    case "event":
+    case "string":
+    case "linkStatus":
+    case "draftStatus":
+    case undefined:
+      return "text";
+  }
+}
+
+function standardValueClass(field: string, operator: FilterOperatorKey): FilterValueClass {
+  switch (operator) {
+    case FilterOperatorKey.in:
+    case FilterOperatorKey.notIn:
+      return "stringArray";
+    case FilterOperatorKey.between:
+      return "isoRange";
+    case FilterOperatorKey.inLastDays:
+      return "daysCount";
+    case FilterOperatorKey.gt:
+    case FilterOperatorKey.gte:
+    case FilterOperatorKey.lt:
+    case FilterOperatorKey.lte:
+      return comparisonValueClass(filterValueKind(field)?.kind);
+    case FilterOperatorKey.equals:
+    case FilterOperatorKey.contains:
+    case FilterOperatorKey.startsWith:
+      return "text";
+    case FilterOperatorKey.isNull:
+    case FilterOperatorKey.isNotNull:
+    case FilterOperatorKey.hasNone:
+    case FilterOperatorKey.hasSome:
+    case FilterOperatorKey.hasUnset:
+    case FilterOperatorKey.allSet:
+      return "none";
+  }
+}
+
 export function resolveFilterValueClass(
   field: string,
   operator: FilterOperatorKey | undefined,
@@ -96,10 +141,7 @@ export function resolveFilterValueClass(
     return "text";
   }
 
-  if (RELATION_FILTER_FIELDS.includes(field as FilterFieldKey)) return "stringArray";
-  if (DATE_FILTER_FIELDS.includes(field as FilterFieldKey)) return dateValueClass(operator);
-
-  return "text";
+  return standardValueClass(field, operator);
 }
 
 export function resolveFilterDateGranularity(field: string, customColumns?: CustomColumnDto[]): FilterDateGranularity {

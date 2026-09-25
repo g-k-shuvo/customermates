@@ -49,6 +49,7 @@ const salesManagerGrants = [
   [Resource.services, [Action.readAll]],
   [Resource.users, [Action.readAll]],
   [Resource.auditLog, [Action.readAll]],
+  [Resource.routines, manageAll],
   [Resource.company, companyVisibility],
 ] as const satisfies readonly RoleGrant[];
 
@@ -62,6 +63,7 @@ const customerSuccessGrants = [
   [Resource.pipelines, [Action.readAll]],
   [Resource.services, [Action.readAll]],
   [Resource.users, [Action.readOwn]],
+  [Resource.routines, [Action.readOwn]],
   [Resource.company, companyVisibility],
 ] as const satisfies readonly RoleGrant[];
 

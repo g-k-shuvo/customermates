@@ -1,0 +1,272 @@
+"use client";
+
+import type { MouseEvent, ReactNode } from "react";
+import type { BaseDataViewStore, HasId } from "@/core/base/base-data-view.store";
+import type { DataViewChipDto } from "@/core/data-view/data-view-state.schema";
+import type { ViewMetaDraft } from "./use-view-commands";
+
+import { ChevronDownIcon, Sparkles } from "lucide-react";
+import { observer } from "mobx-react-lite";
+import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useRouter, usePathname as useLocalePathname } from "@/i18n/navigation";
+
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { OverflowRail } from "@/components/shared/overflow-rail";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { ALL_VIEW_KEY } from "@/core/data-view/data-view-keys";
+import { cn } from "@/core/utils/cn";
+
+import { VIEW_SURFACE_CLASS, VIEW_TAB_CLASS, ViewChip } from "./view-chip";
+import { ViewMenuItems } from "./view-menu-items";
+import { VIEW_META_NAME_INPUT_ID, ViewMetaOverlay } from "./view-meta-overlay";
+import { allViewMenuItems, orderChips, sortViewsByPosition, viewMenuItems } from "./view-rail-model";
+import { viewHref } from "./view-actions";
+import { useRovingFocus } from "./use-roving-focus";
+import { useViewCommands } from "./use-view-commands";
+import { useViewAi } from "./use-view-ai";
+
+type Props<E extends HasId> = {
+  joinsTopBar?: boolean;
+  detailParam?: string;
+  store: BaseDataViewStore<E>;
+};
+
+function isPlainClick(event: MouseEvent<HTMLAnchorElement>): boolean {
+  return (
+    !event.defaultPrevented &&
+    event.button === 0 &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.shiftKey
+  );
+}
+
+export const DataViewViewsRail = observer(function DataViewViewsRail<E extends HasId>({
+  joinsTopBar = false,
+  detailParam,
+  store,
+}: Props<E>) {
+  const t = useTranslations();
+  const pathname = usePathname();
+  const localePathname = useLocalePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [meta, setMeta] = useState<ViewMetaDraft | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pendingAi = useRef<(() => void) | null>(null);
+  const ai = useViewAi(store);
+  const offersViews = Boolean(store.p13nId);
+
+  const commands = useViewCommands({
+    closeMeta: () => setMeta(null),
+    openMeta: setMeta,
+    pathname,
+    store,
+  });
+
+  const chips = orderChips(store.views, store.activeViewKey);
+  const activeView = store.views.find((view) => view.id === store.activeViewKey);
+  const tabbableIndex = chips.findIndex((chip) => chip.isActive);
+  const { onKeyDownAt, tabIndexAt } = useRovingFocus(chips.length, Math.max(tabbableIndex, 0));
+
+  if (!offersViews) return null;
+
+  const activeName = activeView?.name ?? t("DataView.views.all");
+  const ordered = sortViewsByPosition(store.views);
+  const isDrafting = meta !== null && meta.mode !== "edit";
+  const menuTarget: DataViewChipDto = activeView ?? {
+    id: ALL_VIEW_KEY,
+    name: t("DataView.views.all"),
+    position: -1,
+    state: store.allViewState,
+  };
+  const menuItems = activeView
+    ? viewMenuItems({
+        index: ordered.findIndex((candidate) => candidate.id === activeView.id),
+        total: ordered.length,
+      })
+    : allViewMenuItems();
+
+  const previewFor = (name: string, isActive: boolean): ReactNode => (
+    <>
+      <span className="block font-medium">{name}</span>
+
+      {isActive && (
+        <span className="block text-[11px] text-muted-foreground">
+          {t("DataView.views.recordCount", {
+            count: store.pagination?.total ?? 0,
+          })}
+        </span>
+      )}
+    </>
+  );
+
+  const onChipClick = (viewKey: string) => (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!isPlainClick(event)) return;
+
+    event.preventDefault();
+
+    if (detailParam && searchParams.get(detailParam)) {
+      router.push(viewHref(localePathname, viewKey));
+      return;
+    }
+
+    commands.select(viewKey);
+  };
+
+  return (
+    <nav
+      aria-label={t("DataView.views.railLabel")}
+      className={cn(
+        "flex shrink-0 items-start gap-1.5 border-b border-border bg-background px-4 ps-[calc(1rem+var(--safe-left,0px))] pe-[calc(1rem+var(--safe-right,0px))]",
+        store.hasSelection && store.entityType && "hidden md:flex",
+      )}
+      data-data-view-rail=""
+      data-joins-top-bar={joinsTopBar ? "" : undefined}
+      id="global-data-views"
+    >
+      <TooltipProvider>
+        <OverflowRail
+          ariaLabel={t("DataView.views.railLabel")}
+          bleed={false}
+          className="min-w-0 flex-1"
+          focusable={false}
+          observedKey={chips.length}
+          railClassName="items-center gap-1 pt-0 pb-4"
+          railProps={{
+            "aria-label": t("DataView.views.railLabel"),
+            "aria-orientation": "horizontal",
+            "data-data-view-rail-items": "",
+            role: "toolbar",
+          }}
+        >
+          {!store.isReady &&
+            [0, 1, 2].map((index) => <Skeleton key={index} className="h-7 w-20 shrink-0 rounded-full" />)}
+
+          {store.isReady &&
+            chips.map((chip, index) => {
+              if (chip.kind === "all") {
+                return (
+                  <ViewChip
+                    key={ALL_VIEW_KEY}
+                    href={viewHref(pathname, ALL_VIEW_KEY)}
+                    id="global-data-views-all"
+                    isActive={chip.isActive}
+                    label={t("DataView.views.all")}
+                    preview={previewFor(t("DataView.views.all"), chip.isActive)}
+                    tabIndex={tabIndexAt(index)}
+                    onKeyDown={onKeyDownAt(index)}
+                    onSelect={onChipClick(ALL_VIEW_KEY)}
+                  />
+                );
+              }
+
+              return (
+                <ViewChip
+                  key={chip.view.id}
+                  href={viewHref(pathname, chip.view.id)}
+                  isActive={chip.isActive}
+                  label={chip.view.name}
+                  preview={previewFor(chip.view.name, chip.isActive)}
+                  tabIndex={tabIndexAt(index)}
+                  onKeyDown={onKeyDownAt(index)}
+                  onSelect={onChipClick(chip.view.id)}
+                />
+              );
+            })}
+
+          {store.isReady && (
+            <ViewMetaOverlay
+              mode={meta?.mode ?? "create"}
+              name={meta?.name ?? ""}
+              open={meta !== null}
+              trigger={
+                <Button
+                  className={cn(
+                    VIEW_TAB_CLASS,
+                    "border-dashed border-input bg-transparent text-muted-foreground shadow-none hover:bg-transparent",
+                  )}
+                  data-view-draft={isDrafting ? "" : undefined}
+                  id="global-data-views-new"
+                  size="sm"
+                  variant="ghost"
+                >
+                  <span className="truncate">{t("DataView.views.createTitle")}</span>
+                </Button>
+              }
+              onAskAi={ai.available ? ai.openCurrent : undefined}
+              onChange={(draft) => setMeta((current) => (current ? { ...current, ...draft } : current))}
+              onCreateWithAi={ai.available ? ai.openCreate : undefined}
+              onOpenChange={(next) => setMeta(next ? { mode: "create", name: "" } : null)}
+              onSubmit={(values) => (meta ? commands.submitMeta(meta, values) : Promise.resolve())}
+            />
+          )}
+        </OverflowRail>
+      </TooltipProvider>
+
+      {store.isReady && (
+        <DropdownMenu modal={false} open={menuOpen} onOpenChange={setMenuOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              aria-label={t("DataView.views.menu")}
+              className={cn(VIEW_SURFACE_CLASS, "size-7 rounded-full")}
+              id="global-data-views-menu"
+              size="icon-sm"
+              variant="ghost"
+            >
+              <ChevronDownIcon aria-hidden />
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent
+            align="end"
+            onCloseAutoFocus={(event) => {
+              const handoff = pendingAi.current;
+              if (handoff) {
+                event.preventDefault();
+                pendingAi.current = null;
+                handoff();
+                return;
+              }
+              const nameInput = document.getElementById(VIEW_META_NAME_INPUT_ID);
+              if (nameInput) {
+                event.preventDefault();
+                nameInput.focus();
+              }
+            }}
+          >
+            {ai.available && (
+              <DropdownMenuItem
+                aria-label={t("DataView.views.aiLabel", { name: activeName })}
+                id="global-data-views-ai"
+                onSelect={() => {
+                  pendingAi.current = ai.openCurrent;
+                }}
+              >
+                <Sparkles aria-hidden />
+
+                {t("DataView.views.askAi")}
+              </DropdownMenuItem>
+            )}
+
+            <ViewMenuItems commands={commands} items={menuItems} view={menuTarget} />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
+      <span aria-live="polite" className="sr-only">
+        {t("DataView.views.applied", { name: activeName })}
+      </span>
+    </nav>
+  );
+});

@@ -7,6 +7,7 @@ import type { AgentChatStore } from "./agent-chat.store";
 import type { NavigationGuardController } from "@/core/stores/navigation-guard.controller";
 
 import { useRootStore } from "@/core/stores/root-store.provider";
+import { useAgentChatStore } from "./agent-chat-store-context";
 
 const reloadCurrentPage = () => window.location.reload();
 
@@ -36,6 +37,7 @@ export function scheduleAgentRouteReload({
     }
     if (!store.takeRouteRefreshRequest()) return;
     store.markRouteSyncRefreshing();
+    store.prepareViewReload();
     reload();
   });
 }
@@ -45,7 +47,8 @@ export const AgentRouteReloadBridge = observer(function AgentRouteReloadBridge({
 }: {
   reload?: () => void;
 }) {
-  const { agentChatStore: store, navigationGuard } = useRootStore();
+  const store = useAgentChatStore();
+  const { navigationGuard } = useRootStore();
 
   useEffect(() => {
     scheduleAgentRouteReload({ store, navigationGuard, reload });

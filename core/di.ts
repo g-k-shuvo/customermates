@@ -56,10 +56,26 @@ import { PrismaCompanyRepo } from "@/features/company/prisma-company.repository"
 import { PrismaRoleRepo } from "@/features/role/prisma-role.repository";
 import { PrismaCustomColumnRepo } from "@/features/custom-column/prisma-custom-column.repository";
 import { PrismaP13nRepo } from "@/features/p13n/prisma-p13n.repository";
+import { PrismaDataViewRepo } from "@/features/data-view/prisma-data-view.repository";
 import { PrismaWidgetRepo } from "@/features/widget/prisma-widget.repository";
 import { PrismaWidgetCalculatorRepo } from "@/features/widget/calculator/prisma-widget-calculator.repository";
 import { PrismaWidgetFunnelRepo } from "@/features/widget/calculator/prisma-widget-funnel.repository";
 import { PrismaWebhookRepo } from "@/features/webhook/prisma-webhook.repository";
+import { PrismaRoutineRepo } from "@/ee/routines/prisma-routine.repository";
+import { PrismaRoutineFilterMatcher } from "@/ee/routines/routine-filter-matcher";
+import { PrismaRoutineEventAccess } from "@/ee/routines/routine-event-access";
+import { GetRoutinesInteractor } from "@/ee/routines/get-routines.interactor";
+import { GetRoutineRunsInteractor } from "@/ee/routines/get-routine-runs.interactor";
+import { UpsertRoutineInteractor } from "@/ee/routines/upsert-routine.interactor";
+import { DeleteRoutineInteractor } from "@/ee/routines/delete-routine.interactor";
+import { PauseRoutineInteractor } from "@/ee/routines/pause-routine.interactor";
+import { RunRoutineNowInteractor } from "@/ee/routines/run-routine-now.interactor";
+import { StartRoutineRunInteractor } from "@/ee/routines/start-routine-run.interactor";
+import { FailRoutineRunInteractor } from "@/ee/routines/fail-routine-run.interactor";
+import { SweepDueRoutinesInteractor } from "@/ee/routines/sweep-due-routines.interactor";
+import { ReconcileRoutineRunsInteractor } from "@/ee/routines/reconcile-routine-runs.interactor";
+import { ReleaseOwnerRoutinesInteractor } from "@/ee/routines/release-owner-routines.interactor";
+import { PruneRoutineRunsInteractor } from "@/ee/routines/prune-routine-runs.interactor";
 import { PrismaWebhookDeliveryRepo } from "@/features/webhook/prisma-webhook-delivery.repository";
 import { PrismaAuditLogRepo } from "@/features/audit-log/prisma-audit-log.repository";
 import { PrismaMessagingRepo } from "@/ee/messaging/persistence/prisma-messaging.repository";
@@ -87,6 +103,8 @@ import { BackgroundTaskService } from "@/core/utils/background-task.service";
 import { CaptureAdClickInteractor } from "@/features/acquisition/capture-ad-click.interactor";
 import { DecideAdAttributionConsentInteractor } from "@/features/acquisition/decide-ad-attribution-consent.interactor";
 import { NextAdAttributionCookieRepo } from "@/features/acquisition/next/ad-attribution-cookie";
+import { NextInviteTokenCookieRepo } from "@/features/company/next/invite-token-cookie";
+import { OnboardingIntentService } from "@/features/company/onboarding-intent.service";
 import { ReadAdAttributionConsentInteractor } from "@/features/acquisition/read-ad-attribution-consent.interactor";
 import { WithdrawAdAttributionInteractor } from "@/features/acquisition/withdraw-ad-attribution.interactor";
 // Task Listeners
@@ -108,6 +126,8 @@ import { ExportOrganizationsPageInteractor } from "@/features/data-transfer/expo
 import { ExportServicesPageInteractor } from "@/features/data-transfer/export/export-services-page.interactor";
 import { ExportTasksPageInteractor } from "@/features/data-transfer/export/export-tasks-page.interactor";
 import { GetImportRelationIndexInteractor } from "@/features/data-transfer/import/get-import-relation-index.interactor";
+import { DryRunImportChunkInteractor } from "@/features/data-transfer/import/dry-run-import-chunk.interactor";
+import { CommitImportChunkInteractor } from "@/features/data-transfer/import/commit-import-chunk.interactor";
 import { ImportRelationIndex } from "@/features/data-transfer/import/relation-index.service";
 import { ImportKeyMatcher } from "@/features/data-transfer/import/import-key-matcher.service";
 import { MatchImportKeysInteractor } from "@/features/data-transfer/import/match-import-keys.interactor";
@@ -144,6 +164,8 @@ import { QueryParamsPrecheckInteractor } from "@/core/base/query-params-precheck
 import { CheckChannelConflictInteractor } from "@/features/contacts/upsert/check-channel-conflict.interactor";
 import { CreateManyContactsInteractor } from "@/features/contacts/upsert/create-many-contacts.interactor";
 import { UpdateContactInteractor } from "@/features/contacts/upsert/update-contact.interactor";
+import { LinkContactIdentifierInteractor } from "@/features/contacts/upsert/link-contact-identifier.interactor";
+import { UnlinkContactIdentifierInteractor } from "@/features/contacts/upsert/unlink-contact-identifier.interactor";
 import { UpdateManyContactsInteractor } from "@/features/contacts/upsert/update-many-contacts.interactor";
 import { DeleteContactInteractor } from "@/features/contacts/delete/delete-contact.interactor";
 import { DeleteManyContactsInteractor } from "@/features/contacts/delete/delete-many-contacts.interactor";
@@ -221,6 +243,7 @@ import { GetServicesInteractor } from "@/features/services/get/get-services.inte
 import { GetServicesConfigurationInteractor } from "@/features/services/get/get-services-configuration.interactor";
 import { GetServiceByIdInteractor } from "@/features/services/get/get-service-by-id.interactor";
 import { CreateServiceInteractor } from "@/features/services/upsert/create-service.interactor";
+import { CreateServiceByNameInteractor } from "@/features/services/upsert/create-service-by-name.interactor";
 import { CreateManyServicesInteractor } from "@/features/services/upsert/create-many-services.interactor";
 import { UpdateServiceInteractor } from "@/features/services/upsert/update-service.interactor";
 import { UpdateManyServicesInteractor } from "@/features/services/upsert/update-many-services.interactor";
@@ -243,6 +266,7 @@ import { CompleteTaskInteractor } from "@/features/tasks/complete/complete-task.
 import { UncompleteTaskInteractor } from "@/features/tasks/complete/uncomplete-task.interactor";
 // User interactors
 import { RegisterUserInteractor } from "@/features/user/register/register-user.interactor";
+import { RegisterOnboardingProfileInteractor } from "@/features/user/register/register-onboarding-profile.interactor";
 import { UpdateUserDetailsInteractor } from "@/features/user/upsert/update-user-details.interactor";
 import { CompleteOnboardingWizardInteractor } from "@/features/onboarding-wizard/complete-onboarding-wizard.interactor";
 import { GetUserDetailsInteractor } from "@/features/user/get/get-user-details.interactor";
@@ -264,6 +288,9 @@ import { UpdateCompanySettingsInteractor } from "@/features/company/update-compa
 import { GetOrCreateInviteTokenInteractor } from "@/features/company/get-or-create-invite-token.interactor";
 import { InviteUsersByEmailInteractor } from "@/features/company/invite-users-by-email.interactor";
 import { InviteTokenValidationInteractor } from "@/features/company/invite-token-validation.interactor";
+import { OpenInvitationInteractor } from "@/features/company/open-invitation.interactor";
+import { ChooseWorkspaceOnboardingInteractor } from "@/features/company/choose-workspace-onboarding.interactor";
+import { env } from "@/env";
 // Role interactors
 import { UpsertRoleInteractor } from "@/features/role/upsert-role.interactor";
 import { GetRolesInteractor } from "@/features/role/get-roles.interactor";
@@ -279,12 +306,17 @@ import { GetWidgetFilterableFieldsInteractor } from "@/features/widget/get-widge
 // Messaging interactors
 import { CreateAuthLinkInteractor } from "@/ee/messaging/connect/create-auth-link.interactor";
 import { GetMyConnectedAccountsInteractor } from "@/ee/messaging/connect/get-my-connected-accounts.interactor";
+import { CountChannelsNeedingActionInteractor } from "@/ee/messaging/connect/count-channels-needing-action.interactor";
+import { GetMyConnectedAccountsApiInteractor } from "@/ee/messaging/connect/get-my-connected-accounts-api.interactor";
+import { GetMyConnectedAccountsContextInteractor } from "@/ee/messaging/connect/get-my-connected-accounts-context.interactor";
 import { RefreshInboxInteractor } from "@/ee/messaging/inbox/refresh-inbox.interactor";
 import { DeleteConnectedAccountInteractor } from "@/ee/messaging/connect/delete-connected-account.interactor";
 import { ResyncConnectedAccountInteractor } from "@/ee/messaging/connect/resync-connected-account.interactor";
 import { ResyncThreadInteractor } from "@/ee/messaging/inbox/resync-thread.interactor";
+import { MoveEmailThreadInteractor } from "@/ee/messaging/inbox/move-email-thread.interactor";
 import { ReconnectConnectedAccountInteractor } from "@/ee/messaging/connect/reconnect-connected-account.interactor";
 import { SetConnectedAccountVisibilityInteractor } from "@/ee/messaging/connect/set-connected-account-visibility.interactor";
+import { SetConnectedAccountSignatureInteractor } from "@/ee/messaging/connect/set-connected-account-signature.interactor";
 import { SetSelectedFoldersInteractor } from "@/ee/messaging/connect/set-selected-folders.interactor";
 import { DeleteAccountForBillingService } from "@/ee/messaging/connect/delete-account-for-billing.service";
 import { DeleteAccountsForPlanInteractor } from "@/ee/messaging/connect/delete-accounts-for-plan.interactor";
@@ -318,6 +350,8 @@ import { BackfillCalendarsInteractor } from "@/ee/messaging/ingest/backfill/back
 import { SendChatMessageInteractor } from "@/ee/messaging/outbound/send-chat-message.interactor";
 import { SendEmailInteractor } from "@/ee/messaging/outbound/send-email.interactor";
 import { SaveDraftInteractor } from "@/ee/messaging/outbound/save-draft.interactor";
+import { SaveNewThreadDraftInteractor } from "@/ee/messaging/outbound/save-new-thread-draft.interactor";
+import { SaveReplyDraftInteractor } from "@/ee/messaging/outbound/save-reply-draft.interactor";
 import { DiscardDraftInteractor } from "@/ee/messaging/outbound/discard-draft.interactor";
 import { StartChatInteractor } from "@/ee/messaging/outbound/start-chat.interactor";
 import { ResolveProviderProfileInteractor } from "@/ee/messaging/outbound/resolve-provider-profile.interactor";
@@ -366,8 +400,13 @@ import { DeleteCustomColumnInteractor } from "@/features/custom-column/delete-cu
 import { GlobalSearchInteractor } from "@/features/search/global-search.interactor";
 // P13n interactors
 import { UpsertP13nInteractor } from "@/features/p13n/upsert-p13n.interactor";
-import { UpsertFilterPresetInteractor } from "@/features/p13n/upsert-filter-preset.interactor";
-import { DeleteFilterPresetInteractor } from "@/features/p13n/delete-filter-preset.interactor";
+import { ManageDataViewsInteractor } from "@/features/data-view/manage-data-views.interactor";
+import { SURFACE } from "@/core/data-view/data-view-keys";
+import { GetDataViewsInteractor } from "@/features/data-view/get-data-views.interactor";
+import { UpsertDataViewInteractor } from "@/features/data-view/upsert-data-view.interactor";
+import { DeleteDataViewInteractor } from "@/features/data-view/delete-data-view.interactor";
+import { SaveDataViewStateInteractor } from "@/features/data-view/save-data-view-state.interactor";
+import { SelectDataViewInteractor } from "@/features/data-view/select-data-view.interactor";
 import { GetP13nInteractor } from "@/features/p13n/get-p13n.interactor";
 // Feedback interactor
 import { SendFeedbackInteractor } from "@/features/feedback/send-feedback.interactor";
@@ -379,6 +418,7 @@ import { DeleteApiKeyInteractor } from "@/features/api-key/delete-api-key.intera
 // EE Subscription interactors
 import { CreateCheckoutSessionInteractor } from "@/ee/subscription/create-checkout-session.interactor";
 import { GetSubscriptionInteractor } from "@/ee/subscription/get-subscription.interactor";
+import { GetBillingPortalUrlInteractor } from "@/ee/subscription/get-billing-portal-url.interactor";
 import { RefreshSubscriptionInteractor } from "@/ee/subscription/refresh-subscription.interactor";
 // EE Lifecycle interactors (cron consumers)
 import { SendWelcomeAndDemoInteractor } from "@/ee/lifecycle/send-welcome-and-demo.interactor";
@@ -447,7 +487,7 @@ import { ResetOperatorUserCreditsInteractor } from "@/ee/operator/reset-operator
 
 export const getContactRepo = () => new PrismaContactRepo();
 export const getOrganizationRepo = () => new PrismaOrganizationRepo();
-export const getDealRepo = () => new PrismaDealRepo();
+export const getDealRepo = () => new PrismaDealRepo(getCompanyRepo());
 export const getPipelineRepo = () => new PrismaPipelineRepo();
 export const getPipelineStageIdsRepo = () => new PrismaPipelineStageRepo();
 export const getLostReasonRepo = () => new PrismaLostReasonRepo();
@@ -459,14 +499,28 @@ export const getTaskRepo = () => new PrismaTaskRepo();
 export const getUserRepo = () => new PrismaUserRepo();
 export const getCompanyRepo = () => new PrismaCompanyRepo();
 export const getRoleRepo = () => new PrismaRoleRepo();
-export const getCustomColumnRepo = () => new PrismaCustomColumnRepo();
+export const getCustomColumnRepo = () => new PrismaCustomColumnRepo(getCompanyRepo());
 export const getP13nRepo = () => new PrismaP13nRepo();
+export const getDataViewRepo = () => new PrismaDataViewRepo();
+export const getDataViewStateRepo = () => new PrismaDataViewRepo();
 export const getWidgetRepo = () => new PrismaWidgetRepo();
 
 export const getActivitiesRepo = () => new PrismaActivitiesRepo();
 export const getWidgetCalculatorRepo = () => new PrismaWidgetCalculatorRepo();
 export const getWidgetFunnelRepo = () => new PrismaWidgetFunnelRepo();
 export const getWebhookRepo = () => new PrismaWebhookRepo();
+
+export const getRoutineRepo = () => new PrismaRoutineRepo(getRoutineEventAccess());
+
+export const getRoutineFilterMatcher = () =>
+  new PrismaRoutineFilterMatcher(
+    getContactRepo(),
+    getOrganizationRepo(),
+    getDealRepo(),
+    getServiceRepo(),
+    getTaskRepo(),
+  );
+export const getRoutineEventAccess = () => new PrismaRoutineEventAccess(getRoutineFilterMatcher());
 export const getWebhookDeliveryRepo = () => new PrismaWebhookDeliveryRepo();
 export const getAuditLogRepo = () => new PrismaAuditLogRepo();
 export const getMessagingRepo = () => new PrismaMessagingRepo();
@@ -487,6 +541,9 @@ export const getUserService = () => new UserService(getAuthService(), getUserRep
 export const getRouteGuardService = () =>
   new RouteGuardService(getAuthService(), getUserRepo(), getCompanyRepo(), getGetLegalStatusInteractor());
 export const getBackgroundTaskService = () => new BackgroundTaskService();
+export const getInviteTokenCookieRepo = () => new NextInviteTokenCookieRepo();
+export const getOnboardingIntentService = () =>
+  new OnboardingIntentService(getInviteTokenValidationInteractor(), env.BETTER_AUTH_SECRET);
 export const getUserPendingAuthorizationTaskListener = () => new UserPendingAuthorizationTaskListener(getTaskRepo());
 export const getDealStageHistoryListener = () => new DealStageHistoryListener(getDealRepo());
 export const getLeadCreatedNotificationListener = () =>
@@ -533,6 +590,8 @@ export const getEventService = () => {
     getWebhookDeliveryRepo(),
     getAuditLogRepo(),
     getBackgroundTaskService(),
+    getRoutineRepo(),
+    getRoutineEventAccess(),
   );
 };
 export const getWidgetDataFetcher = () => new WidgetDataFetcher();
@@ -541,7 +600,7 @@ export const getSubscriptionService = () => new SubscriptionService(getCompanyRe
 export const getEntitlementService = () => new EntitlementService(getCompanyRepo());
 export const getMessagingService = () => new MessagingService();
 export const getDeleteAccountForBillingService = () =>
-  new DeleteAccountForBillingService(getConnectedAccountRepo(), getMessagingService());
+  new DeleteAccountForBillingService(getConnectedAccountRepo(), getMessagingService(), getEventService());
 export const getIngestUnipileWebhookInteractor = () =>
   new IngestUnipileWebhookInteractor(getUnipileWebhookRepo(), getProcessUnipileWebhookInteractor());
 
@@ -550,10 +609,10 @@ export const getIngestUnipileWebhookInteractor = () =>
 // --- Contacts ---
 
 export const getGetContactsInteractor = () =>
-  new GetContactsInteractor(getContactRepo(), getP13nRepo(), "interactive", getQueryParamsPrecheck());
+  new GetContactsInteractor(getContactRepo(), getDataViewStateRepo(), "interactive", getQueryParamsPrecheck());
 
 export const getGetContactsApiInteractor = () =>
-  new GetContactsInteractor(getContactRepo(), getP13nRepo(), "api", getQueryParamsPrecheck());
+  new GetContactsInteractor(getContactRepo(), getDataViewStateRepo(), "api", getQueryParamsPrecheck());
 
 export const getGetContactsConfigurationInteractor = () => new GetContactsConfigurationInteractor(getContactRepo());
 
@@ -694,6 +753,12 @@ export const getCreateManyContactsInteractor = () =>
     getContactWritePrecheck(),
   );
 
+export const getLinkContactIdentifierInteractor = () =>
+  new LinkContactIdentifierInteractor(getGetContactByIdInteractor(), getUpdateContactInteractor());
+
+export const getUnlinkContactIdentifierInteractor = () =>
+  new UnlinkContactIdentifierInteractor(getGetContactByIdInteractor(), getUpdateContactInteractor());
+
 export const getUpdateContactInteractor = () =>
   new UpdateContactInteractor(
     getContactRepo(),
@@ -737,10 +802,15 @@ export const getDeleteManyContactsInteractor = () =>
 // --- Organizations ---
 
 export const getGetOrganizationsInteractor = () =>
-  new GetOrganizationsInteractor(getOrganizationRepo(), getP13nRepo(), "interactive", getQueryParamsPrecheck());
+  new GetOrganizationsInteractor(
+    getOrganizationRepo(),
+    getDataViewStateRepo(),
+    "interactive",
+    getQueryParamsPrecheck(),
+  );
 
 export const getGetOrganizationsApiInteractor = () =>
-  new GetOrganizationsInteractor(getOrganizationRepo(), getP13nRepo(), "api", getQueryParamsPrecheck());
+  new GetOrganizationsInteractor(getOrganizationRepo(), getDataViewStateRepo(), "api", getQueryParamsPrecheck());
 
 export const getGetOrganizationsConfigurationInteractor = () =>
   new GetOrganizationsConfigurationInteractor(getOrganizationRepo());
@@ -811,10 +881,10 @@ export const getDeleteManyOrganizationsInteractor = () =>
 // --- Deals ---
 
 export const getGetDealsInteractor = () =>
-  new GetDealsInteractor(getDealRepo(), getP13nRepo(), "interactive", getQueryParamsPrecheck());
+  new GetDealsInteractor(getDealRepo(), getDataViewStateRepo(), "interactive", getQueryParamsPrecheck());
 
 export const getGetDealsApiInteractor = () =>
-  new GetDealsInteractor(getDealRepo(), getP13nRepo(), "api", getQueryParamsPrecheck());
+  new GetDealsInteractor(getDealRepo(), getDataViewStateRepo(), "api", getQueryParamsPrecheck());
 
 export const getGetDealsConfigurationInteractor = () =>
   new GetDealsConfigurationInteractor(getDealRepo(), getPipelineRepo());
@@ -939,10 +1009,10 @@ export const getDeleteLostReasonInteractor = () =>
 // --- Services ---
 
 export const getGetServicesInteractor = () =>
-  new GetServicesInteractor(getServiceRepo(), getP13nRepo(), "interactive", getQueryParamsPrecheck());
+  new GetServicesInteractor(getServiceRepo(), getDataViewStateRepo(), "interactive", getQueryParamsPrecheck());
 
 export const getGetServicesApiInteractor = () =>
-  new GetServicesInteractor(getServiceRepo(), getP13nRepo(), "api", getQueryParamsPrecheck());
+  new GetServicesInteractor(getServiceRepo(), getDataViewStateRepo(), "api", getQueryParamsPrecheck());
 
 export const getGetServicesConfigurationInteractor = () => new GetServicesConfigurationInteractor(getServiceRepo());
 
@@ -1011,6 +1081,8 @@ export const getCreateServiceInteractor = () =>
     getServiceWritePrecheck(),
   );
 
+export const getCreateServiceByNameInteractor = () => new CreateServiceByNameInteractor(getCreateServiceInteractor());
+
 export const getCreateManyServicesInteractor = () =>
   new CreateManyServicesInteractor(
     getServiceRepo(),
@@ -1059,10 +1131,10 @@ export const getDeleteManyServicesInteractor = () =>
 // --- Tasks ---
 
 export const getGetTasksInteractor = () =>
-  new GetTasksInteractor(getTaskRepo(), getP13nRepo(), "interactive", getQueryParamsPrecheck());
+  new GetTasksInteractor(getTaskRepo(), getDataViewStateRepo(), "interactive", getQueryParamsPrecheck());
 
 export const getGetTasksApiInteractor = () =>
-  new GetTasksInteractor(getTaskRepo(), getP13nRepo(), "api", getQueryParamsPrecheck());
+  new GetTasksInteractor(getTaskRepo(), getDataViewStateRepo(), "api", getQueryParamsPrecheck());
 
 export const getGetTasksConfigurationInteractor = () => new GetTasksConfigurationInteractor(getTaskRepo());
 
@@ -1149,7 +1221,21 @@ export const getDeleteManyTasksInteractor = () =>
 // --- User ---
 
 export const getRegisterUserInteractor = () =>
-  new RegisterUserInteractor(getAuthService(), getUserRepo(), getEventService(), getRouteGuardService());
+  new RegisterUserInteractor(
+    getAuthService(),
+    getUserRepo(),
+    getEventService(),
+    getRouteGuardService(),
+    getCompanyRepo(),
+  );
+
+export const getRegisterOnboardingProfileInteractor = () =>
+  new RegisterOnboardingProfileInteractor(
+    getAuthService(),
+    getOnboardingIntentService(),
+    getInviteTokenCookieRepo(),
+    getRegisterUserInteractor(),
+  );
 
 export const getAdAttributionCookieRepo = () => new NextAdAttributionCookieRepo();
 
@@ -1181,30 +1267,36 @@ export const getAdminUpdateUserDetailsInteractor = () =>
     getSubscriptionService(),
     getCompanyRepo(),
     getUserRepo(),
+    getReleaseOwnerRoutinesInteractor(),
   );
 
 export const getGetUsersInteractor = () =>
-  new GetUsersInteractor(getUserRepo(), getP13nRepo(), "interactive", getQueryParamsPrecheck());
+  new GetUsersInteractor(getUserRepo(), getDataViewStateRepo(), "interactive", getQueryParamsPrecheck());
 
 export const getGetUsersApiInteractor = () =>
-  new GetUsersInteractor(getUserRepo(), getP13nRepo(), "api", getQueryParamsPrecheck());
+  new GetUsersInteractor(getUserRepo(), getDataViewStateRepo(), "api", getQueryParamsPrecheck());
 
 // --- Auth ---
 
 export const getSignInWithEmailInteractor = () => new SignInWithEmailInteractor(getAuthService());
 
-export const getSignUpWithEmailInteractor = () => new SignUpWithEmailInteractor(getAuthService());
+export const getSignUpWithEmailInteractor = () =>
+  new SignUpWithEmailInteractor(getAuthService(), getOnboardingIntentService());
 
-export const getRequestPasswordResetInteractor = () => new RequestPasswordResetInteractor(getAuthService());
+export const getRequestPasswordResetInteractor = () =>
+  new RequestPasswordResetInteractor(getAuthService(), getOnboardingIntentService());
 
-export const getResetPasswordInteractor = () => new ResetPasswordInteractor(getAuthService());
+export const getResetPasswordInteractor = () =>
+  new ResetPasswordInteractor(getAuthService(), getOnboardingIntentService());
 
 export const getContinueWithSocialsInteractor = () =>
   new ContinueWithSocialsInteractor(getAuthService(), getUserRepo());
 
-export const getResendVerificationEmailInteractor = () => new ResendVerificationEmailInteractor(getAuthService());
+export const getResendVerificationEmailInteractor = () =>
+  new ResendVerificationEmailInteractor(getAuthService(), getOnboardingIntentService());
 
-export const getSignOutInteractor = () => new SignOutInteractor(getAuthService());
+export const getSignOutInteractor = () =>
+  new SignOutInteractor(getAuthService(), getOnboardingIntentService(), getInviteTokenCookieRepo());
 
 export const getDecideMcpConsentInteractor = () =>
   new DecideMcpConsentInteractor(getAuthService(), getRouteGuardService());
@@ -1223,15 +1315,25 @@ export const getInviteUsersByEmailInteractor = () =>
 
 export const getInviteTokenValidationInteractor = () => new InviteTokenValidationInteractor(getCompanyRepo());
 
+export const getOpenInvitationInteractor = () =>
+  new OpenInvitationInteractor(getInviteTokenValidationInteractor(), getAuthService(), getOnboardingIntentService());
+
+export const getChooseWorkspaceOnboardingInteractor = () =>
+  new ChooseWorkspaceOnboardingInteractor(
+    getRouteGuardService(),
+    getOnboardingIntentService(),
+    getInviteTokenCookieRepo(),
+  );
+
 // --- Role ---
 
 export const getUpsertRoleInteractor = () =>
   new UpsertRoleInteractor(getRoleRepo(), getEventService(), getRoleIdsValidator());
 
 export const getGetRolesInteractor = () =>
-  new GetRolesInteractor(getRoleRepo(), getP13nRepo(), "interactive", getQueryParamsPrecheck());
+  new GetRolesInteractor(getRoleRepo(), getDataViewStateRepo(), "interactive", getQueryParamsPrecheck());
 export const getGetRolesApiInteractor = () =>
-  new GetRolesInteractor(getRoleRepo(), getP13nRepo(), "api", getQueryParamsPrecheck());
+  new GetRolesInteractor(getRoleRepo(), getDataViewStateRepo(), "api", getQueryParamsPrecheck());
 
 export const getDeleteRoleInteractor = () => new DeleteRoleInteractor(getRoleRepo(), getEventService());
 
@@ -1273,9 +1375,9 @@ export const getGetWidgetFilterableFieldsInteractor = () =>
 // --- Webhook ---
 
 export const getGetWebhooksInteractor = () =>
-  new GetWebhooksInteractor(getWebhookRepo(), getP13nRepo(), "interactive", getQueryParamsPrecheck());
+  new GetWebhooksInteractor(getWebhookRepo(), getDataViewStateRepo(), "interactive", getQueryParamsPrecheck());
 export const getGetWebhooksApiInteractor = () =>
-  new GetWebhooksInteractor(getWebhookRepo(), getP13nRepo(), "api", getQueryParamsPrecheck());
+  new GetWebhooksInteractor(getWebhookRepo(), getDataViewStateRepo(), "api", getQueryParamsPrecheck());
 
 export const getUpsertWebhookInteractor = () =>
   new UpsertWebhookInteractor(getWebhookRepo(), getEventService(), getWebhookIdsValidator());
@@ -1305,9 +1407,14 @@ export const getDeleteWebhookInteractor = () =>
   new DeleteWebhookInteractor(getWebhookRepo(), getEventService(), getWebhookIdsValidator());
 
 export const getGetWebhookDeliveriesInteractor = () =>
-  new GetWebhookDeliveriesInteractor(getWebhookDeliveryRepo(), getP13nRepo(), "interactive", getQueryParamsPrecheck());
+  new GetWebhookDeliveriesInteractor(
+    getWebhookDeliveryRepo(),
+    getDataViewStateRepo(),
+    "interactive",
+    getQueryParamsPrecheck(),
+  );
 export const getGetWebhookDeliveriesApiInteractor = () =>
-  new GetWebhookDeliveriesInteractor(getWebhookDeliveryRepo(), getP13nRepo(), "api", getQueryParamsPrecheck());
+  new GetWebhookDeliveriesInteractor(getWebhookDeliveryRepo(), getDataViewStateRepo(), "api", getQueryParamsPrecheck());
 
 export const getResendWebhookDeliveryInteractor = () =>
   new ResendWebhookDeliveryInteractor(
@@ -1329,6 +1436,15 @@ export const getCreateAuthLinkInteractor = () =>
 
 export const getGetMyConnectedAccountsInteractor = () =>
   new GetMyConnectedAccountsInteractor(getConnectedAccountRepo());
+
+export const getCountChannelsNeedingActionInteractor = () =>
+  new CountChannelsNeedingActionInteractor(getConnectedAccountRepo());
+
+export const getGetMyConnectedAccountsApiInteractor = () =>
+  new GetMyConnectedAccountsApiInteractor(getConnectedAccountRepo());
+
+export const getGetMyConnectedAccountsContextInteractor = () =>
+  new GetMyConnectedAccountsContextInteractor(getConnectedAccountRepo());
 
 export const getDeleteConnectedAccountInteractor = () =>
   new DeleteConnectedAccountInteractor(getConnectedAccountRepo(), getMessagingService(), getEventService());
@@ -1359,6 +1475,14 @@ export const getDeleteAccountsForPlanInteractor = () =>
 
 export const getResyncThreadInteractor = () =>
   new ResyncThreadInteractor(getMessagingRepo(), getMessagingService(), getEntitlementService());
+
+export const getMoveEmailThreadInteractor = () =>
+  new MoveEmailThreadInteractor(
+    getMessagingRepo(),
+    getConnectedAccountRepo(),
+    getMessagingService(),
+    getEntitlementService(),
+  );
 
 export const getSetConnectedAccountVisibilityInteractor = () =>
   new SetConnectedAccountVisibilityInteractor(getConnectedAccountRepo(), getEventService(), getEntitlementService());
@@ -1422,10 +1546,18 @@ export const getProcessCalendarEventUpsertWebhookInteractor = () =>
   new ProcessCalendarEventUpsertWebhookInteractor(getCalendarRepo(), getConnectedAccountRepo(), getEventService());
 export const getProcessCalendarEventDeleteWebhookInteractor = () =>
   new ProcessCalendarEventDeleteWebhookInteractor(getCalendarRepo(), getConnectedAccountRepo(), getEventService());
+export const getGetCalendarsInteractor = () =>
+  new GetCalendarsInteractor(
+    getCalendarRepo(),
+    getDataViewStateRepo(),
+    "interactive",
+    getQueryParamsPrecheck(),
+    getEntitlementService(),
+  );
 export const getGetCalendarsApiInteractor = () =>
   new GetCalendarsInteractor(
     getCalendarRepo(),
-    getP13nRepo(),
+    getDataViewStateRepo(),
     "api",
     getQueryParamsPrecheck(),
     getEntitlementService(),
@@ -1435,7 +1567,7 @@ export const getGetCalendarByIdInteractor = () =>
 export const getGetCalendarEventsApiInteractor = () =>
   new GetCalendarEventsInteractor(
     getCalendarEventsRepo(),
-    getP13nRepo(),
+    getDataViewStateRepo(),
     "api",
     getQueryParamsPrecheck(),
     getEntitlementService(),
@@ -1540,8 +1672,15 @@ export const getSendEmailInteractor = () =>
     getEntitlementService(),
   );
 
+export const getSetConnectedAccountSignatureInteractor = () =>
+  new SetConnectedAccountSignatureInteractor(getConnectedAccountRepo(), getEntitlementService());
+
 export const getSaveDraftInteractor = () =>
   new SaveDraftInteractor(getMessagingRepo(), getConnectedAccountRepo(), getEntitlementService());
+
+export const getSaveNewThreadDraftInteractor = () => new SaveNewThreadDraftInteractor(getSaveDraftInteractor());
+
+export const getSaveReplyDraftInteractor = () => new SaveReplyDraftInteractor(getSaveDraftInteractor());
 
 export const getDiscardDraftInteractor = () => new DiscardDraftInteractor(getMessagingRepo(), getEntitlementService());
 
@@ -1563,7 +1702,7 @@ export const getSearchChannelCandidatesInteractor = () =>
 export const getGetMessagingThreadsInteractor = () =>
   new GetMessagingThreadsInteractor(
     getMessagingRepo(),
-    getP13nRepo(),
+    getDataViewStateRepo(),
     "interactive",
     getQueryParamsPrecheck(),
     getEntitlementService(),
@@ -1571,7 +1710,7 @@ export const getGetMessagingThreadsInteractor = () =>
 export const getGetMessagingThreadsApiInteractor = () =>
   new GetMessagingThreadsInteractor(
     getMessagingRepo(),
-    getP13nRepo(),
+    getDataViewStateRepo(),
     "api",
     getQueryParamsPrecheck(),
     getEntitlementService(),
@@ -1588,7 +1727,7 @@ export const getGetUnreadThreadCountInteractor = () => new GetUnreadThreadCountI
 export const getGetActivitiesInteractor = () =>
   new GetActivitiesInteractor(
     getActivitiesRepo(),
-    getP13nRepo(),
+    getDataViewStateRepo(),
     "interactive",
     getQueryParamsPrecheck(),
     getEntitlementService(),
@@ -1596,7 +1735,7 @@ export const getGetActivitiesInteractor = () =>
 export const getGetActivitiesApiInteractor = () =>
   new GetActivitiesInteractor(
     getActivitiesRepo(),
-    getP13nRepo(),
+    getDataViewStateRepo(),
     "api",
     getQueryParamsPrecheck(),
     getEntitlementService(),
@@ -1683,6 +1822,7 @@ export const getUpsertCustomColumnInteractor = () =>
 export const getDeleteCustomColumnInteractor = () =>
   new DeleteCustomColumnInteractor(
     getCustomColumnRepo(),
+    getRoutineRepo(),
     getUserService(),
     getEventService(),
     getCustomColumnIdsValidator(),
@@ -1698,9 +1838,43 @@ export const getUpsertP13nInteractor = () => new UpsertP13nInteractor(getP13nRep
 
 export const getGetP13nInteractor = () => new GetP13nInteractor(getP13nRepo());
 
-export const getUpsertFilterPresetInteractor = () => new UpsertFilterPresetInteractor(getP13nRepo());
+// --- Data views ---
 
-export const getDeleteFilterPresetInteractor = () => new DeleteFilterPresetInteractor(getP13nRepo());
+export const getGetDataViewsInteractor = () => new GetDataViewsInteractor(getDataViewRepo());
+
+export const getUpsertDataViewInteractor = () => new UpsertDataViewInteractor(getDataViewRepo(), getP13nRepo());
+
+export const getDeleteDataViewInteractor = () => new DeleteDataViewInteractor(getDataViewRepo(), getP13nRepo());
+
+export const getSaveDataViewStateInteractor = () => new SaveDataViewStateInteractor(getDataViewRepo(), getP13nRepo());
+
+export const getSelectDataViewInteractor = () => new SelectDataViewInteractor(getDataViewRepo(), getP13nRepo());
+
+export const getManageDataViewsInteractor = () =>
+  new ManageDataViewsInteractor(
+    {
+      [SURFACE.contacts]: getContactRepo(),
+      [SURFACE.organizations]: getOrganizationRepo(),
+      [SURFACE.deals]: getDealRepo(),
+      [SURFACE.services]: getServiceRepo(),
+      [SURFACE.tasks]: getTaskRepo(),
+      [SURFACE.users]: getUserRepo(),
+      [SURFACE.roles]: getRoleRepo(),
+      [SURFACE.webhooks]: getWebhookRepo(),
+      [SURFACE.webhookDeliveries]: getWebhookDeliveryRepo(),
+      [SURFACE.auditLogs]: getAuditLogRepo(),
+      [SURFACE.messagingThreads]: getMessagingRepo(),
+      [SURFACE.entityTimeline]: getActivitiesRepo(),
+      [SURFACE.routines]: getRoutineRepo(),
+    },
+    getDataViewStateRepo(),
+    getUpsertDataViewInteractor(),
+    getSaveDataViewStateInteractor(),
+    getSelectDataViewInteractor(),
+    getDeleteDataViewInteractor(),
+    getQueryParamsPrecheck(),
+    getEntitlementService(),
+  );
 
 // --- Feedback ---
 
@@ -1725,15 +1899,17 @@ export const getDeleteApiKeyInteractor = () => new DeleteApiKeyInteractor(getAut
 export const getCreateCheckoutSessionInteractor = () =>
   new CreateCheckoutSessionInteractor(getSubscriptionService(), getCompanyRepo(), getUserRepo());
 
-export const getGetSubscriptionInteractor = () =>
-  new GetSubscriptionInteractor(getCompanyRepo(), getUserRepo(), getSubscriptionService());
+export const getGetSubscriptionInteractor = () => new GetSubscriptionInteractor(getCompanyRepo(), getUserRepo());
+
+export const getGetBillingPortalUrlInteractor = () =>
+  new GetBillingPortalUrlInteractor(getCompanyRepo(), getSubscriptionService());
 
 export const getRefreshSubscriptionInteractor = () =>
   new RefreshSubscriptionInteractor(getCompanyRepo(), getSubscriptionService(), getDeleteAccountsForPlanInteractor());
 
 // --- Audit log ---
 
-export const getGetAuditLogsInteractor = () => new GetAuditLogsInteractor(getAuditLogRepo(), getP13nRepo());
+export const getGetAuditLogsInteractor = () => new GetAuditLogsInteractor(getAuditLogRepo(), getDataViewStateRepo());
 
 // --- EE Lifecycle (workflow cron) ---
 
@@ -1746,10 +1922,18 @@ export const getSendTrialInactivationReminderInteractor = () =>
   new SendTrialInactivationReminderInteractor(getUserRepo(), getEmailService());
 
 export const getDeactivateTrialUsersAndSendNoticeInteractor = () =>
-  new DeactivateTrialUsersAndSendNoticeInteractor(getUserRepo(), getEmailService());
+  new DeactivateTrialUsersAndSendNoticeInteractor(
+    getUserRepo(),
+    getEmailService(),
+    getReleaseOwnerRoutinesInteractor(),
+  );
 
 export const getDeactivateUsersAfterSubscriptionGracePeriodInteractor = () =>
-  new DeactivateUsersAfterSubscriptionGracePeriodInteractor(getUserRepo(), getEmailService());
+  new DeactivateUsersAfterSubscriptionGracePeriodInteractor(
+    getUserRepo(),
+    getEmailService(),
+    getReleaseOwnerRoutinesInteractor(),
+  );
 
 export const getDeleteConnectedAccountsForExpiredTrialsInteractor = () =>
   new DeleteConnectedAccountsForExpiredTrialsInteractor(getConnectedAccountRepo(), getDeleteAccountForBillingService());
@@ -1790,7 +1974,46 @@ export const getSendAgentMessageInteractor = () =>
     getAgentUsageService(),
     getEntitlementService(),
     getBackgroundTaskService(),
+    getCustomColumnRepo(),
   );
+
+export const getGetRoutinesInteractor = () =>
+  new GetRoutinesInteractor(getRoutineRepo(), getDataViewStateRepo(), "interactive", getQueryParamsPrecheck());
+
+export const getGetRoutinesApiInteractor = () =>
+  new GetRoutinesInteractor(getRoutineRepo(), getDataViewStateRepo(), "api", getQueryParamsPrecheck());
+
+export const getGetRoutineRunsInteractor = () => new GetRoutineRunsInteractor(getRoutineRepo());
+
+export const getUpsertRoutineInteractor = () =>
+  new UpsertRoutineInteractor(getRoutineRepo(), getCompanyRepo(), getEventService());
+
+export const getDeleteRoutineInteractor = () => new DeleteRoutineInteractor(getRoutineRepo(), getEventService());
+
+export const getPauseRoutineInteractor = () => new PauseRoutineInteractor(getRoutineRepo(), getEventService());
+
+export const getRunRoutineNowInteractor = () =>
+  new RunRoutineNowInteractor(getRoutineRepo(), getBackgroundTaskService());
+
+export const getStartRoutineRunInteractor = () =>
+  new StartRoutineRunInteractor(
+    getRoutineRepo(),
+    getAgentChatRepo(),
+    getSendAgentMessageInteractor(),
+    getRoutineEventAccess(),
+  );
+
+export const getFailRoutineRunInteractor = () => new FailRoutineRunInteractor(getRoutineRepo());
+
+export const getSweepDueRoutinesInteractor = () =>
+  new SweepDueRoutinesInteractor(getRoutineRepo(), getBackgroundTaskService());
+
+export const getReconcileRoutineRunsInteractor = () => new ReconcileRoutineRunsInteractor(getRoutineRepo());
+
+export const getReleaseOwnerRoutinesInteractor = () =>
+  new ReleaseOwnerRoutinesInteractor(getRoutineRepo(), getReconcileRoutineRunsInteractor());
+
+export const getPruneRoutineRunsInteractor = () => new PruneRoutineRunsInteractor(getRoutineRepo());
 
 export const getGetAgentConfigInteractor = () =>
   new GetAgentConfigInteractor(getAgentChatRepo(), getAgentUsageService(), getEntitlementService());
@@ -1855,22 +2078,23 @@ export const getGetOperatorUserSummaryInteractor = () => new GetOperatorUserSumm
 
 export const getGetOperatorUserDetailInteractor = () => new GetOperatorUserDetailInteractor(getOperatorRepo());
 
-export const getUpdateOperatorUserStatusInteractor = () => new UpdateOperatorUserStatusInteractor(getOperatorRepo());
+export const getUpdateOperatorUserStatusInteractor = () =>
+  new UpdateOperatorUserStatusInteractor(getOperatorRepo(), getReleaseOwnerRoutinesInteractor());
 
 export const getOperatorUsersRepo = () => new PrismaOperatorUsersRepo();
 
 export const getGetOperatorUsersInteractor = () =>
-  new GetOperatorUsersInteractor(getOperatorUsersRepo(), getP13nRepo());
+  new GetOperatorUsersInteractor(getOperatorUsersRepo(), getDataViewStateRepo());
 
 export const getOperatorWorkspacesRepo = () => new PrismaOperatorWorkspacesRepo();
 
 export const getGetOperatorWorkspacesInteractor = () =>
-  new GetOperatorWorkspacesInteractor(getOperatorWorkspacesRepo(), getP13nRepo());
+  new GetOperatorWorkspacesInteractor(getOperatorWorkspacesRepo(), getDataViewStateRepo());
 
 export const getOperatorAuditRepo = () => new PrismaOperatorAuditRepo();
 
 export const getGetOperatorAuditLogsInteractor = () =>
-  new GetOperatorAuditLogsInteractor(getOperatorAuditRepo(), getP13nRepo());
+  new GetOperatorAuditLogsInteractor(getOperatorAuditRepo(), getDataViewStateRepo());
 
 export const getOperatorRiskSummaryRepo = () => new PrismaOperatorRiskSummaryRepo();
 
@@ -1910,6 +2134,29 @@ export const getExportLeadsPageInteractor = () => new ExportLeadsPageInteractor(
 export const getDryRunImportContactsInteractor = () => new DryRunImportContactsInteractor(getContactWritePrecheck());
 
 export const getImportRelationIndex = () => new ImportRelationIndex();
+
+export const getDryRunImportChunkInteractor = () =>
+  new DryRunImportChunkInteractor(
+    getDryRunImportContactsInteractor(),
+    getDryRunImportOrganizationsInteractor(),
+    getDryRunImportDealsInteractor(),
+    getDryRunImportServicesInteractor(),
+    getDryRunImportTasksInteractor(),
+  );
+
+export const getCommitImportChunkInteractor = () =>
+  new CommitImportChunkInteractor(
+    getCreateManyContactsInteractor(),
+    getUpdateManyContactsInteractor(),
+    getCreateManyOrganizationsInteractor(),
+    getUpdateManyOrganizationsInteractor(),
+    getCreateManyDealsInteractor(),
+    getUpdateManyDealsInteractor(),
+    getCreateManyServicesInteractor(),
+    getUpdateManyServicesInteractor(),
+    getCreateManyTasksInteractor(),
+    getUpdateManyTasksInteractor(),
+  );
 
 export const getGetImportRelationIndexInteractor = () =>
   new GetImportRelationIndexInteractor(getImportRelationIndex(), getUserService());

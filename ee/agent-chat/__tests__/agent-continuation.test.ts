@@ -3,13 +3,14 @@ import { describe, expect, it } from "vitest";
 
 import {
   AGENT_CONTINUATION_CHECKPOINT_MAX_BYTES,
+  AGENT_CONTINUATION_DIGEST_CHECKPOINT_MAX_BYTES,
   AGENT_CONTINUATION_RETAINED_RESPONSE_STEPS,
-  agentContinuationShouldStop,
   compactAgentContinuationContext,
   decideAgentContinuationLoop,
+  digestAgentToolResult,
   serializeAgentContinuationCheckpoint,
   summarizeAgentContinuationStep,
-  type AgentContinuationLimits,
+  summarizeAgentContinuationSteps,
   type AgentContinuationStep,
 } from "../agent-continuation";
 
@@ -76,32 +77,8 @@ function step(
   };
 }
 
-const limits: AgentContinuationLimits = {
-  maxProviderSteps: 20,
-  maxWriteActivities: 40,
-  maxErrors: 4,
-  maxNoProgressSteps: 2,
-  maxRepeatedActivityCalls: 4,
-  maxWallTimeMs: 240_000,
-};
-
-function advance(
-  steps: AgentContinuationStep[],
-  overrides: Partial<AgentContinuationLimits> = {},
-  options: {
-    completedAtMs?: number;
-    pendingApproval?: boolean;
-  } = {},
-) {
-  return decideAgentContinuationLoop(
-    {
-      startedAtMs: 1_000,
-      steps,
-      observedAtMs: options.completedAtMs ?? 2_000,
-      pendingApproval: options.pendingApproval,
-    },
-    { ...limits, ...overrides },
-  );
+function advance(steps: AgentContinuationStep[]) {
+  return decideAgentContinuationLoop({ steps });
 }
 
 describe("agent continuation context compaction", () => {
@@ -316,176 +293,94 @@ describe("agent continuation decisions", () => {
   it("continues an incomplete segment that made bounded progress", () => {
     const decision = advance([step([{ name: "get_workspace_context" }])]);
 
-    expect(decision).toMatchObject({
-      action: "continue",
-      accounting: { providerSteps: 1, noProgressSteps: 0 },
-    });
-    expect(agentContinuationShouldStop(decision)).toBe(false);
+    expect(decision).toEqual({ action: "continue" });
   });
 
   it("completes when the model naturally stops", () => {
     const decision = advance([step([], "stop")]);
 
     expect(decision.action).toBe("complete");
-    expect(agentContinuationShouldStop(decision)).toBe(true);
   });
 
-  it("pauses for approval before applying ordinary continuation limits", () => {
-    const decision = advance(
-      [
-        step([
-          {
-            name: "request_support",
-            input: { subject: "Help", body: "Please help" },
-            status: "pending",
-          },
-        ]),
-      ],
-      { maxProviderSteps: 1 },
-    );
+  it("pauses only for an unresolved approval", () => {
+    const decision = advance([
+      step([
+        {
+          name: "request_support",
+          input: { subject: "Help", body: "Please help" },
+          status: "pending",
+        },
+      ]),
+    ]);
 
     expect(decision).toMatchObject({ action: "pause", reason: "approval" });
   });
 
-  it("stops after consecutive steps with no successful activity", () => {
-    const noProgress = step([], "tool-calls");
-    const decision = advance([noProgress, noProgress], {
-      maxNoProgressSteps: 2,
-    });
+  it("continues through repeated calls, errors, and no-progress rounds", () => {
+    const repeated = Array.from({ length: 40 }, () =>
+      step([{ name: "create_contacts", input: [{}], status: "error" }]),
+    );
+    const noProgress = Array.from({ length: 40 }, () => step([], "tool-calls"));
+    const decision = advance([...repeated, ...noProgress]);
 
-    expect(decision).toMatchObject({ action: "error", reason: "no_progress" });
+    expect(decision).toEqual({ action: "continue" });
   });
 
-  it("stops a repeated semantic call even when opaque tool-call ids differ", () => {
-    const decision = advance(
-      [step([{ name: "get_workspace_context" }, { name: "get_workspace_context" }, { name: "get_workspace_context" }])],
-      { maxRepeatedActivityCalls: 3 },
-    );
-
-    expect(decision).toMatchObject({
-      action: "error",
-      reason: "repeated_activity",
-    });
-  });
-
-  it("stops the same exact call when a loop interleaves other activity", () => {
-    const decision = advance(
-      [
-        step([{ name: "get_workspace_context" }]),
-        step([{ name: "get_record_schema", input: { entity: "contact" } }]),
-        step([{ name: "get_workspace_context" }]),
-        step([{ name: "get_record_schema", input: { entity: "organization" } }]),
-        step([{ name: "get_workspace_context" }]),
-      ],
-      { maxRepeatedActivityCalls: 3 },
-    );
-
-    expect(decision).toMatchObject({
-      action: "error",
-      reason: "repeated_activity",
-      accounting: { repeatedActivityCalls: 3 },
-    });
-  });
-
-  it("does not confuse distinct calls that share the same safe activity descriptor", () => {
-    const decision = advance(
-      [
-        step([
-          {
-            name: "manage_custom_columns",
-            input: { action: "upsert", entity: "contact", label: "Region" },
-          },
-          {
-            name: "manage_custom_columns",
-            input: { action: "upsert", entity: "contact", label: "Source" },
-          },
-          {
-            name: "manage_custom_columns",
-            input: { action: "upsert", entity: "contact", label: "Tier" },
-          },
-          {
-            name: "manage_custom_columns",
-            input: { action: "upsert", entity: "contact", label: "Owner" },
-          },
-        ]),
-      ],
-      { maxRepeatedActivityCalls: 3 },
-    );
-
-    expect(decision).toMatchObject({
-      action: "continue",
-      accounting: { repeatedActivityCalls: 1 },
-    });
-  });
-
-  it("stops at the structured tool-error limit", () => {
-    const decision = advance(
-      [
-        step([
-          { name: "create_contacts", input: [{}], status: "error" },
-          { name: "create_organizations", input: [{}], status: "error" },
-        ]),
-      ],
-      { maxErrors: 2, maxNoProgressSteps: 10 },
-    );
-
-    expect(decision).toMatchObject({ action: "error", reason: "error_limit" });
+  it("continues after an output-length finish", () => {
+    expect(advance([step([], "length")])).toMatchObject({ action: "continue" });
   });
 
   it.each([
-    {
-      name: "wall time",
-      steps: [step([{ name: "get_workspace_context" }])],
-      overrides: { maxWallTimeMs: 1_000 },
-      options: { completedAtMs: 2_000 },
-      reason: "wall_time_limit",
-    },
-    {
-      name: "provider steps",
-      steps: [step([{ name: "get_workspace_context" }]), step([{ name: "get_workspace_context" }])],
-      overrides: { maxProviderSteps: 2 },
-      options: {},
-      reason: "step_limit",
-    },
-    {
-      name: "writes",
-      steps: [step([{ name: "create_contacts", input: [{}] }])],
-      overrides: { maxWriteActivities: 1 },
-      options: {},
-      reason: "write_limit",
-    },
-  ])("stops at the overall $name limit", ({ steps, overrides, options, reason }) => {
-    expect(advance(steps, overrides, options)).toMatchObject({
-      action: "error",
-      reason,
-    });
-  });
-
-  it("recomputes full single-stream accounting without double-counting prior stop checks", () => {
-    const steps = [step([{ name: "create_contacts", input: [{}] }]), step([{ name: "create_contacts", input: [{}] }])];
-    const first = decideAgentContinuationLoop({ startedAtMs: 1_000, steps, observedAtMs: 3_000 }, limits);
-    const second = decideAgentContinuationLoop({ startedAtMs: 1_000, steps, observedAtMs: 3_000 }, limits);
-
-    expect(first.accounting).toEqual(second.accounting);
-    expect(first).toMatchObject({
-      action: "continue",
-      accounting: {
-        providerSteps: 2,
-        writeActivities: 2,
-        repeatedActivityCalls: 2,
-      },
-    });
-  });
-
-  it.each([
-    ["length", "length"],
     ["content-filter", "content_filter"],
     ["error", "provider_error"],
     ["other", "provider_error"],
-  ] as const)("maps the %s finish reason to a bounded %s error", (finishReason, reason) => {
-    expect(advance([step([], finishReason)], { maxNoProgressSteps: 10 })).toMatchObject({
-      action: "error",
-      reason,
+  ] as const)("maps the %s finish reason to the technical %s stop", (finishReason, reason) => {
+    expect(advance([step([], finishReason)])).toMatchObject({ action: "error", reason });
+  });
+});
+
+describe("agent continuation result digest", () => {
+  const listResult = {
+    ok: true,
+    result:
+      "total: 42\nsums:\n  totalValue: 123456.5\n  weightedValue: 9000\npage: 1\npageSize: 25\nitems[2]{id,name,totalValue}:\n  00000000-0000-4000-8000-000000000001,Nova Expansion,100\n  00000000-0000-4000-8000-000000000002,Acme Renewal,200",
+  };
+
+  it("keeps the numeric facts of a successful read and nothing else", () => {
+    expect(digestAgentToolResult(listResult)).toBe(
+      "total=42 page=1 pageSize=25 items=2 sums.totalValue=123456.5 sums.weightedValue=9000",
+    );
+    expect(
+      digestAgentToolResult({ ok: true, result: "requested: 2\nfound: 2\nfailed: 0\nitems[1]{id,name}:\n  a,b" }),
+    ).toBe("requested=2 found=2 failed=0 items=1");
+    expect(digestAgentToolResult({ ok: false, result: "total: 5 private" })).toBeNull();
+    expect(digestAgentToolResult({ ok: true, result: "Loaded messaging: send_email" })).toBeNull();
+    expect(digestAgentToolResult("plain")).toBeNull();
+  });
+
+  it("carries the digest into the checkpoint only when enabled and never for failures", () => {
+    const steps = [
+      step([
+        { name: "list_records", input: { entity: "deal" }, output: listResult },
+        { name: "create_contacts", input: [{ firstName: "x" }], output: { ok: false, result: "total: 9 nope" } },
+      ]),
+    ];
+    const withDigest = summarizeAgentContinuationSteps(steps, { resultDigest: true }).flat();
+    expect(withDigest[0]?.resultDigest).toContain("total=42");
+    expect(withDigest[0]?.resultDigest).not.toContain("Nova");
+    expect(withDigest[0]?.resultDigest).not.toContain("00000000");
+    expect(withDigest[1]?.resultDigest).toBeUndefined();
+    const withoutDigest = summarizeAgentContinuationSteps(steps).flat();
+    expect(withoutDigest[0]?.resultDigest).toBeUndefined();
+
+    const compacted = compactAgentContinuationContext({
+      system: "system",
+      initialMessages: [{ role: "user", content: "request" }],
+      steps: [...steps, step([], "tool-calls", "recent-1"), step([], "tool-calls", "recent-2")],
+      resultDigest: true,
     });
+    expect(compacted.system).toContain("total=42");
+    expect(compacted.system).not.toContain("Nova Expansion");
+    expect(compacted.checkpointBytes).toBeLessThanOrEqual(AGENT_CONTINUATION_DIGEST_CHECKPOINT_MAX_BYTES);
   });
 });

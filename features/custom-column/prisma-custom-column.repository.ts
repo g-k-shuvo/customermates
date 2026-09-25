@@ -1,4 +1,5 @@
 import type { RepoArgs } from "@/core/utils/types";
+import type { GetDealWeightingColumnRepo } from "@/features/company/get-deal-weighting-column.repo";
 import type { UpsertCustomColumnRepo } from "./upsert-custom-column.interactor";
 import type { GetCustomColumnsRepo } from "./get-custom-columns.interactor";
 import type { GetCustomColumnsByEntityTypeRepo } from "./get-custom-columns-by-entity-type.interactor";
@@ -13,14 +14,34 @@ import type { TaskCustomColumnRepo } from "@/features/tasks/get/get-task-by-id.i
 
 import { CustomColumnType, EntityType } from "@/generated/prisma";
 
+import { canonicalIsoDateTime, isIsoDateTime } from "@/core/validation/iso-date-time";
+
 import type { Prisma } from "@/generated/prisma";
 
-import { type CustomColumnDto } from "./custom-column.schema";
-
 import { BaseRepository } from "@/core/base/base-repository";
+import { toCustomColumnDto, toCustomColumnDtos } from "./custom-column.dto";
+import { clearGroupingForDeletedColumn } from "@/core/base/grouping/clear-grouping";
 import { getDealRepo } from "@/core/di";
 import { Transaction } from "@/core/decorators/transaction.decorator";
-import { FilterOperatorKey } from "@/core/base/base-query-builder";
+import { CUSTOM_COLUMN_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
+
+const DATE_LIKE_CUSTOM_COLUMN_TYPES: ReadonlySet<CustomColumnType> = new Set([
+  CustomColumnType.date,
+  CustomColumnType.dateTime,
+  CustomColumnType.dateRange,
+  CustomColumnType.dateTimeRange,
+]);
+
+function canonicalIsoDateTimeParts(value: string | null | undefined) {
+  if (typeof value !== "string") return value;
+  return value
+    .split(",")
+    .map((part) => {
+      const trimmed = part.trim();
+      return isIsoDateTime(trimmed) ? canonicalIsoDateTime(trimmed) : part;
+    })
+    .join(",");
+}
 
 export class PrismaCustomColumnRepo
   extends BaseRepository
@@ -37,6 +58,10 @@ export class PrismaCustomColumnRepo
     ServiceCustomColumnRepo,
     TaskCustomColumnRepo
 {
+  constructor(private readonly companyRepo: GetDealWeightingColumnRepo) {
+    super();
+  }
+
   private get baseSelect() {
     return {
       id: true,
@@ -56,85 +81,7 @@ export class PrismaCustomColumnRepo
     [EntityType.lead]: "leadId",
   };
 
-  readonly operatorsByType: Record<CustomColumnType, FilterOperatorKey[]> = {
-    [CustomColumnType.singleSelect]: [
-      FilterOperatorKey.in,
-      FilterOperatorKey.notIn,
-      FilterOperatorKey.isNull,
-      FilterOperatorKey.isNotNull,
-    ],
-    [CustomColumnType.currency]: [
-      FilterOperatorKey.equals,
-      FilterOperatorKey.gt,
-      FilterOperatorKey.gte,
-      FilterOperatorKey.lt,
-      FilterOperatorKey.lte,
-      FilterOperatorKey.isNull,
-      FilterOperatorKey.isNotNull,
-    ],
-    [CustomColumnType.date]: [
-      FilterOperatorKey.gt,
-      FilterOperatorKey.gte,
-      FilterOperatorKey.lt,
-      FilterOperatorKey.lte,
-      FilterOperatorKey.between,
-      FilterOperatorKey.isNull,
-      FilterOperatorKey.isNotNull,
-    ],
-    [CustomColumnType.dateTime]: [
-      FilterOperatorKey.gt,
-      FilterOperatorKey.gte,
-      FilterOperatorKey.lt,
-      FilterOperatorKey.lte,
-      FilterOperatorKey.between,
-      FilterOperatorKey.isNull,
-      FilterOperatorKey.isNotNull,
-    ],
-    [CustomColumnType.dateRange]: [
-      FilterOperatorKey.contains,
-      FilterOperatorKey.gt,
-      FilterOperatorKey.gte,
-      FilterOperatorKey.lt,
-      FilterOperatorKey.lte,
-      FilterOperatorKey.between,
-      FilterOperatorKey.isNull,
-      FilterOperatorKey.isNotNull,
-    ],
-    [CustomColumnType.dateTimeRange]: [
-      FilterOperatorKey.contains,
-      FilterOperatorKey.gt,
-      FilterOperatorKey.gte,
-      FilterOperatorKey.lt,
-      FilterOperatorKey.lte,
-      FilterOperatorKey.between,
-      FilterOperatorKey.isNull,
-      FilterOperatorKey.isNotNull,
-    ],
-    [CustomColumnType.email]: [
-      FilterOperatorKey.equals,
-      FilterOperatorKey.contains,
-      FilterOperatorKey.isNull,
-      FilterOperatorKey.isNotNull,
-    ],
-    [CustomColumnType.phone]: [
-      FilterOperatorKey.equals,
-      FilterOperatorKey.contains,
-      FilterOperatorKey.isNull,
-      FilterOperatorKey.isNotNull,
-    ],
-    [CustomColumnType.plain]: [
-      FilterOperatorKey.equals,
-      FilterOperatorKey.contains,
-      FilterOperatorKey.isNull,
-      FilterOperatorKey.isNotNull,
-    ],
-    [CustomColumnType.link]: [
-      FilterOperatorKey.equals,
-      FilterOperatorKey.contains,
-      FilterOperatorKey.isNull,
-      FilterOperatorKey.isNotNull,
-    ],
-  };
+  readonly operatorsByType = CUSTOM_COLUMN_DEFAULT_OPERATORS;
 
   async findByIdOrThrow(id: string) {
     const { companyId } = this.user;
@@ -144,7 +91,7 @@ export class PrismaCustomColumnRepo
       select: this.baseSelect,
     });
 
-    return column as CustomColumnDto;
+    return toCustomColumnDto(column);
   }
 
   async findById(id: string) {
@@ -155,7 +102,7 @@ export class PrismaCustomColumnRepo
       select: this.baseSelect,
     });
 
-    return column as CustomColumnDto | null;
+    return column === null ? null : toCustomColumnDto(column);
   }
 
   async findIds(ids: Set<string>) {
@@ -180,37 +127,32 @@ export class PrismaCustomColumnRepo
       orderBy: [{ entityType: "asc" }, { label: "asc" }],
     });
 
-    return columns as CustomColumnDto[];
+    return toCustomColumnDtos(columns);
   }
 
   async findByEntityType(entityType: EntityType) {
     const { companyId } = this.user;
 
-    return (await this.prisma.customColumn.findMany({
-      where: { companyId, entityType },
-      select: this.baseSelect,
-      orderBy: [{ label: "asc" }],
-    })) as CustomColumnDto[];
+    return (
+      await this.prisma.customColumn.findMany({
+        where: { companyId, entityType },
+        select: this.baseSelect,
+        orderBy: [{ label: "asc" }],
+      })
+    ).map(toCustomColumnDto);
   }
 
   @Transaction
   async delete(id: string) {
     const { companyId } = this.user;
 
-    const company = await this.prisma.company.findUnique({
-      where: { id: companyId },
-      select: { dealWeightingColumnId: true },
-    });
-
-    const wasWeightingColumn = company?.dealWeightingColumnId === id;
+    const wasWeightingColumn = (await this.companyRepo.getDealWeightingColumnId()) === id;
 
     await Promise.all([
       this.prisma.widget.deleteMany({
         where: { groupByCustomColumnId: id, companyId },
       }),
-      this.prisma.p13n.deleteMany({
-        where: { groupingColumnId: id, companyId },
-      }),
+      clearGroupingForDeletedColumn(this.prisma, { columnId: id, companyId }),
       this.prisma.customColumn.deleteMany({
         where: { id, companyId },
       }),
@@ -261,7 +203,7 @@ export class PrismaCustomColumnRepo
 
     await this.recalculateDealsWhenWeightingColumn(column.id);
 
-    return column as CustomColumnDto;
+    return toCustomColumnDto(column);
   }
 
   @Transaction
@@ -291,14 +233,7 @@ export class PrismaCustomColumnRepo
   }
 
   private async recalculateDealsWhenWeightingColumn(columnId: string) {
-    const { companyId } = this.user;
-
-    const company = await this.prisma.company.findUnique({
-      where: { id: companyId },
-      select: { dealWeightingColumnId: true },
-    });
-
-    if (company?.dealWeightingColumnId !== columnId) return;
+    if ((await this.companyRepo.getDealWeightingColumnId()) !== columnId) return;
 
     await getDealRepo().recalculateWeightedValuesForCompany();
   }
@@ -373,10 +308,12 @@ export class PrismaCustomColumnRepo
       const typeByColumnId = new Map(columns.map((c) => [c.id, c.type]));
 
       const data = nonEmptyValues.reduce<Array<Prisma.CustomFieldValueCreateManyInput>>((acc, v) => {
-        const { columnId, value } = v;
+        const { columnId } = v;
         const type = typeByColumnId.get(columnId);
 
         if (!type) return acc;
+
+        const value = DATE_LIKE_CUSTOM_COLUMN_TYPES.has(type) ? canonicalIsoDateTimeParts(v.value) : v.value;
 
         const numericValue =
           type === CustomColumnType.currency && value != null && value !== "" && !Number.isNaN(Number(value))

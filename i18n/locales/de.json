@@ -1,4 +1,18 @@
 {
+  "AccountAccessRevoked": {
+    "body": "Du hast dich gerade ohne Passwort angemeldet, und damit ist bestätigt, dass diese E-Mail-Adresse dir gehört. Bis jetzt war sie nie bestätigt, deshalb konnten wir nicht sicher sein, wer dieses Konto angelegt hat. Zur Sicherheit haben wir das alte Passwort entfernt und alles andere, womit man das Konto öffnen könnte, etwa verbundene Apps oder Schlüssel. Deine Daten sind unverändert, und du kannst dich weiterhin genau so anmelden wie gerade eben.",
+    "cta": "Neues Passwort festlegen",
+    "greeting": "Hallo,",
+    "signoff": "Den Button oben brauchst du nur, wenn du dich lieber mit einem Passwort anmelden möchtest. Falls du dich gerade nicht angemeldet hast, melde dich bitte sofort bei uns.",
+    "subject": "Deine E-Mail-Adresse ist bestätigt, dein altes Passwort haben wir entfernt",
+    "title": "Deine E-Mail-Adresse ist bestätigt"
+  },
+  "AccountRemovalReason": {
+    "ownerInactive": "Eigentümer/in deaktiviert",
+    "planDowngrade": "Tarif herabgestuft",
+    "subscriptionLapsed": "Abo abgelaufen",
+    "trialExpired": "Testphase beendet"
+  },
   "AccountsRemovedNotice": {
     "body": "Dein Plan wurde auf {plan} umgestellt. Um das Limit deines Plans einzuhalten, habe ich die erforderliche Anzahl verbundener Konten entfernt: {accounts}. Deine Nachrichten und Kontakte sind weiterhin vorhanden. Du kannst die Konten jederzeit auf der Seite „Verbundene Konten“ erneut verbinden.",
     "cta": "Verbundene Konten ansehen",
@@ -65,6 +79,43 @@
   },
   "AgentChat": {
     "activity": {
+      "approval": {
+        "customFields": {
+          "configure": "Bereit, benutzerdefinierte Felder zu ändern",
+          "delete": "Bereit, ein benutzerdefiniertes Feld endgültig zu löschen"
+        },
+        "generic": "Bereit für eine Änderung, die deine Freigabe braucht",
+        "messages": {
+          "discard": "Bereit, den Entwurf zu verwerfen",
+          "draft": "Bereit, einen Entwurf zu speichern",
+          "send": "Bereit, eine echte Nachricht zu senden",
+          "triage": "Bereit, den Unterhaltungsstatus zu ändern"
+        },
+        "records": {
+          "delete": "{count, plural, one {Bereit, {target} endgültig zu löschen} other {Bereit, {target} endgültig zu löschen}}"
+        },
+        "routines": {
+          "configure": "Bereit, die Routine zu pausieren oder auszuführen",
+          "delete": "Bereit, die Routine samt Verlauf zu löschen"
+        },
+        "support": {
+          "escalate": "Bereit, deine Anfrage an den Support zu senden"
+        },
+        "team": {
+          "manage": "Bereit, den Teamzugriff zu ändern"
+        },
+        "views": {
+          "configure": "Bereit, die gespeicherte Ansicht zu ändern",
+          "delete": "Gespeicherte Ansicht ist zum endgültigen Löschen bereit"
+        },
+        "webhooks": {
+          "manage": "Bereit, die Webhook-Zustellung zu ändern"
+        },
+        "widgets": {
+          "configure": "Bereit, Dashboard-Widgets zu ändern",
+          "delete": "Bereit, ein Dashboard-Widget endgültig zu löschen"
+        }
+      },
       "cancelled": "Gestoppt",
       "consequence": {
         "accountConnect": "Einen Nachrichtenkanal verbinden",
@@ -77,6 +128,9 @@
         "recordsDelete": "Das kann nicht rückgängig gemacht werden.",
         "recordsLink": "Datensätze verknüpfen",
         "recordsUnlink": "Verknüpfungen entfernen",
+        "routineDelete": "Die ausgewählte Routine samt Verlauf endgültig löschen",
+        "routinePause": "Die ausgewählte Routine pausieren",
+        "routineRun": "Die ausgewählte Routine jetzt ausführen",
         "salesListSave": "Den ausgewählten Interessenten zu einer Sales-Navigator-Liste hinzufügen",
         "salesListSaveTarget": "{target} zur Sales-Navigator-Liste {list} hinzufügen",
         "socialAccept": "Die ausgewählte Kontaktanfrage annehmen",
@@ -88,6 +142,7 @@
         "teamInvite": "Einladungs-E-Mails an die ausgewählten Personen senden",
         "teamInviteTarget": "{count} Einladung(en) per E-Mail senden an: {target}",
         "teamUpdate": "Rolle oder Status des ausgewählten Teammitglieds ändern",
+        "threadMove": "Die Konversation in einen anderen Ordner im Postfach verschieben",
         "threadUpdate": "Status der ausgewählten Unterhaltung ändern",
         "threadUpdateState": "Unterhaltungsstatus auf „{state}“ setzen",
         "webhookCreate": "Webhook erstellen",
@@ -204,12 +259,12 @@
           "discard": {
             "done": "Entwurf wurde verworfen",
             "error": "Entwurf konnte nicht verworfen werden",
-            "running": "Entwurf ist zum Verwerfen bereit"
+            "running": "Entwurf wird verworfen"
           },
           "draft": {
             "done": "Entwurf wurde gespeichert",
             "error": "Entwurf konnte nicht gespeichert werden",
-            "running": "Entwurf ist zum Speichern bereit"
+            "running": "Entwurf wird gespeichert"
           },
           "read": {
             "done": "Unterhaltungen wurden geprüft",
@@ -219,12 +274,12 @@
           "send": {
             "done": "Nachricht wurde gesendet",
             "error": "Nachricht konnte nicht gesendet werden",
-            "running": "Eine echte Nachricht ist zum Senden bereit"
+            "running": "Nachricht wird gesendet"
           },
           "triage": {
             "done": "Unterhaltungsstatus wurde geändert",
             "error": "Unterhaltungsstatus konnte nicht geändert werden",
-            "running": "Unterhaltungsstatus ist zum Ändern bereit"
+            "running": "Unterhaltungsstatus wird geändert"
           }
         },
         "profile": {
@@ -266,6 +321,33 @@
             "running": "{count, plural, one {{target} wird aktualisiert} other {{target} werden aktualisiert}}"
           }
         },
+        "routines": {
+          "configure": {
+            "done": "Routinenzeitplan wurde geändert",
+            "error": "Routinenzeitplan konnte nicht geändert werden",
+            "running": "Routinenzeitplan wird geändert"
+          },
+          "create": {
+            "done": "Routine wurde angelegt",
+            "error": "Routine konnte nicht angelegt werden",
+            "running": "Routine wird angelegt"
+          },
+          "delete": {
+            "done": "Routine wurde entfernt",
+            "error": "Routine konnte nicht entfernt werden",
+            "running": "Routine wird entfernt"
+          },
+          "read": {
+            "done": "Routinen wurden gelesen",
+            "error": "Routinen konnten nicht gelesen werden",
+            "running": "Routinen werden gelesen"
+          },
+          "update": {
+            "done": "Routine wurde geändert",
+            "error": "Routine konnte nicht geändert werden",
+            "running": "Routine wird geändert"
+          }
+        },
         "support": {
           "escalate": {
             "done": "Support-E-Mail wurde zum Versand angenommen",
@@ -277,14 +359,38 @@
           "manage": {
             "done": "Teamzugriff wurde geändert",
             "error": "Teamzugriff konnte nicht geändert werden",
-            "running": "Teamzugriff ist zum Ändern bereit"
+            "running": "Teamzugriff wird geändert"
+          }
+        },
+        "tools": {
+          "load": {
+            "done": "Weitere Werkzeuge geladen",
+            "error": "Weitere Werkzeuge konnten nicht geladen werden",
+            "running": "Lädt weitere Werkzeuge"
+          }
+        },
+        "views": {
+          "configure": {
+            "done": "Ansicht eingerichtet",
+            "error": "Ansicht konnte nicht eingerichtet werden",
+            "running": "Ansicht wird eingerichtet"
+          },
+          "delete": {
+            "done": "Ansicht gelöscht",
+            "error": "Ansicht konnte nicht gelöscht werden",
+            "running": "Ansicht wird gelöscht"
+          },
+          "read": {
+            "done": "Gespeicherte Ansichten geprüft",
+            "error": "Gespeicherte Ansichten konnten nicht geprüft werden",
+            "running": "Gespeicherte Ansichten werden geprüft"
           }
         },
         "webhooks": {
           "manage": {
             "done": "Webhook-Aktion abgeschlossen",
             "error": "Webhook-Aktion fehlgeschlagen",
-            "running": "Webhook-Aktion ist bereit"
+            "running": "Webhook-Zustellung wird geändert"
           }
         },
         "widgets": {
@@ -353,10 +459,35 @@
       "resuming": "Entscheidung gespeichert – Mate macht weiter…",
       "retryResume": "Mate konnte noch nicht fortfahren. Wiederhole dieselbe Entscheidung.",
       "timeout": "Zeit abgelaufen, keine Antwort",
-      "title": "Der Assistent möchte ausführen:"
+      "title": "Mate möchte ausführen:"
     },
     "askAi": "KI fragen",
     "askAiWorking": "Mate arbeitet",
+    "context": {
+      "addAria": "Kontext hinzufügen",
+      "addTooltip": "Kontext hinzufügen oder / eingeben",
+      "namedNewViewLabel": "Neue {viewType}: {name}",
+      "newViewLabel": "Neue {viewType}",
+      "noResults": "Kein passender Kontext",
+      "onThisPage": "Auf dieser Seite",
+      "records": "Datensätze",
+      "remove": "{label} entfernen",
+      "searchError": "Datensätze konnten nicht durchsucht werden.",
+      "searchPlaceholder": "Datensätze suchen…",
+      "starter": {
+        "appearance": "Ändere Layout, Gruppierung oder Sortierung dieser Ansicht wie folgt: ",
+        "create": "Erstelle eine neue Ansicht mit diesen Vorgaben: ",
+        "createNamed": "Erstelle die neue Ansicht „{name}“ mit diesen Vorgaben: ",
+        "filters": "Ändere Filter und Suche dieser Ansicht wie folgt: ",
+        "timeline": "Ändere Aktivitätsfilter oder Sortierung dieser Ansicht wie folgt: ",
+        "update": "Aktualisiere diese Ansicht wie folgt: "
+      },
+      "surfaceViewType": "{location}-Ansicht",
+      "surfaceViewTypeStandalone": "{location}-Ansicht",
+      "timelineViewType": "Aktivitätsansicht",
+      "timelineViewTypeStandalone": "Aktivitätsansicht",
+      "viewLabel": "{viewType}: {name}"
+    },
     "credits": {
       "blocked": {
         "configuration_unavailable": "Der gehostete Assistent ist vorübergehend nicht verfügbar. Dein Verlauf bleibt zugänglich.",
@@ -375,23 +506,26 @@
     "errors": {
       "approvalFailed": "Die Freigabe konnte nicht übermittelt werden.",
       "limitReached": "Es sind nicht genügend KI-Credits übrig, um eine weitere Anfrage zu starten.",
-      "sendFailed": "Der Assistent konnte deine Nachricht nicht verarbeiten.",
+      "sendFailed": "Mate konnte deine Nachricht nicht verarbeiten.",
       "stopFailed": "Mate konnte nicht gestoppt werden. Die Verbindung wird wiederhergestellt, damit du es erneut versuchen kannst.",
-      "turnFailed": "Beim Assistenten ist ein Fehler aufgetreten."
+      "turnFailed": "Bei Mate ist ein Fehler aufgetreten."
     },
     "greeting": {
       "headline": "Hey, ich bin Mate",
       "subtitle": "Frag mich alles zu deinem Workspace, oder sag mir, was ich für dich erledigen soll.",
       "support": "Wenn etwas nicht klappt, kann ich unserem Team den letzten Gesprächsverlauf per E-Mail senden. Es antwortet dir per E-Mail."
     },
+    "openSavedView": "Gespeicherte Ansicht öffnen",
     "placeholder": "Frag dein CRM…",
     "runner": {
       "cancelled": "Diese Antwort wurde gestoppt.",
+      "contentFilter": "Der KI-Anbieter hat einen Teil dieser Antwort blockiert. Es wurde nichts weiter geändert. Formuliere die Anfrage anders.",
       "creditLimit": "Ich habe einen Teil dieser Anfrage erledigt, dann aber gestoppt, weil deine Assistant-Credits aufgebraucht sind. Erledigte Arbeit bleibt bestehen; die Credits werden zu Beginn deiner nächsten Periode zurückgesetzt.",
+      "creditLimitNoWrite": "Ich habe gestoppt, bevor etwas geändert wurde, weil deine Assistant-Credits aufgebraucht sind. Es wurde nichts erstellt, geändert oder gesendet. Die Credits werden zu Beginn deiner nächsten Periode zurückgesetzt.",
       "emptyReply": "Ich konnte keine Antwort erstellen. Bitte versuche es erneut.",
       "hostedAiUnavailable": "Die gehostete KI ist vorübergehend nicht verfügbar. Bitte versuche es später erneut.",
-      "outputLimit": "Ich habe einen Teil dieser Antwort erstellt, aber die Ausgabegrenze für diesen Durchlauf erreicht. Bitte mich, weiterzumachen; ich setze bei der bereits erledigten Arbeit fort.",
-      "safetyLimit": "Ich habe einen Teil dieser Anfrage erledigt, aber gestoppt, weil sich die letzten Schritte wiederholt haben, fehlgeschlagen sind oder eine Sicherheitsgrenze erreicht wurde. Die erledigte Arbeit bleibt bestehen; prüfe die Schritte oben, bevor du mich bittest fortzufahren.",
+      "policyBreach": "Der KI-Anbieter hat das reservierte Credit-Budget überschritten, daher wurde der Lauf gestoppt. Es wurde keine weitere Anbieterarbeit gestartet.",
+      "providerError": "Der KI-Anbieter hat einen Fehler zurückgegeben, bevor ich fertig war. Es wurde nichts weiter geändert. Bitte versuche es erneut.",
       "turnError": "Ich konnte diese Anfrage nicht abschließen. Bitte versuche es erneut."
     },
     "send": "Senden",
@@ -608,6 +742,36 @@
             }
           }
         },
+        "routines": {
+          "data": {
+            "create-routine": {
+              "label": "Routine erstellen",
+              "prompt": "Hilf mir, eine Routine zu erstellen. Frage, was ich automatisieren möchte, und empfiehl dann, ob sie nach Zeitplan oder durch ein Ereignis ausgelöst werden soll."
+            },
+            "routine-health": {
+              "label": "Meine Routinen prüfen",
+              "prompt": "Prüfe meine Routinen und weise auf Überschneidungen, Lücken, pausierte Routinen und kürzlich fehlgeschlagene Ausführungen hin. Nimm keine Änderungen vor."
+            },
+            "routines-tour-data": {
+              "label": "Meine Routinen erklären",
+              "prompt": "Erkläre, was jede meiner Routinen tut, wann sie ausgeführt wird und welche Datensätze oder Nachrichten sie beeinflussen kann."
+            }
+          },
+          "empty": {
+            "first-routine": {
+              "label": "Meine erste Routine erstellen",
+              "prompt": "Hilf mir, meine erste Routine zu erstellen. Frage, was ich automatisieren möchte, und empfiehl dann, ob sie nach Zeitplan oder durch ein Ereignis ausgelöst werden soll."
+            },
+            "routine-ideas": {
+              "label": "Nützliche Routinen vorschlagen",
+              "prompt": "Prüfe meinen Arbeitsbereich und schlage drei nützliche Routinen für wiederkehrende Aufgaben vor. Erstelle noch nichts."
+            },
+            "routines-tour": {
+              "label": "Routinen kennenlernen",
+              "prompt": "Führe mich durch die Routinen-Seite und erkläre Zeitpläne, Ereignisauslöser, Tests, Credits und den Ausführungsverlauf. Nimm keine Änderungen vor."
+            }
+          }
+        },
         "services": {
           "data": {
             "create-service": {
@@ -701,7 +865,7 @@
       "archive": "Chat archivieren",
       "archived": "Archiviert",
       "archivedChats": "Archivierte Chats",
-      "assistantWorking": "Der Assistent antwortet",
+      "assistantWorking": "Mate antwortet",
       "back": "Zurück zum Chat",
       "cancel": "Abbrechen",
       "chats": "Chats",
@@ -723,6 +887,7 @@
       "newChat": "Neuer Chat",
       "noChats": "Noch keine Chats",
       "noChatsBody": "Starte einen Chat, um Fragen und Arbeitsschritte später wiederzufinden.",
+      "preparingAction": "Die nächste Aktion wird vorbereitet…",
       "queued": "Als Nächstes",
       "reconnecting": "Verbindung zu Mate wird wiederhergestellt…",
       "refreshHistoryFailed": "Der Chatverlauf konnte nicht aktualisiert werden. Deine vorhandenen Chats bleiben sichtbar.",
@@ -732,13 +897,17 @@
       "retryTurn": "Erneut versuchen",
       "routeSyncRefreshing": "Seite wird aktualisiert…",
       "routeSyncWaiting": "Die Seitenaktualisierung wartet, bis deine Änderungen abgeschlossen sind…",
+      "startingRequest": "Wird gestartet…",
       "stepsTook": "{steps, plural, one {# Schritt} other {# Schritte}} · {seconds}s",
       "stopping": "Mate wird angehalten…",
       "tableCopied": "Tabelle kopiert",
       "thinking": "Denkt nach",
       "turnFailed": "Diese Antwort konnte nicht abgeschlossen werden.",
+      "turnInterrupted": "Die Antwort wurde unterbrochen. Änderungen wurden möglicherweise bereits vorgenommen. Prüfe die aktuellen Datensätze, bevor du eine neue Anfrage sendest.",
       "undo": "Rückgängig",
-      "untitled": "Neuer Chat"
+      "untitled": "Neuer Chat",
+      "waitElapsed": "{seconds} s vergangen",
+      "workingOnRequest": "Deine Anfrage wird bearbeitet…"
     }
   },
   "AgplGithubBadge": {
@@ -776,18 +945,28 @@
       "acceptanceType": "Art der Zustimmung",
       "acceptingEmail": "Zugestimmt von",
       "changedDocuments": "Geänderte Dokumente",
+      "changedFields": "Überwachte Felder",
       "city": "Stadt",
       "country": "Land",
+      "cronExpression": "Zeitplan",
       "currency": "Währung",
       "dealStageWeights": "Phasenwahrscheinlichkeiten",
       "dealWeightingColumnId": "Phasenfeld",
+      "debounceSeconds": "Verzögerung",
+      "disabledReason": "Deaktivierungsgrund",
       "effectiveAt": "Gültig ab",
       "emails": "E-Mail-Adressen",
       "isNewCompany": "Erste Person im Workspace",
       "postalCode": "Postleitzahl",
+      "prompt": "Anweisungen",
       "recipientEmail": "Gesendet an",
+      "removalReason": "Entfernungsgrund",
       "street": "Straße",
       "terminology": "Datensatzbenennung",
+      "timezone": "Zeitzone",
+      "triggerEvents": "Auslöser-Ereignisse",
+      "triggerFilters": "Auslöser-Filter",
+      "triggerKind": "Auslöser",
       "versions": "Dokumentversionen",
       "visibility": "Sichtbarkeit"
     },
@@ -807,7 +986,8 @@
   "AuthSocialErrors": {
     "accessDenied": "Die Anmeldung wurde beim Anbieter abgebrochen.",
     "accountAlreadyLinkedToDifferentUser": "Dieses Social-Konto ist bereits mit einem anderen Benutzer verknüpft.",
-    "accountNotLinked": "Ein Konto mit dieser E-Mail existiert bereits, aber die E-Mail-Adresse ist noch nicht bestätigt. Melde dich zuerst mit deinem Passwort an und bestätige deine E-Mail, danach kannst du den Social-Login nutzen.",
+    "accountNotLinked": "Dein Anbieter hat diese E-Mail-Adresse nicht bestätigt, deshalb konnten wir sie nicht mit deinem bestehenden Konto verbinden. Melde dich stattdessen mit deinem Passwort an.",
+    "accountNotLinkedAction": "Passwort zurücksetzen",
     "emailDoesNotMatch": "Die E-Mail-Adresse vom Anbieter stimmt nicht mit der E-Mail deines Kontos überein.",
     "emailIsMissing": "Der Anbieter hat keine E-Mail-Adresse zurückgegeben.",
     "emailNotFound": "Für dieses Social-Konto wurde keine E-Mail-Adresse gefunden.",
@@ -887,9 +1067,8 @@
       "hidePassword": "Passwort ausblenden",
       "selectOption": "Option auswählen",
       "showPassword": "Passwort anzeigen",
-      "switchToCardView": "Zur Kartenansicht wechseln",
-      "switchToKanbanView": "Zur Kanban-Ansicht wechseln",
-      "switchToKanbanViewDisabled": "Füge ein Einzelauswahl-Feld hinzu, um die Kanban-Ansicht zu aktivieren",
+      "switchToBoardView": "Zur Board-Ansicht wechseln",
+      "switchToBoardViewDisabled": "Diese Liste hat kein Feld zum Gruppieren",
       "switchToTableView": "Zur Tabellenansicht wechseln",
       "themeSwitcher": "Darstellungsmodus-Umschalter",
       "tooltipFields": "Darstellung",
@@ -921,6 +1100,13 @@
     "customFieldHelp": {
       "immutableType": "Der Feldtyp ist nach dem Erstellen festgelegt. Erstelle ein neues benutzerdefiniertes Feld, um einen anderen Typ zu verwenden.",
       "probabilityPermission": "Phasenwahrscheinlichkeiten werden unter „{company}“ verwaltet. Bitte einen Administrator um die Berechtigung, sie zu ändern."
+    },
+    "dateBuckets": {
+      "day": "Tag",
+      "earlier": "Früher",
+      "later": "Später",
+      "month": "Monat",
+      "week": "Woche"
     },
     "datePresets": {
       "endTime": "Endzeit",
@@ -1027,6 +1213,7 @@
       "apiKeyMaxExpiration": "Die Ablaufzeit des API-Schlüssels darf 365 Tage nicht überschreiten.",
       "apiKeyMinExpiration": "Die Ablaufzeit des API-Schlüssels muss mindestens 1 Tag betragen.",
       "assigneeRequired": "Du musst dich diesem Element zuweisen. Beachte, dass du nur Elemente sehen kannst, die dir zugewiesen sind.",
+      "billingPortalUnavailable": "Das Abrechnungsportal ist für diesen Workspace nicht verfügbar. Wende dich für Änderungen an den Support.",
       "calendarEventNotFound": "Kalenderereignis-ID nicht gefunden oder nicht zugänglich.",
       "channelAlreadyLinked": "Dieser Kanal ist bereits mit einem anderen Kontakt verknüpft.",
       "connectedAccountNotFound": "Kanal-ID nicht gefunden oder nicht zugänglich.",
@@ -1035,6 +1222,7 @@
       "customColumnIdNotFound": "Benutzerdefinierte Spalten-ID nicht gefunden oder nicht zugänglich.",
       "customColumnNotFound": "Benutzerdefinierte Spalten-ID nicht gefunden oder nicht zugänglich. Verfügbare Spalten: {validValues}.",
       "customColumnTypeMismatch": "Diese benutzerdefinierte Spalte ist vom Typ {actualType}, nicht {expectedType}. Setze type auf {actualType}, um sie zu aktualisieren.",
+      "customColumnUsedByRoutineCannotDelete": "Diese benutzerdefinierte Spalte wird in mindestens einem Routinefilter verwendet. Entferne sie aus den betroffenen Routinen, bevor du sie löschst.",
       "customFieldInvalidCurrency": "Der Währungswert ist ungültig. Muss eine gültige Zahl sein.",
       "customFieldInvalidDate": "Der Datumswert ist ungültig. Muss im ISO 8601 Datumsformat sein (z.B. 2024-01-15) oder im ISO 8601 Datums-/Zeitformat (z.B. 2024-01-15T00:00:00Z).",
       "customFieldInvalidDateRange": "Der Datumsbereich ist ungültig. Muss aus zwei ISO 8601 Datumswerten bestehen, durch Komma getrennt, Startdatum vor oder gleich Enddatum (z.B. 2024-01-15,2024-01-22).",
@@ -1044,15 +1232,24 @@
       "customFieldInvalidPhone": "Der Telefonwert ist ungültig. Muss im E.164-Format sein (z.B. +491234567890). Bei mehreren Telefonnummern durch Komma trennen (z.B. +491234567890, +499876543210).",
       "customFieldInvalidSingleSelect": "Der Single-Select-Wert ist ungültig. Muss eine der erlaubten Optionen sein: {validValues}.",
       "customFieldInvalidUrl": "Der URL-Wert ist ungültig. Muss ein gültiges URL-Format haben (z.B. https://example.com). Bei mehreren URLs durch Komma trennen (z.B. https://example.com, https://example.org).",
+      "dataViewAllNameImmutable": "Die Ansicht Alle kann nicht umbenannt werden. Lasse name weg und ändere nur die angeforderten Einstellungen in state. Lies vor einem erneuten Versuch config für unterstützte Einstellungen und list für den aktuellen Zustand.",
+      "dataViewNotFound": "Diese gespeicherte Ansicht wurde nicht gefunden.",
+      "dataViewUpdateEmpty": "Gib einen Namen oder mindestens eine Ansichtseinstellung an, die aktualisiert werden soll.",
       "dealAlreadyClosed": "Dieser Deal ist bereits abgeschlossen. Öffnen Sie ihn erneut, bevor Sie ihn wieder als gewonnen oder verloren markieren.",
       "dealNotClosed": "Dieser Deal ist bereits offen, es gibt also nichts wieder zu eröffnen.",
       "dealNotFound": "Deal-ID nicht gefunden oder nicht zugänglich.",
       "demoMode": "Diese Aktion ist im Demo-Modus nicht verfügbar. Melde dich an, um alle Funktionen zu nutzen.",
       "draftMessageNotFound": "Dieser Entwurf wurde nicht gefunden. Möglicherweise wurde er bereits gesendet oder verworfen.",
+      "draftThreadNotSent": "Dieser Entwurf hat noch keine Unterhaltung. Senden Sie ihn über den Posteingang.",
       "duplicateChannel": "Dieser Kanal ist mehrfach vorhanden. Füge jede E-Mail-Adresse, Telefonnummer und jeden Benutzernamen nur einmal hinzu.",
       "duplicateOutboundSuppressed": "Eine identische Nachricht wurde gerade eben in dieser Konversation gesendet. Ändere den Text oder warte eine Minute, bevor du es erneut versuchst.",
       "duplicateWebhookEvents": "Doppelte Ereignisse sind nicht erlaubt.",
+      "duplicateWebhookHeaders": "Doppelte Header-Namen sind nicht erlaubt.",
       "emailAlreadyExists": "Ein Konto mit dieser E-Mail-Adresse existiert bereits.",
+      "emailFolderMoveUnsupported": "Die E-Mails dieses Kontos können nicht aus Customermates abgelegt werden.",
+      "emailFolderNotFound": "Ordner für dieses Konto nicht gefunden.",
+      "emailFolderNotMovable": "Dieser Ordner kann keine verschobenen E-Mails aufnehmen.",
+      "emailLinkColourInvalid": "Gib # gefolgt von 6 Hexadezimalzeichen (0–9, A–F) ein, zum Beispiel #1A2B3C.",
       "emailMismatch": "E-Mail-Adressen müssen übereinstimmen.",
       "emailNotVerified": "E-Mail nicht verifiziert.",
       "enterpriseCheckoutUnavailable": "Enterprise-Workspaces werden manuell abgerechnet und können keinen Self-Service-Checkout starten.",
@@ -1116,13 +1313,27 @@
       "pipelineStageLastInPipeline": "Eine Pipeline muss mindestens eine Phase behalten. Füge eine weitere Phase hinzu, bevor du diese löschst.",
       "pipelineStageMismatch": "Die ausgewählte Phase gehört nicht zur ausgewählten Pipeline.",
       "pipelineStageNotFound": "Phasen-ID nicht gefunden oder nicht zugänglich.",
-      "presetNotFound": "Diese gespeicherte Filtervoreinstellung wurde nicht gefunden.",
+      "privacyAcknowledgementRequired": "Bitte bestätigen Sie, dass Sie die Datenschutzerklärung gelesen haben.",
       "relationNotAllowed": "Die Beziehung '{relation}' ist für {entity} nicht erlaubt. Erlaubte Beziehungen: {allowed}.",
       "roleAssignedCannotDelete": "Eine Nutzern zugewiesene Rolle kann nicht gelöscht werden.",
       "roleNotFound": "Rollen-ID nicht gefunden oder nicht zugänglich.",
       "roleSelfEditForbidden": "Du kannst die Berechtigungen deiner eigenen Rolle nicht ändern.",
       "roleSystemImmutable": "Systemrollen können nicht bearbeitet werden.",
       "roleSystemRequired": "Mindestens ein Nutzer muss Systemadministrator sein.",
+      "routineAdminRequired": "Nur ein Unternehmensadmin kann Routinen pausieren oder löschen.",
+      "routineDeleteHasRunningRun": "Warte, bis der aktive Lauf beendet ist, bevor du diese Routine löschst.",
+      "routineEditNotOwner": "Nur die Eigentümerin oder der Eigentümer kann Einrichtung und Aktivierung dieser Routine ändern.",
+      "routineLimitReached": "Dein Tarif enthält {limit} Routinen pro Nutzer. Wechsle deinen Tarif für ein höheres Kontingent.",
+      "routineNotFound": "Routinen-ID nicht gefunden oder nicht zugänglich.",
+      "routineOwnerIneligible": "Die Eigentümerin oder der Eigentümer der Routine muss ein aktives Mitglied dieses Unternehmens sein.",
+      "routineRunNotOwner": "Nur wer diese Routine besitzt, kann sie ausführen, da sie dessen KI-Guthaben verbraucht.",
+      "routineRunNowRequiresSchedule": "Nur geplante Routinen können manuell getestet werden.",
+      "routineScheduleInvalid": "Dieser Zeitplan ist kein gültiger Cron-Ausdruck.",
+      "routineScheduleRequired": "Wähle einen Zeitplan oder ein einmaliges Datum für diese Routine.",
+      "routineScheduleTooFrequent": "Dieser Zeitplan läuft zu häufig. Routinen können höchstens alle 15 Minuten laufen.",
+      "routineTestRequiresEnabled": "Aktiviere die Routine, bevor du sie testest.",
+      "routineTimeZoneInvalid": "Diese Zeitzone wird nicht unterstützt.",
+      "routineTriggerEventsRequired": "Wähle mindestens ein Ereignis für diese Routine aus.",
       "salesNavigatorNotAvailable": "Dieses LinkedIn-Konto hat Sales Navigator nicht verbunden.",
       "salesNavigatorRequiresLinkedin": "Sales Navigator braucht ein verbundenes LinkedIn-Konto, dieses Konto ist aber {provider}.",
       "sendEmailTargetRequired": "Wähle eine Konversation oder ein Konto zum Senden aus.",
@@ -1154,8 +1365,15 @@
       "userSelfAdminUpdateForbidden": "Du kannst dein eigenes Konto nicht über die Teamverwaltung aktualisieren.",
       "webFormSourceNotFound": "Webformular-Quellen-ID nicht gefunden oder nicht zugänglich.",
       "webFormSourceSlugTaken": "Eine Webformular-Quelle mit dieser Adresse existiert bereits. Wähle eine andere.",
+      "webhookBodyTemplateInvalid": "Die Body-Vorlage muss ein gültiges JSON-Objekt ergeben.",
       "webhookDeliveryNotFound": "Webhook-Zustellungs-ID nicht gefunden oder nicht zugänglich.",
       "webhookEventsRequired": "Wähle mindestens ein Ereignis aus.",
+      "webhookHeaderNameInvalid": "Header-Namen dürfen nur Buchstaben, Ziffern und HTTP-Token-Zeichen enthalten.",
+      "webhookHeaderNameReserved": "Dieser Header wird automatisch gesetzt und kann nicht überschrieben werden.",
+      "webhookHeadersRequireHttps": "Eigene Header erfordern einen HTTPS-Endpunkt.",
+      "webhookHeadersTooLarge": "Die Header sind zu groß.",
+      "webhookHeadersTooMany": "Zu viele Header.",
+      "webhookHeaderValueInvalid": "Header-Werte dürfen nur Latin-1-Text ohne Zeilenumbrüche oder Steuerzeichen enthalten.",
       "webhookNotFound": "Webhook-ID nicht gefunden oder nicht zugänglich.",
       "widgetClosedDealAggregationCannotGroupByForecastMonth": "Der erwartete Abschlussmonat beschreibt offene Deals. Gruppiere Kennzahlen zu abgeschlossenen Deals stattdessen nach Abschlussmonat.",
       "widgetClosedDealAggregationCannotGroupByLostOutcome": "Gewonnene Deals haben keinen Verlustgrund und keine Phase beim Verlust, eine so gruppierte Gewinnrate stünde überall bei 0 %. Verwende stattdessen eine Anzahl oder einen Wert, gefiltert auf verlorene Deals.",
@@ -1251,6 +1469,11 @@
         "deleted": "Rolle gelöscht",
         "updated": "Rolle aktualisiert"
       },
+      "routine": {
+        "created": "Routine erstellt",
+        "deleted": "Routine gelöscht",
+        "updated": "Routine aktualisiert"
+      },
       "service": {
         "created": "Service erstellt",
         "deleted": "Service gelöscht",
@@ -1272,8 +1495,6 @@
       }
     },
     "filters": {
-      "clearAll": "Alle entfernen",
-      "clearSearch": "Suche löschen",
       "daysPlaceholder": "Tage",
       "daysPreset": "{count, plural, =1 {1 Tag} other {# Tage}}",
       "daysSuffix": "Tage",
@@ -1284,13 +1505,18 @@
         "connectedAccountId": "Kanal",
         "createdAt": "Erstellt am",
         "dealStatus": "Status",
+        "draft": "Entwurf",
         "event": "Ereignis",
+        "firstName": "Vorname",
         "isPlatformOperator": "Plattform-Operator",
         "lastActiveAt": "Zuletzt aktiv",
+        "lastName": "Nachname",
         "leadStatus": "Lead-Status",
         "lostReasonId": "Verlustgrund",
+        "name": "Name",
         "nextActivity": "Nächste Aktivität",
         "overdue": "Überfällig",
+        "ownerUserId": "Inhaber",
         "participants": "Teilnehmer",
         "pipelineId": "Pipeline",
         "plan": "Tarif",
@@ -1329,23 +1555,35 @@
         "isNull": "ist leer",
         "lt": "<",
         "lte": "≤",
-        "notIn": "ist nicht in"
+        "notIn": "ist nicht in",
+        "startsWith": "Beginnt mit"
       },
       "overdueValues": {
         "onTrack": "Nicht überfällig",
         "overdue": "Überfällig"
       },
-      "presets": {
-        "add": "Als Preset speichern…",
-        "label": "Preset",
-        "namePlaceholder": "Preset-Name",
-        "none": "Kein Preset"
+      "palette": {
+        "activeGroup": "Aktive Filter",
+        "addFilter": "Filter hinzufügen…",
+        "appliedCount": "{count, plural, =1 {1 Filter} other {# Filter}}",
+        "dateAfter": "Nach…",
+        "dateBefore": "Vor…",
+        "dateBetween": "Zwischen…",
+        "dateCustom": "Eigener Zeitraum…",
+        "dateIncludes": "Enthält…",
+        "dateOnOrAfter": "Ab…",
+        "dateOnOrBefore": "Bis…",
+        "editOperator": "Bedingung ändern",
+        "editOperatorNamed": "Bedingung ändern: {operator}",
+        "fieldsGroup": "Filtern nach",
+        "limitReached": "Du kannst bis zu {count} Filter anwenden.",
+        "removeFilter": "Filter entfernen",
+        "title": "Filter"
       },
       "rottingValues": {
         "healthy": "Nicht stagnierend",
         "rotting": "Stagnierend"
       },
-      "searchLabel": "Suche",
       "selectionLimit": "Du kannst bis zu {count} Werte auswählen.",
       "selectOperator": "Bedingung auswählen…",
       "unavailableValue": "Filter nicht verfügbar"
@@ -1360,6 +1598,8 @@
       "aggregationType": "Metrik",
       "amount": "Betrag",
       "avatarUrl": "Avatar-URL",
+      "bodyTemplate": "Body-Vorlage",
+      "changedFields": "Geänderte Felder",
       "company": "Unternehmen",
       "confirmEmail": "E-Mail bestätigen",
       "confirmPassword": "Passwort bestätigen",
@@ -1379,12 +1619,14 @@
       "email": "E-Mail",
       "emails": "E-Mails",
       "emptyContent": "Keine Ergebnisse gefunden",
+      "enabled": "Aktiv",
       "entityType": "Element",
       "events": "Ereignisse",
       "feedback": "Feedback",
       "firstName": "Vorname",
       "formattingLocale": "Regionales Format",
       "groupByValue": "Gruppierung",
+      "headers": "Eigene Header",
       "label": "Bezeichnung",
       "labels": "Labels",
       "lastName": "Nachname",
@@ -1401,11 +1643,18 @@
       "password": "Passwort",
       "periodDays": "Zeitraum",
       "pipelineId": "Pipeline",
+      "prompt": "Anweisungen",
       "roleId": "Rolle",
+      "scheduleDayOfMonth": "Tag des Monats",
+      "schedulePreset": "Wiederholung",
+      "scheduleWeekday": "Wochentag",
       "secret": "Secret",
       "status": "Status",
       "theme": "Darstellung",
       "title": "Titel",
+      "triggerEvents": "Ereignisse",
+      "triggerFilters": "Datensatzfilter",
+      "triggerKind": "Auslöser",
       "type": "Typ",
       "unavailableSelection": "Auswahl nicht verfügbar",
       "url": "URL",
@@ -1515,10 +1764,12 @@
         "lastActiveAt": "Zuletzt aktiv",
         "lastName": "Nachname",
         "lastRequest": "Zuletzt verwendet",
+        "lastRunAt": "Letzter Lauf",
         "lostReason": "Verlustgrund",
         "members": "Mitglieder",
         "name": "Name",
         "nextActivity": "Nächste Aktivität",
+        "nextRunAt": "Nächster Lauf",
         "notes": "Notizen",
         "operator": "Operator",
         "options": "Optionen",
@@ -1544,6 +1795,7 @@
         "totalQuantity": "Service-Anzahl",
         "totalValue": "Deal-Wert",
         "trialEnd": "Testphase endet",
+        "trigger": "Auslöser",
         "type": "Typ",
         "updatedAt": "Aktualisiert am",
         "url": "URL",
@@ -1553,13 +1805,22 @@
         "weightedValue": "Gewichteter Wert",
         "workspace": "Arbeitsbereich"
       },
+      "fields": "Felder",
       "groupBy": "Gruppieren nach",
       "layout": "Ansicht",
+      "layouts": {
+        "board": "Board",
+        "table": "Tabelle"
+      },
       "nextPage": "Nächste Seite",
       "paginationEmpty": "0 von 0",
       "paginationRange": "{from}-{to} von {total}",
       "previousPage": "Vorherige Seite",
       "search": "Suchen..."
+    },
+    "taskTypes": {
+      "custom": "Benutzerdefiniert",
+      "userPendingAuthorization": "Autorisierung ausstehend"
     },
     "themes": {
       "dark": "Dunkel",
@@ -1631,6 +1892,56 @@
     "disconnect": "Trennen",
     "disconnectedToastDescription": "Dieses Konto ist beim Anbieter nicht mehr verbunden. Verbinde es mit deinen aktuellen Anmeldedaten neu.",
     "disconnectedToastTitle": "Konto getrennt",
+    "emailAppearanceDescription": "Gilt für jede E-Mail, die über dieses Konto verfasst wird.",
+    "emailAppearanceTitle": "Darstellung",
+    "emailDivider": "Trennlinie",
+    "emailDividers": {
+      "line": "Dünne Linie",
+      "none": "Keine"
+    },
+    "emailFontFamilies": {
+      "monospace": "Nichtproportional (Courier New)",
+      "sansSerif": "Serifenlos (Arial)",
+      "serif": "Serifenschrift (Georgia)"
+    },
+    "emailFontFamily": "Schriftart",
+    "emailFontSize": "Schriftgrösse",
+    "emailLayoutOptions": "Layoutoptionen",
+    "emailLinkColour": "Linkfarbe",
+    "emailLinkColourLowContrast": "Geringer Kontrast: {light}:1 auf Hell, {dark}:1 auf Dunkel. Manche Empfänger können das kaum lesen.",
+    "emailLinkColourPicker": "Linkfarbe auswählen",
+    "emailLinkColourPlaceholder": "#RRGGBB",
+    "emailLinkStyle": "Linkstil",
+    "emailLinkStyles": {
+      "plain": "Nicht unterstrichen",
+      "underlined": "Unterstrichen"
+    },
+    "emailLogoHint": "Nutze eine öffentliche HTTPS-Bild-URL, auf die Empfänger zugreifen können.",
+    "emailLogoPlaceholder": "https://example.com/logo.png",
+    "emailLogoSize": "Logogröße",
+    "emailLogoSizes": {
+      "large": "Groß",
+      "medium": "Mittel",
+      "small": "Klein"
+    },
+    "emailLogoUrl": "Logo-URL",
+    "emailPreviewDescription": "Die Darstellung gilt für die gesamte E-Mail; die Signatur wird darunter angefügt.",
+    "emailPreviewLink": "Beispiellink",
+    "emailPreviewSample": "So sieht dein E-Mail-Text aus.",
+    "emailPreviewTitle": "Vorschau",
+    "emailSave": "E-Mail-Einstellungen speichern",
+    "emailSaved": "E-Mail-Einstellungen gespeichert",
+    "emailSignatureContent": "Signaturinhalt",
+    "emailSignatureDescription": "Wird automatisch an E-Mails angefügt, die über dieses Konto gesendet werden.",
+    "emailSignatureEnabled": "Signatur hinzufügen",
+    "emailSignatureHint": "Unterstützt E-Mail-sicheres Markdown für Hervorhebungen, Links, Listen, Zitate und Trennlinien.",
+    "emailSignaturePlaceholder": "**Benjamin Wagner**\nGründer bei Customermates",
+    "emailSignatureTitle": "Signatur",
+    "emailSpacing": "Abstand",
+    "emailSpacings": {
+      "comfortable": "Großzügig",
+      "compact": "Kompakt"
+    },
     "emptyState": "Du hast noch keine Kanäle verbunden.",
     "expiredLinkToastDescription": "Dieser Verbindungslink ist abgelaufen. Erstelle auf dieser Seite einen neuen und versuche es erneut.",
     "expiredLinkToastTitle": "Link abgelaufen",
@@ -1660,6 +1971,12 @@
     "sharedAccountsRequiresCloud": "Geteilte Konten sind in {brand} Cloud verfügbar (ab dem Business-Tarif).",
     "sharedOffToast": "Konto ist jetzt privat",
     "sharedOnToast": "Konto mit deinem Workspace geteilt",
+    "signatureTemplate": "Layout",
+    "signatureTemplates": {
+      "plain": "Nur Text",
+      "sideBySide": "Logo daneben",
+      "stacked": "Logo oben"
+    },
     "status": "Status",
     "statusLabels": {
       "connecting": "Wird verbunden",
@@ -1675,6 +1992,12 @@
     "subTypeEmail": "E-Mail",
     "syncing": "Wird im Hintergrund synchronisiert",
     "syncingTooltip": "Nachrichten, E-Mails und Kalendereinträge dieses Kontos werden im Hintergrund importiert. Das dauert in der Regel wenige Minuten, bei großen Konten bis zu einer Stunde. Du kannst währenddessen normal weiterarbeiten; neue Aktivitäten erscheinen, sobald sie eingehen.",
+    "tabs": {
+      "details": "Details",
+      "email": "E-Mail",
+      "foldersCount": "Ordner {shown}/{total}",
+      "label": "Kontobereiche"
+    },
     "title": "Kanäle",
     "upgradeToBusinessForMoreAccounts": "Du hast die im Pro-Tarif enthaltenen verbundenen Konten erreicht. Wechsle zu Business, um weitere zu verbinden.",
     "upsellDialogTitle": "Upgrade, um mehr Konten zu verbinden",
@@ -1968,15 +2291,46 @@
     "menu": "Import und Export"
   },
   "DataView": {
+    "board": {
+      "chooseField": "Nach Feld gruppieren",
+      "createField": "Einzelauswahl-Feld erstellen",
+      "promptBody": "Wähle ein Feld zum Gruppieren. Jeder Wert wird zu einer Spalte auf dem Board.",
+      "promptTitle": "Wähle, wie dieses Board gruppiert wird"
+    },
+    "collapseGroup": "Gruppe {group} einklappen",
     "dragToReorder": "Zum Neuanordnen ziehen",
     "editColumn": "Spalte bearbeiten",
+    "expandGroup": "Gruppe {group} ausklappen",
     "groupByStage": "Pipeline-Phase",
+    "groupOverflow": "Es werden nur {count} Gruppen angezeigt",
     "noValue": "Kein Wert",
     "resizeColumn": "Größe der Spalte „{column}“ ändern. Ziehe oder verwende die Pfeiltasten; doppeltippe oder drücke zum Zurücksetzen die Eingabetaste.",
     "resizeHint": "Zum Ändern der Größe ziehen. Zum Zurücksetzen doppelklicken.",
     "selectAllRows": "Alle Zeilen auswählen",
-    "selectGroupingColumn": "Wähle eine Gruppierungsspalte aus, um die Kanban-Ansicht anzuzeigen.",
-    "selectRow": "Zeile {id} auswählen"
+    "selectGroup": "Gruppe {group} auswählen",
+    "selectRow": "Zeile {id} auswählen",
+    "views": {
+      "aiLabel": "KI zu {name} fragen",
+      "all": "Alle",
+      "applied": "{name} wird angezeigt",
+      "askAi": "KI fragen",
+      "copyLink": "Link kopieren",
+      "createTitle": "Neue Ansicht",
+      "createWithAi": "Mit KI erstellen",
+      "createWithAiDescription": "Öffne den KI-Chat mit dieser Ansicht als Kontext und beschreibe dort, was du sehen möchtest.",
+      "delete": "Ansicht löschen",
+      "duplicate": "Als neue Ansicht duplizieren",
+      "duplicateName": "{name} Kopie",
+      "editTitle": "Ansicht bearbeiten",
+      "linkCopied": "Link kopiert",
+      "menu": "Ansichtsaktionen",
+      "moveLeft": "Nach links verschieben",
+      "moveRight": "Nach rechts verschieben",
+      "name": "Name",
+      "namePlaceholder": "Name der Ansicht",
+      "railLabel": "Gespeicherte Ansichten",
+      "recordCount": "{count, plural, one {# Datensatz} other {# Datensätze}}"
+    }
   },
   "DealModal": {
     "close": {
@@ -2050,6 +2404,7 @@
     "appOnboarding": "Onboarding-Wizard",
     "appProfile": "Profil",
     "appRecords": "Datensätze",
+    "appRoutines": "Routinen",
     "appSearch": "Globale Suche",
     "architectureSecurity": "Architektur & Sicherheit",
     "concepts": "Kernkonzepte",
@@ -2077,6 +2432,7 @@
     "code": "Code",
     "confirm": "Link anwenden",
     "divider": "Trennlinie",
+    "formatting": "Formatierung",
     "heading1": "Überschrift 1",
     "heading2": "Überschrift 2",
     "image": "Bild",
@@ -2143,25 +2499,17 @@
       "weightedValue": "{dealValue} × {percent} % Abschlusswahrscheinlichkeit der aktuellen Phase ({stage}). Ändere „{services}“, Mengen oder die Phase; bearbeite Phasenwahrscheinlichkeiten unter „{company}“.",
       "weightedValueUnconfigured": "{dealValue} × Abschlusswahrscheinlichkeit der ausgewählten Phase. Richte unter „{company}“ Phasenwahrscheinlichkeiten ein und wähle eine Phase; ändere „{services}“ oder Mengen."
     },
-    "customFieldsEmpty": {
-      "body": "Benutzerdefinierte Felder enthalten die zusätzlichen Angaben, die dein Arbeitsbereich zu diesem Datensatztyp erfasst.",
-      "title": "Noch keine benutzerdefinierten Felder"
-    },
     "donePersonalizing": "Fertig",
     "fields": {
       "createdAt": "Erstellt am",
       "updatedAt": "Aktualisiert am"
     },
     "hideField": "{field} in den Details ausblenden",
-    "moveFieldDown": "{field} nach unten verschieben",
-    "moveFieldUp": "{field} nach oben verschieben",
+    "overview": "Übersicht",
     "personalize": "Anpassen",
     "pinField": "{field} an die Übersicht anheften",
     "sections": {
-      "base": "Basisdaten",
-      "customFields": "Benutzerdefinierte Felder",
-      "notes": "Notizen",
-      "relations": "Beziehungen"
+      "notes": "Notizen"
     },
     "showField": "{field} in den Details anzeigen",
     "unpinField": "{field} von der Übersicht lösen"
@@ -2309,7 +2657,9 @@
     "demoModeError": "Speichern, Löschen und Ändern von Daten ist im Demo-Modus nicht verfügbar. <link>Jetzt kostenlos starten</link>, um auf alle Funktionen zuzugreifen.",
     "inactiveUser": "Dein Konto ist derzeit inaktiv. Kontaktiere deinen Administrator, um dein Konto zu reaktivieren.",
     "invalidInviteLink": "Der Einladungslink, den du verwendet hast, ist ungültig oder wurde möglicherweise manipuliert. Kontaktiere deinen Administrator, um einen neuen, gültigen Einladungslink zu erhalten und deine Registrierung fortzusetzen.",
+    "invalidOnboardingIntent": "Dieser Onboarding-Link ist ungültig. Kehre zum Onboarding zurück oder öffne den ursprünglichen Einladungslink erneut.",
     "inviteLinkExpired": "Der Einladungslink, den du verwendet hast, ist abgelaufen und kann nicht mehr verwendet werden. Kontaktiere deinen Administrator und bitte ihn, einen neuen Einladungslink für dich zu erstellen, damit du deine Kontoeinrichtung abschließen kannst.",
+    "onboardingSessionExpired": "Diese Onboarding-Sitzung ist abgelaufen. Öffne den ursprünglichen Einladungslink erneut oder wähle noch einmal aus, wie du starten möchtest.",
     "retry": "Erneut versuchen",
     "subtitle": "Ups! Etwas ist schiefgelaufen",
     "title": "Das ist jetzt peinlich",
@@ -2378,7 +2728,7 @@
   },
   "GlobalSearch": {
     "clearRecent": "Leeren",
-    "emptyDescription": "Durchsuche {contacts}, {organizations}, {deals} und {services} an einem Ort.",
+    "emptyDescription": "Durchsuche {contacts}, {organizations}, {deals}, {services} und {tasks} an einem Ort.",
     "emptyTitle": "Finde alles in deinem Workspace",
     "groupRecent": "Zuletzt geöffnet",
     "hintNavigate": "Navigieren",
@@ -2446,9 +2796,11 @@
       "ccBccToggle": "Cc/Bcc",
       "ccLabel": "Cc",
       "createContact": "„{query}“ erstellen",
+      "draftAttachmentsUnsupported": "Entfernen Sie Anhänge, bevor Sie diesen Entwurf speichern.",
       "draftDiscard": "Verwerfen",
       "draftDiscardFailed": "Entwurf konnte nicht verworfen werden",
       "draftEdit": "Bearbeiten",
+      "draftSaved": "Entwurf gespeichert. Sie finden ihn im Posteingang.",
       "draftSendNow": "Entwurf senden",
       "emailContent": "E-Mail-Inhalt",
       "emojiPicker": "Emoji einfügen",
@@ -2470,6 +2822,7 @@
       "updateDraft": "Entwurf aktualisieren",
       "writeReply": "Antwort schreiben…"
     },
+    "conversationRegion": "Konversation",
     "dateToday": "Heute",
     "dateYesterday": "Gestern",
     "edited": "(bearbeitet)",
@@ -2482,10 +2835,16 @@
     "folders": {
       "current": "In {folder}",
       "hiddenTooltip": "In {folder}, der in Ihrem Posteingang ausgeblendet ist",
+      "moved": "Nach {folder} verschoben.",
+      "movedHidden": "Nach {folder} verschoben. Die Konversation erscheint nicht mehr im Posteingang.",
+      "moveNothing": "Nichts nach {folder} zu verschieben.",
+      "movePartial": "Ein Teil dieser Konversation wurde nach {folder} verschoben. {failed} Nachricht(en) konnten nicht verschoben werden.",
+      "moveRateLimited": "Ablegen in {folder} gestoppt, weil der Anbieter die Rate begrenzt. Versuche den Rest erneut {retryAfter}.",
       "none": "Kein Ordner"
     },
     "groupThread": "Gruppe ({count, plural, one {# Mitglied} other {# Mitglieder}})",
     "hideQuotedText": "Zitierten Text ausblenden",
+    "jumpToLatest": "Zum neuesten springen",
     "learnMore": "Mehr erfahren",
     "linkedinContact": "LinkedIn-Kontakt",
     "loadMedia": "Medien laden",
@@ -2548,6 +2907,39 @@
       "seek": "Wiedergabeposition ändern"
     },
     "youPrefix": "Du:"
+  },
+  "InvitationCard": {
+    "inviter": "Einladung von {inviterName}",
+    "joinAction": "Weiter",
+    "joinBody": "Richte dein Profil ein und beantrage den Zugang. Ein Workspace-Administrator muss dich freigeben, bevor du beitreten kannst.",
+    "joinSubtitle": "Du bist als {email} angemeldet",
+    "joinTitle": "Einladung annehmen",
+    "switchBody": "Dieses Konto gehört bereits zu einem Workspace. Melde dich ab, um mit einem anderen Konto fortzufahren.",
+    "switchSubtitle": "Du bist als {email} angemeldet",
+    "switchTitle": "Du bist bereits angemeldet"
+  },
+  "JoinWorkspace": {
+    "backAction": "Zurück zur Auswahl",
+    "emailLabel": "E-Mail-Adresse für die Einladung",
+    "safeBody": "Du kannst diese Seite schließen und zurückkehren, sobald du eine Einladung erhalten hast.",
+    "safeTitle": "Es wurde kein Workspace erstellt",
+    "steps": {
+      "complete": {
+        "body": "Warte anschließend auf die Freigabe durch einen Workspace-Administrator.",
+        "title": "Profil vervollständigen"
+      },
+      "open": {
+        "body": "Nutze dazu den Link aus der Einladungs-E-Mail oder einen direkt geteilten Einladungslink in diesem Browser.",
+        "title": "Einladungslink öffnen"
+      },
+      "request": {
+        "body": "Sende diese E-Mail-Adresse an einen Administrator des Workspaces.",
+        "title": "Einladung anfordern"
+      }
+    },
+    "stepsTitle": "So trittst du bei",
+    "subtitle": "Ein Workspace-Administrator muss {email} einladen.",
+    "title": "Bestehendem Workspace beitreten"
   },
   "LeadCreatedNotice": {
     "cta": "Lead öffnen",
@@ -2812,6 +3204,7 @@
       "taskManagement": "Aufgabenverwaltung",
       "unifiedInbox": "Zentraler Posteingang"
     },
+    "routines": "Routinen",
     "search": "Suchen",
     "settings": "Einstellungen",
     "subscription": "Abonnement",
@@ -2823,8 +3216,26 @@
     "subtitle": "Diese Seite ist ohne uns zu informieren in den Urlaub gefahren",
     "title": "Huch! Sie haben die Leere betreten"
   },
+  "OnboardingChoice": {
+    "create": {
+      "description": "Richte einen eigenen Workspace für ein Unternehmen ein, das du führst oder verwaltest.",
+      "note": "{days} Tage kostenlos testen",
+      "title": "Neuen Workspace erstellen"
+    },
+    "footnote": "Ein Workspace wird erst erstellt, wenn du Erstellen wählst und dein Profil abschließt.",
+    "join": {
+      "description": "Tritt einem Team bei, das Customermates bereits nutzt. Dafür brauchst du eine Einladung von einem Workspace-Administrator.",
+      "note": "Es wird kein Workspace erstellt",
+      "title": "Bestehendem Workspace beitreten"
+    },
+    "optionsLabel": "Auswahl für die Workspace-Einrichtung",
+    "signedInAs": "Angemeldet als {email}",
+    "subtitle": "Erstelle einen Workspace für dein Unternehmen oder tritt einem Team bei, das Customermates bereits nutzt.",
+    "title": "Wie möchtest du starten?"
+  },
   "OnboardingForm": {
     "agreeToTerms": "Ich bin berechtigt, für den Geschäftskunden zu handeln, und stimme den <termsOfServiceLink>AGB</termsOfServiceLink> sowie dem <dpaLink>AVV</dpaLink> zu. Die <dataPrivacyLink>Datenschutzerklärung</dataPrivacyLink> habe ich gelesen.",
+    "invitationFrom": "Einladung von {inviterName}",
     "invitedAgreeToTerms": "Ich verpflichte mich, die <termsOfServiceLink>AGB</termsOfServiceLink> einzuhalten, und habe den <dpaLink>AVV</dpaLink> sowie die <dataPrivacyLink>Datenschutzerklärung</dataPrivacyLink> gelesen."
   },
   "OnboardingWizard": {
@@ -2956,6 +3367,7 @@
         "title": "Team einladen"
       },
       "profile": {
+        "invitedSubtitle": "Vervollständige dein Profil, um Zugang zum eingeladenen Workspace anzufordern.",
         "subtitle": "Erzähle uns, wer du bist, damit wir deinen Workspace einrichten können.",
         "title": "Dein Profil"
       }
@@ -3261,6 +3673,7 @@
       "leads": "Leads",
       "organizations": "Organisationen",
       "pipelines": "Pipelines",
+      "routines": "Routinen",
       "services": "Services",
       "tasks": "Aufgaben",
       "users": "Benutzer & Rollen"
@@ -3276,6 +3689,166 @@
     "system": "System",
     "title": "Rollen"
   },
+  "RoutineAdministration": {
+    "help": "Als Unternehmensadmin kannst du diese Routine pausieren oder löschen, aber nicht bearbeiten, testen oder ausführen.",
+    "pause": "Routine pausieren",
+    "pauseConfirmation": "„{name}“ pausieren? Wartende Läufe werden übersprungen.",
+    "pauseTitle": "Routine pausieren",
+    "title": "Admin-Steuerung"
+  },
+  "RoutineDetail": {
+    "credits": "Guthaben",
+    "empty": {
+      "event": {
+        "actions": {
+          "calendarChanged": "Erstelle, bearbeite oder lösche im externen Kalenderdienst, der mit Customermates verbunden ist, einen Kalender.",
+          "calendarEventChanged": "Erstelle, bearbeite oder lösche im externen Kalenderdienst, der mit Customermates verbunden ist, einen Kalendertermin.",
+          "chatUpdated": "Ändere den Namen, die Beschreibung oder den Typ einer verbundenen Unterhaltung.",
+          "emailReceived": "Empfange eine neue, nicht doppelte E-Mail in einem verbundenen Postfach.",
+          "messageDeleted": "Lösche eine Nachricht beim verbundenen Messaging-Anbieter.",
+          "messageReaction": "Füge einer Nachricht in einer verbundenen Unterhaltung eine Reaktion hinzu.",
+          "messageReceived": "Empfange eine neue, nicht doppelte eingehende Nachricht über ein verbundenes Konto.",
+          "messageUpdated": "Bearbeite eine Nachricht beim verbundenen Messaging-Anbieter.",
+          "recordCreated": "Erstelle einen Datensatz in Customermates: {entity}.",
+          "recordDeleted": "Lösche einen Datensatz in Customermates: {entity}.",
+          "recordUpdated": "Nimm eine echte Änderung an einem Datensatz in Customermates vor: {entity}.",
+          "relationCreated": "Lass eine LinkedIn-Kontaktanfrage über ein verbundenes Konto annehmen."
+        },
+        "conditions": {
+          "filters": "Der Datensatz muss außerdem alle konfigurierten Filter erfüllen.",
+          "filtersWithDeletion": "Konfigurierte Filter gelten für erstellte und aktualisierte Datensätze. Gelöschte Datensätze verwenden ihren Lösch-Schnappschuss und umgehen diese Filter.",
+          "ownerAccess": "Die Eigentümerin oder der Eigentümer der Routine muss weiterhin aktiv sein und auf das verbundene Konto oder den Datensatz zugreifen können.",
+          "paused": "Aktiviere und speichere diese Routine, bevor du ein Ereignis auslöst.",
+          "suppression": "Ereignisse, die von einer Routine verursacht werden, lösen keine Routinen aus.",
+          "unsaved": "Speichere diese Änderungen zuerst. Bis dahin verwenden Ereignisse die zuletzt gespeicherte Konfiguration.",
+          "watchedFields": "Bei Aktualisierungsereignissen muss sich mindestens eines der beobachteten Felder wirklich ändern: {fields}."
+        },
+        "description": "Ereignis-Routinen können nicht manuell gestartet werden. Führe eine der folgenden echten Aktionen aus, um die benötigten Ereignisdaten zu erzeugen.",
+        "instructionsLabel": "Möglichkeiten, diese Routine auszulösen"
+      },
+      "schedule": {
+        "activateFirst": "Aktiviere und speichere die Routine, bevor du „Auslöser testen“ verwendest.",
+        "description": "Sie wird nach diesem Zeitplan ausgeführt:",
+        "ownerOnly": "Nur die Eigentümerin oder der Eigentümer kann „Auslöser testen“ verwenden. Der Zeitplan läuft automatisch, solange die Routine aktiv ist.",
+        "saveFirst": "Speichere diese Änderungen, bevor du „Auslöser testen“ verwendest.",
+        "testNow": "Starte mit „Auslöser testen“ jetzt einen Lauf oder warte auf den nächsten geplanten Zeitpunkt."
+      },
+      "title": "Noch keine Läufe"
+    },
+    "never": "Nie",
+    "owner": "Eigentümer/in",
+    "ownerOnlyEdit": "Diese Routine ist für dich schreibgeschützt. Sie wird nur als {owner} ausgeführt und kann von dieser Person bearbeitet oder pausiert werden. Unternehmensadmins können sie nur pausieren oder löschen.",
+    "ownerPermissionReadOnly": "Deine Rolle erlaubt dir, diese Routine und ihre Ausführungen anzusehen, aber nicht, sie zu ändern oder zu testen.",
+    "ownerUnavailable": "Eigentümer/in nicht verfügbar",
+    "ownerUnavailableReadOnly": "Für diese Routine ist keine Eigentümerin und kein Eigentümer mehr verfügbar. Sie bleibt pausiert und schreibgeschützt; ein Unternehmensadmin kann sie löschen.",
+    "ranAs": "Ausgeführt als {owner}",
+    "readOnlyTitle": "Schreibgeschützter Zugriff",
+    "runDetails": "Details zum Lauf",
+    "runNoTranscript": "Für diesen Lauf ist kein Protokoll verfügbar.",
+    "runQueued": "Dieser Lauf wartet in der Warteschlange. Das Protokoll erscheint, sobald der Assistent beginnt.",
+    "runs": "Läufe",
+    "runsLoadErrorDescription": "Der Verlauf der Läufe konnte nicht geladen werden. Versuche es erneut.",
+    "runsLoadErrorTitle": "Läufe konnten nicht geladen werden",
+    "runStarting": "Dieser Lauf wird gestartet. Das Protokoll erscheint in Kürze.",
+    "testTrigger": "Auslöser testen",
+    "testTriggerEnableFirst": "Aktiviere diese Routine, bevor du sie testest.",
+    "testTriggerEventUnavailable": "Ereignis-Auslöser benötigen echte Ereignisdaten. Löse zum Testen dieser Routine ein passendes Ereignis im Arbeitsbereich aus.",
+    "testTriggerSaveFirst": "Speichere deine Änderungen, bevor du diese Routine testest.",
+    "testTriggerStarted": "Testlauf gestartet.",
+    "testTriggerWarning": "Führe diese Routine jetzt aus. Das verbraucht deine KI-Guthaben und kann die in den Anweisungen genannten Aktionen ausführen.",
+    "transcriptOwnerOnly": "Nur {owner}, unter dessen Identität die Routine lief, kann das vollständige Protokoll öffnen.",
+    "trigger": "Auslöser",
+    "triggerChangedFields": "Geänderte Felder",
+    "triggerChangedFieldsMore": "und weitere",
+    "triggerRecord": "Datensatz",
+    "triggerThread": "Unterhaltung"
+  },
+  "RoutineModal": {
+    "at": "um",
+    "changedFieldsHelp": "Leer lassen, um bei jeder Änderung zu laufen. Eingrenzen spart Guthaben.",
+    "configurationHeading": "Konfiguration",
+    "customSchedule": "Diese Routine nutzt einen eigenen Zeitplan: {expression}",
+    "detailsTab": "Details",
+    "disabled": "Pausiert",
+    "enabled": "Aktiv",
+    "enabledHelp": "Diese Routine kann derzeit ausgeführt werden.",
+    "eventSuppressionNote": "Von Routinen verursachte Ereignisse lösen keine Routinen aus.",
+    "onMinute": "zur Minute",
+    "pausedHelp": "Diese Routine ist derzeit pausiert und wird nicht ausgeführt.",
+    "promptExampleEvent": "Lies den geänderten Datensatz und antworte mit einem Satz dazu, was das bedeutet.",
+    "promptExampleSchedule": "Fasse zusammen, was sich seit gestern bewegt hat, und antworte mit einer kurzen Liste.",
+    "scheduleTimeZone": "Zeiten werden in {timezone} angezeigt.",
+    "tabsLabel": "Bereiche der Routine",
+    "title": "Routine",
+    "triggerFiltersHelp": "Leer lassen, um für jeden Datensatz zu laufen.",
+    "useSchedulePreset": "Zu einem Muster wechseln"
+  },
+  "RoutineRunReason": {
+    "adminPaused": "Ein Unternehmensadmin hat die Routine pausiert",
+    "agentAlreadyCompleted": "Dieser Lauf war bereits abgeschlossen",
+    "agentAlreadyRunning": "Der Assistent war bereits mit einem anderen Lauf beschäftigt",
+    "agentTurnConflict": "Ein anderer Lauf hat den Assistenten zuerst belegt",
+    "agentTurnFailed": "Der Assistent konnte den Lauf nicht starten",
+    "agentTurnUncertain": "Der Assistent konnte den Start des Laufs nicht bestätigen",
+    "filtersNotMatched": "Der Datensatz passte nicht zu den Filtern",
+    "hourlyRunLimit": "Das Stundenlimit für Läufe war erreicht",
+    "ownerInactive": "Das Konto der Routine-Eigentümerin oder des Eigentümers ist nicht mehr aktiv",
+    "ownerPaused": "Die Eigentümerin oder der Eigentümer hat die Routine pausiert",
+    "ownerUnavailable": "Die Eigentümerin oder der Eigentümer der Routine ist nicht mehr verfügbar",
+    "routineDisabled": "Die Routine war pausiert",
+    "startAbandoned": "Der Lauf wurde vor dem Start unterbrochen",
+    "startFailed": "Der Lauf konnte nicht gestartet werden",
+    "unknownFailure": "Der Lauf konnte nicht abgeschlossen werden"
+  },
+  "RoutineRunStatus": {
+    "blocked": "Blockiert",
+    "failed": "Fehlgeschlagen",
+    "partial": "Teilweise",
+    "queued": "In Warteschlange",
+    "running": "Läuft",
+    "skipped": "Übersprungen",
+    "succeeded": "Erfolgreich"
+  },
+  "RoutineRunStopReason": {
+    "cancelled": "Der Lauf wurde abgebrochen.",
+    "contentFilter": "Der KI-Anbieter hat einen Teil dieses Laufs blockiert. Es wurden keine weiteren Änderungen vorgenommen.",
+    "creditLimit": "Der Lauf wurde beendet, weil das verfügbare Assistenten-Guthaben aufgebraucht war.",
+    "hostedAiUnavailable": "Die gehostete KI war nicht mehr verfügbar, bevor der Lauf abgeschlossen werden konnte.",
+    "policyBreach": "Der KI-Anbieter hat das reservierte Guthabenbudget überschritten; deshalb wurde der Lauf beendet.",
+    "providerError": "Der KI-Anbieter hat vor Abschluss des Laufs einen Fehler zurückgegeben.",
+    "turnError": "Der Assistent konnte diesen Lauf nicht abschließen."
+  },
+  "RoutinesCard": {
+    "emptyBody": "Mate kann arbeiten, während du weg bist. Zum Beispiel: jeden Werktagmorgen zusammenfassen, was sich bewegt hat, oder eine Dankesmail entwerfen, sobald etwas gewonnen ist.",
+    "emptyTitle": "Noch keine Routinen"
+  },
+  "RoutineSchedule": {
+    "daily": "Täglich um {time}",
+    "hourly": "Jede Stunde um :{minute}",
+    "monthly": "Am {day}. jedes Monats um {time}",
+    "weekly": "Jeden {weekday} um {time}"
+  },
+  "RoutineSchedulePreset": {
+    "daily": "Täglich",
+    "every15Minutes": "Alle 15 Minuten",
+    "every30Minutes": "Alle 30 Minuten",
+    "hourly": "Stündlich",
+    "monthly": "Monatlich",
+    "weekly": "Wöchentlich"
+  },
+  "RoutineTriggerKind": {
+    "event": "Wenn sich etwas ändert",
+    "schedule": "Nach Zeitplan"
+  },
+  "RoutineWeekday": {
+    "friday": "Freitag",
+    "monday": "Montag",
+    "saturday": "Samstag",
+    "sunday": "Sonntag",
+    "thursday": "Donnerstag",
+    "tuesday": "Dienstag",
+    "wednesday": "Mittwoch"
+  },
   "ServiceModal": {
     "title": "Service"
   },
@@ -3283,6 +3856,7 @@
     "agreeToTerms": "Mit dem Fortfahren stimmst du unseren <termsOfServiceLink>AGB</termsOfServiceLink> zu und nimmst unsere <dataPrivacyLink>Datenschutzerklärung</dataPrivacyLink> zur Kenntnis. Siehe unseren <dpaLink>AVV</dpaLink>.",
     "buttonLabel": "Anmelden mit {provider}",
     "forgotPassword": "Passwort vergessen?",
+    "inviteSubtitle": "{inviterName} hat dich in einen Workspace eingeladen. Melde dich an, um die Einladung zu prüfen.",
     "or": "ODER",
     "rememberMe": "Angemeldet bleiben",
     "signInCta": "Anmelden",
@@ -3290,7 +3864,8 @@
     "switchToSignUp": "Noch kein Konto? <registerLink>Registrieren</registerLink>"
   },
   "SignUpForm": {
-    "acceptInviteCta": "Einladung annehmen",
+    "acceptInviteCta": "Weiter",
+    "accountSubtitle": "Erstelle zuerst dein Konto. Anschließend entscheidest du, ob du einen neuen Workspace erstellst oder einem bestehenden beitrittst.",
     "agreeToTerms": "Mit dem Fortfahren stimmst du unseren <termsOfServiceLink>AGB</termsOfServiceLink> zu und nimmst unsere <dataPrivacyLink>Datenschutzerklärung</dataPrivacyLink> zur Kenntnis. Siehe unseren <dpaLink>AVV</dpaLink>.",
     "buttonLabel": "Registrieren mit {provider}",
     "inviteSubtitle": "Du wurdest eingeladen, einem Team auf {brandName} beizutreten. Wähle deine Anmeldemethode, um die Einladung anzunehmen.",
@@ -3320,12 +3895,10 @@
       "planManage": "Wird mit der Abrechnung synchronisiert. Verwende „{billing}“ für Änderungen.",
       "planPicker": "Wähle unten einen Tarif, um das Abonnement zu starten oder zu ändern.",
       "planReadOnly": "Wird mit der Abrechnung synchronisiert. Bitte eine Workspace-Administration um Änderungen.",
-      "planUnavailable": "Wird mit der Abrechnung synchronisiert. Wende dich für Änderungen an den Support.",
       "quantity": "Wird mit der Anzahl aktiver Workspace-Mitglieder synchronisiert. Eine Workspace-Administration kann Mitglieder unter „{company}“ aktivieren oder deaktivieren.",
       "trialEndsManage": "Wird durch den Testzeitraum festgelegt. Verwalte das Abonnement über „{billing}“.",
       "trialEndsPicker": "Wird durch den Testzeitraum festgelegt. Wähle vor diesem Datum einen Tarif, um Unterbrechungen zu vermeiden.",
-      "trialEndsReadOnly": "Wird durch den Testzeitraum festgelegt. Bitte eine Workspace-Administration, das Abonnement zu verwalten.",
-      "trialEndsUnavailable": "Wird durch den Testzeitraum festgelegt. Wende dich zur Verwaltung des Abonnements an den Support."
+      "trialEndsReadOnly": "Wird durch den Testzeitraum festgelegt. Bitte eine Workspace-Administration, das Abonnement zu verwalten."
     },
     "managedExternallyNote": "Dieser Workspace nutzt einen Enterprise-Tarif mit Rechnungsstellung. Wende dich an deinen Ansprechpartner, um Änderungen vorzunehmen.",
     "manageWithLemonSqueezy": "Verwalten mit Lemon Squeezy",
@@ -3344,7 +3917,9 @@
       },
       "hostedAiCredits": "{credits, number} Credits für den gehosteten KI-Assistenten pro aktivem Nutzer / Monat",
       "mostPopular": "Am beliebtesten",
-      "perUserMonth": "pro Nutzer / Monat"
+      "perUserMonth": "pro Nutzer / Monat",
+      "routinesPerUser": "{routines, plural, one {# Routine pro Nutzer} other {# Routinen pro Nutzer}}",
+      "unlimitedRoutinesPerUser": "Unbegrenzte Routinen pro Nutzer"
     },
     "plan": "Plan",
     "planNames": {
@@ -3457,9 +4032,14 @@
   "VerifyEmailCard": {
     "body": "Wir haben dir eine Verifizierungs-E-Mail gesendet. Bitte überprüfe dein Postfach und klicke auf den Link, um deine E-Mail-Adresse zu verifizieren.",
     "ctaLabel": "Verifizierungs-E-Mail erneut senden",
+    "invitationFrom": "Einladung von {inviterName}",
+    "linkExpired": "Dieser Bestätigungslink ist abgelaufen.",
+    "linkInvalid": "Dieser Bestätigungslink ist ungültig.",
     "resendSuccess": "Verifizierungs-E-Mail wurde erfolgreich gesendet.",
+    "signedOutBody": "Melde dich in deinem Konto an, um eine neue Bestätigungs-E-Mail anzufordern.",
     "subtitle": "Verifiziere deine E-Mail-Adresse, um fortzufahren.",
-    "title": "E-Mail-Verifizierung"
+    "title": "E-Mail-Verifizierung",
+    "verifiedSignIn": "Deine E-Mail-Adresse ist jetzt bestätigt. Melde dich an, um fortzufahren."
   },
   "WebFormSourceModal": {
     "active": "Nimmt Einsendungen an",
@@ -3500,7 +4080,7 @@
     },
     "entity": "Element",
     "event": "Ereignis",
-    "requestBody": "Anfrage-Body",
+    "eventPayload": "Ereignis-Payload",
     "resend": "Erneut senden",
     "responseMessage": "Antwort-Nachricht",
     "statusCode": "Status-Code",
@@ -3508,8 +4088,10 @@
     "url": "URL"
   },
   "WebhookModal": {
+    "bodyTemplateDescription": "Optionale JSON-Vorlage für den Anfrage-Body, für Empfänger mit fester Struktur. Leer lassen, um den Standard-Ereignisumschlag zu senden.",
     "disabled": "Deaktiviert",
     "enabled": "Aktiviert",
+    "headersDescription": "Optionale Header, die bei jeder Zustellung mitgesendet werden, einer pro Zeile als Name: Wert. Nutze sie für Empfänger, die eine eigene Authentifizierung verlangen. Content-Type und der Signatur-Header lassen sich nicht überschreiben.",
     "secretDescription": "Optionales Geheimnis zur Generierung einer HMAC-SHA256-Signatur, die im X-Webhook-Signature-Header gesendet wird. Zur Überprüfung den Request-Body mit diesem Geheimnis mittels HMAC-SHA256 hashen und mit dem Header-Wert vergleichen.",
     "title": "Webhook",
     "urlDescription": "Die Endpunkt-URL, an die Webhook-Ereignisse per POST-Anfragen gesendet werden."

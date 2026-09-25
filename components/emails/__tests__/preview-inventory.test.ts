@@ -9,6 +9,7 @@ import { render } from "@react-email/render";
 import { createElement } from "react";
 import { describe, expect, it } from "vitest";
 
+import AccountAccessRevoked from "../account-access-revoked";
 import AccountsRemovedNotice from "../accounts-removed-notice";
 import CompanyInvite from "../company-invite";
 import LeadCreatedNotice from "../lead-created-notice";
@@ -139,6 +140,23 @@ const EMAIL_PREVIEW_CASES = [
       return createElement(VerifyEmail, {
         ...previewLayoutProps(locale),
         url: `${PREVIEW_BASE_URL}/auth/verify-email?token=synthetic-preview-token`,
+        ...copy,
+      });
+    },
+  },
+  {
+    key: "account-access-revoked",
+    sendSite: "account-access-revoked",
+    audience: "recipient-localized",
+    sourcePath: "features/auth/auth.service.ts",
+    templatePath: "components/emails/account-access-revoked.tsx",
+    template: AccountAccessRevoked,
+    expectedText: (locale) => catalog(locale).AccountAccessRevoked.title,
+    render: (locale) => {
+      const copy = catalog(locale).AccountAccessRevoked;
+      return createElement(AccountAccessRevoked, {
+        ...previewLayoutProps(locale),
+        href: `${PREVIEW_BASE_URL}/auth/forgot-password`,
         ...copy,
       });
     },

@@ -18,6 +18,8 @@ const harness = vi.hoisted(() => ({
   roleAdd: vi.fn(),
   roleOpen: vi.fn(),
   roleSet: vi.fn(),
+  routineCreate: vi.fn(),
+  routineEdit: vi.fn(),
   setTopBarActions: vi.fn(),
   sync: vi.fn(),
   toolbarProps: vi.fn(),
@@ -114,6 +116,9 @@ vi.mock("@/app/[locale]/(protected)/company/components/webhook/use-webhook-colum
 vi.mock("@/app/[locale]/(protected)/company/components/webhook/use-webhook-delivery-columns", () => ({
   useWebhookDeliveryColumns: () => [],
 }));
+vi.mock("@/app/[locale]/(protected)/routines/components/use-routine-columns", () => ({
+  useRoutineColumns: () => [],
+}));
 
 vi.mock("@/app/[locale]/(protected)/company/components/role/role-modal", () => ({
   RoleModal: () => createElement("div", { "data-role-modal": true }),
@@ -125,6 +130,7 @@ import { MembersPageView } from "@/app/[locale]/(protected)/company/components/u
 import { WebhookDeliveriesPageView } from "@/app/[locale]/(protected)/company/components/webhook/webhook-deliveries-page-view";
 import { WebhooksPageView } from "@/app/[locale]/(protected)/company/components/webhook/webhooks-page-view";
 import { DealsPageView } from "@/app/[locale]/(protected)/deals/components/deals-page-view";
+import { RoutinesPageView } from "@/app/[locale]/(protected)/routines/components/routines-page-view";
 import { ServicesPageView } from "@/app/[locale]/(protected)/services/components/services-page-view";
 import { TasksPageView } from "@/app/[locale]/(protected)/tasks/components/tasks-page-view";
 
@@ -151,8 +157,11 @@ function store(items: Array<Record<string, unknown>>, canManage = true) {
     entityType: undefined,
     filterableFields: [],
     filters: [],
-    groupingColumnId: null,
+    groupableFields: [],
+    grouping: null,
+    groupingResult: undefined,
     isDisabled: !canManage,
+    isGrouped: false,
     isReady: true,
     items,
     pagination: { page: 1, pageSize: 25, total: items.length, totalPages: items.length ? 1 : 0 },
@@ -197,6 +206,7 @@ function setRoot(key: string, value: Store, extras: Record<string, unknown> = {}
       onInitOrRefresh: harness.webhookDeliveryInit,
       open: harness.webhookDeliveryOpen,
     },
+    routineModalStore: { openForCreate: harness.routineCreate, openForEdit: harness.routineEdit },
     webhookModalStore: { openWith: harness.webhookOpen },
     [key]: value,
     ...extras,
@@ -317,6 +327,8 @@ const fixtures: Fixture[] = [
         description: undefined,
         events: [],
         secret: undefined,
+        headers: "",
+        bodyTemplate: undefined,
         enabled: true,
       }),
     verifyRow: (props) => {
@@ -335,6 +347,8 @@ const fixtures: Fixture[] = [
         description: undefined,
         events: [],
         secret: undefined,
+        headers: "",
+        bodyTemplate: undefined,
         enabled: true,
       });
     },
@@ -355,6 +369,21 @@ const fixtures: Fixture[] = [
     },
     verifySync: (value, initial) => expect(harness.sync).toHaveBeenCalledWith(value, initial),
   },
+  {
+    creator: true,
+    name: "Routines",
+    render: (value, initial) => {
+      setRoot("routinesStore", value);
+      return renderToStaticMarkup(createElement(RoutinesPageView, { initialRoutines: initial as never }));
+    },
+    verifyAdd: () => expect(harness.routineCreate).toHaveBeenCalledTimes(1),
+    verifyRow: (props) => {
+      const item = { id: "row", name: "Weekly digest" };
+      (props.onRowClick as (value: typeof item) => void)(item);
+      expect(harness.routineEdit).toHaveBeenCalledWith(item);
+    },
+    verifySync: (value, initial) => expect(harness.sync).toHaveBeenCalledWith(value, initial),
+  },
 ];
 
 describe("migrated collection page wiring", () => {
@@ -369,14 +398,25 @@ describe("migrated collection page wiring", () => {
     value.dataRequest = { status: "refresh-error", error: new Error("retained") } as never;
     const html = fixture.render(value, initial);
     const content = harness.contentProps.mock.lastCall?.[0] as Record<string, unknown>;
-    const layout = harness.layoutProps.mock.lastCall?.[0] as { showPagination: boolean };
+    const layout = harness.layoutProps.mock.lastCall?.[0] as { showPagination: boolean; store: unknown };
 
     expect(html).toContain('data-data-view-content="true"');
     expect(content.store).toBe(value);
     expect(content.view).toBe("table");
     expect(layout.showPagination).toBe(true);
+    expect(layout.store).toBe(value);
     fixture.verifySync(value, initial);
     fixture.verifyRow(content);
+  });
+
+  it.each(fixtures)("hands $name pagination back to the group rows once the surface is grouped", (fixture) => {
+    const item = { id: "row" };
+    const value = store([item]);
+    value.isGrouped = true;
+    fixture.render(value, result([item]));
+    const layout = harness.layoutProps.mock.lastCall?.[0] as { showPagination: boolean };
+
+    expect(layout.showPagination).toBe(false);
   });
 
   it.each(fixtures)("renders the complete $name page-state contract", (fixture) => {
@@ -384,6 +424,11 @@ describe("migrated collection page wiring", () => {
       {
         expected: 'data-page-state="loading"',
         request: { status: "uninitialized" },
+      },
+      {
+        expected: 'data-page-state="loading"',
+        items: [{ id: "row" }],
+        request: { status: "refreshing" },
       },
       {
         expected: 'data-page-state="error"',
@@ -428,6 +473,8 @@ describe("migrated collection page wiring", () => {
     const topBar = renderToStaticMarkup(harness.setTopBarActions.mock.lastCall?.[0] as ReactElement);
     const toolbar = harness.toolbarProps.mock.lastCall?.[0] as { onAdd?: () => void };
 
+    expect(html, `${fixture.name}: the view rail is layout owned, not page owned`).not.toContain("data-data-view-rail");
+
     if (fixture.creator) {
       expect(html).toContain('data-variant="secondary"');
       expect(topBar).toContain('data-variant="default"');
@@ -443,10 +490,27 @@ describe("migrated collection page wiring", () => {
     const readOnly = store([], false);
     const readOnlyHtml = fixture.render(readOnly, initial);
     const readOnlyTopBar = renderToStaticMarkup(harness.setTopBarActions.mock.lastCall?.[0] as ReactElement);
+    expect(readOnlyHtml, `${fixture.name}: the view rail is layout owned, not page owned`).not.toContain(
+      "data-data-view-rail",
+    );
     expectOnlyTransferButtons(readOnlyHtml);
     expectOnlyTransferButtons(readOnlyTopBar);
     expect(readOnlyTopBar.includes("data-transfer-menu")).toBe(TRANSFERABLE_VIEWS.has(fixture.name));
     expect(readOnlyTopBar.includes('data-slot="tabs-trigger"')).toBe(VIEW_TAB_VIEWS.has(fixture.name));
+  });
+
+  it("keeps the board and its grouping prompt off screen while a view switch is in flight", () => {
+    const item = { id: "row" };
+    const value = store([item]);
+    value.dataRequest = { status: "refreshing" } as never;
+    value.viewMode = ViewMode.card;
+    (value as unknown as { canBoard: boolean }).canBoard = true;
+    const html = fixtures.find(({ name }) => name === "Deals")?.render(value, result([item])) ?? "";
+
+    expect(html).toContain('data-page-state="loading"');
+    expect(html).toContain('data-skeleton-view="board"');
+    expect(html).not.toContain('data-data-view-content="true"');
+    expect(harness.contentProps).not.toHaveBeenCalled();
   });
 
   it("keeps Roles off URL sync and makes its rejected retry caller-safe", () => {

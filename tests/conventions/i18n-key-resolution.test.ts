@@ -15,9 +15,12 @@ import {
   MessagingProvider,
   MessagingThreadState,
   Resource,
+  RoutineRunStatus,
+  RoutineTriggerKind,
   Status,
   SubscriptionPlan,
   SubscriptionStatus,
+  TaskType,
   Theme,
   WebhookDeliveryStatus,
   WidgetKind,
@@ -29,9 +32,12 @@ import { IMPORT_ISSUE_CODES } from "@/features/data-transfer/import/import-plan"
 import { ALL_LEGAL_DOCUMENTS } from "@/constants/legal-documents";
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
+import { SignatureTemplate } from "@/ee/messaging/email-settings";
 import { AGENDA_BUCKETS } from "@/features/tasks/activity-agenda";
 import { CustomErrorCode } from "@/core/validation/validation.types";
-import { AGENT_ACTIVITY_KINDS } from "@/ee/agent-chat/agent-activity";
+import { AGENT_ACTIVITY_KINDS, AGENT_APPROVAL_COPY_KINDS } from "@/ee/agent-chat/agent-activity";
+import { ROUTINE_SCHEDULE_PRESETS } from "@/ee/routines/routine-schedule-preset";
+import { ROUTINE_RUN_REASONS } from "@/ee/routines/routine-run-outcome";
 import { OPERATOR_AUDIT_ACTION } from "@/ee/operator/operator.schema";
 import { DomainEvent } from "@/features/event/domain-events";
 import { FeedbackType } from "@/features/feedback/send-feedback.schema";
@@ -39,6 +45,7 @@ import {
   ENTITY_TERMINOLOGY_PRESETS,
   FILTER_FIELD_TERMINOLOGY,
 } from "@/features/entity-terminology/entity-terminology.constants";
+import { ACCOUNT_REMOVAL_REASONS } from "@/ee/messaging/connect/account-removal-reason";
 import { DIAGRAM_SYSTEM_LABEL_KEYS, DisplayType, WinRateBasis } from "@/features/widget/widget.schema";
 import { DEAL_DIMENSION_GROUP_BY_TYPES } from "@/features/widget/widget-aggregation";
 import { ROUTING_LOCALES } from "@/i18n/locale-registry";
@@ -50,6 +57,20 @@ const ENTITY_TERMINOLOGY_KEYS = Object.entries(ENTITY_TERMINOLOGY_PRESETS).flatM
 );
 
 const DOMAIN_EVENT_KEYS = Object.values(DomainEvent).map((event) => `Common.events.${event}`);
+const ACCOUNT_REMOVAL_REASON_KEYS = ACCOUNT_REMOVAL_REASONS.map((reason) => `AccountRemovalReason.${reason}`);
+const ROUTINE_RUN_STATUS_KEYS = Object.values(RoutineRunStatus).map((status) => `RoutineRunStatus.${status}`);
+const ROUTINE_TRIGGER_KIND_KEYS = Object.values(RoutineTriggerKind).map((kind) => `RoutineTriggerKind.${kind}`);
+const ROUTINE_SCHEDULE_PRESET_KEYS = ROUTINE_SCHEDULE_PRESETS.map((preset) => `RoutineSchedulePreset.${preset}`);
+const ROUTINE_RUN_REASON_KEYS = ROUTINE_RUN_REASONS.map((reason) => `RoutineRunReason.${reason}`);
+const ROUTINE_WEEKDAY_KEYS = [
+  "RoutineWeekday.sunday",
+  "RoutineWeekday.monday",
+  "RoutineWeekday.tuesday",
+  "RoutineWeekday.wednesday",
+  "RoutineWeekday.thursday",
+  "RoutineWeekday.friday",
+  "RoutineWeekday.saturday",
+] as const;
 const FEEDBACK_DESCRIPTION_KEYS = Object.values(FeedbackType).map((type) => `feedback.${type}.description`);
 const FEEDBACK_TITLE_KEYS = Object.values(FeedbackType).map((type) => `feedback.${type}.title`);
 const CUSTOM_ERROR_CODE_KEYS = Object.values(CustomErrorCode).map((code) => `Common.errors.${code}`);
@@ -77,6 +98,14 @@ const AGGREGATION_TYPE_KEYS = [
   "Dashboard.aggregationTypes.dealValueRelated",
   "Dashboard.aggregationTypes.dealWeightedValueRelated",
 ] as const;
+const DATE_BUCKET_KEYS = [
+  "Common.dateBuckets.day",
+  "Common.dateBuckets.earlier",
+  "Common.dateBuckets.later",
+  "Common.dateBuckets.month",
+  "Common.dateBuckets.week",
+] as const;
+const TASK_TYPE_KEYS = Object.values(TaskType).map((type) => `Common.taskTypes.${type}`);
 const DATE_PRESET_KEYS = [
   "Common.datePresets.endTime",
   "Common.datePresets.inAMonth",
@@ -106,10 +135,19 @@ const ENTITLEMENT_DENIAL_KEYS = [
 ] as const;
 const FORM_FIELD_INPUT_KEYS = [
   "Common.inputs.amount",
+  "Common.inputs.changedFields",
+  "Common.inputs.enabled",
+  "Common.inputs.prompt",
+  "Common.inputs.scheduleDayOfMonth",
+  "Common.inputs.schedulePreset",
+  "Common.inputs.scheduleWeekday",
+  "Common.inputs.triggerEvents",
+  "Common.inputs.triggerKind",
   "Common.inputs.labels",
   "Common.inputs.title",
   "Common.inputs.value",
   "Common.inputs.avatarUrl",
+  "Common.inputs.bodyTemplate",
   "Common.inputs.company",
   "Common.inputs.confirmEmail",
   "Common.inputs.confirmPassword",
@@ -120,6 +158,7 @@ const FORM_FIELD_INPUT_KEYS = [
   "Common.inputs.emails",
   "Common.inputs.events",
   "Common.inputs.feedback",
+  "Common.inputs.headers",
   "Common.inputs.firstName",
   "Common.inputs.lastName",
   "Common.inputs.message",
@@ -135,18 +174,28 @@ const AUDIT_FIELD_KEYS = [
   "AuditLogModal.fields.acceptanceType",
   "AuditLogModal.fields.acceptingEmail",
   "AuditLogModal.fields.changedDocuments",
+  "AuditLogModal.fields.changedFields",
   "AuditLogModal.fields.city",
   "AuditLogModal.fields.country",
+  "AuditLogModal.fields.cronExpression",
   "AuditLogModal.fields.currency",
   "AuditLogModal.fields.dealStageWeights",
   "AuditLogModal.fields.dealWeightingColumnId",
+  "AuditLogModal.fields.debounceSeconds",
+  "AuditLogModal.fields.disabledReason",
   "AuditLogModal.fields.effectiveAt",
   "AuditLogModal.fields.emails",
   "AuditLogModal.fields.isNewCompany",
   "AuditLogModal.fields.postalCode",
+  "AuditLogModal.fields.prompt",
   "AuditLogModal.fields.recipientEmail",
+  "AuditLogModal.fields.removalReason",
   "AuditLogModal.fields.street",
   "AuditLogModal.fields.terminology",
+  "AuditLogModal.fields.timezone",
+  "AuditLogModal.fields.triggerEvents",
+  "AuditLogModal.fields.triggerFilters",
+  "AuditLogModal.fields.triggerKind",
   "AuditLogModal.fields.versions",
   "AuditLogModal.fields.visibility",
 ] as const;
@@ -159,6 +208,9 @@ const TABLE_COLUMN_KEYS = [
   "Common.table.columns.nextActivity",
   "Common.table.columns.trialEnd",
   "Common.table.columns.amount",
+  "Common.table.columns.trigger",
+  "Common.table.columns.lastRunAt",
+  "Common.table.columns.nextRunAt",
   "Common.table.columns.weightedValue",
   "Common.table.columns.avatarUrl",
   "Common.table.columns.channels",
@@ -247,6 +299,9 @@ const WEBHOOK_DELIVERY_STATUS_KEYS = Object.values(WebhookDeliveryStatus).map(
 const CONNECTED_ACCOUNT_STATUS_KEYS = Object.values(ConnectedAccountStatus).map(
   (status) => `ConnectedAccountsCard.statusLabels.${status}`,
 );
+const SIGNATURE_TEMPLATE_KEYS = Object.values(SignatureTemplate).map(
+  (template) => `ConnectedAccountsCard.signatureTemplates.${template}`,
+);
 const SUBSCRIPTION_PLAN_KEYS = Object.values(SubscriptionPlan).map((plan) => `Subscription.planNames.${plan}`);
 const SUBSCRIPTION_STATUS_KEYS = Object.values(SubscriptionStatus).map((status) => `Subscription.status.${status}`);
 const SELECTABLE_SUBSCRIPTION_PLANS = Object.values(SubscriptionPlan).filter(
@@ -265,7 +320,9 @@ const ENTITY_TIMELINE_TYPE_KEYS = [
 const ERROR_CARD_DYNAMIC_KEYS = [
   "ErrorCard.inactiveUser",
   "ErrorCard.invalidInviteLink",
+  "ErrorCard.invalidOnboardingIntent",
   "ErrorCard.inviteLinkExpired",
+  "ErrorCard.onboardingSessionExpired",
 ] as const;
 const AUTH_SOCIAL_ERROR_KEYS = socialErrorMessageKeys();
 const HOMEPAGE_PRICING_VARIABLE_KEYS = [
@@ -377,6 +434,7 @@ const AGENT_ACTIVITY_RESOURCE_SINGULAR_KEYS = [
 const AGENT_ACTIVITY_STATE_KEYS = AGENT_ACTIVITY_KINDS.flatMap((kind) =>
   (["done", "error", "running"] as const).map((state) => `AgentChat.activity.state.${kind}.${state}`),
 );
+const AGENT_ACTIVITY_APPROVAL_KEYS = AGENT_APPROVAL_COPY_KINDS.map((kind) => `AgentChat.activity.approval.${kind}`);
 const AGENT_SUGGESTION_KEYS = [
   "AgentChat.suggestions.pages.connected-accounts.data.accounts-add-channel",
   "AgentChat.suggestions.pages.connected-accounts.data.accounts-list",
@@ -420,6 +478,12 @@ const AGENT_SUGGESTION_KEYS = [
   "AgentChat.suggestions.pages.organizations.empty.first-organization",
   "AgentChat.suggestions.pages.organizations.empty.organizations-tour",
   "AgentChat.suggestions.pages.organizations.empty.setup-organizations",
+  "AgentChat.suggestions.pages.routines.data.create-routine",
+  "AgentChat.suggestions.pages.routines.data.routine-health",
+  "AgentChat.suggestions.pages.routines.data.routines-tour-data",
+  "AgentChat.suggestions.pages.routines.empty.first-routine",
+  "AgentChat.suggestions.pages.routines.empty.routine-ideas",
+  "AgentChat.suggestions.pages.routines.empty.routines-tour",
   "AgentChat.suggestions.pages.services.data.create-service",
   "AgentChat.suggestions.pages.services.data.service-gaps",
   "AgentChat.suggestions.pages.services.data.services-summary",
@@ -446,12 +510,19 @@ const DYNAMIC_TEMPLATE_CONSUMERS = new Map<string, readonly string[]>([
   ["AuthSocialErrors.${*}", AUTH_SOCIAL_ERROR_KEYS],
   ["Common.colors.${*}", COLOR_KEYS],
   ["Common.customColumnTypes.${*}", CUSTOM_COLUMN_TYPE_KEYS],
+  ["Common.dateBuckets.${*}", DATE_BUCKET_KEYS],
   ["Common.datePresets.${*}", DATE_PRESET_KEYS],
   ["Common.defaultData.${*}.columnLabel", DEFAULT_DATA_COLUMN_KEYS],
   ["Common.defaultData.${*}.options.${*}", DEFAULT_DATA_OPTION_KEYS],
   ["Common.defaultData.lostReason.options.${*}", DEFAULT_DATA_LOST_REASON_KEYS],
   ["Common.errors.${*}", CUSTOM_ERROR_CODE_KEYS],
   ["Common.events.${*}", DOMAIN_EVENT_KEYS],
+  ["AccountRemovalReason.${*}", ACCOUNT_REMOVAL_REASON_KEYS],
+  ["RoutineRunStatus.${*}", ROUTINE_RUN_STATUS_KEYS],
+  ["RoutineTriggerKind.${*}", ROUTINE_TRIGGER_KIND_KEYS],
+  ["RoutineSchedulePreset.${*}", ROUTINE_SCHEDULE_PRESET_KEYS],
+  ["RoutineRunReason.${*}", ROUTINE_RUN_REASON_KEYS],
+  ["RoutineWeekday.${*}", ROUTINE_WEEKDAY_KEYS],
   ["Common.filters.operators.${*}", FILTER_OPERATOR_KEYS],
   ["Common.locales.${*}", LOCALE_KEYS],
   ["LegalDocumentNotice.documents.${*}", LEGAL_DOCUMENT_KEYS],
@@ -461,6 +532,7 @@ const DYNAMIC_TEMPLATE_CONSUMERS = new Map<string, readonly string[]>([
   ["Common.leadStatuses.${*}", LEAD_STATUS_KEYS],
   ["Common.userStatuses.${*}", USER_STATUS_KEYS],
   ["ConnectedAccountsCard.statusLabels.${*}", CONNECTED_ACCOUNT_STATUS_KEYS],
+  ["ConnectedAccountsCard.signatureTemplates.${*}", SIGNATURE_TEMPLATE_KEYS],
   ["Dashboard.displayTypes.${*}", DISPLAY_TYPE_KEYS],
   ["Dashboard.groupBys.${*}", WIDGET_GROUP_BY_KEYS],
   ["Dashboard.widgetEditor.appearance.winRateBasisOptions.${*}", WIN_RATE_BASIS_KEYS],
@@ -506,6 +578,7 @@ const DYNAMIC_TEMPLATE_CONSUMERS = new Map<string, readonly string[]>([
   ["AgentChat.activity.resourceSingular.${*}", AGENT_ACTIVITY_RESOURCE_SINGULAR_KEYS],
   ["AgentChat.activity.label.${*}", AGENT_ACTIVITY_LABEL_KEYS],
   ["AgentChat.activity.state.${*}.${*}", AGENT_ACTIVITY_STATE_KEYS],
+  ["AgentChat.activity.approval.${*}", AGENT_ACTIVITY_APPROVAL_KEYS],
   ["AgentChat.approval.${*}", AGENT_APPROVAL_RESOLUTION_KEYS],
   ["AgentChat.credits.blocked.${*}", AGENT_CREDIT_BLOCKED_KEYS],
   ["AgentChat.suggestions.pages.${*}.${*}.${*}.label", AGENT_SUGGESTION_KEYS.map((key) => `${key}.label`)],
@@ -570,6 +643,23 @@ export const DYNAMIC_KEY_SITES = [
   "app/[locale]/(protected)/company/components/webhook/webhook-delivery-modal.tsx :: t :: Common.events.${delivery.event}",
   "app/[locale]/(protected)/company/components/webhook/webhook-delivery-modal.tsx :: t :: WebhookDeliveryModal.deliveryStatus.${delivery.status}",
   "app/[locale]/(protected)/company/components/webhook/webhook-modal.tsx :: t :: Common.events.${item.key}",
+  "app/[locale]/(protected)/routines/components/routine-configuration-pane.tsx :: t :: Common.events.${item.key}",
+  "app/[locale]/(protected)/routines/components/routine-configuration-pane.tsx :: t :: Common.userStatuses.${form.owner.status}",
+  "app/[locale]/(protected)/routines/components/routine-empty-state.tsx :: t :: Common.events.${event}",
+  "app/[locale]/(protected)/routines/components/routine-run-detail.tsx :: t :: RoutineRunStatus.${run.status}",
+  "app/[locale]/(protected)/routines/components/routine-runs-pane.tsx :: t :: Common.events.${run.triggerEvent}",
+  "app/[locale]/(protected)/routines/components/routine-runs-pane.tsx :: t :: RoutineRunStatus.${run.status}",
+  "app/[locale]/(protected)/routines/components/routine-run-trigger-card.tsx :: t :: Common.events.${run.triggerEvent}",
+  "app/[locale]/(protected)/routines/components/routine-run-trigger-card.tsx :: t :: RoutineTriggerKind.${run.triggerKind}",
+  "app/[locale]/(protected)/routines/components/routine-runs-pane.tsx :: t :: RoutineTriggerKind.${run.triggerKind}",
+  "app/[locale]/(protected)/routines/components/routine-configuration-pane.tsx :: t :: RoutineSchedulePreset.${value}",
+  "app/[locale]/(protected)/routines/components/routine-configuration-pane.tsx :: t :: RoutineWeekday.${key}",
+  "ee/routines/routine-run-outcome.ts :: t :: RoutineRunReason.${reason}",
+  "ee/routines/routine-run-outcome.ts :: t :: Common.errors.${reason}",
+  "ee/routines/routine-schedule-preset.ts :: t :: RoutineSchedulePreset.${schedule.preset}",
+  "ee/routines/routine-schedule-preset.ts :: t :: RoutineWeekday.${ROUTINE_WEEKDAY_KEYS[schedule.weekday]}",
+  "app/[locale]/(protected)/routines/components/use-routine-columns.tsx :: t :: RoutineRunStatus.${row.original.lastRunStatus}",
+  "app/[locale]/(protected)/routines/components/use-routine-columns.tsx :: t :: Common.userStatuses.${owner.status}",
   "app/[locale]/(protected)/contacts/components/add-channel-popover.tsx :: t :: Common.providers.${provider}",
   "app/[locale]/(protected)/contacts/components/channel-icon-stack.tsx :: t :: Common.providers.${channelLabelKey(id.provider)}",
   "app/[locale]/(protected)/contacts/components/channel-icon-stack.tsx :: t :: Common.providers.${channelLabelKey(provider)}",
@@ -595,6 +685,7 @@ export const DYNAMIC_KEY_SITES = [
   "app/[locale]/(protected)/profile/components/account-status-color.ts :: t :: Common.providers.${account.provider}",
   "app/[locale]/(protected)/profile/components/api-key-modal.tsx :: t :: OnboardingWizard.ai.choices.${aiConnectionStore.route.provider}",
   "app/[locale]/(protected)/profile/components/connected-account-modal.tsx :: t :: ConnectedAccountsCard.statusLabels.${account.status}",
+  "app/[locale]/(protected)/profile/components/signature-template-picker.tsx :: t :: ConnectedAccountsCard.signatureTemplates.${template}",
   "app/[locale]/(protected)/profile/components/connected-accounts-page-view.tsx :: t :: ConnectedAccountsCard.statusLabels.${account.status}",
   "app/[locale]/(protected)/profile/components/profile-settings-form.tsx :: t :: Common.locales.${detectBrowserUiLocale()}",
   "app/[locale]/(protected)/profile/components/profile-settings-form.tsx :: t :: Common.locales.${key}",
@@ -644,7 +735,8 @@ export const DYNAMIC_KEY_SITES = [
   "components/data-view/filter-modal/inputs/use-filter-select-items.tsx :: t :: Subscription.planNames.${plan}",
   "components/data-view/filter-modal/inputs/use-filter-select-items.tsx :: t :: Subscription.status.${status}",
   "components/data-view/filter-modal/inputs/use-filter-select-items.tsx :: t :: Inbox.threadStates.${state}",
-  "components/data-view/header/active-filters-bar.tsx :: t :: Common.filters.operators.${filter.operator}",
+  "components/data-view/filter-modal/use-filter-operator-label.ts :: t :: Common.filters.operators.${operator}",
+  "components/data-view/group-label.ts :: t :: Common.dateBuckets.${bucket}",
   "components/entity-terminology/use-column-label.ts :: t :: AuditLogModal.fields.${columnId}",
   "components/entity-terminology/use-column-label.ts :: t :: Common.table.columns.${columnId}",
   "components/entity-terminology/use-column-label.ts :: t.has :: AuditLogModal.fields.${columnId}",
@@ -665,6 +757,7 @@ export const DYNAMIC_KEY_SITES = [
   "ee/agent-chat/agent-activity.ts :: t :: AgentChat.activity.resource.${activity.resource}",
   "ee/agent-chat/agent-activity.ts :: t :: AgentChat.activity.resourceSingular.${resourceKey}",
   "ee/agent-chat/agent-activity.ts :: t :: AgentChat.activity.state.${activity.kind}.${name}",
+  "ee/agent-chat/agent-activity.ts :: t :: AgentChat.activity.approval.${activity.kind}",
   "ee/agent-chat/agent-page-actions.ts :: t :: AgentChat.suggestions.pages.${page}.${state}.${id}.label",
   "ee/agent-chat/agent-page-actions.ts :: t :: AgentChat.suggestions.pages.${page}.${state}.${id}.prompt",
   "ee/agent-chat/agent-page-actions.ts :: t :: AgentChat.suggestions.readOnly.${id}.label",
@@ -675,11 +768,13 @@ export const DYNAMIC_KEY_SITES = [
   "features/messaging/activities/activities-list.tsx :: t :: Common.events.${entry.event}",
   "features/messaging/activities/activities-list.tsx :: t :: Common.providers.${ev.provider}",
   "features/messaging/activities/activities-list.tsx :: t :: Common.providers.${message.provider}",
+  "features/messaging/activities/audit-detail.tsx :: t :: AccountRemovalReason.${String(value)}",
   "features/messaging/activities/audit-detail.tsx :: t :: Common.customColumnTypes.${String(value)}",
   "features/messaging/activities/audit-detail.tsx :: t :: Common.events.${entry.event}",
   "features/messaging/activities/audit-detail.tsx :: t :: Common.providers.${String(value)}",
   "features/messaging/activities/audit-detail.tsx :: t :: Common.userStatuses.${String(value)}",
   "features/messaging/activities/audit-detail.tsx :: t :: LegalDocumentNotice.documents.${document}",
+  "features/messaging/activities/audit-detail.tsx :: t.has :: AccountRemovalReason.${String(value)}",
   "features/messaging/activities/audit-detail.tsx :: t.has :: Common.customColumnTypes.${String(value)}",
   "features/messaging/activities/audit-detail.tsx :: t.has :: Common.providers.${String(value)}",
   "features/messaging/activities/audit-detail.tsx :: t.has :: Common.userStatuses.${String(value)}",
@@ -738,6 +833,8 @@ const NONLITERAL_T_CALL_SITES = new Map<string, number>([
   ["app/components/app-topbar-crumbs.ts :: t :: subroute.labelKey", 1],
   ["components/card/form-actions.tsx :: t :: primaryButtonLabel", 1],
   ["components/data-transfer/import-wizard.tsx :: t :: field.labelKey", 1],
+  ["components/data-view/group-label.ts :: t :: group.labelKey", 1],
+  ["components/data-view/use-groupable-field-label.ts :: t :: field.labelKey", 1],
   ["components/data-transfer/import-wizard.tsx :: t :: labelKey", 1],
   ["components/data-view/filter-modal/inputs/use-filter-select-items.tsx :: t :: nameKey", 1],
   ["components/entity-detail/entity-detail.registry.tsx :: t :: key", 1],
@@ -778,7 +875,12 @@ const OPERATOR_AUDIT_ACTION_LABEL_KEYS = Object.keys(OPERATOR_AUDIT_ACTION).map(
 const OPERATOR_AUDIT_ACTION_LABEL_EVIDENCE = Object.fromEntries(
   OPERATOR_AUDIT_ACTION_LABEL_KEYS.map((key) => [
     key,
-    [{ kind: "template" as const, value: "`OperatorAudit.values.action.${name}`" }],
+    [
+      {
+        kind: "template" as const,
+        value: "`OperatorAudit.values.action.${name}`",
+      },
+    ],
   ]),
 );
 const TERMINOLOGY_TEMPLATE_EVIDENCE = Object.fromEntries(
@@ -816,6 +918,13 @@ const INDIRECT_KEY_CONSUMERS: readonly IndirectKeyConsumer[] = [
   {
     file: "features/event/entity-name.utils.ts",
     keys: ["Common.company"],
+  },
+  {
+    file: "core/base/grouping/groupable-field.ts",
+    keys: TASK_TYPE_KEYS,
+    evidence: Object.fromEntries(
+      TASK_TYPE_KEYS.map((key) => [key, [{ kind: "template" as const, value: "`Common.taskTypes.${value}`" }]]),
+    ),
   },
   {
     file: "components/activity/activity-kind.config.ts",

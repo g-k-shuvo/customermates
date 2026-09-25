@@ -26,23 +26,29 @@ import { useIsWiderThan } from "@/hooks/use-media-query";
 type Props = {
   trigger: ReactNode;
   title: ReactNode;
+  headerAction?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   align?: "start" | "center" | "end";
   popoverClassName?: string;
+  onEscapeKeyDown?: (event: KeyboardEvent) => void;
+  onCloseAutoFocus?: (event: Event) => void;
 };
 
 export function ResponsiveOverlay({
   trigger,
   title,
+  headerAction,
   children,
   footer,
   open,
   onOpenChange,
   align = "start",
   popoverClassName,
+  onEscapeKeyDown,
+  onCloseAutoFocus,
 }: Props) {
   const isWide = useIsWiderThan("md");
 
@@ -58,9 +64,13 @@ export function ResponsiveOverlay({
           "flex max-h-(--radix-popover-content-available-height) flex-col overflow-hidden p-0",
           popoverClassName,
         )}
+        onCloseAutoFocus={onCloseAutoFocus}
+        onEscapeKeyDown={onEscapeKeyDown}
       >
-        <PopoverHeader className="shrink-0 p-3">
-          <PopoverTitle>{title}</PopoverTitle>
+        <PopoverHeader className={cn("shrink-0 p-3", headerAction && "flex-row items-center gap-2 py-1.5 pr-1.5")}>
+          <PopoverTitle className={cn(headerAction && "min-w-0 flex-1 truncate")}>{title}</PopoverTitle>
+
+          {headerAction}
         </PopoverHeader>
 
         <div className={cn(OVERLAY_SCROLL_REGION)}>{children}</div>
@@ -74,9 +84,15 @@ export function ResponsiveOverlay({
         {trigger}
       </DrawerTrigger>
 
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle className="min-w-0 truncate">{title}</DrawerTitle>
+      <DrawerContent
+        data-overlay-actions={headerAction ? "" : undefined}
+        onCloseAutoFocus={onCloseAutoFocus}
+        onEscapeKeyDown={onEscapeKeyDown}
+      >
+        <DrawerHeader className={cn(headerAction && "flex-row items-center gap-2 py-1.5 pr-[3.125rem]")}>
+          <DrawerTitle className={cn("min-w-0 truncate", headerAction && "flex-1")}>{title}</DrawerTitle>
+
+          {headerAction}
         </DrawerHeader>
 
         <DrawerBody className="px-0 pb-4">{children}</DrawerBody>

@@ -32,13 +32,19 @@ exports[`gated-tools > snapshots the surface so new tools and actions force a co
   "create_organizations",
   "create_services",
   "create_tasks",
+  "discard_message_draft",
   "linkedin_manage_sales_lists",
   "manage_custom_columns",
+  "manage_data_views",
   "manage_record_links",
+  "manage_routines",
   "manage_social_relations",
   "manage_webhooks",
   "manage_widgets",
+  "move_email_thread",
   "save_message_draft",
+  "send_chat_message",
+  "send_email",
   "update_contacts",
   "update_deals",
   "update_messaging_thread",
@@ -53,11 +59,8 @@ exports[`gated-tools > snapshots the surface so new tools and actions force a co
 exports[`gated-tools > snapshots the surface so new tools and actions force a conscious approval decision 3`] = `
 [
   "delete_records",
-  "discard_message_draft",
   "manage_team",
   "request_support",
-  "send_chat_message",
-  "send_email",
 ]
 `;
 
@@ -66,13 +69,33 @@ exports[`gated-tools > snapshots the surface so new tools and actions force a co
   "linkedin_manage_sales_lists": [
     "list",
     "browse",
+    "save",
   ],
   "manage_custom_columns": [
     "list",
     "upsert",
   ],
+  "manage_data_views": [
+    "surfaces",
+    "list",
+    "config",
+    "create",
+    "update",
+    "select",
+  ],
+  "manage_routines": [
+    "list",
+    "runs",
+    "create",
+    "update",
+    "pause",
+    "run_now",
+  ],
   "manage_social_relations": [
     "list",
+    "invite",
+    "accept",
+    "cancel",
   ],
   "manage_team": [
     "update_member",

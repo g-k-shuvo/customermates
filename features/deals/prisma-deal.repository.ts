@@ -1,4 +1,6 @@
+import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
 import type { RepoArgs } from "@/core/utils/types";
+import type { GetDealWeightingColumnRepo } from "@/features/company/get-deal-weighting-column.repo";
 import type { GetWidgetFilterableFieldsDealRepo } from "../widget/get-widget-filterable-fields.interactor";
 import type { GetCompanyWideDealRepo } from "./get-company-wide-deal.repo";
 import type { CreateDealRepo } from "./upsert/create-deal.repo";
@@ -26,6 +28,12 @@ import { BaseRepository } from "@/core/base/base-repository";
 import { Transaction } from "@/core/decorators/transaction.decorator";
 import { type Filter, type GetQueryParams } from "@/core/base/base-get.schema";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
+import {
+  customSelectGroupables,
+  dateGroupables,
+  enumGroupables,
+  relationGroupables,
+} from "@/core/base/grouping/groupable-field";
 import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { getCustomColumnRepo, getPipelineRepo } from "@/core/di";
@@ -150,6 +158,10 @@ export class PrismaDealRepo
     ModifyRelationDealRepo,
     ExportRecordsRepo<DealDto>
 {
+  constructor(private readonly companyRepo: GetDealWeightingColumnRepo) {
+    super();
+  }
+
   private get userScopedSelect() {
     return {
       id: true,
@@ -304,6 +316,11 @@ export class PrismaDealRepo
 
     const filterFields = [];
 
+    filterFields.push({
+      field: FilterFieldKey.name,
+      operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.name],
+    });
+
     if (this.canAccess(Resource.contacts)) {
       filterFields.push({
         field: FilterFieldKey.contactIds,
@@ -357,6 +374,23 @@ export class PrismaDealRepo
       { field: FilterFieldKey.rotting, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.rotting] },
       { field: FilterFieldKey.stageId, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.stageId] },
       { field: FilterFieldKey.pipelineId, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.pipelineId] },
+    ];
+  }
+
+  async getGroupableFields(customColumns?: readonly CustomColumnDto[]) {
+    if (!this.canAccess(Resource.deals)) return [];
+
+    return [
+      ...customSelectGroupables(EntityType.deal, customColumns ?? (await this.getCustomColumns())),
+      ...relationGroupables("deal", {
+        contactIds: this.canAccess(Resource.contacts),
+        organizationIds: this.canAccess(Resource.organizations),
+        serviceIds: this.canAccess(Resource.services),
+        taskIds: this.canAccess(Resource.tasks),
+        userIds: this.canAccess(Resource.users),
+      }),
+      ...enumGroupables("deal", {}),
+      ...dateGroupables("deal", { createdAt: true, updatedAt: true }),
     ];
   }
 
@@ -1042,6 +1076,29 @@ export class PrismaDealRepo
     const deals = await this.prisma.deal.findMany({ where: { companyId }, select: { id: true } });
 
     await this.recalculateTotals(deals.map((deal) => deal.id));
+  }
+
+  private async resolveDealWeighting(companyId: string) {
+    const columnId = await this.companyRepo.getDealWeightingColumnId();
+    if (!columnId) return null;
+
+    const column = await this.prisma.customColumn.findFirst({
+      where: { id: columnId, companyId, entityType: EntityType.deal },
+      select: { id: true, options: true },
+    });
+
+    if (!column) return null;
+
+    return { columnId: column.id, weightByOptionValue: readOptionWeights(column.options) };
+  }
+
+  private async findStageValuesByDealId(columnId: string, dealIds: string[], companyId: string) {
+    const rows = await this.prisma.customFieldValue.findMany({
+      where: { columnId, companyId, dealId: { in: dealIds } },
+      select: { dealId: true, value: true },
+    });
+
+    return new Map(rows.flatMap((row) => (row.dealId && row.value ? [[row.dealId, row.value] as const] : [])));
   }
 
   async recalculateRotting(dealIds: string[]) {

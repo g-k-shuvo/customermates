@@ -7,6 +7,7 @@ import type { TaskSeedData } from "./tasks";
 
 import { seedContacts } from "./contacts";
 import { seedCustomFields } from "./custom-fields";
+import { seedDataViews } from "./data-views";
 import { seedDeals } from "./deals";
 import {
   seedHostedAiOperatorFixtures,
@@ -20,6 +21,7 @@ import { seedSyntheticAuditLogs } from "./audit-logs";
 import { seedOrganizations } from "./organizations";
 import { seedPersonalization } from "./personalization";
 import { seedRelationships } from "./relationships";
+import { seedRoutines } from "./routines";
 import { seedServices } from "./services";
 import { seedTasks } from "./tasks";
 import { seedWebhooks } from "./webhooks";
@@ -51,6 +53,7 @@ export async function runSyntheticSeed(
 
   const customFieldData = await seedCustomFields(context, entities);
   await seedWidgets(context, customFieldData);
+  await seedDataViews(context, customFieldData);
   await seedPersonalization(context, customFieldData);
   await seedRelationships(context, entities);
   await seedWebhooks(context);
@@ -62,6 +65,9 @@ export async function runSyntheticSeed(
   });
   await seedSyntheticAuditLogs(context, entities);
   await seedAgentConversations(context);
+  await seedRoutines(context);
+  await context.prisma
+    .$executeRaw`SELECT setval(pg_get_serial_sequence('"AgentMessage"', 'sequence'), (SELECT COALESCE(MAX(sequence), 1) FROM "AgentMessage"))`;
 
   return entities;
 }

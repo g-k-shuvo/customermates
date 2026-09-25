@@ -3,11 +3,14 @@ import type { Data } from "../validation/validation.utils";
 import { z } from "zod";
 import { Prisma } from "@/generated/prisma";
 
-import { FilterOperatorKey } from "./base-query-builder";
+import { FilterOperatorKey, ViewMode } from "./base-query-builder";
 import { normalizeFilterInput } from "./filter-compat";
 
 import { CustomErrorCode } from "@/core/validation/validation.types";
 import { CustomColumnDtoSchema } from "@/features/custom-column/custom-column.schema";
+import { GROUP_PAGE_SIZE_MAX, GroupPageRequestSchema, GroupingSchema } from "@/core/base/grouping/grouping.schema";
+
+import type { GroupScope } from "@/core/base/grouping/group-scope";
 
 export const FilterSchema = z.preprocess(
   normalizeFilterInput,
@@ -18,6 +21,7 @@ export const FilterSchema = z.preprocess(
         operator: z.union([
           z.literal(FilterOperatorKey.equals).meta({ title: "equals" }),
           z.literal(FilterOperatorKey.contains).meta({ title: "contains" }),
+          z.literal(FilterOperatorKey.startsWith).meta({ title: "startsWith" }),
           z.literal(FilterOperatorKey.gt).meta({ title: "gt" }),
           z.literal(FilterOperatorKey.gte).meta({ title: "gte" }),
           z.literal(FilterOperatorKey.lt).meta({ title: "lt" }),
@@ -109,8 +113,8 @@ export const STAGE_GROUPING_FIELD = "stageId";
 
 export const GroupedPaginationRequestSchema = z.object({
   groupingColumnId: z.string(),
-  perGroup: z.number().int().min(1).max(KANBAN_PER_GROUP_MAX),
-  overrides: z.record(z.string(), z.number().int().min(1).max(KANBAN_PER_GROUP_MAX)).optional(),
+  perGroup: z.number().int().min(1).max(GROUP_PAGE_SIZE_MAX),
+  overrides: z.record(z.string(), z.number().int().min(1).max(GROUP_PAGE_SIZE_MAX)).optional(),
 });
 export type GroupedPaginationRequest = Data<typeof GroupedPaginationRequestSchema>;
 
@@ -155,12 +159,17 @@ export type GetQueryParamsApi = Data<typeof GetQueryParamsApiSchema>;
 
 export const GetQueryParamsSchema = GetQueryParamsApiSchema.extend({
   p13nId: z.string().optional(),
+  viewId: z.string().optional(),
+  page: z.number().int().min(1).optional(),
+  pageSize: z.union([z.literal(5), z.literal(10), z.literal(25), z.literal(100)]).optional(),
+  viewMode: z.enum(ViewMode).optional(),
+  grouping: GroupingSchema.nullish(),
+  groupPage: GroupPageRequestSchema.optional(),
 });
 export type GetQueryParams = Data<typeof GetQueryParamsSchema> & {
   take?: number;
   skip?: number;
-  viewMode?: "table" | "card";
-  groupingColumnId?: string | null;
+  groupScope?: GroupScope;
 };
 
 export const GetConfigurationSchema = z.object({
@@ -179,10 +188,21 @@ export const GetResultSchema = z.object({
     total: z.number().positive().optional(),
   }).optional(),
   filterableFields: z.array(FilterableFieldSchema).optional(),
-  savedFilterPresets: z.array(SavedFilterPresetSchema).optional(),
 });
 
-export function createGetResultSchema<T extends z.ZodSchema>(itemSchema: T) {
+export const GroupingResultFields = {
+  grouping: z.any().optional(),
+  groupableFields: z.array(z.any()).optional(),
+};
+
+export const DataViewResultFields = {
+  views: z.array(z.any()).optional(),
+  activeViewKey: z.string().optional(),
+  allState: z.any().optional(),
+  viewPersistable: z.boolean().optional(),
+};
+
+export function createApiGetResultSchema<T extends z.ZodSchema>(itemSchema: T) {
   return z.object({
     p13nId: z.string().optional(),
     items: z.array(itemSchema),
@@ -202,7 +222,6 @@ export function createGetResultSchema<T extends z.ZodSchema>(itemSchema: T) {
     columnOrder: z.array(z.string()).optional(),
     columnWidths: z.record(z.string(), z.number()).optional(),
     hiddenColumns: z.array(z.string()).optional(),
-    savedFilterPresets: z.array(z.any()).optional(),
     viewMode: z.string().optional(),
     groupingColumnId: z.string().optional(),
     groupOptions: z.array(GroupOptionSchema).optional(),
@@ -210,4 +229,8 @@ export function createGetResultSchema<T extends z.ZodSchema>(itemSchema: T) {
     groupValueSums: z.record(z.string(), GroupValueSumsSchema).optional(),
     valueSums: GroupValueSumsSchema.optional(),
   });
+}
+
+export function createGetResultSchema<T extends z.ZodSchema>(itemSchema: T) {
+  return createApiGetResultSchema(itemSchema).extend({ ...DataViewResultFields, ...GroupingResultFields });
 }

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { GetResult } from "@/core/base/base-get.interactor";
 import type { WebhookDto } from "@/features/webhook/webhook.schema";
 
+import { formatWebhookHeaderLines } from "@/features/webhook/webhook-headers";
 import { observer } from "mobx-react-lite";
 import { useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
@@ -30,17 +31,27 @@ export const WebhooksPageView = observer(function WebhooksPageView({ initialWebh
   useDataViewSync(webhooksStore, initialWebhooks);
   const columns = useWebhookColumns();
   const t = useTranslations();
-  const view = resolveDataViewView(webhooksStore.viewMode, webhooksStore.groupingColumnId);
+  const view = resolveDataViewView(webhooksStore.viewMode, webhooksStore.canBoard);
   const pageState = resolveDataViewPageState({
     explicitlyUnpaginated: false,
     hasActiveQuery: Boolean(webhooksStore.searchTerm?.trim()) || (webhooksStore.filters?.length ?? 0) > 0,
+    isGrouped: webhooksStore.isGrouped,
     itemCount: webhooksStore.items.length,
     request: webhooksStore.dataRequest,
     total: webhooksStore.pagination?.total,
   });
   const descriptor = { title: t("WebhooksCard.emptyTitle"), body: t("WebhooksCard.emptyBody") };
   const handleAdd = useCallback(
-    () => webhookModalStore.openWith({ url: "", description: undefined, events: [], secret: undefined, enabled: true }),
+    () =>
+      webhookModalStore.openWith({
+        url: "",
+        description: undefined,
+        events: [],
+        secret: undefined,
+        headers: "",
+        bodyTemplate: undefined,
+        enabled: true,
+      }),
     [webhookModalStore],
   );
   const topBarNode = useMemo(
@@ -104,6 +115,8 @@ export const WebhooksPageView = observer(function WebhooksPageView({ initialWebh
               description: item.description ?? undefined,
               events: item.events,
               secret: item.secret ?? undefined,
+              headers: formatWebhookHeaderLines(item.headers),
+              bodyTemplate: item.bodyTemplate ?? undefined,
               enabled: item.enabled,
             })
           }
@@ -116,7 +129,10 @@ export const WebhooksPageView = observer(function WebhooksPageView({ initialWebh
     }
   }
   return (
-    <DataViewLayout showPagination={pageState === "content" && view !== "board"} store={webhooksStore}>
+    <DataViewLayout
+      showPagination={pageState === "content" && view !== "board" && !webhooksStore.isGrouped}
+      store={webhooksStore}
+    >
       {body}
     </DataViewLayout>
   );

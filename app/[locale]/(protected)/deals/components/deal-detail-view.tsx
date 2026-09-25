@@ -7,8 +7,8 @@ import { DealStatus, EntityType } from "@/generated/prisma";
 
 import { CustomFieldInputs } from "@/components/data-view/custom-columns/custom-field-inputs";
 import { EntityDetailBody } from "@/components/entity-detail/entity-detail-body";
-import { EntityDetailCustomFieldsSection } from "@/components/entity-detail/entity-detail-custom-fields-section";
-import { EntityDetailSection, EntityDetailSectionGroup } from "@/components/entity-detail/entity-detail-section";
+import { EntityDetailOverview } from "@/components/entity-detail/entity-detail-overview";
+import { EntityDetailFieldDragHandle } from "@/components/entity-detail/entity-detail-fields";
 import { EntityDetailField } from "@/components/entity-detail/entity-detail-field";
 import { EntityDetailFieldActions } from "@/components/entity-detail/entity-detail-field-actions";
 import { EntityDetailStaticField } from "@/components/entity-detail/entity-detail-static-field";
@@ -44,6 +44,7 @@ export const DealDetailView = observer(({ layout = "drawer" }: Props) => {
     isEditingCustomField,
     customColumns,
     fetchedEntity,
+    toggleEditingCustomField,
     totalQuantity,
     totalValue,
     weightedValueBreakdown,

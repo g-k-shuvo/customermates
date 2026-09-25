@@ -28,7 +28,12 @@ vi.mock("next-intl/server", () => ({
 
 import { ALL_MCP_TOOLS } from "@/features/mcp-tools/tool-registry";
 
-import { getAgentAiToolDefinitions, getAgentAiTools, type AgentToolDeps } from "../agent-tools";
+import {
+  AGENT_WIRE_UUID_PATTERN,
+  getAgentAiToolDefinitions,
+  getAgentAiTools,
+  type AgentToolDeps,
+} from "../agent-tools";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -86,6 +91,25 @@ describe("provider-safe tool schemas", () => {
     expect(failures, failures.join("\n")).toEqual([]);
   });
 
+  it("sends a compact uuid pattern instead of the canonical one, which costs a third of the catalog", () => {
+    const canonical = collect({ schemas: shippedSchemas }, (node) => {
+      const pattern = node.pattern;
+      return typeof pattern === "string" && pattern.includes("[0-9a-fA-F]{8}-") && pattern !== AGENT_WIRE_UUID_PATTERN;
+    });
+    expect(
+      canonical.map(({ path }) => path),
+      "a canonical uuid regex reached the wire",
+    ).toEqual([]);
+
+    const compact = collect({ schemas: shippedSchemas }, (node) => node.pattern === AGENT_WIRE_UUID_PATTERN);
+    expect(compact.length).toBeGreaterThanOrEqual(20);
+
+    const validate = new Ajv().compile({ type: "string", pattern: AGENT_WIRE_UUID_PATTERN });
+    expect(validate("3f7c1a54-9b2e-4c31-8f6a-2b5d7e9c1a04")).toBe(true);
+    expect(validate("not-a-uuid")).toBe(false);
+    expect(validate("3f7c1a54-9b2e-4c31-8f6a-2b5d7e9c1a04x")).toBe(false);
+  });
+
   it("emits no format keyword anywhere, because that Ajv has no format support", () => {
     const offending = shippedSchemas.flatMap(({ name, schema }) =>
       collect(schema, (node) => typeof node.format === "string").map(({ path }) => `${name} ${path}`),
@@ -139,7 +163,7 @@ describe("provider-safe tool schemas", () => {
       }
     }
 
-    expect(Object.fromEntries(census)).toEqual({ uuid: 86, email: 6, uri: 4 });
+    expect(Object.fromEntries(census)).toEqual({ uuid: 86, "date-time": 3, email: 6, uri: 4 });
   });
 
   it("still enforces the real constraint through the tool's own validator", async () => {

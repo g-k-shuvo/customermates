@@ -1,3 +1,4 @@
+import { manageDataViewsTool } from "@/features/mcp-tools/data-view.mcp-tools";
 import { createContactsTool, updateContactsTool } from "@/features/mcp-tools/contact.mcp-tools";
 import { createDealsTool, updateDealsTool } from "@/features/mcp-tools/deal.mcp-tools";
 import { createOrganizationsTool, updateOrganizationsTool } from "@/features/mcp-tools/organization.mcp-tools";
@@ -10,6 +11,7 @@ import { manageCustomColumnsTool } from "@/features/mcp-tools/custom-column.mcp-
 import { manageTeamTool, updateWorkspaceSettingsTool } from "@/features/mcp-tools/admin.mcp-tools";
 import { manageWebhooksTool } from "@/features/mcp-tools/webhook.mcp-tools";
 import { manageWidgetsTool } from "@/features/mcp-tools/widget.mcp-tools";
+import { manageRoutinesTool } from "@/features/mcp-tools/routine.mcp-tools";
 import { requestSupportTool } from "@/features/mcp-tools/support.mcp-tools";
 import {
   deleteRecordsTool,
@@ -30,6 +32,7 @@ import {
   sendChatMessageTool,
   sendEmailTool,
   updateMessagingThreadTool,
+  moveEmailThreadTool,
 } from "@/features/mcp-tools/messaging.mcp-tools";
 import {
   getSocialPostEngagementTool,
@@ -67,6 +70,7 @@ export const MCP_TOOL_GROUPS: Record<string, McpTool[]> = {
     deleteRecordsTool,
   ],
   workspace: [getWorkspaceContextTool, listUsersTool],
+  views: [manageDataViewsTool],
   messaging: [
     getMessagingThreadsTool,
     getActivitiesTool,
@@ -76,6 +80,7 @@ export const MCP_TOOL_GROUPS: Record<string, McpTool[]> = {
     saveMessageDraftTool,
     discardMessageDraftTool,
     updateMessagingThreadTool,
+    moveEmailThreadTool,
     connectMessagingAccountTool,
   ],
   social: [
@@ -91,6 +96,7 @@ export const MCP_TOOL_GROUPS: Record<string, McpTool[]> = {
   docs: [searchDocsTool, getDocsPageTool],
   "custom-columns": [manageCustomColumnsTool],
   widgets: [manageWidgetsTool],
+  routines: [manageRoutinesTool],
   webhooks: [manageWebhooksTool],
   admin: [updateWorkspaceSettingsTool, manageTeamTool],
   support: [requestSupportTool],

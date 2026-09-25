@@ -1,25 +1,44 @@
 import { z } from "zod";
 import { asSchema, tool, jsonSchema, type ToolSet } from "ai";
 
-import { ALL_MCP_TOOLS, MCP_TOOL_GROUPS } from "@/features/mcp-tools/tool-registry";
-import { executeMcpTool, expectedMcpToolFailure, type McpToolExecutionResult } from "@/features/mcp-tools/mcp-tool";
+import { ALL_MCP_TOOLS, MCP_ALWAYS_ON_TOOLS, MCP_TOOL_GROUPS } from "@/features/mcp-tools/tool-registry";
+import { encodeToToon } from "@/features/mcp-tools/utils";
+import { dataViewNavigationHref, entityTimelineNavigationHref } from "@/core/data-view/data-view-links";
+import { SURFACE } from "@/core/data-view/data-view-keys";
+import { DATA_VIEW_PATHS } from "@/core/data-view/data-view-paths";
+import { AiManageableDataViewSurfaceKeySchema } from "@/core/data-view/ai-manageable-surfaces";
+import { ViewKeySchema } from "@/core/data-view/data-view-state.schema";
+import {
+  executeMcpTool,
+  expectedMcpToolFailure,
+  validationError,
+  type McpToolExecutionResult,
+} from "@/features/mcp-tools/mcp-tool";
 import { RequestSupportSchema } from "@/features/mcp-tools/support.mcp-tools";
 import { redactUnexpectedError } from "@/core/errors/redact-unexpected-error";
 
+import { agentToolResultText } from "./agent-budget-policy";
 import { isReadOnlyTool, requiresApproval } from "./gated-tools";
-import { toAgentUiCommandInput } from "./agent-ui-command";
-import { type AgentToolCancellation as AgentToolCancellationValue } from "./agent-tool-cancellation";
+import { AGENT_UI_TOOL_NAMES, toAgentUiCommandInput } from "./agent-ui-command";
+import { isUnattendedSurface, type AgentSurface } from "./agent-surface-policy";
 import {
-  AGENT_UI_TARGETS,
-  ClickUiTargetIdSchema,
-  NavigationUiTargetIdSchema,
-  UiTargetIdSchema,
-  type AgentUiTarget,
-} from "./ui-targets";
+  AGENT_ON_DEMAND_TOOLSETS,
+  AGENT_TOOLSET_SUMMARY,
+  LOAD_TOOLSET_TOOL_NAME,
+  isAgentOnDemandToolset,
+} from "./agent-toolset-routing";
+import { onDemandToolsetOfTool, toolNamesOfToolset } from "./agent-toolsets";
+import { hostedToolInputGuard } from "./agent-hosted-guards";
+import { isContentLocale } from "@/i18n/locale-registry";
+import { type AgentToolCancellation as AgentToolCancellationValue } from "./agent-tool-cancellation";
+import { AGENT_UI_TARGETS, UiTargetIdSchema, type AgentUiTarget } from "./ui-targets";
 import { AgentTourSchema } from "./agent-tours";
-import { OpenRecordSchema } from "./ui-operations";
+import { NavigateInputSchema } from "./ui-operations";
 import type { AgentApprovalContextResolution } from "./agent-external-approval-context";
 import { internalToolIdentity } from "./tool-identity";
+import { providerWireInputSchema } from "./provider-safe-json-schema";
+import type { AgentToolInputResult } from "./agent-tool-input";
+import { agentViewToolMismatch } from "./agent-page-context";
 
 export { isAgentToolCancellation, type AgentToolCancellation } from "./agent-tool-cancellation";
 
@@ -48,6 +67,7 @@ export type AgentToolDeps = {
   runExactlyOnce: <T>(toolCallId: string, toolName: string, run: () => Promise<T>) => Promise<T>;
   runInCallerContext: <T>(run: () => Promise<T>) => Promise<T>;
   resultMaxChars: number;
+  pageRoute?: string | null;
 };
 
 function withCallerContext(tools: ToolSet, deps: AgentToolDeps): ToolSet {
@@ -90,8 +110,52 @@ async function runGated<T>(
   return run();
 }
 
-function agentToolResult(outcome: McpToolExecutionResult, maxChars: number) {
-  return { ok: outcome.ok, result: outcome.result.slice(0, maxChars) };
+function contextualAgentToolResultText(
+  toolName: string | undefined,
+  outcome: McpToolExecutionResult,
+  pageRoute: string | null | undefined,
+) {
+  if (toolName !== "manage_data_views" || !outcome.ok || !outcome.structuredContent) return outcome.result;
+  const content = outcome.structuredContent;
+  if (content.surfaceKey !== SURFACE.entityTimeline || content.action === "delete") return outcome.result;
+
+  const link = entityTimelineNavigationHref(pageRoute, content.viewKey);
+  return link ? encodeToToon({ ...content, link }) : outcome.result;
+}
+
+function contextualAgentToolNavigation(
+  toolName: string | undefined,
+  outcome: McpToolExecutionResult,
+  pageRoute: string | null | undefined,
+) {
+  if (toolName !== "manage_data_views" || !outcome.ok || !outcome.structuredContent) return null;
+  const content = outcome.structuredContent;
+  if (content.action !== "create" && content.action !== "update" && content.action !== "select") return null;
+  const surfaceKey = AiManageableDataViewSurfaceKeySchema.safeParse(content.surfaceKey);
+  const viewKey = ViewKeySchema.safeParse(content.viewKey);
+  if (!surfaceKey.success || !viewKey.success) return null;
+  const href =
+    surfaceKey.data === SURFACE.entityTimeline
+      ? content.link === null
+        ? entityTimelineNavigationHref(pageRoute, viewKey.data)
+        : null
+      : content.link === `${DATA_VIEW_PATHS[surfaceKey.data]}?view=${viewKey.data}`
+        ? dataViewNavigationHref(content.link)
+        : null;
+  return href ? { kind: "saved-view" as const, href } : null;
+}
+
+function agentToolResult(
+  outcome: McpToolExecutionResult,
+  maxChars: number,
+  context: { toolName?: string; pageRoute?: string | null } = {},
+) {
+  const navigation = contextualAgentToolNavigation(context.toolName, outcome, context.pageRoute);
+  return {
+    ok: outcome.ok,
+    result: agentToolResultText(contextualAgentToolResultText(context.toolName, outcome, context.pageRoute), maxChars),
+    ...(navigation ? { navigation } : {}),
+  };
 }
 
 async function runSafely<T>(
@@ -109,10 +173,15 @@ async function runSafely<T>(
 
 const UNSUPPORTED_PATTERN = /\(\?=|\(\?!|\(\?<=|\(\?<!/;
 
+export const AGENT_WIRE_UUID_PATTERN = "^[0-9a-fA-F-]{36}$";
+
 const PROVIDER_SAFE_FORMAT_PATTERNS: Record<string, string | undefined> = {
   email: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
   uri: "^[A-Za-z][A-Za-z0-9+.-]*:\\S*$",
+  uuid: AGENT_WIRE_UUID_PATTERN,
 };
+
+const CANONICAL_UUID_PATTERN_MARK = "[0-9a-fA-F]{8}-";
 
 function providerSafeSchema<TSchema extends z.ZodType>(inputSchema: TSchema) {
   return jsonSchema<z.infer<TSchema>>(
@@ -122,6 +191,8 @@ function providerSafeSchema<TSchema extends z.ZodType>(inputSchema: TSchema) {
       override: (ctx) => {
         const schema = ctx.jsonSchema as { pattern?: string; format?: string };
         if (typeof schema.pattern === "string" && UNSUPPORTED_PATTERN.test(schema.pattern)) delete schema.pattern;
+        if (typeof schema.pattern === "string" && schema.pattern.includes(CANONICAL_UUID_PATTERN_MARK))
+          schema.pattern = AGENT_WIRE_UUID_PATTERN;
 
         const format = schema.format;
         delete schema.format;
@@ -140,14 +211,9 @@ function providerSafeSchema<TSchema extends z.ZodType>(inputSchema: TSchema) {
   );
 }
 
-const NavigateSchema = z.object({ targetId: NavigationUiTargetIdSchema.describe("A routable target id.") });
 const HighlightElementSchema = z.object({
   targetId: UiTargetIdSchema.describe("A target id from list_ui_targets."),
 });
-const ClickUiTargetSchema = z.object({
-  targetId: ClickUiTargetIdSchema.describe("An activatable target id from list_ui_targets."),
-});
-
 const ListUiTargetsSchema = z.object({
   query: z
     .string()
@@ -162,8 +228,8 @@ const ListUiTargetsSchema = z.object({
 });
 
 function compactUiTarget(target: AgentUiTarget) {
-  const actions = [...(target.route.startsWith("/") ? ["n"] : []), "h", ...(target.activation ? ["c"] : [])].join("");
-  const prerequisite = target.activation?.kind === "selected" ? `|>${target.activation.prerequisite}` : "";
+  const actions = [...(target.route.startsWith("/") ? ["n"] : []), "h"].join("");
+  const prerequisite = target.prerequisite ? `|>${target.prerequisite}` : "";
   return `${target.id}|${target.route}|${actions}${prerequisite}`;
 }
 
@@ -176,14 +242,31 @@ function matchesUiTargetQuery(target: AgentUiTarget, tokens: string[]) {
   return tokens.some((token) => haystack.includes(token));
 }
 
+function uiTargetPrefixes(limit: number): string[] {
+  const counts = new Map<string, number>();
+  for (const target of AGENT_UI_TARGETS) {
+    const prefix = target.id.split("-")[0] ?? target.id;
+    counts.set(prefix, (counts.get(prefix) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .toSorted((left, right) => right[1] - left[1] || (left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0))
+    .slice(0, limit)
+    .map(([prefix]) => `${prefix}-`);
+}
+
 function listUiTargets(input: z.infer<typeof ListUiTargetsSchema>, resultMaxChars: number) {
   const tokens = uiTargetQueryTokens(input.query);
-  const matched = tokens.length
+  const targets = tokens.length
     ? AGENT_UI_TARGETS.filter((target) => matchesUiTargetQuery(target, tokens))
     : AGENT_UI_TARGETS;
-  const targets = matched.length > 0 ? matched : AGENT_UI_TARGETS;
+  if (targets.length === 0) {
+    return `No interface target matches "${input.query ?? ""}". Query with the page or workflow phrase (for example "deals", "inbox", "settings"), or with one of these id prefixes: ${uiTargetPrefixes(10).join(", ")}.`.slice(
+      0,
+      resultMaxChars,
+    );
+  }
   const cursor = Math.min(input.cursor ?? 0, targets.length);
-  const header = "actions n=navigate,h=highlight,c=click; >target is a prerequisite\n";
+  const header = "actions n=navigate,h=highlight; >target is a prerequisite the user must open\n";
 
   const lines: string[] = [];
   let nextCursor = cursor;
@@ -211,14 +294,16 @@ function crmTool(mcp: (typeof ALL_MCP_TOOLS)[number], deps: AgentToolDeps) {
     execute: async (input: unknown, { toolCallId }) => {
       const execute = async () => {
         const outcome = await executeMcpTool(mcp, [input]);
-        return agentToolResult(outcome, deps.resultMaxChars);
+        return agentToolResult(outcome, deps.resultMaxChars, { toolName: mcp.name, pageRoute: deps.pageRoute });
       };
       const enrollable = !isReadOnlyTool(mcp) && !hasNonTransactionalEffect(mcp.name);
       const run = enrollable ? () => deps.runExactlyOnce(toolCallId, mcp.name, execute) : execute;
       return runSafely(async () => {
-        if (!requiresApproval(internalToolIdentity(mcp.name), mcp, input)) return run();
+        const mismatch = agentViewToolMismatch(deps.pageRoute, mcp.name, input);
+        if (mismatch) return { ok: false, result: mismatch };
         const approvalContext = await deps.resolveApprovalContext(mcp.name, input);
         if (!approvalContext.ok) return { ok: false, result: approvalContext.result };
+        if (!requiresApproval(internalToolIdentity(mcp.name), mcp, approvalContext.input)) return run();
         return runGated(deps, toolCallId, mcp.name, approvalContext.input, run);
       }, deps.resultMaxChars);
     },
@@ -232,19 +317,23 @@ function panelInput(toolName: string, input: unknown): Record<string, unknown> {
 function uiTools(deps: AgentToolDeps): ToolSet {
   const runUiCommand = async (toolCallId: string, name: string, input: Record<string, unknown>) => {
     const outcome = await deps.runUiCommand(toolCallId, name, input);
-    return { ...outcome, result: outcome.result.slice(0, deps.resultMaxChars) };
+    return {
+      ...outcome,
+      result: agentToolResultText(outcome.result, deps.resultMaxChars),
+    };
   };
 
   return {
     list_ui_targets: tool({
       description:
-        "List exact stable interface target ids before using an interface tool. Make one focused query with the workflow or page phrase and reuse every relevant id it returns instead of querying ids one by one. Results use action codes n=navigate, h=highlight, c=click and >target for a prerequisite; continue only when nextCursor is present.",
+        "List exact stable interface target ids before using an interface tool. Make one focused query with the workflow or page phrase and reuse every relevant id it returns instead of querying ids one by one. Results use action codes n=navigate and h=highlight; >target names a prerequisite the user must open. Continue only when nextCursor is present.",
       inputSchema: providerSafeSchema(ListUiTargetsSchema),
       execute: (input) => listUiTargets(input, deps.resultMaxChars),
     }),
     navigate: tool({
-      description: "Open an app destination by its target id from list_ui_targets.",
-      inputSchema: providerSafeSchema(NavigateSchema),
+      description:
+        "Open an app area by its target id from list_ui_targets, or open one existing record's page by passing entity and recordId after list_records or search_records found the id. Records always open on their page, never in the drawer; to add a record, highlight the matching add control instead.",
+      inputSchema: providerSafeSchema(NavigateInputSchema),
       execute: (input, { toolCallId }) =>
         runSafely(() => runUiCommand(toolCallId, "navigate", panelInput("navigate", input)), deps.resultMaxChars),
     }),
@@ -264,34 +353,44 @@ function uiTools(deps: AgentToolDeps): ToolSet {
       execute: (input, { toolCallId }) =>
         runSafely(() => runUiCommand(toolCallId, "start_tour", panelInput("start_tour", input)), deps.resultMaxChars),
     }),
-    click_ui_target: tool({
-      description:
-        "Activate one reversible display control by its exact id from list_ui_targets. Navigate to the target first. Layout controls require opening the matching display-options target first. A successful result means the browser verified the control is expanded or selected.",
-      inputSchema: providerSafeSchema(ClickUiTargetSchema),
-      execute: (input, { toolCallId }) =>
-        runSafely(
-          () => runUiCommand(toolCallId, "click_ui_target", panelInput("click_ui_target", input)),
-          deps.resultMaxChars,
-        ),
-    }),
-    open_record: tool({
-      description:
-        "Open one record after finding its id with list_records or search_records. Use the drawer to keep context, the page for a full view, and recordId 'new' for a blank form the user fills in.",
-      inputSchema: providerSafeSchema(OpenRecordSchema),
-      execute: (input, { toolCallId }) =>
-        runSafely(() => runUiCommand(toolCallId, "open_record", panelInput("open_record", input)), deps.resultMaxChars),
-    }),
   };
 }
 
+function isDeepResearchTool(name: string) {
+  return MCP_ALWAYS_ON_TOOLS.some((mcp) => mcp.name === name);
+}
+
+const LoadToolsetSchema = z.object({
+  toolset: z
+    .enum(AGENT_ON_DEMAND_TOOLSETS)
+    .describe(AGENT_ON_DEMAND_TOOLSETS.map((toolset) => `${toolset} = ${AGENT_TOOLSET_SUMMARY[toolset]}`).join("; ")),
+});
+
+function loadToolsetTool() {
+  return tool({
+    description:
+      "Add an on-demand tool set to this turn when the request needs tools that are not in your current list. Sets: " +
+      AGENT_ON_DEMAND_TOOLSETS.map((toolset) => `${toolset} (${AGENT_TOOLSET_SUMMARY[toolset]})`).join(", ") +
+      ". A loaded set stays available for the rest of the turn; call its tools directly afterwards.",
+    inputSchema: providerSafeSchema(LoadToolsetSchema),
+    execute: (input) => ({
+      ok: true,
+      result: `Loaded ${input.toolset}: ${toolNamesOfToolset(input.toolset).join(", ")}. Call these tools directly now.`,
+    }),
+  });
+}
+
+export function hostedMcpTools() {
+  return ALL_MCP_TOOLS.filter((mcp) => mcp.name !== "request_support" && !isDeepResearchTool(mcp.name));
+}
+
 export function getAgentAiTools(deps: AgentToolDeps): ToolSet {
-  const crm = ALL_MCP_TOOLS.filter((mcp) => mcp.name !== "request_support").map(
-    (mcp) => [mcp.name, crmTool(mcp, deps)] as const,
-  );
+  const crm = hostedMcpTools().map((mcp) => [mcp.name, crmTool(mcp, deps)] as const);
   return withCallerContext(
     {
       ...Object.fromEntries(crm),
       ...uiTools(deps),
+      [LOAD_TOOLSET_TOOL_NAME]: loadToolsetTool(),
       request_support: tool({
         description:
           "Email a support request to the Customermates team. Use when the user asks for a human, reports a bug, or you cannot help after a genuine attempt. The recent Assistant conversation is included, and the team replies to the email address on the user's account.",
@@ -318,12 +417,15 @@ export type AgentAiToolDefinition = {
   inputSchema: unknown;
 };
 
-export function describeAgentAiTools(tools: ToolSet): AgentAiToolDefinition[] {
+export function describeAgentAiTools(tools: ToolSet, servingProvider?: string): AgentAiToolDefinition[] {
   return Object.entries(tools).map(([name, agentTool]) => ({
     name,
     description:
       "description" in agentTool && typeof agentTool.description === "string" ? agentTool.description : undefined,
-    inputSchema: "inputSchema" in agentTool ? asSchema(agentTool.inputSchema).jsonSchema : undefined,
+    inputSchema:
+      "inputSchema" in agentTool
+        ? providerWireInputSchema(asSchema(agentTool.inputSchema).jsonSchema, servingProvider)
+        : undefined,
   }));
 }
 
@@ -337,6 +439,67 @@ const TOOL_DEFINITION_DEPS: AgentToolDeps = {
   resultMaxChars: 1,
 };
 
-export function getAgentAiToolDefinitions(): AgentAiToolDefinition[] {
-  return describeAgentAiTools(getAgentAiTools(TOOL_DEFINITION_DEPS));
+export function getAgentAiToolDefinitions(servingProvider?: string): AgentAiToolDefinition[] {
+  return describeAgentAiTools(getAgentAiTools(TOOL_DEFINITION_DEPS), servingProvider);
+}
+
+export type AgentTurnToolDefinition = AgentAiToolDefinition & { toolset: string | null };
+
+export function agentToolDefinitionsForTurn(args: {
+  servingProvider: string;
+  surface: AgentSurface;
+}): AgentTurnToolDefinition[] {
+  const panelToolNames = new Set<string>(AGENT_UI_TOOL_NAMES);
+  const unattended = isUnattendedSurface(args.surface);
+  return getAgentAiToolDefinitions(args.servingProvider)
+    .filter((definition) => !unattended || !panelToolNames.has(definition.name))
+    .map((definition) => ({ ...definition, toolset: onDemandToolsetOfTool(definition.name) }));
+}
+
+export function agentToolDefinitionsForToolsets(
+  definitions: readonly AgentTurnToolDefinition[],
+  toolsets: readonly string[],
+): AgentTurnToolDefinition[] {
+  const active = new Set(toolsets.filter(isAgentOnDemandToolset));
+  return definitions.filter((definition) => definition.toolset === null || active.has(definition.toolset as never));
+}
+
+const DOCS_TOOL_NAMES = new Set(["search_docs", "get_docs_page"]);
+
+export function withTurnLocale(toolName: string, input: unknown, locale: string | undefined): unknown {
+  if (!DOCS_TOOL_NAMES.has(toolName) || !isContentLocale(locale)) return input;
+  const record =
+    input && typeof input === "object" && !Array.isArray(input) ? (input as Record<string, unknown>) : null;
+  if (!record || record.locale !== undefined) return input;
+  return { ...record, locale };
+}
+
+export async function normalizeAgentAiToolInput(
+  toolName: string,
+  input: unknown,
+  maxChars: number,
+  options: { locale?: string; pageRoute?: string | null } = {},
+): Promise<AgentToolInputResult> {
+  const tools = getAgentAiTools(TOOL_DEFINITION_DEPS);
+  if (!Object.hasOwn(tools, toolName)) return { ok: false, result: "The requested tool is not available." };
+  const agentTool = tools[toolName];
+  const schema = asSchema(agentTool.inputSchema);
+  if (!schema.validate) throw new Error("The agent tool has no authoritative input validator.");
+  const result = await schema.validate(withTurnLocale(toolName, input, options.locale));
+  if (result.success) {
+    const guard = hostedToolInputGuard(toolName, result.value);
+    if (guard) return { ok: false, result: guard };
+    const mismatch = agentViewToolMismatch(options.pageRoute, toolName, result.value);
+    return mismatch
+      ? { ok: false, result: agentToolResultText(mismatch, maxChars) }
+      : { ok: true, input: result.value };
+  }
+
+  return {
+    ok: false,
+    result:
+      result.error instanceof z.ZodError
+        ? agentToolResultText(validationError(result.error), maxChars)
+        : "The tool input does not match its required schema.",
+  };
 }

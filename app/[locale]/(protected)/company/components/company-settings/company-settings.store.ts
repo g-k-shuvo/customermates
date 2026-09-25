@@ -14,7 +14,7 @@ import { cloneDeep } from "lodash";
 import equal from "fast-deep-equal/es6";
 import { Currency, Resource } from "@/generated/prisma";
 
-import { KANBAN_EMPTY_GROUP_KEY } from "@/core/base/base-get.schema";
+import { NO_VALUE_GROUP_KEY } from "@/core/base/grouping/grouping.schema";
 import { DEAL_GROUP_SUM_FIELDS } from "@/features/deals/deal-weighting";
 
 import { getDealStageValueSumsAction, getPipelinesAction, updateCompanyAction, updateStageAction } from "../../actions";
@@ -110,7 +110,7 @@ export class CompanySettingsStore extends BaseFormStore<CompanySettingsFormData>
     const stageValueSums = this.stageValueSums;
     if (!stageValueSums) return 0;
 
-    return stageValueSums[KANBAN_EMPTY_GROUP_KEY]?.[DEAL_GROUP_SUM_FIELDS.total] ?? 0;
+    return stageValueSums[NO_VALUE_GROUP_KEY]?.[DEAL_GROUP_SUM_FIELDS.total] ?? 0;
   }
 
   get weightedPipelineTotal(): number {

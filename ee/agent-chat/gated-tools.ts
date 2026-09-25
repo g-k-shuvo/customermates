@@ -17,20 +17,35 @@ const INTERNAL_APPROVAL_POLICY: Record<string, AgentApprovalPolicy> = {
   create_organizations: { approvalFree: true },
   create_services: { approvalFree: true },
   create_tasks: { approvalFree: true },
+  discard_message_draft: { approvalFree: true },
   manage_custom_columns: { approvalFreeActions: ["list", "upsert"], readOnlyActions: ["list"] },
   manage_record_links: { approvalFree: true },
-  manage_social_relations: { approvalFreeActions: ["list"], readOnlyActions: ["list"] },
+  manage_social_relations: {
+    approvalFreeActions: ["list", "invite", "accept", "cancel"],
+    readOnlyActions: ["list"],
+  },
   manage_team: { approvalFreeActions: ["update_member"] },
   manage_webhooks: {
     approvalFreeActions: ["list", "get", "list_deliveries", "create", "update"],
     readOnlyActions: ["list", "get", "list_deliveries"],
   },
   manage_widgets: { approvalFreeActions: ["list", "get", "create", "update"], readOnlyActions: ["list", "get"] },
+  manage_data_views: {
+    approvalFreeActions: ["surfaces", "list", "config", "create", "update", "select"],
+    readOnlyActions: ["surfaces", "list", "config"],
+  },
+  manage_routines: {
+    approvalFreeActions: ["list", "runs", "create", "update", "pause", "run_now"],
+    readOnlyActions: ["list", "runs"],
+  },
+  move_email_thread: { approvalFree: true },
   linkedin_manage_sales_lists: {
-    approvalFreeActions: ["list", "browse"],
+    approvalFreeActions: ["list", "browse", "save"],
     readOnlyActions: ["list", "browse"],
   },
   save_message_draft: { approvalFree: true },
+  send_chat_message: { approvalFree: true },
+  send_email: { approvalFree: true },
   update_contacts: { approvalFree: true },
   update_deals: { approvalFree: true },
   update_messaging_thread: { approvalFree: true },
@@ -49,6 +64,8 @@ const AGENT_APPROVAL_POLICY: Record<string, AgentApprovalPolicy> = Object.fromEn
 );
 
 export const AGENT_APPROVAL_POLICY_TOOL_NAMES = Object.keys(INTERNAL_APPROVAL_POLICY);
+
+export const AGENT_DESTRUCTIVE_APPROVAL_FREE_TOOL_NAMES = ["discard_message_draft"] as const;
 
 function policyFor(identity: AgentToolIdentity): AgentApprovalPolicy | undefined {
   if (!isInternalToolIdentity(identity)) return undefined;

@@ -1,4 +1,7 @@
-import type { Prisma, PrismaClient } from "@/generated/prisma";
+import type { PrismaClient } from "@/generated/prisma";
+
+import { Prisma } from "@/generated/prisma";
+import { SURFACE } from "@/core/data-view/data-view-keys";
 
 import {
   CONTACT_DETAIL_FIELD,
@@ -43,11 +46,12 @@ export const SYNTHETIC_P13N_IDS = {
   dealDetail: fixtureId(SYNTHETIC_P13N_ID_PREFIX, 13),
   serviceDetail: fixtureId(SYNTHETIC_P13N_ID_PREFIX, 14),
   taskDetail: fixtureId(SYNTHETIC_P13N_ID_PREFIX, 15),
+  routines: fixtureId(SYNTHETIC_P13N_ID_PREFIX, 16),
 } as const;
 
-export const SYNTHETIC_P13N_PRESET_IDS = {
-  directCustomer: fixtureId("1f100000", 1),
-  affiliatedCompany: fixtureId("1f100000", 2),
+export const SYNTHETIC_TEAM_ROUTINE_P13N_IDS = {
+  sofiaRossi: fixtureId(SYNTHETIC_P13N_ID_PREFIX, 17),
+  elenaHoffmann: fixtureId(SYNTHETIC_P13N_ID_PREFIX, 18),
 } as const;
 
 export type SyntheticP13nFixture = Prisma.P13nCreateManyInput & { id: string };
@@ -60,7 +64,7 @@ export function buildSyntheticP13nFixtures(
   context: Pick<SeedContext, "ids">,
   customFields: CustomFieldSeedData,
 ): SyntheticP13nFixture[] {
-  const { customColumnIds, customOptionIds } = customFields;
+  const { customColumnIds } = customFields;
   const { company, user } = context.ids;
   const userFilter = {
     field: "userIds",
@@ -85,6 +89,8 @@ export function buildSyntheticP13nFixtures(
     p13nId: string,
     columnOrder: string[],
     starredFieldIds: string[],
+    fieldOrder: string[],
+    hiddenFieldIds: string[] = [],
   ): SyntheticP13nFixture =>
     fixture(id, p13nId, {
       columnOrder,
@@ -93,6 +99,8 @@ export function buildSyntheticP13nFixtures(
       detailOptions: inputJson({
         starredFieldIds,
         collapsedSectionIds: [],
+        hiddenFieldIds: [...hiddenFieldIds, "createdAt", "updatedAt"],
+        fieldOrder: [...fieldOrder, "createdAt", "updatedAt"],
       }),
     });
 
@@ -111,34 +119,33 @@ export function buildSyntheticP13nFixtures(
       ],
       columnWidths: inputJson({ tasks: 133 }),
       filters: inputJson([userFilter]),
-      savedFilterPresets: inputJson([]),
       searchTerm: null,
       sortDescriptor: inputJson({ direction: "asc", field: "name" }),
-      pagination: inputJson({ page: 1, pageSize: 100 }),
+      pagination: inputJson({ pageSize: 100 }),
       hiddenColumns: ["deals", "createdAt"],
       viewMode: "table",
       groupingColumnId: null,
+      grouping: Prisma.DbNull,
     }),
     fixture(SYNTHETIC_P13N_IDS.users, "users-card-store", {
       columnOrder: [],
       columnWidths: inputJson({ role: 108 }),
       filters: inputJson([]),
-      savedFilterPresets: inputJson([]),
       searchTerm: null,
       sortDescriptor: inputJson({ direction: "desc", field: "name" }),
-      pagination: inputJson({ page: 1, pageSize: 100 }),
+      pagination: inputJson({ pageSize: 100 }),
       hiddenColumns: ["email"],
       viewMode: "table",
       groupingColumnId: null,
+      grouping: Prisma.DbNull,
     }),
     fixture(SYNTHETIC_P13N_IDS.tasks, "tasks-card-store", {
       columnOrder: [customColumnIds.taskPriority, customColumnIds.taskStatus, "updatedAt", "createdAt", "users"],
       columnWidths: inputJson({}),
       filters: inputJson([userFilter]),
-      savedFilterPresets: inputJson([]),
       searchTerm: null,
       sortDescriptor: inputJson({ direction: "desc", field: "updatedAt" }),
-      pagination: inputJson({ page: 1, pageSize: 100 }),
+      pagination: inputJson({ pageSize: 100 }),
       hiddenColumns: [
         customColumnIds.taskStatus,
         "createdAt",
@@ -151,30 +158,31 @@ export function buildSyntheticP13nFixtures(
       ],
       viewMode: "card",
       groupingColumnId: customColumnIds.taskStatus,
+      grouping: inputJson({ field: customColumnIds.taskStatus }),
     }),
     fixture(SYNTHETIC_P13N_IDS.roles, "roles-card-store", {
       columnOrder: [],
       columnWidths: inputJson({}),
       filters: inputJson([]),
-      savedFilterPresets: inputJson([]),
       searchTerm: null,
       sortDescriptor: inputJson({ direction: "asc", field: "type" }),
-      pagination: inputJson({ page: 1, pageSize: 100 }),
+      pagination: inputJson({ pageSize: 100 }),
       hiddenColumns: [],
       viewMode: null,
       groupingColumnId: null,
+      grouping: Prisma.DbNull,
     }),
     fixture(SYNTHETIC_P13N_IDS.webhooks, "webhooks-card-store", {
       columnOrder: [],
       columnWidths: inputJson({}),
       filters: inputJson([]),
-      savedFilterPresets: inputJson([]),
       searchTerm: null,
       sortDescriptor: inputJson({ direction: "desc", field: "name" }),
-      pagination: inputJson({ page: 1, pageSize: 100 }),
+      pagination: inputJson({ pageSize: 100 }),
       hiddenColumns: [],
-      viewMode: "card",
+      viewMode: "table",
       groupingColumnId: null,
+      grouping: Prisma.DbNull,
     }),
     fixture(SYNTHETIC_P13N_IDS.deals, "deals-card-store", {
       columnOrder: [
@@ -193,13 +201,13 @@ export function buildSyntheticP13nFixtures(
       ],
       columnWidths: inputJson({}),
       filters: inputJson([]),
-      savedFilterPresets: inputJson([]),
       searchTerm: null,
       sortDescriptor: inputJson({ direction: "desc", field: "name" }),
-      pagination: inputJson({ page: 1, pageSize: 100 }),
+      pagination: inputJson({ pageSize: 100 }),
       hiddenColumns: ["contacts", "updatedAt", "createdAt", "tasks"],
       viewMode: "card",
       groupingColumnId: customColumnIds.dealStatus,
+      grouping: inputJson({ field: customColumnIds.dealStatus }),
     }),
     fixture(SYNTHETIC_P13N_IDS.services, "services-card-store", {
       columnOrder: [
@@ -214,37 +222,37 @@ export function buildSyntheticP13nFixtures(
       ],
       columnWidths: inputJson({}),
       filters: inputJson([]),
-      savedFilterPresets: inputJson([]),
       searchTerm: null,
       sortDescriptor: inputJson({ direction: "asc", field: "name" }),
-      pagination: inputJson({ page: 1, pageSize: 100 }),
+      pagination: inputJson({ pageSize: 100 }),
       hiddenColumns: ["createdAt", "tasks"],
       viewMode: "table",
       groupingColumnId: null,
+      grouping: Prisma.DbNull,
     }),
     fixture(SYNTHETIC_P13N_IDS.auditLogs, "audit-logs-card-store", {
       columnOrder: ["event", "entityId", "createdAt", "user"],
       columnWidths: inputJson({ name: 302 }),
       filters: inputJson([]),
-      savedFilterPresets: inputJson([]),
       searchTerm: null,
       sortDescriptor: inputJson({ direction: "desc", field: "createdAt" }),
-      pagination: inputJson({ page: 1, pageSize: 25 }),
+      pagination: inputJson({ pageSize: 25 }),
       hiddenColumns: ["entityId"],
       viewMode: "table",
       groupingColumnId: null,
+      grouping: Prisma.DbNull,
     }),
     fixture(SYNTHETIC_P13N_IDS.webhookDeliveries, "webhook-deliveries-card-store", {
       columnOrder: [],
       columnWidths: inputJson({}),
       filters: inputJson([]),
-      savedFilterPresets: inputJson([]),
       searchTerm: null,
       sortDescriptor: inputJson({ direction: "desc", field: "createdAt" }),
-      pagination: inputJson({ page: 1, pageSize: 25 }),
+      pagination: inputJson({ pageSize: 25 }),
       hiddenColumns: [],
       viewMode: null,
       groupingColumnId: null,
+      grouping: Prisma.DbNull,
     }),
     fixture(SYNTHETIC_P13N_IDS.organizations, "organizations-card-store", {
       columnOrder: [
@@ -259,57 +267,59 @@ export function buildSyntheticP13nFixtures(
       ],
       columnWidths: inputJson({ deals: 227, tasks: 191 }),
       filters: inputJson([]),
-      savedFilterPresets: inputJson([
-        {
-          filters: [
-            {
-              field: customColumnIds.organizationType,
-              operator: "in",
-              value: [customOptionIds.organizationType.directCustomer],
-            },
-            userFilter,
-          ],
-          id: SYNTHETIC_P13N_PRESET_IDS.directCustomer,
-          name: "Direct customer",
-        },
-        {
-          filters: [
-            {
-              field: customColumnIds.organizationType,
-              operator: "in",
-              value: [customOptionIds.organizationType.affiliatedCompany],
-            },
-            userFilter,
-          ],
-          id: SYNTHETIC_P13N_PRESET_IDS.affiliatedCompany,
-          name: "Affiliated company",
-        },
-      ]),
       searchTerm: null,
       sortDescriptor: inputJson({ direction: "asc", field: "name" }),
-      pagination: inputJson({ page: 1, pageSize: 100 }),
+      pagination: inputJson({ pageSize: 100 }),
       hiddenColumns: ["createdAt"],
       viewMode: "table",
       groupingColumnId: null,
+      grouping: Prisma.DbNull,
+    }),
+    fixture(SYNTHETIC_P13N_IDS.routines, SURFACE.routines, {
+      columnOrder: [],
+      columnWidths: inputJson({}),
+      filters: inputJson([]),
+      searchTerm: null,
+      sortDescriptor: inputJson({ direction: "desc", field: "createdAt" }),
+      pagination: inputJson({ pageSize: 100 }),
+      hiddenColumns: [],
+      viewMode: "table",
+      groupingColumnId: "ownerUserId",
+      grouping: inputJson({ field: "ownerUserId" }),
     }),
     detailFixture(
       SYNTHETIC_P13N_IDS.contactDetail,
       CONTACT_DETAIL_P13N_ID,
       [customColumnIds.contactSalesPipeline, customColumnIds.contactPhone],
+      [CONTACT_DETAIL_FIELD.identifiers, CONTACT_DETAIL_FIELD.organizationIds, customColumnIds.contactSalesPipeline],
       [
         CONTACT_DETAIL_FIELD.firstName,
         CONTACT_DETAIL_FIELD.lastName,
         customColumnIds.contactSalesPipeline,
+        CONTACT_DETAIL_FIELD.organizationIds,
+        CONTACT_DETAIL_FIELD.identifiers,
         customColumnIds.contactPhone,
+        CONTACT_DETAIL_FIELD.dealIds,
+        CONTACT_DETAIL_FIELD.taskIds,
         CONTACT_DETAIL_FIELD.userIds,
-        CONTACT_DETAIL_FIELD.updatedAt,
       ],
+      [CONTACT_DETAIL_FIELD.taskIds],
     ),
     detailFixture(
       SYNTHETIC_P13N_IDS.organizationDetail,
       ORGANIZATION_DETAIL_P13N_ID,
       [customColumnIds.organizationType, customColumnIds.organizationWebsite],
-      [ORGANIZATION_DETAIL_FIELD.contactIds, ORGANIZATION_DETAIL_FIELD.userIds, ORGANIZATION_DETAIL_FIELD.updatedAt],
+      [customColumnIds.organizationType, customColumnIds.organizationWebsite, ORGANIZATION_DETAIL_FIELD.userIds],
+      [
+        ORGANIZATION_DETAIL_FIELD.name,
+        customColumnIds.organizationType,
+        customColumnIds.organizationWebsite,
+        ORGANIZATION_DETAIL_FIELD.contactIds,
+        ORGANIZATION_DETAIL_FIELD.dealIds,
+        ORGANIZATION_DETAIL_FIELD.taskIds,
+        ORGANIZATION_DETAIL_FIELD.userIds,
+      ],
+      [ORGANIZATION_DETAIL_FIELD.taskIds],
     ),
     detailFixture(
       SYNTHETIC_P13N_IDS.dealDetail,
@@ -320,25 +330,54 @@ export function buildSyntheticP13nFixtures(
         DEAL_DETAIL_FIELD.totalQuantity,
         DEAL_DETAIL_FIELD.organizationIds,
         customColumnIds.dealStatus,
-        customColumnIds.dealProjectPeriod,
       ],
+      [
+        DEAL_DETAIL_FIELD.name,
+        customColumnIds.dealStatus,
+        DEAL_DETAIL_FIELD.organizationIds,
+        customColumnIds.dealProjectPeriod,
+        DEAL_DETAIL_FIELD.serviceIds,
+        DEAL_DETAIL_FIELD.totalQuantity,
+        DEAL_DETAIL_FIELD.totalValue,
+        DEAL_DETAIL_FIELD.weightedValue,
+        DEAL_DETAIL_FIELD.contactIds,
+        DEAL_DETAIL_FIELD.taskIds,
+        DEAL_DETAIL_FIELD.userIds,
+      ],
+      [DEAL_DETAIL_FIELD.weightedValue, DEAL_DETAIL_FIELD.contactIds, DEAL_DETAIL_FIELD.taskIds],
     ),
     detailFixture(
       SYNTHETIC_P13N_IDS.serviceDetail,
       SERVICE_DETAIL_P13N_ID,
       [customColumnIds.serviceType, customColumnIds.servicePricing],
+      [SERVICE_DETAIL_FIELD.amount, customColumnIds.serviceType, customColumnIds.servicePricing],
       [
-        SERVICE_DETAIL_FIELD.amount,
+        SERVICE_DETAIL_FIELD.name,
         customColumnIds.serviceType,
         customColumnIds.servicePricing,
+        SERVICE_DETAIL_FIELD.amount,
+        SERVICE_DETAIL_FIELD.dealIds,
+        SERVICE_DETAIL_FIELD.taskIds,
         SERVICE_DETAIL_FIELD.userIds,
       ],
+      [SERVICE_DETAIL_FIELD.taskIds],
     ),
     detailFixture(
       SYNTHETIC_P13N_IDS.taskDetail,
       TASK_DETAIL_P13N_ID,
       [customColumnIds.taskPriority, customColumnIds.taskStatus],
-      [customColumnIds.taskPriority, customColumnIds.taskStatus, TASK_DETAIL_FIELD.updatedAt],
+      [customColumnIds.taskStatus, customColumnIds.taskPriority, TASK_DETAIL_FIELD.userIds],
+      [
+        TASK_DETAIL_FIELD.name,
+        customColumnIds.taskStatus,
+        customColumnIds.taskPriority,
+        TASK_DETAIL_FIELD.contactIds,
+        TASK_DETAIL_FIELD.organizationIds,
+        TASK_DETAIL_FIELD.dealIds,
+        TASK_DETAIL_FIELD.serviceIds,
+        TASK_DETAIL_FIELD.userIds,
+      ],
+      [TASK_DETAIL_FIELD.organizationIds, TASK_DETAIL_FIELD.serviceIds],
     ),
   ];
 }
@@ -375,4 +414,16 @@ export async function persistSyntheticP13nFixtures(
 export async function seedPersonalization(context: SeedContext, customFields: CustomFieldSeedData): Promise<void> {
   const fixtures = buildSyntheticP13nFixtures(context, customFields);
   await persistSyntheticP13nFixtures(context.prisma, context.ids.company, context.ids.user, fixtures);
+
+  const routineTemplate = fixtures.find(({ p13nId }) => p13nId === SURFACE.routines);
+  if (!routineTemplate) throw new Error("The synthetic Routine personalization fixture is missing.");
+
+  for (const [id, userId] of [
+    [SYNTHETIC_TEAM_ROUTINE_P13N_IDS.sofiaRossi, context.ids.sofiaRossiUser],
+    [SYNTHETIC_TEAM_ROUTINE_P13N_IDS.elenaHoffmann, context.ids.elenaHoffmannUser],
+  ] as const) {
+    await persistSyntheticP13nFixtures(context.prisma, context.ids.company, userId, [
+      { ...routineTemplate, id, userId },
+    ]);
+  }
 }

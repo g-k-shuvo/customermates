@@ -5,57 +5,65 @@ import { useLayoutEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Pencil, X } from "lucide-react";
 
-import { useRootStore } from "@/core/stores/root-store.provider";
+import { useAgentChatStore, useAgentChatUiTargets } from "./agent-chat-store-context";
 import { Button } from "@/components/ui/button";
 import { ActionTooltip, chatUiCopy, focusAgentComposer } from "./chat-ui";
+import { AgentComposerContexts } from "./agent-composer-contexts";
 
 export const QueuedPrompt = observer(function QueuedPrompt() {
-  const { agentChatStore: store } = useRootStore();
+  const store = useAgentChatStore();
+  const uiTargets = useAgentChatUiTargets();
   const copy = chatUiCopy(useTranslations());
   const rowRef = useRef<HTMLDivElement>(null);
   const prompt = store.queuedPrompt;
 
   useLayoutEffect(
     () => () => {
-      if (rowRef.current?.contains(document.activeElement)) focusAgentComposer();
+      if (rowRef.current?.contains(document.activeElement)) focusAgentComposer(uiTargets);
     },
-    [],
+    [uiTargets],
   );
 
   if (!prompt) return null;
 
   return (
-    <div ref={rowRef} className="mb-2 flex items-center gap-2 rounded-lg bg-muted/60 px-2 py-1.5 text-xs" role="status">
-      <span className="min-w-0 flex-1 truncate">
-        <span className="font-medium">{copy.queued}:</span>
+    <div ref={rowRef} className="mb-2 rounded-lg bg-muted/60 px-2 py-1.5 text-xs" role="status">
+      <div className="flex items-center gap-2">
+        <span className="min-w-0 flex-1 truncate leading-5">
+          <AgentComposerContexts contexts={store.queuedContexts} />
 
-        <span>{` ${prompt}`}</span>
-      </span>
+          <span>
+            <span className="font-medium">{copy.queued}:</span>
 
-      <ActionTooltip label={copy.editQueued}>
-        <Button
-          aria-label={copy.editQueued}
-          className="size-7 shrink-0"
-          disabled={Boolean(store.usage?.blockedReason)}
-          size="icon"
-          variant="ghost"
-          onClick={store.editQueuedPrompt}
-        >
-          <Pencil className="size-3.5" />
-        </Button>
-      </ActionTooltip>
+            <span>{` ${prompt}`}</span>
+          </span>
+        </span>
 
-      <ActionTooltip label={copy.removeQueued}>
-        <Button
-          aria-label={copy.removeQueued}
-          className="size-7 shrink-0"
-          size="icon"
-          variant="ghost"
-          onClick={store.removeQueuedPrompt}
-        >
-          <X className="size-3.5" />
-        </Button>
-      </ActionTooltip>
+        <ActionTooltip label={copy.editQueued}>
+          <Button
+            aria-label={copy.editQueued}
+            className="size-7 shrink-0"
+            disabled={Boolean(store.usage?.blockedReason)}
+            size="icon"
+            variant="ghost"
+            onClick={store.editQueuedPrompt}
+          >
+            <Pencil className="size-3.5" />
+          </Button>
+        </ActionTooltip>
+
+        <ActionTooltip label={copy.removeQueued}>
+          <Button
+            aria-label={copy.removeQueued}
+            className="size-7 shrink-0"
+            size="icon"
+            variant="ghost"
+            onClick={store.removeQueuedPrompt}
+          >
+            <X className="size-3.5" />
+          </Button>
+        </ActionTooltip>
+      </div>
     </div>
   );
 });

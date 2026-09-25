@@ -1,6 +1,8 @@
 import { runAgentTurn } from "./agent-turn";
 import { backfillConnectedAccount } from "./backfill-connected-account";
 import { deliverWebhook } from "./deliver-webhook";
+import { reconcileRoutineRuns } from "./reconcile-routine-runs";
+import { runRoutine } from "./run-routine";
 import { processWebFormSubmission } from "./process-web-form-submission";
 import { syncMailboxes } from "./sync-mailboxes";
 import { triggerTestError } from "./trigger-test-error";
@@ -9,6 +11,8 @@ export const WORKFLOW_REGISTRY = {
   "agent-turn": runAgentTurn,
   "backfill-connected-account": backfillConnectedAccount,
   "deliver-webhook": deliverWebhook,
+  "reconcile-routine-runs": reconcileRoutineRuns,
+  "run-routine": runRoutine,
   "process-web-form-submission": processWebFormSubmission,
   "sync-mailboxes": syncMailboxes,
   "trigger-test-error": triggerTestError,

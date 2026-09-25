@@ -21,7 +21,8 @@ export type AccessOptions = {
   resource?: Resource;
 };
 
-export abstract class RouteGuardSubscriptionRepo {
+export abstract class RouteGuardCompanyRepo {
+  abstract existsUnscoped(companyId: string): Promise<boolean>;
   abstract getSubscriptionOrThrowUnscoped(companyId: string): Promise<Subscription>;
 }
 
@@ -81,7 +82,7 @@ export class RouteGuardService {
   constructor(
     private authService: AuthService,
     private userRepo: FindUserRepo,
-    private subscriptionRepo: RouteGuardSubscriptionRepo,
+    private companyRepo: RouteGuardCompanyRepo,
     private getLegalStatusInteractor: GetLegalStatusInteractor,
   ) {}
 
@@ -98,9 +99,29 @@ export class RouteGuardService {
       };
     }
 
+    const authUserState = await this.userRepo.findAuthUserAccountStateUnscoped(session.user.id);
+    if (authUserState === undefined) {
+      return {
+        state: "unauthenticated",
+        sessionUser: null,
+        user: null,
+        emailVerified: null,
+        legalStatus: null,
+        subscription: null,
+      };
+    }
+
     const user = await this.userRepo.findCurrentUserUnscoped(session.user.email);
-    const emailVerified = session.user.emailVerified ?? false;
-    const sessionUser: AccountSessionUser = session.user;
+    const authUserCompanyId = authUserState.companyId;
+    let companyId = user?.companyId ?? null;
+    if (!user && authUserCompanyId && (await this.companyRepo.existsUnscoped(authUserCompanyId)))
+      companyId = authUserCompanyId;
+    const emailVerified = authUserState.emailVerified;
+    const sessionUser: AccountSessionUser = {
+      ...session.user,
+      companyId,
+      emailVerified,
+    };
     const base = {
       sessionUser,
       user,
@@ -109,7 +130,7 @@ export class RouteGuardService {
       subscription: null,
     };
 
-    if (mustVerifyEmail(session.user)) return { state: "overdueVerification", ...base };
+    if (mustVerifyEmail(sessionUser)) return { state: "overdueVerification", ...base };
     if (!user) return { state: "unregistered", ...base };
     switch (user.status) {
       case Status.inactive:
@@ -130,8 +151,8 @@ export class RouteGuardService {
     }
 
     let subscription: Subscription | null = null;
-    if (env.APP_MODE === "cloud") {
-      subscription = await this.subscriptionRepo.getSubscriptionOrThrowUnscoped(user.companyId);
+    if (env.APP_MODE !== "demo") {
+      subscription = await this.companyRepo.getSubscriptionOrThrowUnscoped(user.companyId);
       if (isSubscriptionExpired(subscription)) return { state: "subscription", ...base, legalStatus, subscription };
     }
 

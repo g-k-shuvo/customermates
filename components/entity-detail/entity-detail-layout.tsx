@@ -15,7 +15,8 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Action, EntityType, Resource } from "@/generated/prisma";
 
-import { useSetTopBarActions, useSetTopBarJoinedContent } from "@/app/components/topbar-actions-context";
+import { useSetTopBarActions } from "@/app/components/topbar-actions-context";
+import { useAgentRecordContext } from "@/app/components/agent-chat/use-agent-record-context";
 import { AppForm } from "@/components/forms/form-context";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,7 +32,7 @@ import { EntityNotesPanel } from "./entity-notes-panel";
 import { EntityDetailPageSkeleton } from "./entity-detail-page-skeleton";
 import { resolveEntityDetailPageState } from "./entity-detail-page-state";
 import { ENTITY_URL_SEGMENT } from "./entity-relations";
-import { useEntityDetailPersonalization } from "./entity-detail-personalization";
+import { useEntityDetailCustomization, useEntityDetailPersonalization } from "./entity-detail-personalization";
 
 type IdentityProps = {
   name: string;
@@ -79,15 +80,10 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
 }: Props<Form, Dto>) {
   const t = useTranslations();
   const router = useRouter();
-  const { layoutStore, userStore } = useRootStore();
+  const { agentChatStore, layoutStore, userStore } = useRootStore();
   const { stack: entityDrawerStack } = useEntityDrawerStack();
   const { showDeleteConfirmation } = useDeleteConfirmation();
-  const {
-    enabled: canPersonalize,
-    isPersonalizing,
-    setIsPersonalizing,
-    starredFieldIds,
-  } = useEntityDetailPersonalization();
+  const { enabled: canPersonalize, starredFieldIds } = useEntityDetailPersonalization();
   const [hasMounted, setHasMounted] = useState(false);
   const [activePanel, setActivePanel] = useState<DetailPanel>("details");
   const formId = useId();
@@ -106,6 +102,11 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
   }, []);
 
   const { canManage, isLoading, isEditingCustomField, toggleEditingCustomField, form } = store;
+  const { isCustomizing, onToggleCustomization } = useEntityDetailCustomization({
+    canManage,
+    isEditingCustomField,
+    toggleEditingCustomField,
+  });
   const hasId = form && typeof form === "object" && "id" in form && Boolean(form.id);
   const canSeeHistory = userStore.can(Resource.auditLog, Action.readAll);
   const showEmailsPanel = Boolean(emailsPanel);
@@ -126,11 +127,9 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
   });
   const showLoadError = pageState === "error" || pageState === "not-found";
   const showLoading = pageState === "loading";
-  const isCustomizing = canPersonalize && (isPersonalizing || (canManage && isEditingCustomField));
   const showEditFieldsAction = !canPersonalize && canManage && !isEditingCustomField;
   const showEditFieldsActiveActions = canManage && isEditingCustomField;
   const hasSummary = Boolean(summary) && (!canPersonalize || starredFieldIds.length > 0);
-  const joinsTopBar = hasSummary && (pageState === "loading" || pageState === "content");
 
   useEffect(() => {
     const key = `${ENTITY_URL_SEGMENT[entityType]}:${entityId}`;
@@ -166,6 +165,13 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
     showLoadError,
   ]);
 
+  useAgentRecordContext({
+    enabled: Boolean(agentChatStore && hasCurrentEntity && entityDrawerStack.length === 0),
+    entityType,
+    recordId: entityId,
+    name: identity.name,
+  });
+
   const deleteConfirmationRef = useRef(showDeleteConfirmation);
   deleteConfirmationRef.current = showDeleteConfirmation;
   const onDelete = useCallback(() => {
@@ -175,12 +181,6 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
       return ok;
     });
   }, [store, router, entityType]);
-  const onToggleCustomization = useCallback(() => {
-    const next = !isCustomizing;
-    setIsPersonalizing(next);
-    if (canManage && isEditingCustomField !== next) toggleEditingCustomField();
-  }, [canManage, isCustomizing, isEditingCustomField, setIsPersonalizing, toggleEditingCustomField]);
-
   const topBarActions = useMemo(
     () =>
       showLoading || showLoadError ? null : (
@@ -312,7 +312,6 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
   );
 
   useSetTopBarActions(topBarActions);
-  useSetTopBarJoinedContent(joinsTopBar);
 
   switch (pageState) {
     case "loading":
@@ -372,23 +371,23 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
             >
               <Tabs value={selectedPanel} onValueChange={(value) => setActivePanel(value as DetailPanel)}>
                 <TabsList
-                  aria-label={t("Common.details")}
+                  aria-label={t("EntityDetail.overview")}
                   className="h-13 w-full justify-stretch gap-0 rounded-none p-0 group-data-[orientation=horizontal]/tabs:h-13"
                   variant="line"
                 >
                   <TabsTrigger
                     aria-controls={`${formId}-details-panel`}
-                    className="h-full rounded-none px-4 after:-bottom-px after:z-10"
+                    className="h-full rounded-none px-4 after:z-10 group-data-[orientation=horizontal]/tabs:after:-bottom-px"
                     id={`${formId}-details-tab`}
                     value="details"
                   >
-                    {t("Common.details")}
+                    {t("EntityDetail.overview")}
                   </TabsTrigger>
 
                   {showNotesPanel && (
                     <TabsTrigger
                       aria-controls={`${formId}-notes-panel`}
-                      className="h-full rounded-none px-4 after:-bottom-px after:z-10"
+                      className="h-full rounded-none px-4 after:z-10 group-data-[orientation=horizontal]/tabs:after:-bottom-px"
                       id={`${formId}-notes-tab`}
                       value="notes"
                     >
@@ -410,7 +409,7 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
                   {canSeeHistory && (
                     <TabsTrigger
                       aria-controls={`${formId}-activities-panel`}
-                      className="h-full rounded-none px-4 after:-bottom-px after:z-10"
+                      className="h-full rounded-none px-4 after:z-10 group-data-[orientation=horizontal]/tabs:after:-bottom-px"
                       id={`${formId}-activities-tab`}
                       value="activities"
                     >

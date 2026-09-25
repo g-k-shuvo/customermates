@@ -10,6 +10,7 @@ import { AuditLogModal } from "./company/components/audit-log/audit-log-modal";
 import { WebhookDeliveryModal } from "./company/components/webhook/webhook-delivery-modal";
 import { ImportWizard } from "@/components/data-transfer/import-wizard";
 import { WebhookModal } from "./company/components/webhook/webhook-modal";
+import { RoutineModal } from "./routines/components/routine-modal";
 import { WebFormSourceModal } from "./company/components/webform/web-form-source-modal";
 import { ApiKeyModal } from "./profile/components/api-key-modal";
 import { ConnectedAccountModal } from "./profile/components/connected-account-modal";
@@ -112,6 +113,8 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
           <TimelineDetailModal />
 
           <WebhookDeliveryModal />
+
+          <RoutineModal />
 
           <ImportWizard />
 

@@ -1,20 +1,18 @@
 import { makeObservable, observable, action } from "mobx";
 
 import type { RootStore } from "@/core/stores/root.store";
-import type { OpenRecordData } from "@/ee/agent-chat/ui-operations";
 
 import { BaseStore } from "@/core/base/base.store";
 import { ENTITY_URL_SEGMENT } from "@/components/entity-detail/entity-relations";
 import { EntityType } from "@/generated/prisma";
-import { findAgentClickTarget, findAgentNavigationTarget, type AgentUiClickTarget } from "@/ee/agent-chat/ui-targets";
+import { findAgentNavigationTarget } from "@/ee/agent-chat/ui-targets";
+import { NavigateRecordTargetSchema } from "@/ee/agent-chat/ui-operations";
 import { agentGuidedTour, type AgentGuidedTourStep, type AgentTourStepData } from "@/ee/agent-chat/agent-tours";
 import {
   captureOverlayFocusTarget,
   focusOverlayTarget,
   type OverlayFocusTarget,
 } from "@/components/ui/overlay-focus-target";
-
-const COLLAPSED_NAV_GROUP_PATTERN = /^nav-(profile|company)-/;
 
 export type Spotlight = {
   targetId: string;
@@ -25,18 +23,21 @@ export type Spotlight = {
 
 export type AgentNavigationOutcome = "navigated" | "blocked" | "timeout";
 
-function revealAncestor(targetId: string) {
-  const match = COLLAPSED_NAV_GROUP_PATTERN.exec(targetId);
-  if (!match) return;
+function resolveAgentNavigationRoute(input: Record<string, unknown>): { path: string; done: string } | null {
+  const record = NavigateRecordTargetSchema.safeParse(input);
+  if (record.success) {
+    const segment = ENTITY_URL_SEGMENT[EntityType[record.data.entity]];
+    return { path: `/${segment}/${record.data.recordId}`, done: `Opened the ${record.data.entity} on its page.` };
+  }
+  const target = findAgentNavigationTarget(String(input.targetId ?? ""));
+  return target ? { path: target.route, done: `Navigated to ${target.route}.` } : null;
+}
 
-  document.getElementById(`nav-${match[1]}`)?.click();
+function describeNavigationInput(input: Record<string, unknown>) {
+  return input.targetId !== undefined ? String(input.targetId) : `${String(input.entity)}:${String(input.recordId)}`;
 }
 
 export function findAgentTargetElement(targetId: string) {
-  const direct = document.getElementById(targetId);
-  if (direct) return direct;
-
-  revealAncestor(targetId);
   return document.getElementById(targetId);
 }
 
@@ -49,38 +50,6 @@ async function awaitAgentTargetElement(targetId: string, stillCurrent: () => boo
     const element = findAgentTargetElement(targetId);
     if (element || Date.now() >= deadline || !stillCurrent()) return element;
     await new Promise<void>((resolve) => setTimeout(resolve, TARGET_SETTLE_POLL_MS));
-  }
-}
-
-const TARGET_ACTIVATION_TIMEOUT_MS = 1000;
-const TARGET_ACTIVATION_POLL_MS = 25;
-
-function isElementVisible(element: HTMLElement) {
-  if (!element.isConnected || element.hidden || element.getAttribute("aria-hidden") === "true") return false;
-  if (element.closest("[hidden], [aria-hidden='true'], [inert]")) return false;
-
-  const style = window.getComputedStyle(element);
-  return (
-    style.display !== "none" &&
-    style.visibility !== "hidden" &&
-    style.opacity !== "0" &&
-    style.pointerEvents !== "none" &&
-    element.getClientRects().length > 0
-  );
-}
-
-function isTargetActive(target: AgentUiClickTarget, element: HTMLElement) {
-  if (target.activation.kind === "expanded") return element.getAttribute("aria-expanded") === "true";
-  return element.getAttribute("data-state") === "active";
-}
-
-async function awaitTargetActivation(target: AgentUiClickTarget) {
-  const deadline = Date.now() + TARGET_ACTIVATION_TIMEOUT_MS;
-  for (;;) {
-    const element = document.getElementById(target.id);
-    if (element && isTargetActive(target, element)) return true;
-    if (Date.now() >= deadline) return false;
-    await new Promise<void>((resolve) => setTimeout(resolve, TARGET_ACTIVATION_POLL_MS));
   }
 }
 
@@ -106,18 +75,18 @@ export class AgentUiControlStore extends BaseStore {
     this.navigateCallback = callback;
   };
 
-  navigate = async (targetId: string) => {
-    const target = findAgentNavigationTarget(targetId);
-    if (!target) {
+  navigate = async (input: Record<string, unknown>) => {
+    const route = resolveAgentNavigationRoute(input);
+    if (!route) {
       return {
         ok: false,
-        result: `Navigation target ${targetId} is not allowed.`,
+        result: `Navigation target ${describeNavigationInput(input)} is not allowed.`,
       };
     }
     if (!this.navigateCallback) return { ok: false, result: "Navigation is not available right now." };
 
-    const outcome = await this.navigateCallback(target.route);
-    if (outcome === "navigated") return { ok: true, result: `Navigated to ${target.route}.` };
+    const outcome = await this.navigateCallback(route.path);
+    if (outcome === "navigated") return { ok: true, result: route.done };
     if (outcome === "blocked") {
       return {
         ok: false,
@@ -126,7 +95,7 @@ export class AgentUiControlStore extends BaseStore {
     }
     return {
       ok: false,
-      result: `Navigation to ${target.route} did not finish.`,
+      result: `Navigation to ${route.path} did not finish.`,
     };
   };
 
@@ -248,70 +217,6 @@ export class AgentUiControlStore extends BaseStore {
     });
     return true;
   }
-
-  clickTarget = async (targetId: string) => {
-    const target = findAgentClickTarget(targetId);
-    if (!target) {
-      return {
-        ok: false,
-        result: `Target ${targetId} is not an allowed interface control.`,
-      };
-    }
-
-    const element = document.getElementById(targetId);
-    if (!element) {
-      const prerequisite = target.activation.kind === "selected" ? target.activation.prerequisite : null;
-      return {
-        ok: false,
-        result: prerequisite
-          ? `Target ${targetId} is not available. Open ${prerequisite} first.`
-          : `Target ${targetId} is not on the current page. Navigate first.`,
-      };
-    }
-    if (element.tagName !== "BUTTON") {
-      return {
-        ok: false,
-        result: `Target ${targetId} is not an activatable button.`,
-      };
-    }
-    if (!isElementVisible(element)) return { ok: false, result: `Target ${targetId} is not visible.` };
-    if ((element as HTMLButtonElement).disabled || element.getAttribute("aria-disabled") === "true")
-      return { ok: false, result: `Target ${targetId} is disabled.` };
-    if (isTargetActive(target, element)) return { ok: true, result: `Target ${targetId} is already active.` };
-
-    element.scrollIntoView({ block: "center", behavior: "smooth" });
-    element.click();
-
-    return (await awaitTargetActivation(target))
-      ? { ok: true, result: `Activated ${targetId}.` }
-      : { ok: false, result: `Target ${targetId} did not activate.` };
-  };
-
-  openRecord = async (input: OpenRecordData) => {
-    if (!this.navigateCallback) return { ok: false, result: "Navigation is not available right now." };
-    const segment = ENTITY_URL_SEGMENT[EntityType[input.entity]];
-    const path =
-      input.recordId === "new" || input.presentation !== "page"
-        ? `/${segment}?open=${input.entity}:${input.recordId}`
-        : `/${segment}/${input.recordId}`;
-    const outcome = await this.navigateCallback(path);
-    if (outcome === "navigated") {
-      return {
-        ok: true,
-        result:
-          input.recordId === "new"
-            ? `Opened a blank ${input.entity} form for the user to fill in.`
-            : `Opened the ${input.entity}.`,
-      };
-    }
-    if (outcome === "blocked") {
-      return {
-        ok: false,
-        result: "Navigation requires the user to resolve unsaved changes.",
-      };
-    }
-    return { ok: false, result: `Opening the ${input.entity} did not finish.` };
-  };
 
   private captureFocus() {
     this.previousFocus = captureOverlayFocusTarget(document.activeElement);

@@ -8,6 +8,7 @@ import { resendVerificationEmailFromAuthAction } from "@/app/[locale]/(public)/a
 export class VerifyEmailStore extends BaseStore {
   isSent = false;
   private activeEmail: string | undefined;
+  private onboardingIntent: string | undefined;
 
   constructor(rootStore: RootStore) {
     super(rootStore);
@@ -20,15 +21,17 @@ export class VerifyEmailStore extends BaseStore {
     });
   }
 
-  activate = (email: string | undefined): void => {
-    if (this.activeEmail === email && email !== undefined) return;
+  activate = (email: string | undefined, onboardingIntent?: string): void => {
+    if (this.activeEmail === email && this.onboardingIntent === onboardingIntent && email !== undefined) return;
     this.activeEmail = email;
+    this.onboardingIntent = onboardingIntent;
     this.isSent = false;
   };
 
   deactivate = (email: string | undefined): void => {
     if (this.activeEmail !== email) return;
     this.activeEmail = undefined;
+    this.onboardingIntent = undefined;
     this.isSent = false;
   };
 
@@ -37,8 +40,12 @@ export class VerifyEmailStore extends BaseStore {
     if (!email) return;
 
     await this.rootStore.loadingOverlayStore.withLoading(async () => {
-      const result = await resendVerificationEmailFromAuthAction();
-      if (!result.ok || this.activeEmail !== email) return;
+      const result = await resendVerificationEmailFromAuthAction({ onboardingIntent: this.onboardingIntent });
+      if (this.activeEmail !== email) return;
+      if (!result.ok) {
+        this.toastError("Common.notifications.unexpectedError");
+        return;
+      }
 
       runInAction(() => {
         this.isSent = true;

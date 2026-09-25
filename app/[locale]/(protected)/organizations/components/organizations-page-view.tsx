@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl";
 import { EntityType } from "@/generated/prisma";
 
 import { useSetTopBarActions } from "@/app/components/topbar-actions-context";
+import { AgentStarterActions } from "@/app/components/agent-chat/suggested-questions";
 import { DataViewContent } from "@/components/data-view/data-view-content";
 import { DataViewEmpty } from "@/components/data-view/data-view-empty";
 import { DataViewLayout } from "@/components/data-view/data-view-layout";
@@ -40,12 +41,13 @@ export const OrganizationsPageView = observer(function OrganizationsPageView({ o
   const { singular } = useEntityTerminology();
   const t = useTranslations();
 
-  const view = resolveDataViewView(organizationsStore.viewMode, organizationsStore.groupingColumnId);
+  const view = resolveDataViewView(organizationsStore.viewMode, organizationsStore.canBoard);
   const hasActiveQuery =
     Boolean(organizationsStore.searchTerm?.trim()) || (organizationsStore.filters?.length ?? 0) > 0;
   const pageState = resolveDataViewPageState({
     explicitlyUnpaginated: false,
     hasActiveQuery,
+    isGrouped: organizationsStore.isGrouped,
     itemCount: organizationsStore.items.length,
     request: organizationsStore.dataRequest,
     total: organizationsStore.pagination?.total,
@@ -114,6 +116,20 @@ export const OrganizationsPageView = observer(function OrganizationsPageView({ o
     case "true-empty":
       body = (
         <DataViewEmpty
+          action={
+            <AgentStarterActions
+              fallback={
+                organizationsStore.canManage ? (
+                  <Button size="sm" variant="secondary" onClick={handleAdd}>
+                    {emptyActionLabel}
+                  </Button>
+                ) : undefined
+              }
+              pageId="organizations"
+              state="empty"
+              surface="page"
+            />
+          }
           actionLabel={emptyActionLabel}
           background={<OrganizationsPageSkeleton animated={false} view={view} />}
           reason="true-empty"
@@ -132,7 +148,10 @@ export const OrganizationsPageView = observer(function OrganizationsPageView({ o
   }
 
   return (
-    <DataViewLayout showPagination={pageState === "content" && view !== "board"} store={organizationsStore}>
+    <DataViewLayout
+      showPagination={pageState === "content" && view !== "board" && !organizationsStore.isGrouped}
+      store={organizationsStore}
+    >
       {body}
     </DataViewLayout>
   );

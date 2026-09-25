@@ -38,8 +38,12 @@ type SharedProps = {
   title: ReactNode;
   actions?: AppModalActions;
   description?: ReactNode;
+  layerClassName?: string;
   size?: ModalSize;
   children: ReactNode;
+  focusReturnTarget?: HTMLElement | null;
+  focusReturnFallback?: HTMLElement | null;
+  onCloseAutoFocus?: (event: Event) => void;
 };
 
 type StoreProps = { store: BaseModalStore; open?: never; onClose?: never };
@@ -63,7 +67,7 @@ function AppModalActionRail({ actions }: { actions: readonly AppModalActionProps
 }
 
 export const AppModal = observer((props: Props) => {
-  const { title, actions = [], description, size = "md", children } = props;
+  const { title, actions = [], description, layerClassName, size = "md", children } = props;
   const store = hasStore(props) ? props.store : undefined;
   const isOpen = hasStore(props) ? props.store.isOpen : props.open;
   const navigationGuard = store?.rootStore.navigationGuard;
@@ -72,7 +76,16 @@ export const AppModal = observer((props: Props) => {
   const hasActions = actionCount > 0;
 
   if (actionCount > 2) throw new Error("AppModal supports at most two header actions");
-  const focusReturn = useOverlayFocusReturn(isOpen, store?.focusReturnTarget, store?.focusReturnFallback);
+  const focusReturn = useOverlayFocusReturn(
+    isOpen,
+    store?.focusReturnTarget ?? props.focusReturnTarget,
+    store?.focusReturnFallback ?? props.focusReturnFallback,
+  );
+
+  function handleCloseAutoFocus(event: Event) {
+    props.onCloseAutoFocus?.(event);
+    if (!event.defaultPrevented) focusReturn.onCloseAutoFocus(event);
+  }
 
   useEffect(() => {
     if (!store || !isOpen || !navigationGuard) return;
@@ -98,11 +111,17 @@ export const AppModal = observer((props: Props) => {
       {isWide ? (
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
           <DialogContent
-            className={cn("flex flex-col gap-0 border-0 bg-transparent p-0 shadow-none", sizeClassMap[size])}
+            className={cn(
+              "flex flex-col gap-0 border-0 bg-transparent p-0 shadow-none",
+              sizeClassMap[size],
+              layerClassName,
+            )}
             data-overlay-action-count={hasActions ? actionCount : undefined}
             data-overlay-actions={hasActions ? "" : undefined}
+            overlayClassName={layerClassName}
             {...(!description ? { "aria-describedby": undefined } : {})}
             {...focusReturn}
+            onCloseAutoFocus={handleCloseAutoFocus}
           >
             <VisuallyHidden.Root>
               <DialogTitle>{title}</DialogTitle>
@@ -118,10 +137,12 @@ export const AppModal = observer((props: Props) => {
       ) : (
         <Drawer open={isOpen} repositionInputs={false} onOpenChange={handleOpenChange}>
           <DrawerContent
-            className="gap-0"
+            className={cn("gap-0", layerClassName)}
             data-overlay-action-count={hasActions ? actionCount : undefined}
             data-overlay-actions={hasActions ? "" : undefined}
+            overlayClassName={layerClassName}
             {...focusReturn}
+            onCloseAutoFocus={handleCloseAutoFocus}
           >
             <VisuallyHidden.Root>
               <DrawerTitle>{title}</DrawerTitle>

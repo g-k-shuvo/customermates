@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl";
 import { EntityType } from "@/generated/prisma";
 
 import { useSetTopBarActions } from "@/app/components/topbar-actions-context";
+import { AgentStarterActions } from "@/app/components/agent-chat/suggested-questions";
 import { DataViewContent } from "@/components/data-view/data-view-content";
 import { DataViewEmpty } from "@/components/data-view/data-view-empty";
 import { DataViewLayout } from "@/components/data-view/data-view-layout";
@@ -40,10 +41,11 @@ export const TasksPageView = observer(function TasksPageView({ tasks }: Props) {
   const { singular } = useEntityTerminology();
   const t = useTranslations();
 
-  const view = resolveDataViewView(tasksStore.viewMode, tasksStore.groupingColumnId);
+  const view = resolveDataViewView(tasksStore.viewMode, tasksStore.canBoard);
   const pageState = resolveDataViewPageState({
     explicitlyUnpaginated: false,
     hasActiveQuery: Boolean(tasksStore.searchTerm?.trim()) || (tasksStore.filters?.length ?? 0) > 0,
+    isGrouped: tasksStore.isGrouped,
     itemCount: tasksStore.items.length,
     request: tasksStore.dataRequest,
     total: tasksStore.pagination?.total,
@@ -102,6 +104,20 @@ export const TasksPageView = observer(function TasksPageView({ tasks }: Props) {
     case "true-empty":
       body = (
         <DataViewEmpty
+          action={
+            <AgentStarterActions
+              fallback={
+                tasksStore.canManage ? (
+                  <Button size="sm" variant="secondary" onClick={handleAdd}>
+                    {emptyActionLabel}
+                  </Button>
+                ) : undefined
+              }
+              pageId="tasks"
+              state="empty"
+              surface="page"
+            />
+          }
           actionLabel={emptyActionLabel}
           background={<TasksPageSkeleton animated={false} view={view} />}
           reason="true-empty"
@@ -126,7 +142,9 @@ export const TasksPageView = observer(function TasksPageView({ tasks }: Props) {
 
   return (
     <DataViewLayout
-      showPagination={pageState === "content" && view !== "board" && tasksStore.activeTab === "list"}
+      showPagination={
+        pageState === "content" && view !== "board" && tasksStore.activeTab === "list" && !tasksStore.isGrouped
+      }
       store={tasksStore}
     >
       {body}

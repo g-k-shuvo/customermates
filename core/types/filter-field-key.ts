@@ -24,6 +24,7 @@ export enum FilterFieldKey {
   stageId = "stageId",
   provider = "provider",
   state = "state",
+  draft = "draft",
   connectedAccountId = "connectedAccountId",
   calendarId = "calendarId",
   startsAt = "startsAt",
@@ -35,4 +36,8 @@ export enum FilterFieldKey {
   adProvider = "adProvider",
   auditSource = "auditSource",
   workspaceTags = "workspaceTags",
+  name = "name",
+  firstName = "firstName",
+  lastName = "lastName",
+  ownerUserId = "ownerUserId",
 }

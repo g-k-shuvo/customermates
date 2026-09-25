@@ -28,14 +28,15 @@ export type FilterValueKind =
   | { kind: "date" }
   | { kind: "event" }
   | { kind: "string" }
-  | { kind: "linkStatus" };
+  | { kind: "linkStatus" }
+  | { kind: "draftStatus" };
 
 const enumValues = (e: Record<string, string>): readonly string[] => Object.values(e);
 
+export const TIMELINE_KIND_VIEW_VALUES = ["changes", "messages", "activities"] as const;
+
 export const TIMELINE_KIND_FILTER_VALUES = [
-  "changes",
-  "messages",
-  "activities",
+  ...TIMELINE_KIND_VIEW_VALUES,
   "message",
   "audit",
   "activity",
@@ -54,6 +55,7 @@ export const DEFAULT_FILTER_VALUE_KIND: Record<FilterFieldKey, FilterValueKind> 
   [FilterFieldKey.contactIds]: { kind: "entityId", entity: "contact" },
   [FilterFieldKey.taskIds]: { kind: "entityId", entity: "task" },
   [FilterFieldKey.participantContactId]: { kind: "entityId", entity: "contact" },
+  [FilterFieldKey.ownerUserId]: { kind: "entityId", entity: "user" },
   [FilterFieldKey.timelineThreadId]: { kind: "entityId", entity: "thread" },
   [FilterFieldKey.updatedAt]: { kind: "date" },
   [FilterFieldKey.createdAt]: { kind: "date" },
@@ -72,6 +74,7 @@ export const DEFAULT_FILTER_VALUE_KIND: Record<FilterFieldKey, FilterValueKind> 
   [FilterFieldKey.state]: { kind: "enum", values: enumValues(MessagingThreadState) },
   [FilterFieldKey.timelineKind]: { kind: "enum", values: TIMELINE_KIND_FILTER_VALUES },
   [FilterFieldKey.participants]: { kind: "linkStatus" },
+  [FilterFieldKey.draft]: { kind: "draftStatus" },
   [FilterFieldKey.connectedAccountId]: { kind: "entityId", entity: "connectedAccount" },
   [FilterFieldKey.calendarId]: { kind: "string" },
   [FilterFieldKey.startsAt]: { kind: "date" },
@@ -83,6 +86,9 @@ export const DEFAULT_FILTER_VALUE_KIND: Record<FilterFieldKey, FilterValueKind> 
   [FilterFieldKey.adProvider]: { kind: "enum", values: AD_PROVIDER_ORDER },
   [FilterFieldKey.auditSource]: { kind: "enum", values: AUDIT_SOURCE_FILTER_VALUES },
   [FilterFieldKey.workspaceTags]: { kind: "string" },
+  [FilterFieldKey.name]: { kind: "string" },
+  [FilterFieldKey.firstName]: { kind: "string" },
+  [FilterFieldKey.lastName]: { kind: "string" },
 };
 
 export const filterValueKind = (field: string): FilterValueKind | undefined =>
@@ -104,6 +110,8 @@ export function describeFilterFieldValue(field: FilterFieldKey): string {
       return `${field} (a text value; operators: ${ops})`;
     case "linkStatus":
       return `${field} (CRM-link status; value-less operators: allSet = all participants linked, hasUnset = at least one unlinked)`;
+    case "draftStatus":
+      return `${field} (draft status; value-less operators: hasSome = thread holds an unsent draft, hasNone = it does not)`;
   }
 }
 

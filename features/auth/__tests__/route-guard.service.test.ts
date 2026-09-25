@@ -1,7 +1,7 @@
 import type { TenantUser } from "@/features/user/user.schema";
 import type { AuthService } from "../auth.service";
 import type { FindUserRepo } from "../../user/user.service";
-import type { AccessOptions, RouteGuardSubscriptionRepo } from "../route-guard.service";
+import type { AccessOptions, RouteGuardCompanyRepo } from "../route-guard.service";
 import type { GetLegalStatusInteractor } from "@/features/legal/get-legal-status.interactor";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -24,7 +24,10 @@ const PAST = new Date(Date.now() - 48 * 60 * 60 * 1000);
 const FUTURE = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
 const mocks = {
+  existsUnscoped: vi.fn(),
   getSession: vi.fn(),
+  findAuthUserCompanyIdUnscoped: vi.fn(),
+  findAuthUserAccountStateUnscoped: vi.fn(),
   findCurrentUserUnscoped: vi.fn(),
   getSubscriptionOrThrowUnscoped: vi.fn(),
   getLegalStatus: vi.fn(),
@@ -33,10 +36,15 @@ const mocks = {
 function makeService() {
   return new RouteGuardService(
     { getSession: mocks.getSession } as unknown as AuthService,
-    { findCurrentUserUnscoped: mocks.findCurrentUserUnscoped } as unknown as FindUserRepo,
     {
+      findAuthUserCompanyIdUnscoped: mocks.findAuthUserCompanyIdUnscoped,
+      findAuthUserAccountStateUnscoped: mocks.findAuthUserAccountStateUnscoped,
+      findCurrentUserUnscoped: mocks.findCurrentUserUnscoped,
+    } as unknown as FindUserRepo,
+    {
+      existsUnscoped: mocks.existsUnscoped,
       getSubscriptionOrThrowUnscoped: mocks.getSubscriptionOrThrowUnscoped,
-    } as unknown as RouteGuardSubscriptionRepo,
+    } as unknown as RouteGuardCompanyRepo,
     { invoke: mocks.getLegalStatus } as unknown as GetLegalStatusInteractor,
   );
 }
@@ -82,12 +90,43 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockEnv.APP_MODE = "cloud";
   mocks.getSession.mockResolvedValue(session());
+  mocks.findAuthUserCompanyIdUnscoped.mockResolvedValue(null);
+  mocks.findAuthUserAccountStateUnscoped.mockImplementation(async (userId: string) => {
+    const companyId = await mocks.findAuthUserCompanyIdUnscoped(userId);
+    if (companyId === undefined) return undefined;
+    const current = await mocks.getSession.mock.results.at(-1)?.value;
+    return { companyId, emailVerified: current?.user?.emailVerified ?? false };
+  });
+  mocks.existsUnscoped.mockResolvedValue(true);
   mocks.findCurrentUserUnscoped.mockResolvedValue(user());
   mocks.getSubscriptionOrThrowUnscoped.mockResolvedValue(subscription(SubscriptionStatus.active));
   mocks.getLegalStatus.mockResolvedValue({ mustAccept: false });
 });
 
 describe("RouteGuardService.resolveAccountState", () => {
+  it("trusts the database over a stale session cache when deciding email verification", async () => {
+    mocks.getSession.mockResolvedValue(session({ createdAt: PAST, emailVerified: false }));
+    mocks.findAuthUserAccountStateUnscoped.mockResolvedValue({ companyId: null, emailVerified: true });
+    mocks.findCurrentUserUnscoped.mockResolvedValue(null);
+
+    const result = await makeService().resolveAccountState();
+
+    expect(result.state).toBe("unregistered");
+    expect(result.emailVerified).toBe(true);
+    expect(result.sessionUser?.emailVerified).toBe(true);
+  });
+
+  it("does not let a stale verified cookie bypass an unverified row past the grace", async () => {
+    mocks.getSession.mockResolvedValue(session({ createdAt: PAST, emailVerified: true }));
+    mocks.findAuthUserAccountStateUnscoped.mockResolvedValue({ companyId: null, emailVerified: false });
+    mocks.findCurrentUserUnscoped.mockResolvedValue(null);
+
+    const result = await makeService().resolveAccountState();
+
+    expect(result.state).toBe("overdueVerification");
+    expect(result.emailVerified).toBe(false);
+  });
+
   it("resolves an absent session without loading product or tenant data", async () => {
     mocks.getSession.mockResolvedValue(null);
 
@@ -130,6 +169,73 @@ describe("RouteGuardService.resolveAccountState", () => {
       state: "unregistered",
       user: null,
     });
+    expect(mocks.getLegalStatus).not.toHaveBeenCalled();
+    expect(mocks.getSubscriptionOrThrowUnscoped).not.toHaveBeenCalled();
+  });
+
+  it("uses only a live identity workspace binding for pre-tenant routing", async () => {
+    mocks.findCurrentUserUnscoped.mockResolvedValue(null);
+    mocks.findAuthUserCompanyIdUnscoped.mockResolvedValue("invited-company-id");
+
+    expect(await makeService().resolveAccountState()).toMatchObject({
+      state: "unregistered",
+      sessionUser: { companyId: "invited-company-id" },
+    });
+  });
+
+  it("treats a cached session for a deleted identity as unauthenticated", async () => {
+    mocks.findCurrentUserUnscoped.mockResolvedValue(null);
+    mocks.findAuthUserCompanyIdUnscoped.mockResolvedValue(undefined);
+
+    expect(await makeService().resolveAccountState()).toMatchObject({
+      state: "unauthenticated",
+      sessionUser: null,
+      user: null,
+    });
+    expect(mocks.getLegalStatus).not.toHaveBeenCalled();
+    expect(mocks.getSubscriptionOrThrowUnscoped).not.toHaveBeenCalled();
+    expect(mocks.existsUnscoped).not.toHaveBeenCalled();
+  });
+
+  it("discards an identity binding to a deleted workspace", async () => {
+    mocks.findCurrentUserUnscoped.mockResolvedValue(null);
+    mocks.findAuthUserCompanyIdUnscoped.mockResolvedValue("deleted-company");
+    mocks.existsUnscoped.mockResolvedValue(false);
+
+    expect(await makeService().resolveAccountState()).toMatchObject({
+      state: "unregistered",
+      sessionUser: { companyId: null },
+    });
+    expect(mocks.existsUnscoped).toHaveBeenCalledExactlyOnceWith("deleted-company");
+  });
+
+  it("uses the tenant user's company without looking up the old identity binding", async () => {
+    mocks.findAuthUserCompanyIdUnscoped.mockResolvedValue("old-company");
+
+    expect(await makeService().resolveAccountState()).toMatchObject({ sessionUser: { companyId: "company-1" } });
+    expect(mocks.existsUnscoped).not.toHaveBeenCalled();
+  });
+
+  it("does not look up a company for an unbound identity", async () => {
+    mocks.findCurrentUserUnscoped.mockResolvedValue(null);
+
+    expect(await makeService().resolveAccountState()).toMatchObject({
+      state: "unregistered",
+      sessionUser: { companyId: null },
+    });
+    expect(mocks.existsUnscoped).not.toHaveBeenCalled();
+  });
+
+  it("rejects a deleted identity even when the same email now has a tenant user", async () => {
+    mocks.findAuthUserCompanyIdUnscoped.mockResolvedValue(undefined);
+    mocks.findCurrentUserUnscoped.mockResolvedValue(user());
+
+    expect(await makeService().resolveAccountState()).toMatchObject({
+      state: "unauthenticated",
+      sessionUser: null,
+      user: null,
+    });
+    expect(mocks.findCurrentUserUnscoped).not.toHaveBeenCalled();
     expect(mocks.getLegalStatus).not.toHaveBeenCalled();
     expect(mocks.getSubscriptionOrThrowUnscoped).not.toHaveBeenCalled();
   });
@@ -208,7 +314,7 @@ describe("accessRedirectForAccountState", () => {
   });
 
   it.each([
-    [null, null, "/onboarding/wizard"],
+    [null, null, "/onboarding"],
     [user({ status: Status.inactive }), null, "/auth/error?type=inactiveUser"],
     [user({ status: Status.pendingAuthorization }), null, "/auth/pending"],
     [user({ onboardingWizardCompletedAt: null }), null, "/onboarding/wizard"],

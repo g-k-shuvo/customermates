@@ -9,12 +9,13 @@ const harness = vi.hoisted(() => ({
   loadById: vi.fn(),
   pageStateProps: vi.fn(),
   setTopBarActions: vi.fn(),
-  setTopBarJoinedContent: vi.fn(),
   canReadHistory: false,
   personalizationEnabled: false,
   isPersonalizing: false,
   setIsPersonalizing: vi.fn(),
   starredFieldIds: [] as string[],
+  drawerStack: [] as { entityType: string; id: string }[],
+  useAgentRecordContext: vi.fn(),
 }));
 
 vi.mock("next-intl", () => ({
@@ -23,7 +24,6 @@ vi.mock("next-intl", () => ({
 
 vi.mock("@/app/components/topbar-actions-context", () => ({
   useSetTopBarActions: harness.setTopBarActions,
-  useSetTopBarJoinedContent: harness.setTopBarJoinedContent,
 }));
 
 vi.mock("@/components/forms/form-context", () => ({
@@ -35,7 +35,11 @@ vi.mock("@/components/modal/hooks/use-delete-confirmation", () => ({
 }));
 
 vi.mock("@/components/entity-detail/hooks/use-entity-drawer-stack", () => ({
-  useEntityDrawerStack: () => ({ stack: [] }),
+  useEntityDrawerStack: () => ({ stack: harness.drawerStack }),
+}));
+
+vi.mock("@/app/components/agent-chat/use-agent-record-context", () => ({
+  useAgentRecordContext: harness.useAgentRecordContext,
 }));
 
 vi.mock("../entity-detail-personalization", () => ({
@@ -45,6 +49,28 @@ vi.mock("../entity-detail-personalization", () => ({
     starredFieldIds: harness.starredFieldIds,
     setIsPersonalizing: harness.setIsPersonalizing,
   }),
+  useEntityDetailCustomization: ({
+    canManage,
+    isEditingCustomField,
+    toggleEditingCustomField,
+  }: {
+    canManage: boolean;
+    isEditingCustomField: boolean;
+    toggleEditingCustomField: () => void;
+  }) => {
+    const isCustomizing = harness.personalizationEnabled
+      ? harness.isPersonalizing || (canManage && isEditingCustomField)
+      : canManage && isEditingCustomField;
+
+    return {
+      isCustomizing,
+      onToggleCustomization: () => {
+        const next = !isCustomizing;
+        if (harness.personalizationEnabled) harness.setIsPersonalizing(next);
+        if (canManage && isEditingCustomField !== next) toggleEditingCustomField();
+      },
+    };
+  },
 }));
 
 vi.mock("@/components/entity-detail/entity-notes-panel", () => ({
@@ -53,6 +79,7 @@ vi.mock("@/components/entity-detail/entity-notes-panel", () => ({
 
 vi.mock("@/core/stores/root-store.provider", () => ({
   useRootStore: () => ({
+    agentChatStore: {},
     customColumnModalStore: { initialize: vi.fn(), open: vi.fn() },
     layoutStore: { clearRuntimeIdentity: vi.fn(), setRuntimeIdentity: vi.fn() },
     userStore: { can: vi.fn(() => harness.canReadHistory) },
@@ -159,6 +186,7 @@ describe("EntityDetailLayout", () => {
     harness.personalizationEnabled = false;
     harness.isPersonalizing = false;
     harness.starredFieldIds = [];
+    harness.drawerStack = [];
   });
 
   it.each([
@@ -195,6 +223,27 @@ describe("EntityDetailLayout", () => {
     expect(html).not.toContain('data-master-data="true"');
   });
 
+  it("registers the loaded full-page record and disables it while a drawer owns the active context", () => {
+    renderState("content");
+
+    expect(harness.useAgentRecordContext).toHaveBeenLastCalledWith({
+      enabled: true,
+      entityType: EntityType.contact,
+      recordId: "contact-1",
+      name: "Ada Lovelace",
+    });
+
+    harness.drawerStack = [{ entityType: "deal", id: "deal-1" }];
+    renderState("content");
+
+    expect(harness.useAgentRecordContext).toHaveBeenLastCalledWith({
+      enabled: false,
+      entityType: EntityType.contact,
+      recordId: "contact-1",
+      name: "Ada Lovelace",
+    });
+  });
+
   it("keeps one details tree and one notes tree while exposing compact panel tabs and the wide three-column grid", () => {
     harness.canReadHistory = true;
 
@@ -212,37 +261,13 @@ describe("EntityDetailLayout", () => {
     expect(html).toContain('data-detail-panel="notes"');
     const switcherClasses = html.match(/data-detail-panel-switcher="true" class="([^"]+)"/)?.[1].split(" ");
     expect(switcherClasses).not.toContain("border-t");
-    expect(html).toContain("after:-bottom-px");
-    expect(html).toContain("Common.details");
+    const tabClasses = html.match(/role="tab"[^>]*class="([^"]+)"/)?.[1].split(" ") ?? [];
+    expect(tabClasses).toContain("group-data-[orientation=horizontal]/tabs:after:-bottom-px");
+    expect(tabClasses).not.toContain("group-data-[orientation=horizontal]/tabs:after:bottom-[-5px]");
+    expect(html).toContain("EntityDetail.overview");
     expect(html).toContain("EntityDetail.sections.notes");
     expect(html).toContain("EntityTimeline.types.activities");
     expect(html).toContain("@6xl/detail:grid-cols-[minmax(0,3fr)_minmax(0,2fr)_360px]");
-  });
-
-  it.each([
-    ["loading", true],
-    ["content", true],
-    ["not-found", false],
-    ["error", false],
-  ] as const)("joins a visible pinned-field row to the top bar in the %s state", (state, expected) => {
-    harness.personalizationEnabled = true;
-    harness.starredFieldIds = ["name"];
-
-    renderState(state, {
-      summary: createElement("div", { "data-summary": true }),
-    });
-
-    expect(harness.setTopBarJoinedContent).toHaveBeenLastCalledWith(expected);
-  });
-
-  it("keeps the ordinary top-bar boundary when no pinned fields are visible", () => {
-    harness.personalizationEnabled = true;
-
-    renderState("content", {
-      summary: createElement("div", { "data-summary": true }),
-    });
-
-    expect(harness.setTopBarJoinedContent).toHaveBeenLastCalledWith(false);
   });
 
   it("uses one Customize control to enter personalization and field editing together", () => {

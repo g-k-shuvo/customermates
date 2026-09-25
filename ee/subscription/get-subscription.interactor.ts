@@ -1,5 +1,3 @@
-import type { SubscriptionService } from "./subscription.service";
-
 import { z } from "zod";
 import {
   Resource,
@@ -23,7 +21,7 @@ const OutputSchema = z.object({
   activeUsers: z.number(),
   trialEndDate: z.date().nullable(),
   currentPeriodEnd: z.date().nullable(),
-  customerPortalUrl: z.string().nullable(),
+  hasBillingPortal: z.boolean(),
   hasActiveSubscription: z.boolean(),
 });
 
@@ -38,7 +36,7 @@ export type SubscriptionDto = {
   activeUsers: number;
   trialEndDate: Date | null;
   currentPeriodEnd: Date | null;
-  customerPortalUrl: string | null;
+  hasBillingPortal: boolean;
   hasActiveSubscription: boolean;
 };
 
@@ -48,7 +46,6 @@ export class GetSubscriptionInteractor extends AuthenticatedInteractor<void, Sub
   constructor(
     private repo: GetSubscriptionRepo,
     private userRepo: CountActiveUsersRepo,
-    private lemonSqueezyService: SubscriptionService,
   ) {
     super();
   }
@@ -60,15 +57,6 @@ export class GetSubscriptionInteractor extends AuthenticatedInteractor<void, Sub
       this.userRepo.countActiveUsers(),
     ]);
 
-    let customerPortalUrl: string | null = null;
-
-    if (subscription.lemonSqueezyId && subscription.plan !== SubscriptionPlanEnum.enterprise) {
-      const lemonSqueezySubscription = await this.lemonSqueezyService.getSubscriptionOrThrowUnscoped(
-        subscription.lemonSqueezyId,
-      );
-      customerPortalUrl = lemonSqueezySubscription.data.attributes.urls?.customer_portal || null;
-    }
-
     return {
       ok: true,
       data: {
@@ -78,7 +66,7 @@ export class GetSubscriptionInteractor extends AuthenticatedInteractor<void, Sub
         activeUsers,
         trialEndDate: subscription.trialEndDate,
         currentPeriodEnd: subscription.currentPeriodEnd,
-        customerPortalUrl,
+        hasBillingPortal: subscription.plan !== SubscriptionPlanEnum.enterprise && Boolean(subscription.lemonSqueezyId),
         hasActiveSubscription: Boolean(subscription.lemonSqueezyId),
       },
     };

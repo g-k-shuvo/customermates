@@ -1,7 +1,6 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import type { ReactNode } from "react";
 import type { BaseDataViewStore, HasId } from "@/core/base/base-data-view.store";
 
 import { observer } from "mobx-react-lite";
@@ -10,12 +9,10 @@ import type { DataViewView } from "./data-view-state";
 
 import { useColumnLabel } from "@/components/entity-terminology/use-column-label";
 
-import { DataCardView } from "./data-card-view";
 import { DataKanbanView } from "./data-kanban-view";
 import { DataTable } from "./data-table";
 
 type Props<E extends HasId> = {
-  cardActions?: (item: E) => ReactNode;
   columns: ColumnDef<E>[];
   onRowClick?: (item: E) => void;
   rowHref?: (item: E) => string | undefined;
@@ -24,7 +21,6 @@ type Props<E extends HasId> = {
 };
 
 export const DataViewContent = observer(function DataViewContent<E extends HasId>({
-  cardActions,
   columns,
   onRowClick,
   rowHref,
@@ -55,21 +51,8 @@ export const DataViewContent = observer(function DataViewContent<E extends HasId
     );
   }
 
-  if (view === "board") {
-    return (
-      <DataKanbanView
-        cardActions={cardActions}
-        cardHref={rowHref}
-        className="animate-page-result-in motion-reduce:animate-none"
-        columns={resolvedColumns}
-        store={store}
-        onCardClick={onRowClick}
-      />
-    );
-  }
-
   return (
-    <DataCardView
+    <DataKanbanView
       cardHref={rowHref}
       className="animate-page-result-in motion-reduce:animate-none"
       columns={resolvedColumns}

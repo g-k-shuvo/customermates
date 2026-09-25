@@ -6,12 +6,14 @@ import type {
   SortDescriptor,
 } from "@/core/base/base-get.schema";
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
+import type { GroupableFieldSpec, GroupingTargetModel } from "@/core/base/grouping/groupable-field";
 
 import { startOfDay, subDays } from "date-fns";
 import { CustomColumnType } from "@/generated/prisma";
 
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { isCustomField } from "@/core/utils/custom-field";
+import { groupScopeFragment } from "@/core/base/grouping/group-scope";
 import { normalizeFilter } from "@/core/base/filter-compat";
 
 export interface SortableField {
@@ -31,6 +33,7 @@ export enum ViewMode {
 export enum FilterOperatorKey {
   equals = "equals",
   contains = "contains",
+  startsWith = "startsWith",
   in = "in",
   notIn = "notIn",
   gt = "gt",
@@ -84,7 +87,9 @@ const RELATION_FIELD_MAPPING: Record<FilterFieldKey, string> = {
   [FilterFieldKey.stageId]: "stageId",
   [FilterFieldKey.provider]: "provider",
   [FilterFieldKey.state]: "state",
+  [FilterFieldKey.draft]: "draft",
   [FilterFieldKey.participantContactId]: "participantContactId",
+  [FilterFieldKey.ownerUserId]: "ownerUserId",
   [FilterFieldKey.participants]: "participants",
   [FilterFieldKey.connectedAccountId]: "connectedAccountId",
   [FilterFieldKey.calendarId]: "calendarId",
@@ -97,6 +102,9 @@ const RELATION_FIELD_MAPPING: Record<FilterFieldKey, string> = {
   [FilterFieldKey.adProvider]: "adProvider",
   [FilterFieldKey.auditSource]: "auditSource",
   [FilterFieldKey.workspaceTags]: "tags",
+  [FilterFieldKey.name]: "name",
+  [FilterFieldKey.firstName]: "firstName",
+  [FilterFieldKey.lastName]: "lastName",
 };
 
 export abstract class BaseQueryBuilder<TWhereInput extends Record<string, unknown>> {
@@ -116,9 +124,30 @@ export abstract class BaseQueryBuilder<TWhereInput extends Record<string, unknow
     return Promise.resolve([]);
   }
 
+  private memoCustomColumns?: Promise<Array<CustomColumnDto>>;
+  private memoFilterableFields?: Promise<Array<FilterableField>>;
+
+  customColumnsOnce(): Promise<Array<CustomColumnDto>> {
+    this.memoCustomColumns ??= this.getCustomColumns();
+    return this.memoCustomColumns;
+  }
+
+  filterableFieldsOnce(): Promise<Array<FilterableField>> {
+    this.memoFilterableFields ??= this.getFilterableFields();
+    return this.memoFilterableFields;
+  }
+
+  getGroupableFields(_customColumns?: readonly CustomColumnDto[]): Promise<Array<GroupableFieldSpec>> {
+    return Promise.resolve([]);
+  }
+
+  protected groupTargetWhere(_model: GroupingTargetModel): Record<string, unknown> {
+    return {};
+  }
+
   async buildQueryArgs(params: GetQueryParams, baseWhere: TWhereInput = {} as TWhereInput) {
-    const where = await this.buildWhereClause(params.filters, params.searchTerm, baseWhere);
-    const customColumns = await this.getCustomColumns();
+    const where = await this.buildWhereClause(params, baseWhere);
+    const customColumns = await this.customColumnsOnce();
     const customSort = resolveCustomSort(params.sortDescriptor, customColumns);
     const orderBy = customSort ? [] : this.buildOrderBy({ sortDescriptor: params.sortDescriptor });
     const pagination =
@@ -166,22 +195,28 @@ export abstract class BaseQueryBuilder<TWhereInput extends Record<string, unknow
   }
 
   private async buildWhereClause(
-    filters: Filter[] | undefined,
-    searchTerm?: string | null,
+    params: GetQueryParams,
     baseWhere: TWhereInput = {} as TWhereInput,
   ): Promise<TWhereInput> {
     const where = { ...baseWhere } as WithDynamicFields<TWhereInput> & WithLogicalOperators<TWhereInput>;
-    const filterableFields = await this.getFilterableFields();
-    const validFilters = this.validateFilters({ filters, filterableFields });
+    const filterableFields = await this.filterableFieldsOnce();
+    const validFilters = this.validateFilters({ filters: params.filters, filterableFields });
 
-    const customColumns = validFilters.some((f) => isCustomField(f.field)) ? await this.getCustomColumns() : [];
+    const customColumns = validFilters.some((f) => isCustomField(f.field)) ? await this.customColumnsOnce() : [];
     const customColumnTypeById = new Map(customColumns.map((c) => [c.id, c.type]));
 
     for (const filter of validFilters) this.applyFieldFilter(where, filter, filterableFields, customColumnTypeById);
 
-    const searchGroup = this.buildSearchGroup(searchTerm);
+    const searchGroup = this.buildSearchGroup(params.searchTerm);
 
     if (searchGroup) where.AND = [...(where.AND ?? []), searchGroup];
+
+    if (params.groupScope) {
+      where.AND = [
+        ...(where.AND ?? []),
+        groupScopeFragment(params.groupScope, (model) => this.groupTargetWhere(model)) as TWhereInput,
+      ];
+    }
 
     return where;
   }
@@ -389,6 +424,8 @@ export abstract class BaseQueryBuilder<TWhereInput extends Record<string, unknow
         return filter.value;
       case FilterOperatorKey.contains:
         return { contains: filter.value, mode: "insensitive" };
+      case FilterOperatorKey.startsWith:
+        return { startsWith: filter.value, mode: "insensitive" };
       case FilterOperatorKey.in:
         return { in: filter.value };
       case FilterOperatorKey.notIn:

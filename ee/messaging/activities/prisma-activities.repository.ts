@@ -12,12 +12,12 @@ import { contactFullName, formatChannelIdentifier, threadCounterpart } from "../
 import { channelClass, classWhere, EMAIL_PROVIDERS } from "../provider";
 import { identifierKey } from "@/features/contacts/upsert/validate-identifiers";
 import {
+  accessibleFolderStatesWhere,
   accountActivityAccessWhere,
   calendarEventAccessWhere,
-  folderMessageWhere,
+  inboxThreadVisibilityWhere,
+  messageVisibilityWhere,
   threadAccessWhere,
-  threadFolderMembershipWhere,
-  threadHasActivityWhere,
 } from "../messaging-access";
 
 import type { GetActivitiesRepo } from "./get-activities.interactor";
@@ -39,6 +39,7 @@ import {
 } from "./activity-filterable-fields";
 import { TERMINOLOGY_ENTITY_RESOURCE } from "@/features/entity-terminology/entity-terminology.constants";
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
+import { toMessagingMessageDto } from "../inbox/inbox.schema";
 
 type UnresolvedRecordRef = { entityType: EntityType; id: string };
 
@@ -170,7 +171,7 @@ function auditRecordRefs(event: string, entityId: string | null): UnresolvedReco
   return [{ entityType, id: entityId }];
 }
 
-function messageRecordRefs(message: MessagingMessage): UnresolvedRecordRef[] {
+function messageRecordRefs(message: Pick<MessagingMessage, "sender">): UnresolvedRecordRef[] {
   const contactId = message.sender?.contact?.id;
   if (!contactId) return [];
 
@@ -1058,30 +1059,14 @@ export class PrismaActivitiesRepo
   private loadAccessibleFolderStates() {
     return (this.accessibleFolderStates ??= this.prisma.connectedAccount
       .findMany({
-        where: {
-          companyId: this.companyId,
-          OR: [{ userId: this.userId }, { shared: true }, { threads: { some: { sharedToCrm: true } } }],
-          foldersSyncedAt: { not: null },
-        },
+        where: accessibleFolderStatesWhere(this.companyId, this.userId),
         select: { id: true, selectedFolderIds: true },
       })
       .then((rows) => rows.map((row) => ({ id: row.id, visibleSet: row.selectedFolderIds }))));
   }
 
   private async messageVisibilityWhere(): Promise<Prisma.MessagingMessageWhereInput> {
-    const states = await this.loadAccessibleFolderStates();
-    if (states.length === 0) return { isHidden: false };
-
-    return {
-      isHidden: false,
-      OR: [
-        { connectedAccountId: { notIn: states.map((state) => state.id) } },
-        ...states.map((state) => ({
-          connectedAccountId: state.id,
-          ...folderMessageWhere(state.visibleSet),
-        })),
-      ],
-    };
+    return messageVisibilityWhere(await this.loadAccessibleFolderStates());
   }
 
   private auditLogWhere(auditWhere: Prisma.AuditLogWhereInput | undefined): Prisma.AuditLogWhereInput {
@@ -1188,7 +1173,7 @@ export class PrismaActivitiesRepo
     return this.redactBcc(rows).map((row) => {
       const { thread, ...message } = row;
       return {
-        message: message as unknown as MessagingMessage,
+        message: toMessagingMessageDto(message as unknown as MessagingMessage),
         participants: thread.participants,
         thread: {
           id: thread.id,
@@ -1299,11 +1284,17 @@ export class PrismaActivitiesRepo
       ...providerWhere(query),
       ...(Object.keys(accountWhere).length ? { connectedAccountId: accountWhere } : {}),
     };
-    const folderMembership = threadFolderMembershipWhere(await this.loadAccessibleFolderStates());
+    const folderStates = await this.loadAccessibleFolderStates();
+    const inboxVisibility = inboxThreadVisibilityWhere(this.companyId, this.userId, folderStates);
+    const inboxVisibilityClauses = Array.isArray(inboxVisibility.AND)
+      ? inboxVisibility.AND
+      : inboxVisibility.AND
+        ? [inboxVisibility.AND]
+        : [];
     const baseWhere: Prisma.MessagingThreadWhereInput = {
       ...scoped,
-      ...threadAccessWhere(this.companyId, this.userId),
-      AND: [...sourceWhere, threadHasActivityWhere(), ...(folderMembership ? [folderMembership] : [])],
+      ...inboxVisibility,
+      AND: [...sourceWhere, ...inboxVisibilityClauses],
     };
     const select = {
       id: true,
@@ -1325,9 +1316,8 @@ export class PrismaActivitiesRepo
     const selectedRows = missingSelectedIds.length
       ? await this.prisma.messagingThread.findMany({
           where: {
-            ...threadAccessWhere(this.companyId, this.userId),
+            ...inboxVisibility,
             id: { in: missingSelectedIds },
-            AND: [threadHasActivityWhere(), ...(folderMembership ? [folderMembership] : [])],
           },
           take: 50,
           select,

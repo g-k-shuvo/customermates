@@ -192,9 +192,11 @@ model User {
   completedTasks                  Task[]                  @relation("TaskCompletedBy")
   widgets                         Widget[]
   p13n                            P13n[]
+  dataViews                       DataView[]
   connectedAccounts               ConnectedAccount[]
   agentConversations              AgentConversation[]
   agentRunLeases                  AgentRunLease[]
+  ownedRoutines                   Routine[]
   agentCreditAdjustments          AgentCreditAdjustment[]
   adAttributions                  AdAttribution[]
   dealStageHistories              DealStageHistory[]
@@ -246,6 +248,7 @@ model Company {
   userRoles                   UserRole[]
   rolePermissions             RolePermission[]
   p13n                        P13n[]
+  dataViews                   DataView[]
   webhooks                    Webhook[]
   webhookDeliveries           WebhookDelivery[]
   connectedAccounts           ConnectedAccount[]
@@ -269,6 +272,8 @@ model Company {
   agentTurnRequests           AgentTurnRequest[]
   agentApprovals              AgentApproval[]
   agentUiCommandResults       AgentUiCommandResult[]
+  routines                    Routine[]
+  routineRuns                 RoutineRun[]
   leads                       Lead[]
   webFormSources              WebFormSource[]
   webFormSubmissions          WebFormSubmission[]
@@ -294,7 +299,6 @@ model P13n {
   companyId          String
   p13nId             String
   filters            Json?
-  savedFilterPresets Json?
   searchTerm         String?
   sortDescriptor     Json?
   pagination         Json?
@@ -303,7 +307,9 @@ model P13n {
   hiddenColumns      String[]
   viewMode           String?  @default("table")
   groupingColumnId   String?
+  grouping           Json?
   detailOptions      Json?
+  activeViewKey      String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -312,6 +318,33 @@ model P13n {
   @@unique([companyId, userId, p13nId])
   @@index([companyId])
   @@index([userId])
+}
+
+model DataView {
+  id               String   @id @default(uuid())
+  companyId        String
+  userId           String
+  surfaceKey       String
+  name             String
+  position         Int      @default(0)
+  filters          Json?
+  searchTerm       String?
+  sortDescriptor   Json?
+  viewMode         String?
+  groupingColumnId String?
+  grouping         Json?
+  columnOrder      Json?
+  columnWidths     Json?
+  hiddenColumns    Json?
+  pageSize         Int?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company          Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([companyId, surfaceKey, userId])
 }
 
 model Task {
@@ -341,6 +374,8 @@ model Task {
   @@index([companyId])
   @@index([type, companyId])
   @@index([relatedUserId])
+  @@index([companyId, createdAt])
+  @@index([companyId, updatedAt])
   @@index([companyId, completedAt, dueAt])
   @@index([companyId, dueAt])
   @@index([completedById])
@@ -400,6 +435,8 @@ model Contact {
   @@index([companyId])
   @@index([firstName])
   @@index([lastName])
+  @@index([companyId, createdAt])
+  @@index([companyId, updatedAt])
 }
 
 model Organization {
@@ -419,6 +456,8 @@ model Organization {
 
   @@index([companyId])
   @@index([name])
+  @@index([companyId, createdAt])
+  @@index([companyId, updatedAt])
 }
 
 model CustomColumn {
@@ -477,6 +516,11 @@ model CustomFieldValue {
   @@index([dealId])
   @@index([serviceId])
   @@index([taskId])
+  @@index([dealId, columnId])
+  @@index([contactId, columnId])
+  @@index([organizationId, columnId])
+  @@index([serviceId, columnId])
+  @@index([taskId, columnId])
   @@index([leadId])
 }
 
@@ -521,6 +565,8 @@ model Deal {
   @@index([totalValue])
   @@index([totalQuantity])
   @@index([weightedValue])
+  @@index([companyId, createdAt])
+  @@index([companyId, updatedAt])
   @@index([companyId, pipelineId, stageId])
   @@index([companyId, status, closedAt])
   @@index([companyId, status, rottingAt])
@@ -547,6 +593,8 @@ model Service {
 
   @@index([companyId])
   @@index([name])
+  @@index([companyId, createdAt])
+  @@index([companyId, updatedAt])
 }
 
 model ServiceDeal {
@@ -565,6 +613,8 @@ model ServiceDeal {
   @@index([dealId])
   @@index([serviceId])
   @@index([companyId])
+  @@index([companyId, serviceId])
+  @@index([companyId, dealId])
 }
 
 model ServiceUser {
@@ -582,6 +632,7 @@ model ServiceUser {
   @@index([serviceId])
   @@index([userId])
   @@index([companyId])
+  @@index([companyId, userId])
 }
 
 model DealOrganization {
@@ -599,6 +650,8 @@ model DealOrganization {
   @@index([dealId])
   @@index([organizationId])
   @@index([companyId])
+  @@index([companyId, organizationId])
+  @@index([companyId, dealId])
 }
 
 model DealUser {
@@ -616,6 +669,7 @@ model DealUser {
   @@index([dealId])
   @@index([userId])
   @@index([companyId])
+  @@index([companyId, userId])
 }
 
 model DealContact {
@@ -633,6 +687,8 @@ model DealContact {
   @@index([dealId])
   @@index([contactId])
   @@index([companyId])
+  @@index([companyId, dealId])
+  @@index([companyId, contactId])
 }
 
 model ContactUser {
@@ -650,6 +706,7 @@ model ContactUser {
   @@index([contactId])
   @@index([userId])
   @@index([companyId])
+  @@index([companyId, userId])
 }
 
 model OrganizationUser {
@@ -667,6 +724,7 @@ model OrganizationUser {
   @@index([organizationId])
   @@index([userId])
   @@index([companyId])
+  @@index([companyId, userId])
 }
 
 model TaskUser {
@@ -684,6 +742,7 @@ model TaskUser {
   @@index([taskId])
   @@index([userId])
   @@index([companyId])
+  @@index([companyId, userId])
 }
 
 model TaskContact {
@@ -701,6 +760,8 @@ model TaskContact {
   @@index([taskId])
   @@index([contactId])
   @@index([companyId])
+  @@index([companyId, taskId])
+  @@index([companyId, contactId])
 }
 
 model TaskOrganization {
@@ -718,6 +779,8 @@ model TaskOrganization {
   @@index([taskId])
   @@index([organizationId])
   @@index([companyId])
+  @@index([companyId, taskId])
+  @@index([companyId, organizationId])
 }
 
 model TaskDeal {
@@ -735,6 +798,8 @@ model TaskDeal {
   @@index([taskId])
   @@index([dealId])
   @@index([companyId])
+  @@index([companyId, taskId])
+  @@index([companyId, dealId])
 }
 
 model TaskService {
@@ -752,6 +817,8 @@ model TaskService {
   @@index([taskId])
   @@index([serviceId])
   @@index([companyId])
+  @@index([companyId, taskId])
+  @@index([companyId, serviceId])
 }
 
 model ContactOrganization {
@@ -769,6 +836,8 @@ model ContactOrganization {
   @@index([contactId])
   @@index([organizationId])
   @@index([companyId])
+  @@index([companyId, organizationId])
+  @@index([companyId, contactId])
 }
 
 model Widget {
@@ -836,16 +905,18 @@ model RolePermission {
 }
 
 model Webhook {
-  id          String   @id @default(uuid())
-  url         String
-  description String?
-  events      String[]
-  secret      String?
-  enabled     Boolean  @default(true)
-  companyId   String
-  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(uuid())
+  url          String
+  description  String?
+  events       String[]
+  secret       String?
+  headers      Json?
+  bodyTemplate String?
+  enabled      Boolean  @default(true)
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([companyId])
 }
@@ -941,6 +1012,7 @@ enum Resource {
   api
   auditLog
   inboxMessages
+  routines
 }
 
 enum MessagingThreadState {
@@ -1553,6 +1625,8 @@ model ConnectedAccount {
   selectedFolderIds  String[]                @default([])
   foldersSyncedAt    DateTime?
   linkedinProducts   String[]                @default([])
+  signature          String?
+  signatureFields    Json?
   shared             Boolean                 @default(false)
   syncing            Boolean                 @default(false)
   ownerAvatarUrl     String?
@@ -1853,24 +1927,28 @@ enum UnipileWebhookSource {
 }
 
 model AgentConversation {
-  id               String                 @id @default(uuid())
+  id               String                  @id @default(uuid())
   companyId        String
   userId           String
   title            String?
   modelKey         String?
+  origin           AgentConversationOrigin @default(user)
+  creditCeiling    Int?
   archivedAt       DateTime?
   selectedAt       DateTime?
-  createdAt        DateTime               @default(now())
-  updatedAt        DateTime               @updatedAt
-  company          Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  user             User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  company          Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user             User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages         AgentMessage[]
   approvals        AgentApproval[]
   uiCommandResults AgentUiCommandResult[]
   turnRequests     AgentTurnRequest[]
   runLease         AgentRunLease?
+  routineRuns      RoutineRun[]
 
   @@index([companyId, userId, archivedAt, updatedAt])
+  @@index([companyId, userId, origin, archivedAt, updatedAt])
   @@index([companyId, userId, archivedAt, selectedAt])
 }
 
@@ -1962,6 +2040,7 @@ model AgentTurnRequest {
   terminalCode            AgentTurnTerminalCode?
   affectedResources       Json                   @default("[]")
   terminalAt              DateTime?
+  stopReason              AgentTurnStopReason?
   createdAt               DateTime               @default(now())
   updatedAt               DateTime               @updatedAt
   conversation            AgentConversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -1991,6 +2070,16 @@ enum AgentTurnTerminalCode {
   error
   cancelled
   policyBreach
+}
+
+enum AgentTurnStopReason {
+  credit_limit
+  provider_error
+  content_filter
+  hosted_ai_unavailable
+  cancelled
+  turn_error
+  policy_breach
 }
 
 enum AgentMessageRole {
@@ -2095,6 +2184,90 @@ model AgentRunLease {
 enum AgentApprovalDecision {
   approve
   reject
+}
+
+enum AgentConversationOrigin {
+  user
+  routine
+}
+
+enum RoutineTriggerKind {
+  schedule
+  event
+}
+
+enum RoutineRunStatus {
+  queued
+  running
+  succeeded
+  partial
+  failed
+  skipped
+  blocked
+}
+
+model Routine {
+  id                   String               @id @default(uuid())
+  companyId            String
+  ownerUserId          String?
+  name                 String
+  prompt               String
+  enabled              Boolean              @default(true)
+  triggerKind          RoutineTriggerKind
+  cronExpression       String?
+  timezone             String?
+  triggerEvents        String[]
+  changedFields        String[]
+  triggerFilters       Json                 @default("[]")
+  debounceSeconds      Int                  @default(300)
+  nextRunAt            DateTime?
+  lastRunAt            DateTime?
+  lastRunStatus        RoutineRunStatus?
+  disabledReason       String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  company              Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  owner                User?                @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  runs                 RoutineRun[]
+
+  @@index([companyId])
+  @@index([companyId, enabled])
+  @@index([enabled, nextRunAt])
+  @@index([ownerUserId])
+}
+
+model RoutineRun {
+  id               String                 @id @default(uuid())
+  companyId        String
+  routineId        String
+  executedByUserId String
+  executedByName   String
+  conversationId   String?
+  turnRequestId    String?
+  status           RoutineRunStatus       @default(queued)
+  triggerKind      RoutineTriggerKind
+  triggerEvent     String?
+  triggerEntityId  String?
+  triggerPayload   Json?
+  scheduledFor     DateTime
+  startedAt        DateTime?
+  finishedAt       DateTime?
+  terminalCode     AgentTurnTerminalCode?
+  chargedCredits   Int                    @default(0)
+  summary          String?
+  error            String?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  company          Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  routine          Routine                @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  conversation     AgentConversation?     @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([companyId, routineId, createdAt])
+  @@index([status, scheduledFor])
+  @@index([routineId, status])
+  @@index([executedByUserId, status])
+  @@index([conversationId])
 }
 
 model AdAttribution {

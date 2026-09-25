@@ -1,3 +1,4 @@
+import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
 import type { GetWidgetFilterableFieldsTaskRepo } from "../widget/get-widget-filterable-fields.interactor";
 import type { TaskRepo as TaskWorkerRepo } from "./listener/user-pending-authorization-task.listener";
 import type { LeadFollowUpTaskRepo } from "@/features/leads/listener/lead-follow-up-task.repo";
@@ -27,6 +28,12 @@ import { BaseRepository } from "@/core/base/base-repository";
 import { Transaction } from "@/core/decorators/transaction.decorator";
 import { type Filter, type GetQueryParams } from "@/core/base/base-get.schema";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
+import {
+  customSelectGroupables,
+  dateGroupables,
+  enumGroupables,
+  relationGroupables,
+} from "@/core/base/grouping/groupable-field";
 import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { getCustomColumnRepo } from "@/core/di";
@@ -206,6 +213,11 @@ export class PrismaTaskRepo
       operators: (typeof FILTER_FIELD_DEFAULT_OPERATORS)[FilterFieldKey];
     }> = [];
 
+    filterFields.push({
+      field: FilterFieldKey.name,
+      operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.name],
+    });
+
     if (this.canAccess(Resource.contacts)) {
       filterFields.push({
         field: FilterFieldKey.contactIds,
@@ -244,6 +256,23 @@ export class PrismaTaskRepo
       { field: FilterFieldKey.updatedAt, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.updatedAt] },
       { field: FilterFieldKey.createdAt, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.createdAt] },
       { field: FilterFieldKey.overdue, operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.overdue] },
+    ];
+  }
+
+  async getGroupableFields(customColumns?: readonly CustomColumnDto[]) {
+    if (!this.canAccess(Resource.tasks)) return [];
+
+    return [
+      ...customSelectGroupables(EntityType.task, customColumns ?? (await this.getCustomColumns())),
+      ...relationGroupables("task", {
+        contactIds: this.canAccess(Resource.contacts),
+        dealIds: this.canAccess(Resource.deals),
+        organizationIds: this.canAccess(Resource.organizations),
+        serviceIds: this.canAccess(Resource.services),
+        userIds: this.canAccess(Resource.users),
+      }),
+      ...enumGroupables("task", { type: true }),
+      ...dateGroupables("task", { createdAt: true, updatedAt: true }),
     ];
   }
 

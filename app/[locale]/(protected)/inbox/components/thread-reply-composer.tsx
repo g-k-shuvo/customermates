@@ -7,7 +7,9 @@ import { Send, Loader2, Check, ChevronDown, Paperclip, Smile } from "lucide-reac
 import { Action, Resource } from "@/generated/prisma";
 
 import type { MessagingProvider } from "@/generated/prisma";
+import type { NewThreadTarget } from "./thread-compose.store";
 import type { LinkedinProduct } from "@/ee/messaging/provider";
+import type { EmailMarkdownEditorHandle } from "@/components/editor/email-markdown-editor";
 
 import { LINKEDIN_PRODUCTS } from "@/ee/messaging/provider";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
@@ -19,6 +21,7 @@ import { AppForm } from "@/components/forms/form-context";
 import { FormInput } from "@/components/forms/form-input";
 import { FormInputChips } from "@/components/forms/form-input-chips";
 import { FormTextarea } from "@/components/forms/form-textarea";
+import { EmailMarkdownEditor } from "@/components/editor/email-markdown-editor";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -27,8 +30,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/core/utils/cn";
 import { useRootStore } from "@/core/stores/root-store.provider";
+import { usePathname, useRouter } from "@/i18n/navigation";
+
+import { ComposerSignature } from "./composer-signature";
 import { runUserAction } from "@/core/errors/report-application-error";
+import { defaultEmailSettings } from "@/ee/messaging/email-settings";
 
 const COMPOSER_EMOJIS = [
   "😀",
@@ -86,18 +94,42 @@ type Props = {
   defaultRecipients?: string[];
   defaultCc?: string[];
   bare?: boolean;
+  newThreadTarget?: NewThreadTarget | null;
 };
 
 export const ThreadReplyComposer = observer(
-  ({ threadId, provider, defaultSubject, defaultRecipients, defaultCc, bare }: Props) => {
+  ({ threadId, provider, defaultSubject, defaultRecipients, defaultCc, bare, newThreadTarget }: Props) => {
     const t = useTranslations();
     const intlStore = useHydratedIntlStore();
-    const { userStore, threadComposeStore, connectedAccountsStore } = useRootStore();
+    const rootStore = useRootStore();
+    const router = useRouter();
+    const pathname = usePathname();
+    const { userStore, threadComposeStore, connectedAccountsStore } = rootStore;
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const emailEditorRef = useRef<EmailMarkdownEditorHandle>(null);
     const initializedThreadId = useRef<string | null>(null);
+    const mounted = useRef(false);
     const [emojiOpen, setEmojiOpen] = useState(false);
+    const [expanded, setExpanded] = useState(false);
+
+    useEffect(() => {
+      mounted.current = true;
+      return () => {
+        mounted.current = false;
+      };
+    }, []);
+
+    useEffect(() => {
+      setExpanded(false);
+    }, [threadId]);
 
     function insertEmoji(emoji: string) {
+      if (threadComposeStore.isEmail) {
+        emailEditorRef.current?.insertText(emoji);
+        setEmojiOpen(false);
+        return;
+      }
+
       const el = document.getElementById("inbox-reply-input") as HTMLTextAreaElement | null;
       const current = (threadComposeStore.getValue("body") as string | undefined) ?? "";
       const start = el?.selectionStart ?? current.length;
@@ -121,6 +153,23 @@ export const ThreadReplyComposer = observer(
       if (initializedThreadId.current === threadId) return;
       initializedThreadId.current = threadId;
       if (threadComposeStore.form.threadId === threadId) return;
+      if (newThreadTarget) {
+        const sourcePathname = window.location.pathname;
+        threadComposeStore.initializeNewThread({
+          provider,
+          ...newThreadTarget,
+          onSent: (sentThreadId) => {
+            if (!mounted.current || window.location.pathname !== sourcePathname) return;
+            const params = new URLSearchParams(window.location.search);
+            if (params.get("threadId") !== threadId) return;
+            if (sentThreadId) params.set("threadId", sentThreadId);
+            else params.delete("threadId");
+            const query = params.toString();
+            router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+          },
+        });
+        return;
+      }
       threadComposeStore.initialize({
         provider,
         threadId,
@@ -128,7 +177,17 @@ export const ThreadReplyComposer = observer(
         defaultRecipients,
         defaultCc,
       });
-    }, [threadComposeStore, provider, threadId, defaultSubject, defaultRecipients, defaultCc]);
+    }, [
+      threadComposeStore,
+      provider,
+      threadId,
+      defaultSubject,
+      defaultRecipients,
+      defaultCc,
+      newThreadTarget,
+      pathname,
+      router,
+    ]);
 
     function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
       if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
@@ -140,6 +199,13 @@ export const ThreadReplyComposer = observer(
     if (!userStore.can(Resource.inboxMessages, Action.create)) return null;
 
     const { isLoading, isEmail, isLinkedin, isNewThread, showCcBcc, editingDraftId, attachments } = threadComposeStore;
+    const signatureAccountId = isNewThread
+      ? (threadComposeStore.newThreadTarget?.connectedAccountId ?? null)
+      : (rootStore.messagingThreadDetailStore.thread?.connectedAccountId ?? null);
+    const emailAccount = signatureAccountId
+      ? connectedAccountsStore.items.find((account) => account.id === signatureAccountId)
+      : null;
+    const emailSettings = emailAccount?.emailSettings ?? defaultEmailSettings();
     const linkedinProduct = threadComposeStore.form.linkedinProduct;
 
     const senders = isNewThread ? connectedAccountsStore.usableSendersFor(provider) : [];
@@ -155,6 +221,14 @@ export const ThreadReplyComposer = observer(
       return account.emailAddress ?? name ?? t("Common.unnamed");
     };
 
+    const hasWorkInProgress =
+      Boolean(threadComposeStore.form.body?.trim()) ||
+      attachments.length > 0 ||
+      Boolean(editingDraftId) ||
+      isNewThread ||
+      isLoading;
+    const isOpen = expanded || hasWorkInProgress;
+
     const form = (
       <AppForm className="flex flex-col" store={threadComposeStore} onSubmit={threadComposeStore.send}>
         {senders.length > 1 && activeSender && (
@@ -165,6 +239,7 @@ export const ThreadReplyComposer = observer(
               <DropdownMenuTrigger asChild>
                 <button
                   className="focus-visible:ring-ring/50 min-w-0 rounded-md outline-none focus-visible:ring-[3px]"
+                  disabled={isLoading || Boolean(threadComposeStore.newThreadTarget?.draftThreadId)}
                   type="button"
                 >
                   <AppChip interactive endContent={<ChevronDown className="size-3" />} variant="secondary">
@@ -199,6 +274,7 @@ export const ThreadReplyComposer = observer(
                   <DropdownMenuTrigger asChild>
                     <button
                       className="focus-visible:ring-ring/50 min-w-0 rounded-md outline-none focus-visible:ring-[3px]"
+                      disabled={isLoading}
                       type="button"
                     >
                       <AppChip interactive endContent={<ChevronDown className="size-3" />} variant="secondary">
@@ -307,15 +383,33 @@ export const ThreadReplyComposer = observer(
           </>
         )}
 
-        <FormTextarea
-          className="max-h-[calc(0.4*var(--viewport-block))] min-h-[56px] resize-none border-0 bg-transparent px-3 pt-2.5 text-sm shadow-none focus-visible:ring-0"
-          containerClassName="w-full"
-          id="body"
-          inputId="inbox-reply-input"
-          label={null}
-          placeholder={isEmail ? t("Inbox.compose.writeReply") : t("Inbox.compose.typeMessage")}
-          onKeyDown={handleKeyDown}
-        />
+        {isEmail ? (
+          <EmailMarkdownEditor
+            ref={emailEditorRef}
+            appearance={emailSettings.appearance}
+            ariaLabel={t("Inbox.compose.writeReply")}
+            className={cn(
+              "rounded-none border-0 bg-transparent shadow-none focus-within:ring-0 [&_.ProseMirror]:max-h-[calc(0.4*var(--viewport-block))] [&_.ProseMirror]:overflow-y-auto",
+              emailAccount?.signatureHtml ? "[&_.ProseMirror]:min-h-0" : "[&_.ProseMirror]:min-h-[72px]",
+            )}
+            disabled={isLoading}
+            invalid={Boolean(threadComposeStore.getError("body"))}
+            placeholder={t("Inbox.compose.writeReply")}
+            value={threadComposeStore.form.body}
+            onChange={(value) => threadComposeStore.onChange("body", value)}
+            onSubmitShortcut={() => runUserAction(() => threadComposeStore.send())}
+          />
+        ) : (
+          <FormTextarea
+            className="max-h-[calc(0.4*var(--viewport-block))] min-h-[56px] resize-none border-0 bg-transparent px-3 pt-2.5 text-sm shadow-none focus-visible:ring-0"
+            containerClassName="w-full"
+            id="body"
+            inputId="inbox-reply-input"
+            label={null}
+            placeholder={t("Inbox.compose.typeMessage")}
+            onKeyDown={handleKeyDown}
+          />
+        )}
 
         {attachments.length > 0 && (
           <div className="flex flex-col gap-1.5 px-3 pb-1.5">
@@ -348,12 +442,15 @@ export const ThreadReplyComposer = observer(
           </div>
         )}
 
+        <ComposerSignature connectedAccountId={signatureAccountId} />
+
         <div className="flex items-center justify-between gap-2 px-2 pt-0.5 pb-1.5">
           <div className="flex items-center gap-0.5">
             <input
               ref={fileInputRef}
               multiple
               className="hidden"
+              disabled={isLoading}
               type="file"
               onChange={(event) => {
                 threadComposeStore.addAttachments(Array.from(event.target.files ?? []));
@@ -363,6 +460,7 @@ export const ThreadReplyComposer = observer(
 
             <Button
               aria-label={t("Inbox.compose.attachFiles")}
+              disabled={isLoading}
               size="icon-sm"
               type="button"
               variant="secondary"
@@ -371,9 +469,15 @@ export const ThreadReplyComposer = observer(
               <Paperclip className="size-4" />
             </Button>
 
-            <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
+            <Popover open={emojiOpen && !isLoading} onOpenChange={setEmojiOpen}>
               <PopoverTrigger asChild>
-                <Button aria-label={t("Inbox.compose.emojiPicker")} size="icon-sm" type="button" variant="secondary">
+                <Button
+                  aria-label={t("Inbox.compose.emojiPicker")}
+                  disabled={isLoading}
+                  size="icon-sm"
+                  type="button"
+                  variant="secondary"
+                >
                   <Smile className="size-4" />
                 </Button>
               </PopoverTrigger>
@@ -385,6 +489,7 @@ export const ThreadReplyComposer = observer(
                       key={emoji}
                       aria-label={emoji}
                       className="hover:bg-accent flex size-8 items-center justify-center rounded-md text-lg transition-[background-color,transform] active:scale-[0.97] motion-reduce:transition-none"
+                      disabled={isLoading}
                       type="button"
                       onClick={() => insertEmoji(emoji)}
                     >
@@ -396,7 +501,13 @@ export const ThreadReplyComposer = observer(
             </Popover>
 
             {isEmail && (
-              <Button size="sm" type="button" variant="secondary" onClick={threadComposeStore.toggleCcBcc}>
+              <Button
+                disabled={isLoading}
+                size="sm"
+                type="button"
+                variant="secondary"
+                onClick={threadComposeStore.toggleCcBcc}
+              >
                 {t("Inbox.compose.ccBccToggle")}
               </Button>
             )}
@@ -404,7 +515,7 @@ export const ThreadReplyComposer = observer(
 
           <div className="flex items-stretch">
             <Button
-              className={isNewThread ? undefined : "rounded-r-none pr-2.5"}
+              className="rounded-r-none pr-2.5"
               disabled={isLoading}
               id="inbox-reply-send"
               size="sm"
@@ -415,7 +526,7 @@ export const ThreadReplyComposer = observer(
               <span>{t("Inbox.compose.send")}</span>
             </Button>
 
-            {!isNewThread && (
+            {(!isLinkedin || !isNewThread || linkedinProduct === "classic") && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -446,7 +557,26 @@ export const ThreadReplyComposer = observer(
     return (
       <div className="bg-background shrink-0 px-4 pt-2 pb-4">
         <div className="bg-input-background focus-within:ring-ring/50 flex flex-col rounded-xl border border-input shadow-xs transition-[color,box-shadow] focus-within:ring-[3px] focus-within:ring-inset">
-          {form}
+          {isOpen ? (
+            form
+          ) : (
+            <button
+              aria-expanded={false}
+              className="group text-muted-foreground hover:text-foreground/90 focus-visible:ring-ring/50 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-inset motion-reduce:transition-none"
+              id="inbox-reply-expand"
+              type="button"
+              onClick={() => setExpanded(true)}
+            >
+              <span className="truncate">
+                {isEmail ? t("Inbox.compose.writeReply") : t("Inbox.compose.typeMessage")}
+              </span>
+
+              <Send
+                aria-hidden
+                className="text-muted-foreground/70 group-hover:text-primary ml-auto size-4 shrink-0 transition-colors motion-reduce:transition-none"
+              />
+            </button>
+          )}
         </div>
       </div>
     );
