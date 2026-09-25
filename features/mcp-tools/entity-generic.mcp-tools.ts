@@ -19,7 +19,7 @@ import type { McpToolFailureResult } from "./mcp-tool";
 import { FilterSchema, SortDescriptorSchema } from "@/core/base/base-get.schema";
 import { CustomErrorCode } from "@/core/validation/validation.types";
 import { parseMarkdownToJSON, serializeJSONToMarkdown } from "@/components/editor/editor.utils";
-import { entityListExecutors, entityNameExtractors } from "@/features/search/entity-list-executors";
+import { extractEntityName, requireEntityListExecutor } from "@/features/search/entity-list-executors";
 import {
   getGetContactByIdInteractor,
   getDeleteManyContactsInteractor,
@@ -386,7 +386,7 @@ export const listRecordsTool = {
     page,
     pageSize,
   }: z.infer<typeof ListRecordsSchema>) => {
-    const result = await entityListExecutors[entity]({
+    const result = await requireEntityListExecutor(entity)({
       searchTerm,
       filters,
       sortDescriptor,
@@ -413,7 +413,7 @@ export const listRecordsTool = {
       pageSize,
       items: result.data.items.map((item: any) => ({
         id: item.id,
-        name: entityNameExtractors[entity](item),
+        name: extractEntityName(entity, item),
         ...(item.totalValue !== undefined && { totalValue: item.totalValue }),
         ...(item.totalQuantity !== undefined && { totalQuantity: item.totalQuantity }),
         ...(item.weightedValue != null && { weightedValue: item.weightedValue }),
@@ -443,7 +443,7 @@ export const searchRecordsTool = {
 
     const results = await Promise.all(
       targets.map(async (entity) => {
-        const result = await entityListExecutors[entity]({
+        const result = await requireEntityListExecutor(entity)({
           searchTerm,
           pagination: { page: 1, pageSize },
         });
@@ -452,7 +452,7 @@ export const searchRecordsTool = {
           entity,
           items: result.data.items.slice(0, limitPerEntity).map((item: any) => ({
             id: item.id,
-            name: entityNameExtractors[entity](item),
+            name: extractEntityName(entity, item),
           })),
           total: result.data.pagination?.total ?? result.data.items.length,
         };

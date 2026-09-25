@@ -5,7 +5,7 @@ export type GroupLabel = { label: string; avatarUrl?: string | null };
 const PERSON_SELECT = { id: true, firstName: true, lastName: true, avatarUrl: true };
 const NAMED_SELECT = { id: true, name: true };
 
-export const LABEL_SELECT: Record<GroupingTargetModel, Record<string, boolean>> = {
+export const LABEL_SELECT: Partial<Record<GroupingTargetModel, Record<string, boolean>>> = {
   user: PERSON_SELECT,
   contact: { id: true, firstName: true, lastName: true },
   deal: NAMED_SELECT,

@@ -33,7 +33,7 @@ type RoutineEventUser = {
   } | null;
 };
 
-const RELATED_FILTER_FIELDS: Record<EntityType, Array<{ field: FilterFieldKey; resource: Resource }>> = {
+const RELATED_FILTER_FIELDS: Partial<Record<EntityType, Array<{ field: FilterFieldKey; resource: Resource }>>> = {
   [EntityType.contact]: [
     { field: FilterFieldKey.organizationIds, resource: Resource.organizations },
     { field: FilterFieldKey.dealIds, resource: Resource.deals },
@@ -97,7 +97,7 @@ const INTRINSIC_FILTER_FIELDS = {
       operators: FILTER_FIELD_DEFAULT_OPERATORS[FilterFieldKey.name],
     },
   ],
-} satisfies Record<EntityType, FilterableField[]>;
+} satisfies Partial<Record<EntityType, FilterableField[]>>;
 
 const MESSAGE_EVENTS = new Set<string>([
   DomainEvent.MESSAGING_MESSAGE_RECEIVED,

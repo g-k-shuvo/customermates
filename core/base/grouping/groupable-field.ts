@@ -32,6 +32,7 @@ export type GroupingTargetModel = EntityGroupableModel | "user";
 export const ENTITY_CUSTOM_FIELD_RELATION = {
   [EntityType.contact]: "contact",
   [EntityType.deal]: "deal",
+  [EntityType.lead]: "lead",
   [EntityType.organization]: "organization",
   [EntityType.service]: "service",
   [EntityType.task]: "task",
@@ -43,7 +44,7 @@ export const GROUPABLE_MODEL_BY_ENTITY_TYPE = {
   [EntityType.organization]: "organization",
   [EntityType.service]: "service",
   [EntityType.task]: "task",
-} satisfies Record<EntityType, EntityGroupableModel>;
+} satisfies Partial<Record<EntityType, EntityGroupableModel>>;
 
 export type GroupingKind = "customSingleSelect" | "enum" | "relation" | "dateBucket";
 

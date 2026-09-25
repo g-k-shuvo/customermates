@@ -9,9 +9,8 @@ import {
   getGetTasksApiInteractor,
 } from "@/core/di";
 
-export const entityListExecutors: Record<
-  EntityType,
-  (params: GetQueryParamsApi) => Promise<{ ok: boolean; data?: any; error?: any }>
+export const entityListExecutors: Partial<
+  Record<EntityType, (params: GetQueryParamsApi) => Promise<{ ok: boolean; data?: any; error?: any }>>
 > = {
   contact: async (params) => getGetContactsApiInteractor().invoke(params),
   organization: async (params) => getGetOrganizationsApiInteractor().invoke(params),
@@ -20,7 +19,7 @@ export const entityListExecutors: Record<
   task: async (params) => getGetTasksApiInteractor().invoke(params),
 };
 
-export const entityNameExtractors: Record<EntityType, (item: any) => string> = {
+export const entityNameExtractors: Partial<Record<EntityType, (item: any) => string>> = {
   contact: (item) => `${item.firstName ?? ""} ${item.lastName ?? ""}`.trim(),
   organization: (item) => String(item.name ?? ""),
   deal: (item) => String(item.name ?? ""),
@@ -30,3 +29,20 @@ export const entityNameExtractors: Record<EntityType, (item: any) => string> = {
     return name || String(item.type ?? "");
   },
 };
+
+export const LISTABLE_ENTITY_TYPES = Object.keys(entityListExecutors) as EntityType[];
+
+export function isListableEntityType(entityType: EntityType): boolean {
+  return entityListExecutors[entityType] !== undefined;
+}
+
+export function requireEntityListExecutor(entityType: EntityType) {
+  const executor = entityListExecutors[entityType];
+  if (!executor) throw new Error(`No list executor is registered for ${entityType}`);
+
+  return executor;
+}
+
+export function extractEntityName(entityType: EntityType, item: any): string {
+  return entityNameExtractors[entityType]?.(item) ?? String(item?.name ?? "");
+}

@@ -15,7 +15,7 @@ import { env } from "@/env";
 import { CONTENT_LOCALES, DEFAULT_LOCALE, isContentLocale } from "@/i18n/locale-registry";
 import { CustomErrorCode } from "@/core/validation/validation.types";
 import { serializeJSONToMarkdown } from "@/components/editor/editor.utils";
-import { entityListExecutors, entityNameExtractors } from "@/features/search/entity-list-executors";
+import { extractEntityName, requireEntityListExecutor } from "@/features/search/entity-list-executors";
 import {
   getGetContactByIdInteractor,
   getGetDealByIdInteractor,
@@ -90,7 +90,7 @@ async function fetchRecord(entity: Entity, key: string) {
   const recordId = String(masterData.id);
   const output = {
     id: `record:${entity}:${recordId}`,
-    title: entityNameExtractors[entity](row),
+    title: extractEntityName(entity, row),
     text,
     url: `${env.BASE_URL}/${entityRoutes[entity]}/${recordId}`,
     metadata: { entity },
@@ -131,11 +131,11 @@ export const searchTool = {
   execute: async ({ query }: { query: string }) => {
     const recordGroups = await Promise.all(
       ENTITIES.map(async (entity) => {
-        const result = await entityListExecutors[entity]({ searchTerm: query, pagination: { page: 1, pageSize: 5 } });
+        const result = await requireEntityListExecutor(entity)({ searchTerm: query, pagination: { page: 1, pageSize: 5 } });
         if (!result.ok) return [];
         return result.data.items.slice(0, 3).map((item: any) => ({
           id: `record:${entity}:${item.id}`,
-          title: entityNameExtractors[entity](item),
+          title: extractEntityName(entity, item),
           url: `${env.BASE_URL}/${entityRoutes[entity]}/${item.id}`,
         }));
       }),

@@ -290,7 +290,6 @@ import { InviteUsersByEmailInteractor } from "@/features/company/invite-users-by
 import { InviteTokenValidationInteractor } from "@/features/company/invite-token-validation.interactor";
 import { OpenInvitationInteractor } from "@/features/company/open-invitation.interactor";
 import { ChooseWorkspaceOnboardingInteractor } from "@/features/company/choose-workspace-onboarding.interactor";
-import { env } from "@/env";
 // Role interactors
 import { UpsertRoleInteractor } from "@/features/role/upsert-role.interactor";
 import { GetRolesInteractor } from "@/features/role/get-roles.interactor";

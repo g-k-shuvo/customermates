@@ -194,6 +194,8 @@ const FullAppSidebar = observer(
               href: "/routines",
               icon: Repeat,
               visible: rootStore.appMode !== "self-hosted" && canAccess(Resource.routines),
+            },
+            {
               key: "mail",
               title: t("Mailbox.title"),
               href: "/mail",
@@ -328,34 +330,6 @@ const FullAppSidebar = observer(
       channelsNeedingActionCount,
     ]);
 
-    const secondaryItems: NavSecondaryItem[] = [
-      {
-        key: "documentation",
-        title: t("UserAvatar.documentation"),
-        icon: FileText,
-        href: restricted ? "/dashboard" : "/docs",
-      },
-      {
-        key: "feedback",
-        title: t("Common.inputs.feedback"),
-        icon: MessageCircle,
-        onSelect: (invoker) => {
-          if (restricted) {
-            closeMobileSidebar(recheckAccountState);
-            return;
-          }
-
-          closeMobileSidebar(() => {
-            feedbackModalStore.onInitOrRefresh({
-              type: FeedbackType.general,
-              feedback: "",
-            });
-            const sidebarTrigger = document.getElementById("sidebar-trigger");
-            feedbackModalStore.openFrom(invoker, sidebarTrigger);
-          });
-        },
-      },
-    ];
     const secondaryItems: NavSecondaryItem[] = rootStore.branding.vendorHelpDisabled
       ? []
       : [

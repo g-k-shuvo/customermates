@@ -10,7 +10,7 @@ import { TaskDtoSchema } from "@/features/tasks/task.schema";
 
 const UNWATCHABLE_FIELDS = new Set(["id", "createdAt", "updatedAt", "avatarUrl", "customFieldValues"]);
 
-const DTO_SCHEMA_BY_ENTITY_TYPE: Record<EntityType, ZodObject> = {
+const DTO_SCHEMA_BY_ENTITY_TYPE: Partial<Record<EntityType, ZodObject>> = {
   [EntityType.contact]: ContactDtoSchema,
   [EntityType.organization]: OrganizationDtoSchema,
   [EntityType.deal]: DealDtoSchema,
@@ -22,7 +22,7 @@ function watchableFieldsOf(schema: ZodObject): string[] {
   return Object.keys(schema.shape).filter((field) => !UNWATCHABLE_FIELDS.has(field));
 }
 
-export const ROUTINE_CHANGE_FIELDS: Record<EntityType, string[]> = {
+export const ROUTINE_CHANGE_FIELDS: Partial<Record<EntityType, string[]>> = {
   [EntityType.contact]: watchableFieldsOf(ContactDtoSchema),
   [EntityType.organization]: watchableFieldsOf(OrganizationDtoSchema),
   [EntityType.deal]: watchableFieldsOf(DealDtoSchema),

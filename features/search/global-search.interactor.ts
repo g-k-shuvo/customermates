@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Resource, Action, EntityType, TaskType } from "@/generated/prisma";
 
-import { entityListExecutors, entityNameExtractors } from "./entity-list-executors";
+import { entityListExecutors, extractEntityName } from "./entity-list-executors";
 
 import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
@@ -40,14 +40,14 @@ const OutputSchema = z.object({
   ),
 });
 
-const UI_SEARCHABLE_ENTITIES = Object.values(EntityType);
-const SEARCH_RESOURCE: Record<EntityType, Resource> = {
+const SEARCH_RESOURCE: Partial<Record<EntityType, Resource>> = {
   contact: Resource.contacts,
   organization: Resource.organizations,
   deal: Resource.deals,
   service: Resource.services,
   task: Resource.tasks,
 };
+const UI_SEARCHABLE_ENTITIES = Object.keys(SEARCH_RESOURCE) as EntityType[];
 const DEFAULT_RESULTS_PER_ENTITY = 50;
 
 @AllowInDemoMode
@@ -83,7 +83,10 @@ export class GlobalSearchInteractor extends AuthenticatedInteractor<GlobalSearch
         );
     const perEntity = await Promise.all(
       searchableEntities.map(async (entity): Promise<GlobalSearchResultItem[]> => {
-        const result = await entityListExecutors[entity]({
+        const executor = entityListExecutors[entity];
+        if (!executor) return [];
+
+        const result = await executor({
           searchTerm: data.searchTerm,
           pagination: { page: 1, pageSize },
         });
@@ -92,7 +95,7 @@ export class GlobalSearchInteractor extends AuthenticatedInteractor<GlobalSearch
         return items.slice(0, limitPerEntity).map((item) => ({
           type: entity,
           id: item.id,
-          name: entityNameExtractors[entity](item),
+          name: extractEntityName(entity, item),
           pictureUrl: entity === "contact" && typeof item.avatarUrl === "string" ? item.avatarUrl : null,
           ...(entity === "task" && Object.values(TaskType).includes(item.type) ? { taskType: item.type } : {}),
         })) as GlobalSearchResultItem[];

@@ -27,7 +27,6 @@ const GROUP_MAP: Record<string, { group: "overview" | "crm" | "settings" | null;
   organizations: { group: "crm", labelKey: "organizations" },
   deals: { group: "crm", labelKey: "deals" },
   services: { group: "crm", labelKey: "services" },
-  tasks: { group: "crm", labelKey: "tasks" },
   settings: { group: "settings", labelKey: "settings" },
   profile: { group: "settings", labelKey: "profile" },
   company: { group: "settings", labelKey: "company" },
