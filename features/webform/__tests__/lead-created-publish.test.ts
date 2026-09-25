@@ -8,13 +8,8 @@ vi.mock("@/core/decorators/system-interactor.decorator", () => ({
   SystemInteractor: (target: unknown) => target,
 }));
 
-const runAsBackgroundTenant = vi.fn((_userId: string, fn: () => unknown) => Promise.resolve(fn()));
-
-vi.mock("@/core/decorators/background-tenant", () => ({
-  runAsBackgroundTenant: (userId: string, fn: () => unknown) => runAsBackgroundTenant(userId, fn),
-}));
-
 import { ProcessWebFormSubmissionInteractor } from "../process/process-web-form-submission.interactor";
+import { PublishLeadCreatedInteractor } from "../process/publish-lead-created.interactor";
 import { DomainEvent } from "@/features/event/domain-events";
 
 const COMPANY_ID = "11111111-1111-4111-8111-111111111111";
@@ -40,48 +35,71 @@ function buildRepo(defaultOwnerId: string | null, fallbackUserId: string | null)
     createLeadFromSubmissionUnscoped: vi.fn().mockResolvedValue(LEAD_ID),
     markSubmissionProcessedUnscoped: vi.fn().mockResolvedValue(undefined),
     markSubmissionFailedUnscoped: vi.fn().mockResolvedValue(undefined),
-    findLeadForEventUnscoped: vi.fn().mockResolvedValue({ id: LEAD_ID, title: "A lead" }),
+    findLeadForEventOrThrowUnscoped: vi.fn().mockResolvedValue({ id: LEAD_ID, title: "A lead" }),
     findTaskCapableUserIdUnscoped: vi.fn().mockResolvedValue(fallbackUserId),
   };
 }
 
-describe("publishing LEAD_CREATED from a web form submission", () => {
-  let eventService: { publish: ReturnType<typeof vi.fn> };
+async function process(repo: ReturnType<typeof buildRepo>) {
+  const outcome = await new ProcessWebFormSubmissionInteractor(repo as never).invoke({ submissionId: SUBMISSION_ID });
+  expect(outcome.ok).toBe(true);
+  if (!outcome.ok) throw new Error("the submission did not process");
 
-  beforeEach(() => {
-    runAsBackgroundTenant.mockClear();
-    eventService = { publish: vi.fn().mockResolvedValue(undefined) };
-  });
+  return outcome.data;
+}
 
-  it("publishes as the source owner when the source has one", async () => {
+describe("naming the user a web form lead is published as", () => {
+  it("names the source owner when the source has one", async () => {
     const repo = buildRepo(OWNER_ID, FALLBACK_ID);
-    const interactor = new ProcessWebFormSubmissionInteractor(repo as never, eventService as never);
 
-    await interactor.invoke({ submissionId: SUBMISSION_ID });
+    const outcome = await process(repo);
 
     expect(repo.findTaskCapableUserIdUnscoped).not.toHaveBeenCalled();
-    expect(runAsBackgroundTenant).toHaveBeenCalledWith(OWNER_ID, expect.any(Function));
-    expect(eventService.publish).toHaveBeenCalledWith(DomainEvent.LEAD_CREATED, expect.anything());
+    expect(outcome).toEqual({ leadId: LEAD_ID, skipped: false, companyId: COMPANY_ID, publisherUserId: OWNER_ID });
   });
 
   it("falls back to a task-capable user so in-process listeners still run", async () => {
     const repo = buildRepo(null, FALLBACK_ID);
-    const interactor = new ProcessWebFormSubmissionInteractor(repo as never, eventService as never);
 
-    await interactor.invoke({ submissionId: SUBMISSION_ID });
+    const outcome = await process(repo);
 
     expect(repo.findTaskCapableUserIdUnscoped).toHaveBeenCalledWith(COMPANY_ID);
-    expect(runAsBackgroundTenant).toHaveBeenCalledWith(FALLBACK_ID, expect.any(Function));
-    expect(eventService.publish).toHaveBeenCalledWith(DomainEvent.LEAD_CREATED, expect.anything());
+    expect(outcome.publisherUserId).toBe(FALLBACK_ID);
   });
 
-  it("publishes system scoped only when the company has nobody who can act", async () => {
+  it("names nobody when the company has nobody who can act", async () => {
+    const outcome = await process(buildRepo(null, null));
+
+    expect(outcome.publisherUserId).toBeNull();
+    expect(outcome.companyId).toBe(COMPANY_ID);
+  });
+});
+
+describe("publishing LEAD_CREATED", () => {
+  let eventService: { publish: ReturnType<typeof vi.fn> };
+
+  beforeEach(() => {
+    eventService = { publish: vi.fn().mockResolvedValue(undefined) };
+  });
+
+  it("publishes inside the tenant the workflow assumed, so its listeners run", async () => {
+    const repo = buildRepo(OWNER_ID, FALLBACK_ID);
+    const interactor = new PublishLeadCreatedInteractor(repo as never, eventService as never);
+
+    await interactor.invoke({ leadId: LEAD_ID, companyId: COMPANY_ID, underTenant: true });
+
+    expect(eventService.publish).toHaveBeenCalledWith(DomainEvent.LEAD_CREATED, {
+      entityId: LEAD_ID,
+      payload: { id: LEAD_ID, title: "A lead" },
+    });
+  });
+
+  it("publishes system scoped when no user could be assumed", async () => {
     const repo = buildRepo(null, null);
-    const interactor = new ProcessWebFormSubmissionInteractor(repo as never, eventService as never);
+    const interactor = new PublishLeadCreatedInteractor(repo as never, eventService as never);
 
-    await interactor.invoke({ submissionId: SUBMISSION_ID });
+    await interactor.invoke({ leadId: LEAD_ID, companyId: COMPANY_ID, underTenant: false });
 
-    expect(runAsBackgroundTenant).not.toHaveBeenCalled();
     expect(eventService.publish).toHaveBeenCalledWith(DomainEvent.LEAD_CREATED, expect.anything(), {
       systemCompanyId: COMPANY_ID,
     });

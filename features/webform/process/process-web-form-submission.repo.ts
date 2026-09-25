@@ -42,6 +42,6 @@ export abstract class ProcessWebFormSubmissionRepo {
   abstract createLeadFromSubmissionUnscoped(args: CreateLeadFromSubmissionArgs): Promise<string>;
   abstract markSubmissionProcessedUnscoped(submissionId: string, leadId: string): Promise<void>;
   abstract markSubmissionFailedUnscoped(submissionId: string, error: string): Promise<void>;
-  abstract findLeadForEventUnscoped(leadId: string): Promise<LeadDto>;
+  abstract findLeadForEventOrThrowUnscoped(leadId: string): Promise<LeadDto>;
   abstract findTaskCapableUserIdUnscoped(companyId: string): Promise<string | null>;
 }

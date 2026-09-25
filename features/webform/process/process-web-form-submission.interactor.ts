@@ -1,11 +1,8 @@
 import type { ProcessWebFormSubmissionRepo } from "./process-web-form-submission.repo";
-import type { EventService } from "@/features/event/event.service";
 import type { Data, Validated } from "@/core/validation/validation.utils";
 
 import { z } from "zod";
 
-import { DomainEvent } from "@/features/event/domain-events";
-import { runAsBackgroundTenant } from "@/core/decorators/background-tenant";
 import { SystemInteractor } from "@/core/decorators/system-interactor.decorator";
 import { Validate } from "@/core/decorators/validate.decorator";
 import { ValidateOutput } from "@/core/decorators/validate-output.decorator";
@@ -19,40 +16,21 @@ export type ProcessWebFormSubmissionData = Data<typeof ProcessWebFormSubmissionS
 export const ProcessWebFormSubmissionOutcomeSchema = z.object({
   leadId: z.string().nullable(),
   skipped: z.boolean(),
+  companyId: z.string().nullable(),
+  publisherUserId: z.string().nullable(),
 });
 export type ProcessWebFormSubmissionOutcome = Data<typeof ProcessWebFormSubmissionOutcomeSchema>;
 
 @SystemInteractor
 export class ProcessWebFormSubmissionInteractor {
-  constructor(
-    private repo: ProcessWebFormSubmissionRepo,
-    private eventService: EventService,
-  ) {}
-
-  private async publishLeadCreated(leadId: string, companyId: string, ownerUserId: string | null): Promise<void> {
-    const lead = await this.repo.findLeadForEventUnscoped(leadId);
-    const publisherUserId = ownerUserId ?? (await this.repo.findTaskCapableUserIdUnscoped(companyId));
-
-    if (!publisherUserId) {
-      await this.eventService.publish(
-        DomainEvent.LEAD_CREATED,
-        { entityId: lead.id, payload: lead },
-        { systemCompanyId: companyId },
-      );
-
-      return;
-    }
-
-    await runAsBackgroundTenant(publisherUserId, () =>
-      this.eventService.publish(DomainEvent.LEAD_CREATED, { entityId: lead.id, payload: lead }),
-    );
-  }
+  constructor(private repo: ProcessWebFormSubmissionRepo) {}
 
   @Validate(ProcessWebFormSubmissionSchema)
   @ValidateOutput(ProcessWebFormSubmissionOutcomeSchema)
   async invoke(data: ProcessWebFormSubmissionData): Validated<ProcessWebFormSubmissionOutcome> {
     const submission = await this.repo.findPendingSubmissionUnscoped(data.submissionId);
-    if (!submission) return { ok: true as const, data: { leadId: null, skipped: true } };
+    if (!submission)
+      return { ok: true as const, data: { leadId: null, skipped: true, companyId: null, publisherUserId: null } };
 
     try {
       const fields = mapWebFormFields(submission.rawPayload, submission.fieldMapping);
@@ -87,9 +65,13 @@ export class ProcessWebFormSubmissionInteractor {
 
       await this.repo.markSubmissionProcessedUnscoped(submission.id, leadId);
 
-      await this.publishLeadCreated(leadId, submission.companyId, submission.defaultOwnerId);
+      const publisherUserId =
+        submission.defaultOwnerId ?? (await this.repo.findTaskCapableUserIdUnscoped(submission.companyId));
 
-      return { ok: true as const, data: { leadId, skipped: false } };
+      return {
+        ok: true as const,
+        data: { leadId, skipped: false, companyId: submission.companyId, publisherUserId },
+      };
     } catch (error) {
       await this.repo.markSubmissionFailedUnscoped(
         submission.id,

@@ -147,7 +147,7 @@ export class PrismaProcessWebFormSubmissionRepo extends BaseRepository implement
   }
 
   @BypassTenantGuard
-  async findLeadForEventUnscoped(leadId: string): Promise<LeadDto> {
+  async findLeadForEventOrThrowUnscoped(leadId: string): Promise<LeadDto> {
     return this.prisma.lead.findFirstOrThrow({
       where: { id: leadId },
       select: {
