@@ -6,6 +6,7 @@ import de from "@/i18n/locales/de.json";
 import es from "@/i18n/locales/es.json";
 import fr from "@/i18n/locales/fr.json";
 import itLocale from "@/i18n/locales/it.json";
+import { applyBrand } from "@/i18n/brand-messages";
 
 import {
   AgentActivityDescriptorSchema,
@@ -25,7 +26,7 @@ const AGENT_CATALOGS = { de, en, es, fr, it: itLocale } as const;
 const translatorFor = (locale: keyof typeof AGENT_CATALOGS) => {
   const translate = createTranslator({
     locale,
-    messages: AGENT_CATALOGS[locale],
+    messages: applyBrand(AGENT_CATALOGS[locale]),
   });
   return (key: string, values?: Record<string, string | number>) =>
     (translate as unknown as (key: string, values?: Record<string, string | number>) => string)(key, values);
