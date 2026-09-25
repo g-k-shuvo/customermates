@@ -24,6 +24,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { runUserAction } from "@/core/errors/report-application-error";
+import { toastZodErrorTree } from "@/core/utils/toast-zod-error-tree";
+import { toast } from "sonner";
 import { useEntityTerminology } from "@/components/entity-terminology/use-entity-terminology";
 import { upsertAutomationAction } from "../actions";
 
@@ -77,6 +79,7 @@ export function AutomationModal({ automation, isOpen, onClose, onSaved }: Props)
       });
 
       if (result?.ok) onSaved();
+      else if (!toastZodErrorTree(result?.error)) toast.error(t("Common.notifications.unexpectedError"));
     });
 
   return (

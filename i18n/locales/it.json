@@ -1018,16 +1018,19 @@
   },
   "Automations": {
     "actionFields": {
-      "field": "Campo",
-      "value": "Valore",
-      "name": "Nome",
-      "title": "Titolo",
       "body": "Testo",
+      "field": "Campo",
+      "labels": "Etichette",
+      "labelsPlaceholder": "Separi le etichette con virgole",
+      "name": "Nome",
+      "seconds": "Secondi di attesa",
       "stageId": "Fase",
-      "to": "Destinatario",
       "subject": "Oggetto",
+      "title": "Titolo",
+      "to": "Destinatario",
       "url": "URL",
-      "seconds": "Secondi di attesa"
+      "userId": "ID utente del titolare",
+      "value": "Valore"
     },
     "actions": {
       "updateField": "Imposta un campo",

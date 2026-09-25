@@ -1018,16 +1018,19 @@
   },
   "Automations": {
     "actionFields": {
-      "field": "Champ",
-      "value": "Valeur",
-      "name": "Nom",
-      "title": "Titre",
       "body": "Texte",
+      "field": "Champ",
+      "labels": "Étiquettes",
+      "labelsPlaceholder": "Séparez les étiquettes par des virgules",
+      "name": "Nom",
+      "seconds": "Secondes d’attente",
       "stageId": "Étape",
-      "to": "Destinataire",
       "subject": "Objet",
+      "title": "Titre",
+      "to": "Destinataire",
       "url": "URL",
-      "seconds": "Secondes d’attente"
+      "userId": "Identifiant du responsable",
+      "value": "Valeur"
     },
     "actions": {
       "updateField": "Définir un champ",

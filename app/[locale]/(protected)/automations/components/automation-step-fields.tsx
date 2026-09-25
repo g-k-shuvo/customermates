@@ -38,6 +38,15 @@ const DEFAULT_CONFIG: Record<AutomationActionKind, unknown> = {
   [AutomationActionKind.delay]: { seconds: 3600 },
 };
 
+const LIST_FIELDS: Partial<Record<AutomationActionKind, string>> = {
+  [AutomationActionKind.addLabel]: "labels",
+  [AutomationActionKind.createLead]: "labels",
+};
+
+function listFieldFor(kind: AutomationActionKind): string | undefined {
+  return LIST_FIELDS[kind];
+}
+
 function textFieldsFor(kind: AutomationActionKind): string[] {
   switch (kind) {
     case AutomationActionKind.updateField:
@@ -50,6 +59,8 @@ function textFieldsFor(kind: AutomationActionKind): string[] {
       return ["name"];
     case AutomationActionKind.createLead:
       return ["title"];
+    case AutomationActionKind.assignOwner:
+      return ["userId"];
     case AutomationActionKind.moveStage:
       return ["stageId"];
     case AutomationActionKind.sendEmail:
@@ -69,6 +80,18 @@ export function AutomationStepFields({ step, entityType, onChange }: Props) {
 
   const setKind = (kind: AutomationActionKind) =>
     onChange({ kind, config: DEFAULT_CONFIG[kind] } as AutomationStepData);
+
+  const setList = (field: string, value: string) =>
+    onChange({
+      kind: step.kind,
+      config: {
+        ...config,
+        [field]: value
+          .split(",")
+          .map((entry) => entry.trim())
+          .filter(Boolean),
+      },
+    } as AutomationStepData);
 
   const setField = (field: string, value: string) =>
     onChange({
@@ -97,6 +120,22 @@ export function AutomationStepFields({ step, entityType, onChange }: Props) {
           </SelectContent>
         </Select>
       </div>
+
+      {listFieldFor(step.kind) ? (
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="automation-step-labels">{t("Automations.actionFields.labels")}</Label>
+
+          <Input
+            id="automation-step-labels"
+            placeholder={t("Automations.actionFields.labelsPlaceholder")}
+            value={(Array.isArray(config[listFieldFor(step.kind) as string])
+              ? (config[listFieldFor(step.kind) as string] as string[])
+              : []
+            ).join(", ")}
+            onChange={(event) => setList(listFieldFor(step.kind) as string, event.target.value)}
+          />
+        </div>
+      ) : null}
 
       {textFieldsFor(step.kind).map((field) => (
         <div key={field} className="flex flex-col gap-1.5">

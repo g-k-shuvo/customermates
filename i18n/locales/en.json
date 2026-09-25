@@ -1018,16 +1018,19 @@
   },
   "Automations": {
     "actionFields": {
-      "field": "Field",
-      "value": "Value",
-      "name": "Name",
-      "title": "Title",
       "body": "Text",
+      "field": "Field",
+      "labels": "Labels",
+      "labelsPlaceholder": "Separate labels with commas",
+      "name": "Name",
+      "seconds": "Seconds to wait",
       "stageId": "Stage",
-      "to": "Recipient",
       "subject": "Subject",
+      "title": "Title",
+      "to": "Recipient",
       "url": "URL",
-      "seconds": "Seconds to wait"
+      "userId": "Owner user id",
+      "value": "Value"
     },
     "actions": {
       "updateField": "Set a field",
