@@ -72,6 +72,13 @@ const REQUIRED_TRANSLATION_FRAGMENTS: Record<string, Record<string, readonly str
 };
 
 const ALLOWED_SOURCE_IDENTICAL_TRANSLATIONS = new Set([
+  // The automation row joins its trigger and action count with a separator that carries no words.
+  "de:Automations.rowSummary",
+  "es:Automations.rowSummary",
+  "fr:Automations.rowSummary",
+  "it:Automations.rowSummary",
+  // French spells action and its plural exactly as English does.
+  "fr:Automations.stepCount",
   // The localized view type and name use the same colon syntax in these languages.
   "de:AgentChat.context.viewLabel",
   "es:AgentChat.context.viewLabel",

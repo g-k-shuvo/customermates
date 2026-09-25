@@ -1016,6 +1016,68 @@
     "userCreationFailed": "Your account could not be created. Please try again.",
     "userInfoIsMissing": "The provider did not return your profile. Please try again."
   },
+  "Automations": {
+    "actionFields": {
+      "field": "Field",
+      "value": "Value",
+      "name": "Name",
+      "title": "Title",
+      "body": "Text",
+      "stageId": "Stage",
+      "to": "Recipient",
+      "subject": "Subject",
+      "url": "URL",
+      "seconds": "Seconds to wait"
+    },
+    "actions": {
+      "updateField": "Set a field",
+      "assignOwner": "Assign an owner",
+      "addLabel": "Add labels",
+      "createTask": "Create a task",
+      "createNote": "Write a note",
+      "createDeal": "Create a deal",
+      "createLead": "Create a lead",
+      "moveStage": "Move to a stage",
+      "sendEmail": "Send an email",
+      "callWebhook": "Call a URL",
+      "delay": "Wait"
+    },
+    "addStep": "Add action",
+    "create": "New automation",
+    "createTitle": "New automation",
+    "deleteLabel": "Delete the {name} automation",
+    "disabled": "Off",
+    "editLabel": "Edit the {name} automation",
+    "editTitle": "Edit automation",
+    "emptyBody": "An automation watches for a change and then does the same thing every time, without anyone opening the record.",
+    "emptyTitle": "No automations yet",
+    "enabled": "On",
+    "fields": {
+      "name": "Name",
+      "trigger": "Trigger",
+      "entityType": "Record type",
+      "schedule": "Schedule",
+      "steps": "Actions",
+      "action": "Action"
+    },
+    "removeStep": "Remove action",
+    "rowSummary": "{trigger} · {steps}",
+    "stepCount": "{count, plural, =1 {1 action} other {# actions}}",
+    "title": "Automations",
+    "toggleLabel": "Turn the {name} automation on or off",
+    "triggerKinds": {
+      "recordCreated": "When a record is created",
+      "recordUpdated": "When a record changes",
+      "recordDeleted": "When a record is deleted",
+      "schedule": "On a schedule"
+    },
+    "triggers": {
+      "recordCreated": "When a {entity} is created",
+      "recordUpdated": "When a {entity} changes",
+      "recordDeleted": "When a {entity} is deleted",
+      "schedule": "On a schedule"
+    }
+  },
   "BrowserFrame": {
     "live": "live",
     "liveDemoTitle": "{brand} live demo",
@@ -2693,13 +2755,6 @@
     "contactIntro": "Can't find what you need?",
     "label": "FAQ"
   },
-  "feedback": {
-    "general": {
-      "description": "Your feedback helps us improve. Share ideas, report issues, or tell us what's working well so we can build a better product for you",
-      "title": "Share Your Feedback"
-    },
-    "success": "Feedback received. You're officially part of the build crew."
-  },
   "Footer": {
     "company": "Company",
     "copyrightText": "© {year} {brand}. All rights reserved.",
@@ -3150,6 +3205,7 @@
     "addPickerTitle": "Create new…",
     "admin": "Admin",
     "affiliate": "Affiliate Program",
+    "automations": "Automations",
     "connectedAccounts": "Channels",
     "crm": "CRM",
     "dashboard": "Dashboard",
@@ -3821,10 +3877,6 @@
     "providerError": "The AI provider returned an error before the run could finish.",
     "turnError": "The assistant could not complete this run."
   },
-  "RoutinesCard": {
-    "emptyBody": "Mate can work while you are away. For example: summarise the deals that moved every weekday morning, or draft a thank-you email when one is won.",
-    "emptyTitle": "No routines yet"
-  },
   "RoutineSchedule": {
     "daily": "Every day at {time}",
     "hourly": "Every hour at :{minute}",
@@ -3851,6 +3903,10 @@
     "thursday": "Thursday",
     "tuesday": "Tuesday",
     "wednesday": "Wednesday"
+  },
+  "RoutinesCard": {
+    "emptyBody": "Mate can work while you are away. For example: summarise the deals that moved every weekday morning, or draft a thank-you email when one is won.",
+    "emptyTitle": "No routines yet"
   },
   "ServiceModal": {
     "title": "Service"
@@ -4102,5 +4158,12 @@
     "emptyBody": "Add a webhook to send workspace events to your systems.",
     "emptyTitle": "No webhooks yet",
     "title": "Webhooks"
+  },
+  "feedback": {
+    "general": {
+      "description": "Your feedback helps us improve. Share ideas, report issues, or tell us what's working well so we can build a better product for you",
+      "title": "Share Your Feedback"
+    },
+    "success": "Feedback received. You're officially part of the build crew."
   }
 }

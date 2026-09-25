@@ -1016,6 +1016,68 @@
     "userCreationFailed": "No se pudo crear tu cuenta. Inténtalo de nuevo.",
     "userInfoIsMissing": "El proveedor no devolvió tu perfil. Inténtalo de nuevo."
   },
+  "Automations": {
+    "actionFields": {
+      "field": "Campo",
+      "value": "Valor",
+      "name": "Nombre",
+      "title": "Título",
+      "body": "Texto",
+      "stageId": "Etapa",
+      "to": "Destinatario",
+      "subject": "Asunto",
+      "url": "URL",
+      "seconds": "Segundos de espera"
+    },
+    "actions": {
+      "updateField": "Establecer un campo",
+      "assignOwner": "Asignar responsable",
+      "addLabel": "Añadir etiquetas",
+      "createTask": "Crear una tarea",
+      "createNote": "Escribir una nota",
+      "createDeal": "Crear una oportunidad",
+      "createLead": "Crear un lead",
+      "moveStage": "Mover a una etapa",
+      "sendEmail": "Enviar un correo",
+      "callWebhook": "Llamar a una URL",
+      "delay": "Esperar"
+    },
+    "addStep": "Añadir acción",
+    "create": "Nueva automatización",
+    "createTitle": "Nueva automatización",
+    "deleteLabel": "Eliminar la automatización {name}",
+    "disabled": "Desactivada",
+    "editLabel": "Editar la automatización {name}",
+    "editTitle": "Editar automatización",
+    "emptyBody": "Una automatización espera un cambio y después repite siempre los mismos pasos, sin que nadie abra el registro.",
+    "emptyTitle": "Aún no hay automatizaciones",
+    "enabled": "Activada",
+    "fields": {
+      "name": "Nombre",
+      "trigger": "Disparador",
+      "entityType": "Tipo de registro",
+      "schedule": "Programación",
+      "steps": "Acciones",
+      "action": "Acción"
+    },
+    "removeStep": "Quitar acción",
+    "rowSummary": "{trigger} · {steps}",
+    "stepCount": "{count, plural, =1 {1 acción} other {# acciones}}",
+    "title": "Automatizaciones",
+    "toggleLabel": "Activar o desactivar la automatización {name}",
+    "triggerKinds": {
+      "recordCreated": "Cuando se crea un registro",
+      "recordUpdated": "Cuando cambia un registro",
+      "recordDeleted": "Cuando se elimina un registro",
+      "schedule": "Según programación"
+    },
+    "triggers": {
+      "recordCreated": "Cuando se crea {entity}",
+      "recordUpdated": "Cuando cambia {entity}",
+      "recordDeleted": "Cuando se elimina {entity}",
+      "schedule": "Según programación"
+    }
+  },
   "BrowserFrame": {
     "live": "en directo",
     "liveDemoTitle": "Demo en directo de {brand}",
@@ -2693,13 +2755,6 @@
     "contactIntro": "¿No encuentras lo que buscas?",
     "label": "Preguntas frecuentes"
   },
-  "feedback": {
-    "general": {
-      "description": "Tus comentarios nos ayudan a mejorar. Comparte ideas, informa de problemas o cuéntanos qué funciona bien para que podamos construir un producto mejor para ti",
-      "title": "Comparte tu opinión"
-    },
-    "success": "Comentario recibido. Ya formas parte oficialmente del equipo."
-  },
   "Footer": {
     "company": "Empresa",
     "copyrightText": "© {year} {brand}. Todos los derechos reservados.",
@@ -3150,6 +3205,7 @@
     "addPickerTitle": "Crear nuevo…",
     "admin": "Administración",
     "affiliate": "Programa de afiliados",
+    "automations": "Automatizaciones",
     "connectedAccounts": "Canales",
     "crm": "CRM",
     "dashboard": "Panel",
@@ -3821,10 +3877,6 @@
     "providerError": "El proveedor de IA devolvió un error antes de que terminara la ejecución.",
     "turnError": "El asistente no pudo completar esta ejecución."
   },
-  "RoutinesCard": {
-    "emptyBody": "Mate puede trabajar mientras no estás. Por ejemplo: resumir cada mañana laborable lo que ha cambiado, o redactar un correo de agradecimiento cuando algo se gana.",
-    "emptyTitle": "Aún no hay rutinas"
-  },
   "RoutineSchedule": {
     "daily": "Todos los días a las {time}",
     "hourly": "Cada hora a los :{minute}",
@@ -3851,6 +3903,10 @@
     "thursday": "Jueves",
     "tuesday": "Martes",
     "wednesday": "Miércoles"
+  },
+  "RoutinesCard": {
+    "emptyBody": "Mate puede trabajar mientras no estás. Por ejemplo: resumir cada mañana laborable lo que ha cambiado, o redactar un correo de agradecimiento cuando algo se gana.",
+    "emptyTitle": "Aún no hay rutinas"
   },
   "ServiceModal": {
     "title": "Servicio"
@@ -4102,5 +4158,12 @@
     "emptyBody": "Añade un webhook para enviar los eventos del espacio de trabajo a tus sistemas.",
     "emptyTitle": "Aún no hay webhooks",
     "title": "Webhooks"
+  },
+  "feedback": {
+    "general": {
+      "description": "Tus comentarios nos ayudan a mejorar. Comparte ideas, informa de problemas o cuéntanos qué funciona bien para que podamos construir un producto mejor para ti",
+      "title": "Comparte tu opinión"
+    },
+    "success": "Comentario recibido. Ya formas parte oficialmente del equipo."
   }
 }

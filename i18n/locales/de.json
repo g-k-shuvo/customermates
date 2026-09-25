@@ -1016,6 +1016,68 @@
     "userCreationFailed": "Dein Konto konnte nicht erstellt werden. Bitte versuche es erneut.",
     "userInfoIsMissing": "Der Anbieter hat dein Profil nicht übermittelt. Bitte versuche es erneut."
   },
+  "Automations": {
+    "actionFields": {
+      "field": "Feld",
+      "value": "Wert",
+      "name": "Name",
+      "title": "Titel",
+      "body": "Text",
+      "stageId": "Phase",
+      "to": "Empfänger",
+      "subject": "Betreff",
+      "url": "URL",
+      "seconds": "Wartezeit in Sekunden"
+    },
+    "actions": {
+      "updateField": "Feld setzen",
+      "assignOwner": "Besitzer zuweisen",
+      "addLabel": "Labels hinzufügen",
+      "createTask": "Aufgabe anlegen",
+      "createNote": "Notiz schreiben",
+      "createDeal": "Deal anlegen",
+      "createLead": "Lead anlegen",
+      "moveStage": "In Phase verschieben",
+      "sendEmail": "E-Mail senden",
+      "callWebhook": "URL aufrufen",
+      "delay": "Warten"
+    },
+    "addStep": "Aktion hinzufügen",
+    "create": "Neue Automatisierung",
+    "createTitle": "Neue Automatisierung",
+    "deleteLabel": "Automatisierung {name} löschen",
+    "disabled": "Aus",
+    "editLabel": "Automatisierung {name} bearbeiten",
+    "editTitle": "Automatisierung bearbeiten",
+    "emptyBody": "Eine Automatisierung wartet auf eine Änderung und führt danach jedes Mal dieselben Schritte aus, ohne dass jemand den Datensatz öffnet.",
+    "emptyTitle": "Noch keine Automatisierungen",
+    "enabled": "An",
+    "fields": {
+      "name": "Name",
+      "trigger": "Auslöser",
+      "entityType": "Datensatztyp",
+      "schedule": "Zeitplan",
+      "steps": "Aktionen",
+      "action": "Aktion"
+    },
+    "removeStep": "Aktion entfernen",
+    "rowSummary": "{trigger} · {steps}",
+    "stepCount": "{count, plural, =1 {1 Aktion} other {# Aktionen}}",
+    "title": "Automatisierungen",
+    "toggleLabel": "Automatisierung {name} ein- oder ausschalten",
+    "triggerKinds": {
+      "recordCreated": "Wenn ein Datensatz angelegt wird",
+      "recordUpdated": "Wenn sich ein Datensatz ändert",
+      "recordDeleted": "Wenn ein Datensatz gelöscht wird",
+      "schedule": "Nach Zeitplan"
+    },
+    "triggers": {
+      "recordCreated": "Wenn {entity} angelegt wird",
+      "recordUpdated": "Wenn sich {entity} ändert",
+      "recordDeleted": "Wenn {entity} gelöscht wird",
+      "schedule": "Nach Zeitplan"
+    }
+  },
   "BrowserFrame": {
     "live": "live",
     "liveDemoTitle": "{brand}-Live-Demo",
@@ -2693,13 +2755,6 @@
     "contactIntro": "Nichts Passendes gefunden?",
     "label": "FAQ"
   },
-  "feedback": {
-    "general": {
-      "description": "Dein Feedback hilft uns, besser zu werden. Teile Ideen, melde Probleme oder sag uns, was gut läuft, damit wir ein besseres Produkt für dich bauen können.",
-      "title": "Teile dein Feedback"
-    },
-    "success": "Feedback erhalten. Du bist offiziell Teil der Build-Crew."
-  },
   "Footer": {
     "company": "Unternehmen",
     "copyrightText": "© {year} {brand}. Alle Rechte vorbehalten.",
@@ -3150,6 +3205,7 @@
     "addPickerTitle": "Neu anlegen…",
     "admin": "Administration",
     "affiliate": "Affiliate-Programm",
+    "automations": "Automatisierungen",
     "connectedAccounts": "Kanäle",
     "crm": "CRM",
     "dashboard": "Dashboard",
@@ -3821,10 +3877,6 @@
     "providerError": "Der KI-Anbieter hat vor Abschluss des Laufs einen Fehler zurückgegeben.",
     "turnError": "Der Assistent konnte diesen Lauf nicht abschließen."
   },
-  "RoutinesCard": {
-    "emptyBody": "Mate kann arbeiten, während du weg bist. Zum Beispiel: jeden Werktagmorgen zusammenfassen, was sich bewegt hat, oder eine Dankesmail entwerfen, sobald etwas gewonnen ist.",
-    "emptyTitle": "Noch keine Routinen"
-  },
   "RoutineSchedule": {
     "daily": "Täglich um {time}",
     "hourly": "Jede Stunde um :{minute}",
@@ -3851,6 +3903,10 @@
     "thursday": "Donnerstag",
     "tuesday": "Dienstag",
     "wednesday": "Mittwoch"
+  },
+  "RoutinesCard": {
+    "emptyBody": "Mate kann arbeiten, während du weg bist. Zum Beispiel: jeden Werktagmorgen zusammenfassen, was sich bewegt hat, oder eine Dankesmail entwerfen, sobald etwas gewonnen ist.",
+    "emptyTitle": "Noch keine Routinen"
   },
   "ServiceModal": {
     "title": "Service"
@@ -4102,5 +4158,12 @@
     "emptyBody": "Füge einen Webhook hinzu, um Workspace-Ereignisse an deine Systeme zu senden.",
     "emptyTitle": "Noch keine Webhooks",
     "title": "Webhooks"
+  },
+  "feedback": {
+    "general": {
+      "description": "Dein Feedback hilft uns, besser zu werden. Teile Ideen, melde Probleme oder sag uns, was gut läuft, damit wir ein besseres Produkt für dich bauen können.",
+      "title": "Teile dein Feedback"
+    },
+    "success": "Feedback erhalten. Du bist offiziell Teil der Build-Crew."
   }
 }

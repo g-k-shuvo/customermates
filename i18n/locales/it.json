@@ -1016,6 +1016,68 @@
     "userCreationFailed": "Non è stato possibile creare il tuo account. Riprova.",
     "userInfoIsMissing": "Il provider non ha restituito il tuo profilo. Riprova."
   },
+  "Automations": {
+    "actionFields": {
+      "field": "Campo",
+      "value": "Valore",
+      "name": "Nome",
+      "title": "Titolo",
+      "body": "Testo",
+      "stageId": "Fase",
+      "to": "Destinatario",
+      "subject": "Oggetto",
+      "url": "URL",
+      "seconds": "Secondi di attesa"
+    },
+    "actions": {
+      "updateField": "Imposta un campo",
+      "assignOwner": "Assegna un titolare",
+      "addLabel": "Aggiungi etichette",
+      "createTask": "Crea un’attività",
+      "createNote": "Scrivi una nota",
+      "createDeal": "Crea un’opportunità",
+      "createLead": "Crea un lead",
+      "moveStage": "Sposta in una fase",
+      "sendEmail": "Invia un’email",
+      "callWebhook": "Chiama un URL",
+      "delay": "Attendi"
+    },
+    "addStep": "Aggiungi azione",
+    "create": "Nuova automazione",
+    "createTitle": "Nuova automazione",
+    "deleteLabel": "Elimina l’automazione {name}",
+    "disabled": "Disattiva",
+    "editLabel": "Modifica l’automazione {name}",
+    "editTitle": "Modifica automazione",
+    "emptyBody": "Un’automazione attende un cambiamento e poi ripete sempre gli stessi passaggi, senza che nessuno apra il record.",
+    "emptyTitle": "Nessuna automazione",
+    "enabled": "Attiva",
+    "fields": {
+      "name": "Nome",
+      "trigger": "Attivatore",
+      "entityType": "Tipo di record",
+      "schedule": "Pianificazione",
+      "steps": "Azioni",
+      "action": "Azione"
+    },
+    "removeStep": "Rimuovi azione",
+    "rowSummary": "{trigger} · {steps}",
+    "stepCount": "{count, plural, =1 {1 azione} other {# azioni}}",
+    "title": "Automazioni",
+    "toggleLabel": "Attiva o disattiva l’automazione {name}",
+    "triggerKinds": {
+      "recordCreated": "Quando un record viene creato",
+      "recordUpdated": "Quando un record cambia",
+      "recordDeleted": "Quando un record viene eliminato",
+      "schedule": "Secondo pianificazione"
+    },
+    "triggers": {
+      "recordCreated": "Quando {entity} viene creato",
+      "recordUpdated": "Quando {entity} cambia",
+      "recordDeleted": "Quando {entity} viene eliminato",
+      "schedule": "Secondo pianificazione"
+    }
+  },
   "BrowserFrame": {
     "live": "in diretta",
     "liveDemoTitle": "Demo live di {brand}",
@@ -2693,13 +2755,6 @@
     "contactIntro": "Non trovi quello che cerchi?",
     "label": "FAQ"
   },
-  "feedback": {
-    "general": {
-      "description": "Il tuo feedback ci aiuta a migliorare. Condividi idee, segnala problemi o dicci cosa funziona bene, così possiamo costruire un prodotto migliore per te",
-      "title": "Condividi il tuo feedback"
-    },
-    "success": "Feedback ricevuto. Fai ufficialmente parte della squadra."
-  },
   "Footer": {
     "company": "Azienda",
     "copyrightText": "© {year} {brand}. Tutti i diritti riservati.",
@@ -3150,6 +3205,7 @@
     "addPickerTitle": "Crea nuovo…",
     "admin": "Amministrazione",
     "affiliate": "Programma di affiliazione",
+    "automations": "Automazioni",
     "connectedAccounts": "Canali",
     "crm": "CRM",
     "dashboard": "Dashboard",
@@ -3821,10 +3877,6 @@
     "providerError": "Il provider IA ha restituito un errore prima che l'esecuzione potesse terminare.",
     "turnError": "L'assistente non è riuscito a completare questa esecuzione."
   },
-  "RoutinesCard": {
-    "emptyBody": "Mate può lavorare mentre non ci sei. Per esempio: riassumere ogni mattina feriale ciò che è cambiato, oppure scrivere una email di ringraziamento quando qualcosa viene vinto.",
-    "emptyTitle": "Nessuna routine"
-  },
   "RoutineSchedule": {
     "daily": "Ogni giorno alle {time}",
     "hourly": "Ogni ora al minuto :{minute}",
@@ -3851,6 +3903,10 @@
     "thursday": "Giovedì",
     "tuesday": "Martedì",
     "wednesday": "Mercoledì"
+  },
+  "RoutinesCard": {
+    "emptyBody": "Mate può lavorare mentre non ci sei. Per esempio: riassumere ogni mattina feriale ciò che è cambiato, oppure scrivere una email di ringraziamento quando qualcosa viene vinto.",
+    "emptyTitle": "Nessuna routine"
   },
   "ServiceModal": {
     "title": "Servizio"
@@ -4102,5 +4158,12 @@
     "emptyBody": "Aggiungi un webhook per inviare gli eventi dello spazio di lavoro ai tuoi sistemi.",
     "emptyTitle": "Ancora nessun webhook",
     "title": "Webhook"
+  },
+  "feedback": {
+    "general": {
+      "description": "Il tuo feedback ci aiuta a migliorare. Condividi idee, segnala problemi o dicci cosa funziona bene, così possiamo costruire un prodotto migliore per te",
+      "title": "Condividi il tuo feedback"
+    },
+    "success": "Feedback ricevuto. Fai ufficialmente parte della squadra."
   }
 }

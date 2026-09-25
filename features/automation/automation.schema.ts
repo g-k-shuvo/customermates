@@ -19,6 +19,7 @@ export const AUTOMATION_TRIGGER_ENTITY_TYPES = [
 ] as const;
 
 export const AutomationTriggerEntityTypeSchema = z.enum(AUTOMATION_TRIGGER_ENTITY_TYPES);
+export type AutomationTriggerEntityType = (typeof AUTOMATION_TRIGGER_ENTITY_TYPES)[number];
 
 export const AutomationStepDtoSchema = z.object({
   id: z.uuid(),

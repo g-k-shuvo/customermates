@@ -25,6 +25,7 @@ import {
   Plus,
   LayoutGrid,
   Repeat,
+  Workflow,
   ShieldCheck,
   TrendingUp,
   UserCircle,
@@ -194,6 +195,13 @@ const FullAppSidebar = observer(
               href: "/routines",
               icon: Repeat,
               visible: rootStore.appMode !== "self-hosted" && canAccess(Resource.routines),
+            },
+            {
+              key: "automations",
+              title: t("NavigationBar.automations"),
+              href: "/automations",
+              icon: Workflow,
+              visible: canAccess(Resource.automations),
             },
             {
               key: "mail",
