@@ -3,7 +3,7 @@
 import type { AutomationDto } from "@/features/automation/automation.schema";
 
 import { useTranslations } from "next-intl";
-import { Pencil, Trash2 } from "lucide-react";
+import { History, Pencil, Trash2 } from "lucide-react";
 
 import { AutomationTriggerKind } from "@/generated/prisma";
 
@@ -18,9 +18,10 @@ type Props = {
   automation: AutomationDto;
   onChanged: () => void;
   onEdit: () => void;
+  onShowRuns: () => void;
 };
 
-export function AutomationRow({ automation, onChanged, onEdit }: Props) {
+export function AutomationRow({ automation, onChanged, onEdit, onShowRuns }: Props) {
   const t = useTranslations();
   const { singular } = useEntityTerminology();
 
@@ -45,7 +46,7 @@ export function AutomationRow({ automation, onChanged, onEdit }: Props) {
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
-        <AppChip size="sm" variant={automation.enabled ? "success" : "default"}>
+        <AppChip size="sm" variant={automation.enabled ? "success" : "secondary"}>
           {automation.enabled ? t("Automations.enabled") : t("Automations.disabled")}
         </AppChip>
 
@@ -59,6 +60,15 @@ export function AutomationRow({ automation, onChanged, onEdit }: Props) {
             })
           }
         />
+
+        <Button
+          aria-label={t("Automations.runsLabel", { name: automation.name })}
+          size="icon-sm"
+          variant="ghost"
+          onClick={onShowRuns}
+        >
+          <History className="size-4" />
+        </Button>
 
         <Button
           aria-label={t("Automations.editLabel", { name: automation.name })}

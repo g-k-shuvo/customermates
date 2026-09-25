@@ -220,6 +220,7 @@ import { PrepareAutomationRunInteractor } from "@/features/automation/run/prepar
 import { ExecuteAutomationStepInteractor } from "@/features/automation/run/execute-automation-step.interactor";
 import { SweepDueAutomationsInteractor } from "@/features/automation/run/sweep-due-automations.interactor";
 import { GetAutomationsInteractor } from "@/features/automation/get/get-automations.interactor";
+import { GetAutomationRunsInteractor } from "@/features/automation/get/get-automation-runs.interactor";
 import { UpsertAutomationInteractor } from "@/features/automation/upsert/upsert-automation.interactor";
 import { DeleteAutomationInteractor } from "@/features/automation/delete/delete-automation.interactor";
 import { PublishLeadCreatedInteractor } from "@/features/webform/process/publish-lead-created.interactor";
@@ -635,6 +636,8 @@ export const getSweepDueAutomationsInteractor = () =>
   new SweepDueAutomationsInteractor(getAutomationRepo(), getBackgroundTaskService());
 
 export const getGetAutomationsInteractor = () => new GetAutomationsInteractor(getAutomationRepo());
+
+export const getGetAutomationRunsInteractor = () => new GetAutomationRunsInteractor(getAutomationRepo());
 
 export const getUpsertAutomationInteractor = () =>
   new UpsertAutomationInteractor(getAutomationRepo(), getEventService());

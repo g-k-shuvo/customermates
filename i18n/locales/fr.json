@@ -1062,6 +1062,18 @@
     },
     "removeStep": "Retirer l’action",
     "rowSummary": "{trigger} · {steps}",
+    "runStatuses": {
+      "queued": "En attente",
+      "running": "En cours",
+      "succeeded": "Réussie",
+      "failed": "Échouée",
+      "skipped": "Ignorée",
+      "cancelled": "Annulée"
+    },
+    "runStepSummary": "Étape {position} : {action} — {status}",
+    "runsEmpty": "Cette automatisation n’a pas encore été exécutée.",
+    "runsLabel": "Afficher l’historique des exécutions de l’automatisation {name}",
+    "runsTitle": "Historique des exécutions",
     "stepCount": "{count, plural, =1 {1 action} other {# actions}}",
     "title": "Automatisations",
     "toggleLabel": "Activer ou désactiver l’automatisation {name}",

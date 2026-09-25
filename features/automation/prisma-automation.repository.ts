@@ -4,8 +4,9 @@ import type { AutomationRunPlan, ExecuteAutomationRunRepo } from "./run/execute-
 import type { UpsertAutomationData, UpsertAutomationRepo } from "./upsert/upsert-automation.interactor";
 import type { DeleteAutomationRepo } from "./delete/delete-automation.interactor";
 import type { GetAutomationsRepo } from "./get/get-automations.interactor";
+import type { GetAutomationRunsRepo } from "./get/get-automation-runs.interactor";
 import type { DueAutomation, SweepDueAutomationsRepo } from "./run/sweep-due-automations.interactor";
-import type { AutomationDto } from "./automation.schema";
+import type { AutomationDto, AutomationRunDto } from "./automation.schema";
 import type { Filter } from "@/core/base/base-get.schema";
 
 import type { EntityType, Prisma } from "@/generated/prisma";
@@ -48,6 +49,7 @@ export class PrismaAutomationRepo
     UpsertAutomationRepo,
     DeleteAutomationRepo,
     GetAutomationsRepo,
+    GetAutomationRunsRepo,
     SweepDueAutomationsRepo
 {
   private toDto(row: AutomationRow): AutomationDto {
@@ -101,6 +103,64 @@ export class PrismaAutomationRepo
     });
 
     return rows.map((row) => this.toDto(row));
+  }
+
+  async listAutomationRuns(automationId: string, take: number): Promise<AutomationRunDto[]> {
+    const rows = await this.prisma.automationRun.findMany({
+      where: { automationId, companyId: this.companyId, automation: this.accessWhere("automation") },
+      select: {
+        id: true,
+        automationId: true,
+        status: true,
+        entityType: true,
+        entityId: true,
+        triggerEvent: true,
+        startedAt: true,
+        finishedAt: true,
+        error: true,
+        createdAt: true,
+        automation: { select: { name: true } },
+        steps: {
+          select: {
+            id: true,
+            position: true,
+            status: true,
+            output: true,
+            error: true,
+            startedAt: true,
+            finishedAt: true,
+            step: { select: { kind: true } },
+          },
+          orderBy: { position: "asc" },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take,
+    });
+
+    return rows.map((row) => ({
+      id: row.id,
+      automationId: row.automationId,
+      automationName: row.automation.name,
+      status: row.status,
+      entityType: row.entityType,
+      entityId: row.entityId,
+      triggerEvent: row.triggerEvent,
+      startedAt: row.startedAt,
+      finishedAt: row.finishedAt,
+      error: row.error,
+      createdAt: row.createdAt,
+      steps: row.steps.map((step) => ({
+        id: step.id,
+        position: step.position,
+        kind: step.step?.kind ?? null,
+        status: step.status,
+        output: step.output,
+        error: step.error,
+        startedAt: step.startedAt,
+        finishedAt: step.finishedAt,
+      })),
+    }));
   }
 
   @Transaction

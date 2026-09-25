@@ -16,6 +16,10 @@ import { AutomationStepFields } from "./automation-step-fields";
 
 import { Button } from "@/components/ui/button";
 import { AppModal } from "@/components/modal";
+import { AppCard } from "@/components/card/app-card";
+import { AppCardHeader } from "@/components/card/app-card-header";
+import { AppCardBody } from "@/components/card/app-card-body";
+import { AppCardFooter } from "@/components/card/app-card-footer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -82,94 +86,104 @@ export function AutomationModal({ automation, isOpen, onClose, onSaved }: Props)
       title={automation ? t("Automations.editTitle") : t("Automations.createTitle")}
       onClose={onClose}
     >
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="automation-name">{t("Automations.fields.name")}</Label>
+      <AppCard>
+        <AppCardHeader>
+          <h2 className="text-x-lg">{automation ? t("Automations.editTitle") : t("Automations.createTitle")}</h2>
+        </AppCardHeader>
 
-          <Input id="automation-name" value={name} onChange={(event) => setName(event.target.value)} />
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
+        <AppCardBody>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="automation-trigger">{t("Automations.fields.trigger")}</Label>
+            <Label htmlFor="automation-name">{t("Automations.fields.name")}</Label>
 
-            <Select value={triggerKind} onValueChange={(next) => setTriggerKind(next as AutomationTriggerKind)}>
-              <SelectTrigger id="automation-trigger">
-                <SelectValue />
-              </SelectTrigger>
-
-              <SelectContent>
-                {Object.values(AutomationTriggerKind).map((kind) => (
-                  <SelectItem key={kind} value={kind}>
-                    {t(`Automations.triggerKinds.${kind}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input id="automation-name" value={name} onChange={(event) => setName(event.target.value)} />
           </div>
 
-          {isSchedule ? (
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="automation-schedule">{t("Automations.fields.schedule")}</Label>
+              <Label htmlFor="automation-trigger">{t("Automations.fields.trigger")}</Label>
 
-              <Input id="automation-schedule" value={schedule} onChange={(event) => setSchedule(event.target.value)} />
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="automation-entity">{t("Automations.fields.entityType")}</Label>
-
-              <Select value={entityType} onValueChange={(next) => setEntityType(next as AutomationTriggerEntityType)}>
-                <SelectTrigger id="automation-entity">
+              <Select value={triggerKind} onValueChange={(next) => setTriggerKind(next as AutomationTriggerKind)}>
+                <SelectTrigger id="automation-trigger">
                   <SelectValue />
                 </SelectTrigger>
 
                 <SelectContent>
-                  {AUTOMATION_TRIGGER_ENTITY_TYPES.map((candidate) => (
-                    <SelectItem key={candidate} value={candidate}>
-                      {singular(candidate)}
+                  {Object.values(AutomationTriggerKind).map((kind) => (
+                    <SelectItem key={kind} value={kind}>
+                      {t(`Automations.triggerKinds.${kind}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-          )}
-        </div>
 
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <Label>{t("Automations.fields.steps")}</Label>
+            {isSchedule ? (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="automation-schedule">{t("Automations.fields.schedule")}</Label>
 
-            <Button size="sm" variant="secondary" onClick={() => setSteps([...steps, DEFAULT_STEP])}>
-              <Plus className="size-4" />
-
-              {t("Automations.addStep")}
-            </Button>
-          </div>
-
-          {steps.map((step, index) => (
-            <div key={`${step.kind}-${index}`} className="flex items-start gap-2 rounded-md border p-3">
-              <div className="min-w-0 flex-1">
-                <AutomationStepFields
-                  entityType={isSchedule ? null : entityType}
-                  step={step}
-                  onChange={(next) => setSteps(steps.map((current, at) => (at === index ? next : current)))}
+                <Input
+                  id="automation-schedule"
+                  value={schedule}
+                  onChange={(event) => setSchedule(event.target.value)}
                 />
               </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="automation-entity">{t("Automations.fields.entityType")}</Label>
 
-              <Button
-                aria-label={t("Automations.removeStep")}
-                disabled={steps.length === 1}
-                size="icon-sm"
-                variant="ghost"
-                onClick={() => setSteps(steps.filter((_, at) => at !== index))}
-              >
-                <Trash2 className="size-4" />
+                <Select value={entityType} onValueChange={(next) => setEntityType(next as AutomationTriggerEntityType)}>
+                  <SelectTrigger id="automation-entity">
+                    <SelectValue />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {AUTOMATION_TRIGGER_ENTITY_TYPES.map((candidate) => (
+                      <SelectItem key={candidate} value={candidate}>
+                        {singular(candidate)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <Label>{t("Automations.fields.steps")}</Label>
+
+              <Button size="sm" variant="secondary" onClick={() => setSteps([...steps, DEFAULT_STEP])}>
+                <Plus className="size-4" />
+
+                {t("Automations.addStep")}
               </Button>
             </div>
-          ))}
-        </div>
 
-        <div className="flex justify-end gap-2">
+            {steps.map((step, index) => (
+              <div key={`${step.kind}-${index}`} className="flex items-start gap-2 rounded-md border p-3">
+                <div className="min-w-0 flex-1">
+                  <AutomationStepFields
+                    entityType={isSchedule ? null : entityType}
+                    step={step}
+                    onChange={(next) => setSteps(steps.map((current, at) => (at === index ? next : current)))}
+                  />
+                </div>
+
+                <Button
+                  aria-label={t("Automations.removeStep")}
+                  disabled={steps.length === 1}
+                  size="icon-sm"
+                  variant="ghost"
+                  onClick={() => setSteps(steps.filter((_, at) => at !== index))}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </AppCardBody>
+
+        <AppCardFooter>
           <Button variant="secondary" onClick={onClose}>
             {t("Common.actions.cancel")}
           </Button>
@@ -177,8 +191,8 @@ export function AutomationModal({ automation, isOpen, onClose, onSaved }: Props)
           <Button disabled={name.trim().length === 0} id="automation-modal-save" onClick={save}>
             {t("Common.actions.save")}
           </Button>
-        </div>
-      </div>
+        </AppCardFooter>
+      </AppCard>
     </AppModal>
   );
 }

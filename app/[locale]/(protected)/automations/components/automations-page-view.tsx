@@ -9,6 +9,7 @@ import { Plus, Workflow } from "lucide-react";
 
 import { AutomationRow } from "./automation-row";
 import { AutomationModal } from "./automation-modal";
+import { AutomationRunsModal } from "./automation-runs-modal";
 import { AutomationsPageSkeleton } from "./automations-page-skeleton";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export const AutomationsPageView = observer(function AutomationsPageView({ initi
   const [automations, setAutomations] = useState(initialAutomations);
   const [editing, setEditing] = useState<AutomationDto | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [runsFor, setRunsFor] = useState<AutomationDto | null>(null);
 
   const refresh = () =>
     runUserAction(async () => {
@@ -74,10 +76,13 @@ export const AutomationsPageView = observer(function AutomationsPageView({ initi
               automation={automation}
               onChanged={refresh}
               onEdit={() => openExisting(automation)}
+              onShowRuns={() => setRunsFor(automation)}
             />
           ))}
         </ul>
       )}
+
+      <AutomationRunsModal automation={runsFor} isOpen={runsFor !== null} onClose={() => setRunsFor(null)} />
 
       <AutomationModal
         automation={editing}

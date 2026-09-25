@@ -1062,6 +1062,18 @@
     },
     "removeStep": "Remove action",
     "rowSummary": "{trigger} · {steps}",
+    "runStatuses": {
+      "queued": "Queued",
+      "running": "Running",
+      "succeeded": "Succeeded",
+      "failed": "Failed",
+      "skipped": "Skipped",
+      "cancelled": "Cancelled"
+    },
+    "runStepSummary": "Step {position}: {action} — {status}",
+    "runsEmpty": "This automation has not run yet.",
+    "runsLabel": "Show the run history of the {name} automation",
+    "runsTitle": "Run history",
     "stepCount": "{count, plural, =1 {1 action} other {# actions}}",
     "title": "Automations",
     "toggleLabel": "Turn the {name} automation on or off",
