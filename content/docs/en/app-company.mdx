@@ -40,6 +40,10 @@ Route `/company/roles`, sidebar id `#nav-company-roles`. Roles are permission se
 | Search, display options | Roles toolbar | `#company-roles-search` / `#company-roles-display-options` | Roles have no filterable fields, so no filter control renders |
 | Layout | Display-options popover | `#company-roles-layout-table` / `#company-roles-layout-board` | Table only; the board control is disabled |
 
+## Web forms tab
+
+Route `/company/web-forms`, sidebar id `#nav-company-web-forms`. Each source is a form on your website that posts its submissions to this workspace and creates a lead from each one. A source holds the endpoint path, the field mapping that names which payload fields become the lead's title, contact and message, the default owner and labels the lead is created with, and an active flag that stops ingestion without deleting the source. The signing secret is shown once, when the source is created; a submission whose signature does not verify is rejected.
+
 ## Webhooks tab
 
 Route `/company/webhooks`, sidebar id `#nav-company-webhooks`. Outbound event subscriptions; the payloads, signatures and retries are documented on [Webhooks](/docs/webhooks).

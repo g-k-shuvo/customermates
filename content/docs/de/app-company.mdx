@@ -40,6 +40,10 @@ Route `/company/roles`, Sidebar-Id `#nav-company-roles` (**Rollen**). Rollen sin
 | Suchen, Anzeigeoptionen | Rollen-Toolbar | `#company-roles-search` / `#company-roles-display-options` | Rollen haben keine filterbaren Felder, daher wird kein Filter-Control gerendert |
 | Layout | Display-options-Popover | `#company-roles-layout-table` (**Tabelle**) / `#company-roles-layout-board` (**Board**) | Nur Tabelle; das Board-Control ist deaktiviert |
 
+## Tab Webformulare
+
+Route `/company/web-forms`, Sidebar-Id `#nav-company-web-forms` (**Webformulare**). Jede Quelle ist ein Formular auf Ihrer Website, das seine Einsendungen an diesen Workspace sendet und daraus je einen Lead erzeugt. Eine Quelle hält den Endpoint-Pfad, das Feld-Mapping, das festlegt, welche Payload-Felder zu Titel, Kontakt und Nachricht des Leads werden, den Standardbesitzer und die Standardlabels, mit denen der Lead angelegt wird, sowie ein Aktiv-Flag, das die Aufnahme stoppt, ohne die Quelle zu löschen. Das Signatur-Secret wird einmalig beim Anlegen angezeigt; eine Einsendung, deren Signatur nicht verifiziert, wird abgelehnt.
+
 ## Tab Webhooks
 
 Route `/company/webhooks`, Sidebar-Id `#nav-company-webhooks` (**Webhooks**). Ausgehende Event-Subscriptions; Payloads, Signaturen und Retries sind unter [Webhooks](/docs/webhooks) dokumentiert.

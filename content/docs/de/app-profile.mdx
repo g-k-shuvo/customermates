@@ -29,6 +29,10 @@ Der Bereich Schnellverbindungen bietet vier Kacheln: Claude, ChatGPT und Codex, 
 
 Es gibt keinen Rotate- oder Revoke-Button: Erstellen Sie einen neuen Key, aktualisieren Sie den Client und löschen Sie dann den alten.
 
+## Tab Postfächer
+
+Route `/profile/mailboxes`, Sidebar-Id `#nav-profile-mailboxes` (**Postfächer**). Mail-Konten, die Sie mit eigenen IMAP- und SMTP-Zugangsdaten verbinden — so liest und sendet eine selbst gehostete Installation Mail ohne den gehosteten Connector. Jede Zeile zeigt die Adresse, ihren Verbindungsstatus und den letzten Sync und bietet eine erneute Synchronisierung und ein Trennen an. Beim Trennen werden die gespeicherten Zugangsdaten entfernt; bereits importierte Nachrichten bleiben erhalten.
+
 ## Tab Verbundene Konten
 
 Route `/profile/connected-accounts`, Sidebar-Id `#nav-profile-connected-accounts` (**Kanäle**), nur Cloud. **Kanal verbinden** (`#profile-connected-accounts-connect`) öffnet eine Kanalauswahl (E-Mail, LinkedIn, WhatsApp, Instagram, Telegram); die Wahl eines Kanals navigiert den aktuellen Tab zur Hosted-Auth-Seite, und das verbundene Konto speist danach den [Posteingang](/docs/app-inbox). WhatsApp verbinden Sie durch Scannen des QR-Codes auf dieser Seite.

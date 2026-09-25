@@ -29,6 +29,10 @@ The quick route offers four tiles: Claude, ChatGPT and Codex, Cursor, and Gemini
 
 There is no rotate or revoke button: create a new key, update the client, then delete the old one.
 
+## Mailboxes tab
+
+Route `/profile/mailboxes`, sidebar id `#nav-profile-mailboxes`. Mail accounts you connect with their own IMAP and SMTP credentials, which is how a self-hosted install reads and sends mail without the hosted connector. Each row shows the address, its connection state and when it last synced, and offers a resync and a disconnect. Disconnecting removes the stored credentials; the messages already imported stay.
+
 ## Connected accounts tab
 
 Route `/profile/connected-accounts`, sidebar id `#nav-profile-connected-accounts`, Cloud only. **Connect channel** (`#profile-connected-accounts-connect`) opens a channel picker (email, LinkedIn, WhatsApp, Instagram, Telegram); choosing a channel navigates the current tab to the hosted-auth page, and the connected account then feeds the [Inbox](/docs/app-inbox). Connecting WhatsApp means scanning the QR code on that page.
