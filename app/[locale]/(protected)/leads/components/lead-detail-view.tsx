@@ -6,8 +6,8 @@ import { EntityType, LeadStatus } from "@/generated/prisma";
 
 import { CustomFieldInputs } from "@/components/data-view/custom-columns/custom-field-inputs";
 import { EntityDetailBody } from "@/components/entity-detail/entity-detail-body";
-import { EntityDetailCustomFieldsSection } from "@/components/entity-detail/entity-detail-custom-fields-section";
-import { EntityDetailSection, EntityDetailSectionGroup } from "@/components/entity-detail/entity-detail-section";
+import { EntityDetailOverview } from "@/components/entity-detail/entity-detail-overview";
+import { EntityDetailFieldDragHandle } from "@/components/entity-detail/entity-detail-fields";
 import { EntityDetailField } from "@/components/entity-detail/entity-detail-field";
 import { EntityDetailFieldActions } from "@/components/entity-detail/entity-detail-field-actions";
 import { EntityDetailStaticField } from "@/components/entity-detail/entity-detail-static-field";
@@ -31,7 +31,7 @@ export const LeadDetailView = observer(({ layout = "drawer" }: Props) => {
   const { singular } = useEntityTerminology();
   const intlStore = useHydratedIntlStore();
   const { leadDetailStore } = useRootStore();
-  const { canManage, isEditingCustomField, customColumns, fetchedEntity } = leadDetailStore;
+  const { canManage, isEditingCustomField, customColumns, fetchedEntity, toggleEditingCustomField } = leadDetailStore;
 
   const statusItems = Object.values(LeadStatus).map((status) => ({
     value: status,
@@ -93,80 +93,119 @@ export const LeadDetailView = observer(({ layout = "drawer" }: Props) => {
         <CustomFieldInputs columns={customColumns} isEditing={isEditingCustomField} />
       </>
     ) : (
-      <EntityDetailSectionGroup>
+      <>
         <LeadConvertAction lead={fetchedEntity} />
 
-        <EntityDetailSection label={t("EntityDetail.sections.base")} sectionId={LEAD_DETAIL_SECTION.base}>
-          <EntityDetailField fieldId={LEAD_DETAIL_FIELD.title}>
-            <FormInput
-              autoFocus
-              required
-              id="title"
-              labelEndAddon={
-                <EntityDetailFieldActions fieldId={LEAD_DETAIL_FIELD.title} label={t("Common.inputs.title")} />
-              }
-            />
-          </EntityDetailField>
-
-          <EntityDetailField fieldId={LEAD_DETAIL_FIELD.status}>
-            <FormSelect required id="status" items={statusItems} />
-          </EntityDetailField>
-
-          <EntityDetailField fieldId={LEAD_DETAIL_FIELD.value}>
-            <FormNumberInput id="value" />
-          </EntityDetailField>
-
-          <EntityDetailField fieldId={LEAD_DETAIL_FIELD.labels}>
-            <FormInputChips arrayMode id="labels" />
-          </EntityDetailField>
-
-          <EntityDetailStaticField
-            fieldId={LEAD_DETAIL_FIELD.createdAt}
-            label={t("EntityDetail.fields.createdAt")}
-            value={intlStore.formatNumericalShortDateTime(fetchedEntity?.createdAt)}
-          />
-
-          <EntityDetailStaticField
-            fieldId={LEAD_DETAIL_FIELD.updatedAt}
-            label={t("EntityDetail.fields.updatedAt")}
-            value={intlStore.formatNumericalShortDateTime(fetchedEntity?.updatedAt)}
-          />
-        </EntityDetailSection>
-
-        <EntityDetailSection label={t("EntityDetail.sections.relations")} sectionId={LEAD_DETAIL_SECTION.relations}>
-          <EntityDetailStaticField
-            fieldId={LEAD_DETAIL_FIELD.contactId}
-            label={singular(EntityType.contact)}
-            value={contactName}
-          />
-
-          <EntityDetailStaticField
-            fieldId={LEAD_DETAIL_FIELD.organizationId}
-            label={singular(EntityType.organization)}
-            value={fetchedEntity?.organization?.name ?? null}
-          />
-
-          <EntityDetailStaticField
-            fieldId={LEAD_DETAIL_FIELD.source}
-            label={t("LeadDetail.source")}
-            value={fetchedEntity?.source?.name ?? fetchedEntity?.sourceOrigin ?? null}
-          />
-
-          <EntityDetailStaticField
-            fieldId={LEAD_DETAIL_FIELD.ownerUserId}
-            label={t("LeadDetail.owner")}
-            value={ownerName}
-          />
-        </EntityDetailSection>
-
-        <EntityDetailCustomFieldsSection
+        <EntityDetailOverview
           canManage={canManage}
           columns={customColumns}
           entityType={EntityType.lead}
+          fields={[
+            {
+              id: LEAD_DETAIL_FIELD.title,
+              content: (
+                <EntityDetailField fieldId={LEAD_DETAIL_FIELD.title}>
+                  <FormInput
+                    autoFocus
+                    required
+                    controlStartAddon={<EntityDetailFieldDragHandle label={t("Common.inputs.title")} />}
+                    id="title"
+                    labelEndAddon={
+                      <EntityDetailFieldActions fieldId={LEAD_DETAIL_FIELD.title} label={t("Common.inputs.title")} />
+                    }
+                  />
+                </EntityDetailField>
+              ),
+            },
+            {
+              id: LEAD_DETAIL_FIELD.status,
+              content: (
+                <EntityDetailField fieldId={LEAD_DETAIL_FIELD.status}>
+                  <FormSelect required id="status" items={statusItems} />
+                </EntityDetailField>
+              ),
+            },
+            {
+              id: LEAD_DETAIL_FIELD.value,
+              content: (
+                <EntityDetailField fieldId={LEAD_DETAIL_FIELD.value}>
+                  <FormNumberInput id="value" />
+                </EntityDetailField>
+              ),
+            },
+            {
+              id: LEAD_DETAIL_FIELD.labels,
+              content: (
+                <EntityDetailField fieldId={LEAD_DETAIL_FIELD.labels}>
+                  <FormInputChips arrayMode id="labels" />
+                </EntityDetailField>
+              ),
+            },
+            {
+              id: LEAD_DETAIL_FIELD.contactId,
+              content: (
+                <EntityDetailStaticField
+                  fieldId={LEAD_DETAIL_FIELD.contactId}
+                  label={singular(EntityType.contact)}
+                  value={contactName}
+                />
+              ),
+            },
+            {
+              id: LEAD_DETAIL_FIELD.organizationId,
+              content: (
+                <EntityDetailStaticField
+                  fieldId={LEAD_DETAIL_FIELD.organizationId}
+                  label={singular(EntityType.organization)}
+                  value={fetchedEntity?.organization?.name ?? null}
+                />
+              ),
+            },
+            {
+              id: LEAD_DETAIL_FIELD.source,
+              content: (
+                <EntityDetailStaticField
+                  fieldId={LEAD_DETAIL_FIELD.source}
+                  label={t("LeadDetail.source")}
+                  value={fetchedEntity?.source?.name ?? fetchedEntity?.sourceOrigin ?? null}
+                />
+              ),
+            },
+            {
+              id: LEAD_DETAIL_FIELD.ownerUserId,
+              content: (
+                <EntityDetailStaticField
+                  fieldId={LEAD_DETAIL_FIELD.ownerUserId}
+                  label={t("LeadDetail.owner")}
+                  value={ownerName}
+                />
+              ),
+            },
+            {
+              id: LEAD_DETAIL_FIELD.createdAt,
+              content: (
+                <EntityDetailStaticField
+                  fieldId={LEAD_DETAIL_FIELD.createdAt}
+                  label={t("EntityDetail.fields.createdAt")}
+                  value={intlStore.formatNumericalShortDateTime(fetchedEntity?.createdAt)}
+                />
+              ),
+            },
+            {
+              id: LEAD_DETAIL_FIELD.updatedAt,
+              content: (
+                <EntityDetailStaticField
+                  fieldId={LEAD_DETAIL_FIELD.updatedAt}
+                  label={t("EntityDetail.fields.updatedAt")}
+                  value={intlStore.formatNumericalShortDateTime(fetchedEntity?.updatedAt)}
+                />
+              ),
+            },
+          ]}
           isEditing={isEditingCustomField}
-          sectionId={LEAD_DETAIL_SECTION.customFields}
+          onToggleEditing={toggleEditingCustomField}
         />
-      </EntityDetailSectionGroup>
+      </>
     );
 
   return (
