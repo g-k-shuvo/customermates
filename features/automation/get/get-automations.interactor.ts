@@ -1,7 +1,6 @@
 import type { AutomationDto } from "../automation.schema";
 import type { Validated } from "@/core/validation/validation.utils";
 
-import z from "zod";
 import { Action, Resource } from "@/generated/prisma";
 
 import { AutomationDtoSchema } from "../automation.schema";
@@ -20,7 +19,7 @@ export class GetAutomationsInteractor extends AuthenticatedInteractor<void, Auto
     super();
   }
 
-  @ValidateOutput(z.array(AutomationDtoSchema))
+  @ValidateOutput(AutomationDtoSchema)
   async invoke(): Validated<AutomationDto[]> {
     return { ok: true as const, data: await this.repo.listAutomations() };
   }

@@ -10,10 +10,12 @@ import { Validate } from "@/core/decorators/validate.decorator";
 import { fail } from "@/core/validation/interactor-failure-server";
 import { CustomErrorCode } from "@/core/validation/validation.types";
 import { runInAutomationContext } from "@/core/decorators/automation-context";
+import { runAsBackgroundTenant } from "@/core/decorators/background-tenant";
 
 export const ExecuteAutomationStepSchema = z.object({
   automationRunId: z.uuid(),
   runStepId: z.uuid(),
+  ownerUserId: z.uuid(),
 });
 export type ExecuteAutomationStepData = Data<typeof ExecuteAutomationStepSchema>;
 
@@ -37,11 +39,13 @@ export class ExecuteAutomationStepInteractor {
     const outcome = await runInAutomationContext(
       { automationId: plan.automationId, runId: plan.runId, causationDepth: 1 },
       () =>
-        this.executor.execute({
-          kind: step.kind,
-          config: step.config,
-          context: { run: plan, entityType: plan.entityType, entityId: plan.entityId },
-        }),
+        runAsBackgroundTenant(data.ownerUserId, () =>
+          this.executor.execute({
+            kind: step.kind,
+            config: step.config,
+            context: { run: plan, entityType: plan.entityType, entityId: plan.entityId },
+          }),
+        ),
     );
 
     await this.repo.markRunStepUnscoped({

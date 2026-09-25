@@ -171,11 +171,11 @@ export function AutomationModal({ automation, isOpen, onClose, onSaved }: Props)
 
         <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={onClose}>
-            {t("Common.inputs.cancel")}
+            {t("Common.actions.cancel")}
           </Button>
 
           <Button disabled={name.trim().length === 0} id="automation-modal-save" onClick={save}>
-            {t("Common.inputs.save")}
+            {t("Common.actions.save")}
           </Button>
         </div>
       </div>

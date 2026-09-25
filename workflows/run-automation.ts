@@ -2,7 +2,6 @@ import { sleep } from "workflow";
 
 import { getExecuteAutomationStepInteractor, getPrepareAutomationRunInteractor } from "@/core/di";
 import { isInteractorFailure } from "@/core/validation/validation.utils";
-import { runAsBackgroundTenant } from "@/core/decorators/background-tenant";
 
 import { reportFailure, toWorkflowFailure } from "./capture-failure";
 
@@ -30,9 +29,7 @@ prepareRun.maxRetries = 3;
 async function executeStep(automationRunId: string, runStepId: string, ownerUserId: string): Promise<boolean> {
   "use step";
 
-  const outcome = await runAsBackgroundTenant(ownerUserId, () =>
-    getExecuteAutomationStepInteractor().invoke({ automationRunId, runStepId }),
-  );
+  const outcome = await getExecuteAutomationStepInteractor().invoke({ automationRunId, runStepId, ownerUserId });
 
   return !isInteractorFailure(outcome);
 }
