@@ -72,6 +72,22 @@ export class PrepareAutomationRunInteractor {
     };
   }
 
+  async completeWait(args: { runStepId: string }): Promise<void> {
+    await this.repo.markRunStepUnscoped({
+      runStepId: args.runStepId,
+      status: AutomationRunStatus.succeeded,
+      finishedAt: new Date(),
+    });
+  }
+
+  async beginWait(args: { runStepId: string }): Promise<void> {
+    await this.repo.markRunStepUnscoped({
+      runStepId: args.runStepId,
+      status: AutomationRunStatus.running,
+      startedAt: new Date(),
+    });
+  }
+
   async settle(args: { automationRunId: string; companyId: string; failed: boolean }): Promise<void> {
     await this.repo.settleRunUnscoped({
       runId: args.automationRunId,

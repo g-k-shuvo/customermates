@@ -42,6 +42,20 @@ async function settleRun(automationRunId: string, companyId: string, failed: boo
 }
 settleRun.maxRetries = 3;
 
+async function beginWait(runStepId: string): Promise<void> {
+  "use step";
+
+  await getPrepareAutomationRunInteractor().beginWait({ runStepId });
+}
+beginWait.maxRetries = 3;
+
+async function completeWait(runStepId: string): Promise<void> {
+  "use step";
+
+  await getPrepareAutomationRunInteractor().completeWait({ runStepId });
+}
+completeWait.maxRetries = 3;
+
 export async function runAutomation(payload: RunAutomationPayload): Promise<void> {
   "use workflow";
 
@@ -53,7 +67,9 @@ export async function runAutomation(payload: RunAutomationPayload): Promise<void
 
     for (const step of prepared.steps) {
       if (step.delaySeconds !== null) {
+        await beginWait(step.runStepId);
         await sleep(step.delaySeconds * 1000);
+        await completeWait(step.runStepId);
         continue;
       }
 
