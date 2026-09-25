@@ -1033,17 +1033,17 @@
       "value": "Valeur"
     },
     "actions": {
-      "updateField": "Définir un champ",
-      "assignOwner": "Attribuer un responsable",
       "addLabel": "Ajouter des étiquettes",
-      "createTask": "Créer une tâche",
-      "createNote": "Écrire une note",
+      "assignOwner": "Attribuer un responsable",
+      "callWebhook": "Appeler une URL",
       "createDeal": "Créer une affaire",
       "createLead": "Créer un lead",
+      "createNote": "Écrire une note",
+      "createTask": "Créer une tâche",
+      "delay": "Attendre",
       "moveStage": "Déplacer vers une étape",
       "sendEmail": "Envoyer un e-mail",
-      "callWebhook": "Appeler une URL",
-      "delay": "Attendre"
+      "updateField": "Définir un champ"
     },
     "addStep": "Ajouter une action",
     "create": "Nouvelle automatisation",
@@ -1056,40 +1056,40 @@
     "emptyTitle": "Aucune automatisation",
     "enabled": "Activée",
     "fields": {
-      "name": "Nom",
-      "trigger": "Déclencheur",
+      "action": "Action",
       "entityType": "Type d’enregistrement",
+      "name": "Nom",
       "schedule": "Planification",
       "steps": "Actions",
-      "action": "Action"
+      "trigger": "Déclencheur"
     },
     "removeStep": "Retirer l’action",
     "rowSummary": "{trigger} · {steps}",
-    "runStatuses": {
-      "queued": "En attente",
-      "running": "En cours",
-      "succeeded": "Réussie",
-      "failed": "Échouée",
-      "skipped": "Ignorée",
-      "cancelled": "Annulée"
-    },
-    "runStepSummary": "Étape {position} : {action} — {status}",
     "runsEmpty": "Cette automatisation n’a pas encore été exécutée.",
     "runsLabel": "Afficher l’historique des exécutions de l’automatisation {name}",
+    "runStatuses": {
+      "cancelled": "Annulée",
+      "failed": "Échouée",
+      "queued": "En attente",
+      "running": "En cours",
+      "skipped": "Ignorée",
+      "succeeded": "Réussie"
+    },
+    "runStepSummary": "Étape {position} : {action} — {status}",
     "runsTitle": "Historique des exécutions",
     "stepCount": "{count, plural, =1 {1 action} other {# actions}}",
     "title": "Automatisations",
     "toggleLabel": "Activer ou désactiver l’automatisation {name}",
     "triggerKinds": {
       "recordCreated": "À la création d’un enregistrement",
-      "recordUpdated": "À la modification d’un enregistrement",
       "recordDeleted": "À la suppression d’un enregistrement",
+      "recordUpdated": "À la modification d’un enregistrement",
       "schedule": "Selon une planification"
     },
     "triggers": {
       "recordCreated": "À la création de {entity}",
-      "recordUpdated": "À la modification de {entity}",
       "recordDeleted": "À la suppression de {entity}",
+      "recordUpdated": "À la modification de {entity}",
       "schedule": "Selon une planification"
     }
   },
@@ -1456,10 +1456,10 @@
       "webhookEventsRequired": "Sélectionnez au moins un évènement.",
       "webhookHeaderNameInvalid": "Les noms d'en-tête ne peuvent contenir que des lettres, des chiffres et des caractères de jeton HTTP.",
       "webhookHeaderNameReserved": "Cet en-tête est défini automatiquement et ne peut pas être remplacé.",
-      "webhookHeaderValueInvalid": "Les valeurs d'en-tête ne peuvent contenir que du texte Latin-1, sans saut de ligne ni caractère de contrôle.",
       "webhookHeadersRequireHttps": "Les en-têtes personnalisés nécessitent un point de terminaison HTTPS.",
       "webhookHeadersTooLarge": "Les en-têtes sont trop volumineux.",
       "webhookHeadersTooMany": "Trop d'en-têtes.",
+      "webhookHeaderValueInvalid": "Les valeurs d'en-tête ne peuvent contenir que du texte Latin-1, sans saut de ligne ni caractère de contrôle.",
       "webhookNotFound": "ID de webhook introuvable ou inaccessible.",
       "widgetClosedDealAggregationCannotGroupByForecastMonth": "Le mois de clôture prévu décrit les affaires ouvertes. Regroupez les mesures sur affaires clôturées par mois de clôture.",
       "widgetClosedDealAggregationCannotGroupByLostOutcome": "Les affaires gagnées n’ont ni motif de perte ni étape au moment de la perte : un taux de réussite regroupé ainsi afficherait 0 % partout. Utilisez plutôt un nombre ou une valeur filtrés sur les affaires perdues.",
@@ -2779,6 +2779,13 @@
     "contactIntro": "Vous ne trouvez pas ce que vous cherchez ?",
     "label": "FAQ"
   },
+  "feedback": {
+    "general": {
+      "description": "Vos retours nous aident à progresser. Partagez vos idées, signalez des problèmes ou dites-nous ce qui fonctionne bien pour que nous construisions un meilleur produit",
+      "title": "Partagez votre avis"
+    },
+    "success": "Retour bien reçu. Vous faites officiellement partie de l'équipe."
+  },
   "Footer": {
     "company": "Entreprise",
     "copyrightText": "© {year} {brand}. Tous droits réservés.",
@@ -3901,6 +3908,10 @@
     "providerError": "Le fournisseur d’IA a renvoyé une erreur avant la fin de l’exécution.",
     "turnError": "L’assistant n’a pas pu terminer cette exécution."
   },
+  "RoutinesCard": {
+    "emptyBody": "Mate peut travailler en votre absence. Par exemple : résumer chaque matin de semaine ce qui a bougé, ou rédiger un e-mail de remerciement dès qu’une affaire est gagnée.",
+    "emptyTitle": "Aucune routine pour l’instant"
+  },
   "RoutineSchedule": {
     "daily": "Tous les jours à {time}",
     "hourly": "Toutes les heures à :{minute}",
@@ -3927,10 +3938,6 @@
     "thursday": "Jeudi",
     "tuesday": "Mardi",
     "wednesday": "Mercredi"
-  },
-  "RoutinesCard": {
-    "emptyBody": "Mate peut travailler en votre absence. Par exemple : résumer chaque matin de semaine ce qui a bougé, ou rédiger un e-mail de remerciement dès qu’une affaire est gagnée.",
-    "emptyTitle": "Aucune routine pour l’instant"
   },
   "ServiceModal": {
     "title": "Service"
@@ -4182,12 +4189,5 @@
     "emptyBody": "Ajoutez un webhook pour envoyer les événements de l’espace de travail à vos systèmes.",
     "emptyTitle": "Aucun webhook pour le moment",
     "title": "Webhooks"
-  },
-  "feedback": {
-    "general": {
-      "description": "Vos retours nous aident à progresser. Partagez vos idées, signalez des problèmes ou dites-nous ce qui fonctionne bien pour que nous construisions un meilleur produit",
-      "title": "Partagez votre avis"
-    },
-    "success": "Retour bien reçu. Vous faites officiellement partie de l'équipe."
   }
 }

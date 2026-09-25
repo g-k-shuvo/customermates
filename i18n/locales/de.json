@@ -1033,17 +1033,17 @@
       "value": "Wert"
     },
     "actions": {
-      "updateField": "Feld setzen",
-      "assignOwner": "Besitzer zuweisen",
       "addLabel": "Labels hinzufügen",
-      "createTask": "Aufgabe anlegen",
-      "createNote": "Notiz schreiben",
+      "assignOwner": "Besitzer zuweisen",
+      "callWebhook": "URL aufrufen",
       "createDeal": "Deal anlegen",
       "createLead": "Lead anlegen",
+      "createNote": "Notiz schreiben",
+      "createTask": "Aufgabe anlegen",
+      "delay": "Warten",
       "moveStage": "In Phase verschieben",
       "sendEmail": "E-Mail senden",
-      "callWebhook": "URL aufrufen",
-      "delay": "Warten"
+      "updateField": "Feld setzen"
     },
     "addStep": "Aktion hinzufügen",
     "create": "Neue Automatisierung",
@@ -1056,40 +1056,40 @@
     "emptyTitle": "Noch keine Automatisierungen",
     "enabled": "An",
     "fields": {
-      "name": "Name",
-      "trigger": "Auslöser",
+      "action": "Aktion",
       "entityType": "Datensatztyp",
+      "name": "Name",
       "schedule": "Zeitplan",
       "steps": "Aktionen",
-      "action": "Aktion"
+      "trigger": "Auslöser"
     },
     "removeStep": "Aktion entfernen",
     "rowSummary": "{trigger} · {steps}",
-    "runStatuses": {
-      "queued": "In Warteschlange",
-      "running": "Läuft",
-      "succeeded": "Erfolgreich",
-      "failed": "Fehlgeschlagen",
-      "skipped": "Übersprungen",
-      "cancelled": "Abgebrochen"
-    },
-    "runStepSummary": "Schritt {position}: {action} — {status}",
     "runsEmpty": "Diese Automatisierung wurde noch nicht ausgeführt.",
     "runsLabel": "Ausführungsverlauf der Automatisierung {name} anzeigen",
+    "runStatuses": {
+      "cancelled": "Abgebrochen",
+      "failed": "Fehlgeschlagen",
+      "queued": "In Warteschlange",
+      "running": "Läuft",
+      "skipped": "Übersprungen",
+      "succeeded": "Erfolgreich"
+    },
+    "runStepSummary": "Schritt {position}: {action} — {status}",
     "runsTitle": "Ausführungsverlauf",
     "stepCount": "{count, plural, =1 {1 Aktion} other {# Aktionen}}",
     "title": "Automatisierungen",
     "toggleLabel": "Automatisierung {name} ein- oder ausschalten",
     "triggerKinds": {
       "recordCreated": "Wenn ein Datensatz angelegt wird",
-      "recordUpdated": "Wenn sich ein Datensatz ändert",
       "recordDeleted": "Wenn ein Datensatz gelöscht wird",
+      "recordUpdated": "Wenn sich ein Datensatz ändert",
       "schedule": "Nach Zeitplan"
     },
     "triggers": {
       "recordCreated": "Wenn {entity} angelegt wird",
-      "recordUpdated": "Wenn sich {entity} ändert",
       "recordDeleted": "Wenn {entity} gelöscht wird",
+      "recordUpdated": "Wenn sich {entity} ändert",
       "schedule": "Nach Zeitplan"
     }
   },
@@ -1456,10 +1456,10 @@
       "webhookEventsRequired": "Wähle mindestens ein Ereignis aus.",
       "webhookHeaderNameInvalid": "Header-Namen dürfen nur Buchstaben, Ziffern und HTTP-Token-Zeichen enthalten.",
       "webhookHeaderNameReserved": "Dieser Header wird automatisch gesetzt und kann nicht überschrieben werden.",
-      "webhookHeaderValueInvalid": "Header-Werte dürfen nur Latin-1-Text ohne Zeilenumbrüche oder Steuerzeichen enthalten.",
       "webhookHeadersRequireHttps": "Eigene Header erfordern einen HTTPS-Endpunkt.",
       "webhookHeadersTooLarge": "Die Header sind zu groß.",
       "webhookHeadersTooMany": "Zu viele Header.",
+      "webhookHeaderValueInvalid": "Header-Werte dürfen nur Latin-1-Text ohne Zeilenumbrüche oder Steuerzeichen enthalten.",
       "webhookNotFound": "Webhook-ID nicht gefunden oder nicht zugänglich.",
       "widgetClosedDealAggregationCannotGroupByForecastMonth": "Der erwartete Abschlussmonat beschreibt offene Deals. Gruppiere Kennzahlen zu abgeschlossenen Deals stattdessen nach Abschlussmonat.",
       "widgetClosedDealAggregationCannotGroupByLostOutcome": "Gewonnene Deals haben keinen Verlustgrund und keine Phase beim Verlust, eine so gruppierte Gewinnrate stünde überall bei 0 %. Verwende stattdessen eine Anzahl oder einen Wert, gefiltert auf verlorene Deals.",
@@ -2779,6 +2779,13 @@
     "contactIntro": "Nichts Passendes gefunden?",
     "label": "FAQ"
   },
+  "feedback": {
+    "general": {
+      "description": "Dein Feedback hilft uns, besser zu werden. Teile Ideen, melde Probleme oder sag uns, was gut läuft, damit wir ein besseres Produkt für dich bauen können.",
+      "title": "Teile dein Feedback"
+    },
+    "success": "Feedback erhalten. Du bist offiziell Teil der Build-Crew."
+  },
   "Footer": {
     "company": "Unternehmen",
     "copyrightText": "© {year} {brand}. Alle Rechte vorbehalten.",
@@ -3901,6 +3908,10 @@
     "providerError": "Der KI-Anbieter hat vor Abschluss des Laufs einen Fehler zurückgegeben.",
     "turnError": "Der Assistent konnte diesen Lauf nicht abschließen."
   },
+  "RoutinesCard": {
+    "emptyBody": "Mate kann arbeiten, während du weg bist. Zum Beispiel: jeden Werktagmorgen zusammenfassen, was sich bewegt hat, oder eine Dankesmail entwerfen, sobald etwas gewonnen ist.",
+    "emptyTitle": "Noch keine Routinen"
+  },
   "RoutineSchedule": {
     "daily": "Täglich um {time}",
     "hourly": "Jede Stunde um :{minute}",
@@ -3927,10 +3938,6 @@
     "thursday": "Donnerstag",
     "tuesday": "Dienstag",
     "wednesday": "Mittwoch"
-  },
-  "RoutinesCard": {
-    "emptyBody": "Mate kann arbeiten, während du weg bist. Zum Beispiel: jeden Werktagmorgen zusammenfassen, was sich bewegt hat, oder eine Dankesmail entwerfen, sobald etwas gewonnen ist.",
-    "emptyTitle": "Noch keine Routinen"
   },
   "ServiceModal": {
     "title": "Service"
@@ -4182,12 +4189,5 @@
     "emptyBody": "Füge einen Webhook hinzu, um Workspace-Ereignisse an deine Systeme zu senden.",
     "emptyTitle": "Noch keine Webhooks",
     "title": "Webhooks"
-  },
-  "feedback": {
-    "general": {
-      "description": "Dein Feedback hilft uns, besser zu werden. Teile Ideen, melde Probleme oder sag uns, was gut läuft, damit wir ein besseres Produkt für dich bauen können.",
-      "title": "Teile dein Feedback"
-    },
-    "success": "Feedback erhalten. Du bist offiziell Teil der Build-Crew."
   }
 }

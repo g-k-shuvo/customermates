@@ -1033,17 +1033,17 @@
       "value": "Valor"
     },
     "actions": {
-      "updateField": "Establecer un campo",
-      "assignOwner": "Asignar responsable",
       "addLabel": "Añadir etiquetas",
-      "createTask": "Crear una tarea",
-      "createNote": "Escribir una nota",
+      "assignOwner": "Asignar responsable",
+      "callWebhook": "Llamar a una URL",
       "createDeal": "Crear una oportunidad",
       "createLead": "Crear un lead",
+      "createNote": "Escribir una nota",
+      "createTask": "Crear una tarea",
+      "delay": "Esperar",
       "moveStage": "Mover a una etapa",
       "sendEmail": "Enviar un correo",
-      "callWebhook": "Llamar a una URL",
-      "delay": "Esperar"
+      "updateField": "Establecer un campo"
     },
     "addStep": "Añadir acción",
     "create": "Nueva automatización",
@@ -1056,40 +1056,40 @@
     "emptyTitle": "Aún no hay automatizaciones",
     "enabled": "Activada",
     "fields": {
-      "name": "Nombre",
-      "trigger": "Disparador",
+      "action": "Acción",
       "entityType": "Tipo de registro",
+      "name": "Nombre",
       "schedule": "Programación",
       "steps": "Acciones",
-      "action": "Acción"
+      "trigger": "Disparador"
     },
     "removeStep": "Quitar acción",
     "rowSummary": "{trigger} · {steps}",
-    "runStatuses": {
-      "queued": "En cola",
-      "running": "En curso",
-      "succeeded": "Correcta",
-      "failed": "Fallida",
-      "skipped": "Omitida",
-      "cancelled": "Cancelada"
-    },
-    "runStepSummary": "Paso {position}: {action} — {status}",
     "runsEmpty": "Esta automatización todavía no se ha ejecutado.",
     "runsLabel": "Mostrar el historial de ejecuciones de la automatización {name}",
+    "runStatuses": {
+      "cancelled": "Cancelada",
+      "failed": "Fallida",
+      "queued": "En cola",
+      "running": "En curso",
+      "skipped": "Omitida",
+      "succeeded": "Correcta"
+    },
+    "runStepSummary": "Paso {position}: {action} — {status}",
     "runsTitle": "Historial de ejecuciones",
     "stepCount": "{count, plural, =1 {1 acción} other {# acciones}}",
     "title": "Automatizaciones",
     "toggleLabel": "Activar o desactivar la automatización {name}",
     "triggerKinds": {
       "recordCreated": "Cuando se crea un registro",
-      "recordUpdated": "Cuando cambia un registro",
       "recordDeleted": "Cuando se elimina un registro",
+      "recordUpdated": "Cuando cambia un registro",
       "schedule": "Según programación"
     },
     "triggers": {
       "recordCreated": "Cuando se crea {entity}",
-      "recordUpdated": "Cuando cambia {entity}",
       "recordDeleted": "Cuando se elimina {entity}",
+      "recordUpdated": "Cuando cambia {entity}",
       "schedule": "Según programación"
     }
   },
@@ -1456,10 +1456,10 @@
       "webhookEventsRequired": "Selecciona al menos un evento.",
       "webhookHeaderNameInvalid": "Los nombres de cabecera solo pueden contener letras, dígitos y caracteres de token HTTP.",
       "webhookHeaderNameReserved": "Esta cabecera se establece automáticamente y no se puede sobrescribir.",
-      "webhookHeaderValueInvalid": "Los valores de cabecera solo pueden contener texto Latin-1, sin saltos de línea ni caracteres de control.",
       "webhookHeadersRequireHttps": "Las cabeceras personalizadas requieren un endpoint HTTPS.",
       "webhookHeadersTooLarge": "Las cabeceras son demasiado grandes.",
       "webhookHeadersTooMany": "Demasiadas cabeceras.",
+      "webhookHeaderValueInvalid": "Los valores de cabecera solo pueden contener texto Latin-1, sin saltos de línea ni caracteres de control.",
       "webhookNotFound": "ID de webhook no encontrado o no accesible.",
       "widgetClosedDealAggregationCannotGroupByForecastMonth": "El mes de cierre previsto describe oportunidades abiertas. Agrupa las métricas de oportunidades cerradas por mes de cierre.",
       "widgetClosedDealAggregationCannotGroupByLostOutcome": "Las oportunidades ganadas no tienen motivo de pérdida ni etapa en la que se perdieron, así que una tasa de éxito agrupada así sería del 0 % en todas partes. Usa una métrica de número o de valor filtrada a oportunidades perdidas.",
@@ -2779,6 +2779,13 @@
     "contactIntro": "¿No encuentras lo que buscas?",
     "label": "Preguntas frecuentes"
   },
+  "feedback": {
+    "general": {
+      "description": "Tus comentarios nos ayudan a mejorar. Comparte ideas, informa de problemas o cuéntanos qué funciona bien para que podamos construir un producto mejor para ti",
+      "title": "Comparte tu opinión"
+    },
+    "success": "Comentario recibido. Ya formas parte oficialmente del equipo."
+  },
   "Footer": {
     "company": "Empresa",
     "copyrightText": "© {year} {brand}. Todos los derechos reservados.",
@@ -3901,6 +3908,10 @@
     "providerError": "El proveedor de IA devolvió un error antes de que terminara la ejecución.",
     "turnError": "El asistente no pudo completar esta ejecución."
   },
+  "RoutinesCard": {
+    "emptyBody": "Mate puede trabajar mientras no estás. Por ejemplo: resumir cada mañana laborable lo que ha cambiado, o redactar un correo de agradecimiento cuando algo se gana.",
+    "emptyTitle": "Aún no hay rutinas"
+  },
   "RoutineSchedule": {
     "daily": "Todos los días a las {time}",
     "hourly": "Cada hora a los :{minute}",
@@ -3927,10 +3938,6 @@
     "thursday": "Jueves",
     "tuesday": "Martes",
     "wednesday": "Miércoles"
-  },
-  "RoutinesCard": {
-    "emptyBody": "Mate puede trabajar mientras no estás. Por ejemplo: resumir cada mañana laborable lo que ha cambiado, o redactar un correo de agradecimiento cuando algo se gana.",
-    "emptyTitle": "Aún no hay rutinas"
   },
   "ServiceModal": {
     "title": "Servicio"
@@ -4182,12 +4189,5 @@
     "emptyBody": "Añade un webhook para enviar los eventos del espacio de trabajo a tus sistemas.",
     "emptyTitle": "Aún no hay webhooks",
     "title": "Webhooks"
-  },
-  "feedback": {
-    "general": {
-      "description": "Tus comentarios nos ayudan a mejorar. Comparte ideas, informa de problemas o cuéntanos qué funciona bien para que podamos construir un producto mejor para ti",
-      "title": "Comparte tu opinión"
-    },
-    "success": "Comentario recibido. Ya formas parte oficialmente del equipo."
   }
 }

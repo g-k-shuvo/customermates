@@ -1033,17 +1033,17 @@
       "value": "Valore"
     },
     "actions": {
-      "updateField": "Imposta un campo",
-      "assignOwner": "Assegna un titolare",
       "addLabel": "Aggiungi etichette",
-      "createTask": "Crea un’attività",
-      "createNote": "Scrivi una nota",
+      "assignOwner": "Assegna un titolare",
+      "callWebhook": "Chiama un URL",
       "createDeal": "Crea un’opportunità",
       "createLead": "Crea un lead",
+      "createNote": "Scrivi una nota",
+      "createTask": "Crea un’attività",
+      "delay": "Attendi",
       "moveStage": "Sposta in una fase",
       "sendEmail": "Invia un’email",
-      "callWebhook": "Chiama un URL",
-      "delay": "Attendi"
+      "updateField": "Imposta un campo"
     },
     "addStep": "Aggiungi azione",
     "create": "Nuova automazione",
@@ -1056,40 +1056,40 @@
     "emptyTitle": "Nessuna automazione",
     "enabled": "Attiva",
     "fields": {
-      "name": "Nome",
-      "trigger": "Attivatore",
+      "action": "Azione",
       "entityType": "Tipo di record",
+      "name": "Nome",
       "schedule": "Pianificazione",
       "steps": "Azioni",
-      "action": "Azione"
+      "trigger": "Attivatore"
     },
     "removeStep": "Rimuovi azione",
     "rowSummary": "{trigger} · {steps}",
-    "runStatuses": {
-      "queued": "In coda",
-      "running": "In corso",
-      "succeeded": "Riuscita",
-      "failed": "Non riuscita",
-      "skipped": "Saltata",
-      "cancelled": "Annullata"
-    },
-    "runStepSummary": "Passaggio {position}: {action} — {status}",
     "runsEmpty": "Questa automazione non è ancora stata eseguita.",
     "runsLabel": "Mostra la cronologia delle esecuzioni dell’automazione {name}",
+    "runStatuses": {
+      "cancelled": "Annullata",
+      "failed": "Non riuscita",
+      "queued": "In coda",
+      "running": "In corso",
+      "skipped": "Saltata",
+      "succeeded": "Riuscita"
+    },
+    "runStepSummary": "Passaggio {position}: {action} — {status}",
     "runsTitle": "Cronologia delle esecuzioni",
     "stepCount": "{count, plural, =1 {1 azione} other {# azioni}}",
     "title": "Automazioni",
     "toggleLabel": "Attiva o disattiva l’automazione {name}",
     "triggerKinds": {
       "recordCreated": "Quando un record viene creato",
-      "recordUpdated": "Quando un record cambia",
       "recordDeleted": "Quando un record viene eliminato",
+      "recordUpdated": "Quando un record cambia",
       "schedule": "Secondo pianificazione"
     },
     "triggers": {
       "recordCreated": "Quando {entity} viene creato",
-      "recordUpdated": "Quando {entity} cambia",
       "recordDeleted": "Quando {entity} viene eliminato",
+      "recordUpdated": "Quando {entity} cambia",
       "schedule": "Secondo pianificazione"
     }
   },
@@ -1456,10 +1456,10 @@
       "webhookEventsRequired": "Seleziona almeno un evento.",
       "webhookHeaderNameInvalid": "I nomi delle intestazioni possono contenere solo lettere, cifre e caratteri token HTTP.",
       "webhookHeaderNameReserved": "Questa intestazione viene impostata automaticamente e non può essere sovrascritta.",
-      "webhookHeaderValueInvalid": "I valori delle intestazioni possono contenere solo testo Latin-1, senza interruzioni di riga o caratteri di controllo.",
       "webhookHeadersRequireHttps": "Le intestazioni personalizzate richiedono un endpoint HTTPS.",
       "webhookHeadersTooLarge": "Le intestazioni sono troppo grandi.",
       "webhookHeadersTooMany": "Troppe intestazioni.",
+      "webhookHeaderValueInvalid": "I valori delle intestazioni possono contenere solo testo Latin-1, senza interruzioni di riga o caratteri di controllo.",
       "webhookNotFound": "ID webhook non trovato o non accessibile.",
       "widgetClosedDealAggregationCannotGroupByForecastMonth": "Il mese di chiusura previsto descrive le trattative aperte. Raggruppa le metriche sulle trattative chiuse per mese di chiusura.",
       "widgetClosedDealAggregationCannotGroupByLostOutcome": "Le trattative vinte non hanno un motivo di perdita né una fase al momento della perdita, quindi un tasso di successo raggruppato così sarebbe ovunque allo 0%. Usa invece un conteggio o un valore filtrato sulle trattative perse.",
@@ -2779,6 +2779,13 @@
     "contactIntro": "Non trovi quello che cerchi?",
     "label": "FAQ"
   },
+  "feedback": {
+    "general": {
+      "description": "Il tuo feedback ci aiuta a migliorare. Condividi idee, segnala problemi o dicci cosa funziona bene, così possiamo costruire un prodotto migliore per te",
+      "title": "Condividi il tuo feedback"
+    },
+    "success": "Feedback ricevuto. Fai ufficialmente parte della squadra."
+  },
   "Footer": {
     "company": "Azienda",
     "copyrightText": "© {year} {brand}. Tutti i diritti riservati.",
@@ -3901,6 +3908,10 @@
     "providerError": "Il provider IA ha restituito un errore prima che l'esecuzione potesse terminare.",
     "turnError": "L'assistente non è riuscito a completare questa esecuzione."
   },
+  "RoutinesCard": {
+    "emptyBody": "Mate può lavorare mentre non ci sei. Per esempio: riassumere ogni mattina feriale ciò che è cambiato, oppure scrivere una email di ringraziamento quando qualcosa viene vinto.",
+    "emptyTitle": "Nessuna routine"
+  },
   "RoutineSchedule": {
     "daily": "Ogni giorno alle {time}",
     "hourly": "Ogni ora al minuto :{minute}",
@@ -3927,10 +3938,6 @@
     "thursday": "Giovedì",
     "tuesday": "Martedì",
     "wednesday": "Mercoledì"
-  },
-  "RoutinesCard": {
-    "emptyBody": "Mate può lavorare mentre non ci sei. Per esempio: riassumere ogni mattina feriale ciò che è cambiato, oppure scrivere una email di ringraziamento quando qualcosa viene vinto.",
-    "emptyTitle": "Nessuna routine"
   },
   "ServiceModal": {
     "title": "Servizio"
@@ -4182,12 +4189,5 @@
     "emptyBody": "Aggiungi un webhook per inviare gli eventi dello spazio di lavoro ai tuoi sistemi.",
     "emptyTitle": "Ancora nessun webhook",
     "title": "Webhook"
-  },
-  "feedback": {
-    "general": {
-      "description": "Il tuo feedback ci aiuta a migliorare. Condividi idee, segnala problemi o dicci cosa funziona bene, così possiamo costruire un prodotto migliore per te",
-      "title": "Condividi il tuo feedback"
-    },
-    "success": "Feedback ricevuto. Fai ufficialmente parte della squadra."
   }
 }

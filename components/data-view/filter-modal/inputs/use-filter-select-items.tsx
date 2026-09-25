@@ -32,11 +32,7 @@ import { USER_STATUS_COLORS_MAP } from "@/constants/user-statuses";
 import { LEAD_STATUS_CHIP_COLOR } from "@/app/[locale]/(protected)/leads/components/lead-status-colors";
 import { SUBSCRIPTION_STATUS_COLOR_MAP } from "@/app/[locale]/(protected)/company/components/subscription/subscription-panel";
 import { OPERATOR_AUDIT_SOURCE } from "@/ee/operator/operator-lists.schema";
-import {
-  getLostReasonsAction,
-  getPipelinesAction,
-  getUsersAction,
-} from "@/app/[locale]/(protected)/company/actions";
+import { getLostReasonsAction, getPipelinesAction, getUsersAction } from "@/app/[locale]/(protected)/company/actions";
 import { getContactsAction } from "@/app/[locale]/(protected)/contacts/actions";
 import { getOrganizationsAction } from "@/app/[locale]/(protected)/organizations/actions";
 import { getDealsAction } from "@/app/[locale]/(protected)/deals/actions";

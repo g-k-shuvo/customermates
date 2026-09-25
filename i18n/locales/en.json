@@ -1033,17 +1033,17 @@
       "value": "Value"
     },
     "actions": {
-      "updateField": "Set a field",
-      "assignOwner": "Assign an owner",
       "addLabel": "Add labels",
-      "createTask": "Create a task",
-      "createNote": "Write a note",
+      "assignOwner": "Assign an owner",
+      "callWebhook": "Call a URL",
       "createDeal": "Create a deal",
       "createLead": "Create a lead",
+      "createNote": "Write a note",
+      "createTask": "Create a task",
+      "delay": "Wait",
       "moveStage": "Move to a stage",
       "sendEmail": "Send an email",
-      "callWebhook": "Call a URL",
-      "delay": "Wait"
+      "updateField": "Set a field"
     },
     "addStep": "Add action",
     "create": "New automation",
@@ -1056,40 +1056,40 @@
     "emptyTitle": "No automations yet",
     "enabled": "On",
     "fields": {
-      "name": "Name",
-      "trigger": "Trigger",
+      "action": "Action",
       "entityType": "Record type",
+      "name": "Name",
       "schedule": "Schedule",
       "steps": "Actions",
-      "action": "Action"
+      "trigger": "Trigger"
     },
     "removeStep": "Remove action",
     "rowSummary": "{trigger} · {steps}",
-    "runStatuses": {
-      "queued": "Queued",
-      "running": "Running",
-      "succeeded": "Succeeded",
-      "failed": "Failed",
-      "skipped": "Skipped",
-      "cancelled": "Cancelled"
-    },
-    "runStepSummary": "Step {position}: {action} — {status}",
     "runsEmpty": "This automation has not run yet.",
     "runsLabel": "Show the run history of the {name} automation",
+    "runStatuses": {
+      "cancelled": "Cancelled",
+      "failed": "Failed",
+      "queued": "Queued",
+      "running": "Running",
+      "skipped": "Skipped",
+      "succeeded": "Succeeded"
+    },
+    "runStepSummary": "Step {position}: {action} — {status}",
     "runsTitle": "Run history",
     "stepCount": "{count, plural, =1 {1 action} other {# actions}}",
     "title": "Automations",
     "toggleLabel": "Turn the {name} automation on or off",
     "triggerKinds": {
       "recordCreated": "When a record is created",
-      "recordUpdated": "When a record changes",
       "recordDeleted": "When a record is deleted",
+      "recordUpdated": "When a record changes",
       "schedule": "On a schedule"
     },
     "triggers": {
       "recordCreated": "When a {entity} is created",
-      "recordUpdated": "When a {entity} changes",
       "recordDeleted": "When a {entity} is deleted",
+      "recordUpdated": "When a {entity} changes",
       "schedule": "On a schedule"
     }
   },
@@ -1456,10 +1456,10 @@
       "webhookEventsRequired": "Select at least one event.",
       "webhookHeaderNameInvalid": "Header names may only contain letters, digits and HTTP token characters.",
       "webhookHeaderNameReserved": "This header is set automatically and cannot be overridden.",
-      "webhookHeaderValueInvalid": "Header values may only contain Latin-1 text, without line breaks or control characters.",
       "webhookHeadersRequireHttps": "Custom headers require an HTTPS endpoint.",
       "webhookHeadersTooLarge": "The headers are too large.",
       "webhookHeadersTooMany": "Too many headers.",
+      "webhookHeaderValueInvalid": "Header values may only contain Latin-1 text, without line breaks or control characters.",
       "webhookNotFound": "Webhook ID not found or not accessible.",
       "widgetClosedDealAggregationCannotGroupByForecastMonth": "Expected close month describes open deals. Group closed-deal metrics by close month instead.",
       "widgetClosedDealAggregationCannotGroupByLostOutcome": "Won deals have no lost reason and no stage they were lost at, so a win rate grouped that way would read 0% everywhere. Use a count or value metric filtered to lost deals instead.",
@@ -2779,6 +2779,13 @@
     "contactIntro": "Can't find what you need?",
     "label": "FAQ"
   },
+  "feedback": {
+    "general": {
+      "description": "Your feedback helps us improve. Share ideas, report issues, or tell us what's working well so we can build a better product for you",
+      "title": "Share Your Feedback"
+    },
+    "success": "Feedback received. You're officially part of the build crew."
+  },
   "Footer": {
     "company": "Company",
     "copyrightText": "© {year} {brand}. All rights reserved.",
@@ -3901,6 +3908,10 @@
     "providerError": "The AI provider returned an error before the run could finish.",
     "turnError": "The assistant could not complete this run."
   },
+  "RoutinesCard": {
+    "emptyBody": "Mate can work while you are away. For example: summarise the deals that moved every weekday morning, or draft a thank-you email when one is won.",
+    "emptyTitle": "No routines yet"
+  },
   "RoutineSchedule": {
     "daily": "Every day at {time}",
     "hourly": "Every hour at :{minute}",
@@ -3927,10 +3938,6 @@
     "thursday": "Thursday",
     "tuesday": "Tuesday",
     "wednesday": "Wednesday"
-  },
-  "RoutinesCard": {
-    "emptyBody": "Mate can work while you are away. For example: summarise the deals that moved every weekday morning, or draft a thank-you email when one is won.",
-    "emptyTitle": "No routines yet"
   },
   "ServiceModal": {
     "title": "Service"
@@ -4182,12 +4189,5 @@
     "emptyBody": "Add a webhook to send workspace events to your systems.",
     "emptyTitle": "No webhooks yet",
     "title": "Webhooks"
-  },
-  "feedback": {
-    "general": {
-      "description": "Your feedback helps us improve. Share ideas, report issues, or tell us what's working well so we can build a better product for you",
-      "title": "Share Your Feedback"
-    },
-    "success": "Feedback received. You're officially part of the build crew."
   }
 }
