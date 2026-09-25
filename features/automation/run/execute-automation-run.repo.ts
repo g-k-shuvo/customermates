@@ -1,4 +1,5 @@
 import type { AutomationActionKind, AutomationRunStatus, EntityType } from "@/generated/prisma";
+import type { Filter } from "@/core/base/base-get.schema";
 
 export type AutomationRunPlanStep = {
   id: string;
@@ -16,6 +17,7 @@ export type AutomationRunPlan = {
   entityType: EntityType | null;
   entityId: string | null;
   triggerEvent: string | null;
+  conditions: Filter[] | null;
   steps: AutomationRunPlanStep[];
 };
 

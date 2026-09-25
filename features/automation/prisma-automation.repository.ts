@@ -299,7 +299,7 @@ export class PrismaAutomationRepo
         entityType: true,
         entityId: true,
         triggerEvent: true,
-        automation: { select: { name: true } },
+        automation: { select: { name: true, conditions: true } },
         steps: {
           select: { id: true, position: true, stepId: true, step: { select: { kind: true, config: true } } },
           orderBy: { position: "asc" },
@@ -316,6 +316,7 @@ export class PrismaAutomationRepo
       entityType: run.entityType,
       entityId: run.entityId,
       triggerEvent: run.triggerEvent,
+      conditions: toConditions(run.automation.conditions),
       steps: run.steps.flatMap((step) =>
         step.step && step.stepId
           ? [

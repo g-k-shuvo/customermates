@@ -23,13 +23,9 @@ const describeDatabase = databaseUrl ? describe : describe.skip;
 
 function automationTriggerRepoStub() {
   return {
-    findEventAutomationsUnscoped: async () => [],
-    admitAutomationRunsUnscoped: async () => [],
+    findEventAutomationsUnscoped: () => Promise.resolve([]),
+    admitAutomationRunsUnscoped: () => Promise.resolve([]),
   } as never;
-}
-
-function automationConditionMatcherStub() {
-  return { matchesUnscoped: async () => true } as never;
 }
 
 describeDatabase("routine event access against PostgreSQL", () => {
@@ -555,7 +551,6 @@ describeDatabase("routine event access against PostgreSQL", () => {
       routineRepo,
       access,
       automationTriggerRepoStub(),
-      automationConditionMatcherStub(),
     );
     const publisher = createMockUser({ id: readAllOwnerId, companyId });
 

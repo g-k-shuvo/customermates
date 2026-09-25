@@ -12,13 +12,9 @@ import messages from "@/i18n/locales/en.json";
 
 function automationTriggerRepoStub() {
   return {
-    findEventAutomationsUnscoped: async () => [],
-    admitAutomationRunsUnscoped: async () => [],
+    findEventAutomationsUnscoped: () => Promise.resolve([]),
+    admitAutomationRunsUnscoped: () => Promise.resolve([]),
   } as never;
-}
-
-function automationConditionMatcherStub() {
-  return { matchesUnscoped: async () => true } as never;
 }
 
 function routineTriggerRepoStub() {
@@ -136,7 +132,6 @@ function newEventService() {
     routineTriggerRepoStub(),
     routineEventAccessStub(),
     automationTriggerRepoStub(),
-    automationConditionMatcherStub(),
   );
 }
 
@@ -359,7 +354,6 @@ describeDatabase("registration against a real database", () => {
       routineTriggerRepoStub(),
       routineEventAccessStub(),
       automationTriggerRepoStub(),
-      automationConditionMatcherStub(),
     );
     const interactor = new RegisterUserInteractor(
       authService as never,
@@ -518,7 +512,6 @@ describeDatabase("registration against a real database", () => {
       routineTriggerRepoStub(),
       routineEventAccessStub(),
       automationTriggerRepoStub(),
-      automationConditionMatcherStub(),
     );
     const interactor = new RegisterUserInteractor(
       {
@@ -1132,7 +1125,6 @@ describeDatabase("registration against a real database", () => {
       routineTriggerRepoStub(),
       routineEventAccessStub(),
       automationTriggerRepoStub(),
-      automationConditionMatcherStub(),
     );
     const versions = currentLegalDocumentVersions();
     await runWithoutTenant(async () => {
@@ -1240,7 +1232,6 @@ describeDatabase("registration against a real database", () => {
       routineTriggerRepoStub(),
       routineEventAccessStub(),
       automationTriggerRepoStub(),
-      automationConditionMatcherStub(),
     );
     const interactor = new RegisterUserInteractor(
       {

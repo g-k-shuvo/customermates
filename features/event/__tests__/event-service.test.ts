@@ -22,13 +22,9 @@ import { runInRoutineContext } from "@/core/decorators/routine-context";
 
 function automationTriggerRepoStub() {
   return {
-    findEventAutomationsUnscoped: async () => [],
-    admitAutomationRunsUnscoped: async () => [],
+    findEventAutomationsUnscoped: () => Promise.resolve([]),
+    admitAutomationRunsUnscoped: () => Promise.resolve([]),
   } as never;
-}
-
-function automationConditionMatcherStub() {
-  return { matchesUnscoped: async () => true } as never;
 }
 
 function routineTriggerRepoStub() {
@@ -70,7 +66,6 @@ describe("EventService webhook dispatch", () => {
       routineTriggerRepoStub(),
       routineEventAccessStub(),
       automationTriggerRepoStub(),
-      automationConditionMatcherStub(),
     );
   });
 
@@ -140,7 +135,6 @@ describe("EventService no-op update skip", () => {
       routineTriggerRepoStub(),
       routineEventAccessStub(),
       automationTriggerRepoStub(),
-      automationConditionMatcherStub(),
     );
   });
 
@@ -205,7 +199,6 @@ describe("EventService audit log routing", () => {
       routineTriggerRepoStub(),
       routineEventAccessStub(),
       automationTriggerRepoStub(),
-      automationConditionMatcherStub(),
     );
   });
 
@@ -315,7 +308,6 @@ describe("EventService routine triggers", () => {
       routineRepo as never,
       routineEventAccess as never,
       automationTriggerRepoStub(),
-      automationConditionMatcherStub(),
     );
   });
 

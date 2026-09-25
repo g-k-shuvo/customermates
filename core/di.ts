@@ -605,7 +605,6 @@ export const getEventService = () => {
     getRoutineRepo(),
     getRoutineEventAccess(),
     getAutomationRepo(),
-    getAutomationConditionMatcher(),
   );
 };
 
@@ -627,7 +626,8 @@ export const getAutomationActionExecutor = () =>
     getAutomationEmailSender(),
   );
 
-export const getPrepareAutomationRunInteractor = () => new PrepareAutomationRunInteractor(getAutomationRepo());
+export const getPrepareAutomationRunInteractor = () =>
+  new PrepareAutomationRunInteractor(getAutomationRepo(), getAutomationConditionMatcher());
 
 export const getExecuteAutomationStepInteractor = () =>
   new ExecuteAutomationStepInteractor(getAutomationRepo(), getAutomationActionExecutor());

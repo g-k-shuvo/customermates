@@ -9,7 +9,6 @@ import type { BackgroundTaskService } from "@/core/utils/background-task.service
 import type { TriggerRoutinesRepo } from "@/ee/routines/trigger-routines.repo";
 import type { RoutineEventAccess } from "@/ee/routines/routine-event-access";
 import type { TriggerAutomationsRepo } from "@/features/automation/trigger-automations.repo";
-import type { AutomationConditionMatcher } from "@/features/automation/automation-condition-matcher";
 
 import { UserAccessor } from "@/core/base/user-accessor";
 import { currentRoutineContext } from "@/core/decorators/routine-context";
@@ -62,7 +61,6 @@ export class EventService extends UserAccessor {
     private routineRepo: TriggerRoutinesRepo,
     private routineEventAccess: RoutineEventAccess,
     private automationRepo: TriggerAutomationsRepo,
-    private automationConditions: AutomationConditionMatcher,
   ) {
     super();
   }
@@ -161,23 +159,7 @@ export class EventService extends UserAccessor {
     if (fieldMatches.length === 0) return 0;
 
     const entityId = payload.entityId;
-    const matched = (
-      await Promise.all(
-        fieldMatches.map(async (automation) => ({
-          automation,
-          matches:
-            !automation.conditions || automation.conditions.length === 0 || !entityId
-              ? !automation.conditions || automation.conditions.length === 0
-              : await this.automationConditions.matchesUnscoped({
-                  companyId,
-                  entityType: trigger.entityType,
-                  entityId,
-                  conditions: automation.conditions,
-                }),
-        })),
-      )
-    ).flatMap(({ automation, matches }) => (matches ? [automation.id] : []));
-    if (matched.length === 0) return 0;
+    const matched = fieldMatches.map((automation) => automation.id);
 
     const admitted = await this.automationRepo.admitAutomationRunsUnscoped({
       companyId,

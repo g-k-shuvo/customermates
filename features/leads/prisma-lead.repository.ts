@@ -26,11 +26,7 @@ import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
 import { getCustomColumnRepo } from "@/core/di";
-import {
-  customSelectGroupables,
-  dateGroupables,
-  enumGroupables,
-} from "@/core/base/grouping/groupable-field";
+import { customSelectGroupables, dateGroupables, enumGroupables } from "@/core/base/grouping/groupable-field";
 
 const LEAD_STATUS_VALUES = new Set<string>(Object.values(LeadStatus));
 
