@@ -20,6 +20,7 @@ function dependencies() {
     deals: { invoke: vi.fn() },
     services: { invoke: vi.fn() },
     tasks: { invoke: vi.fn() },
+    leads: { invoke: vi.fn() },
   };
 }
 
@@ -32,6 +33,7 @@ const cases = [
   [EntityType.deal, "deals"],
   [EntityType.service, "services"],
   [EntityType.task, "tasks"],
+  [EntityType.lead, "leads"],
 ] as const;
 
 function commit() {
@@ -46,6 +48,8 @@ function commit() {
     update.services as never,
     create.tasks as never,
     update.tasks as never,
+    create.leads as never,
+    update.leads as never,
   );
 }
 
@@ -56,6 +60,7 @@ function dryRun() {
     dry.deals as never,
     dry.services as never,
     dry.tasks as never,
+    dry.leads as never,
   );
 }
 

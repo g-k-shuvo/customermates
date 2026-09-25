@@ -18,8 +18,6 @@ const dealsStore = vi.hoisted(() => ({
   selectPipeline: vi.fn(),
 }));
 
-const editFiltersModalStore = vi.hoisted(() => ({ syncDraftFromTable: vi.fn() }));
-
 vi.mock("mobx-react-lite", () => ({ observer: <T>(component: T) => component }));
 
 vi.mock("next-intl", () => ({
@@ -27,7 +25,7 @@ vi.mock("next-intl", () => ({
     values ? `${key}:${Object.values(values).join(",")}` : key,
 }));
 
-vi.mock("@/core/stores/root-store.provider", () => ({ useRootStore: () => ({ dealsStore, editFiltersModalStore }) }));
+vi.mock("@/core/stores/root-store.provider", () => ({ useRootStore: () => ({ dealsStore }) }));
 
 vi.mock("@/components/ui/select", () => ({
   Select: (props: { children: ReactNode; onValueChange: (next: string) => void; value: string }) => {
@@ -63,7 +61,6 @@ beforeEach(() => {
   dealsStore.isReady = true;
   dealsStore.selectedPipelineId = null;
   dealsStore.selectPipeline.mockReset();
-  editFiltersModalStore.syncDraftFromTable.mockReset();
   dealsStore.pipelines = [newBusiness, renewals];
 });
 
@@ -113,12 +110,11 @@ describe("DealPipelineSwitcher", () => {
     expect(render()).toContain(`data-select-value="${RENEWALS}"`);
   });
 
-  it("sets the pipeline through the store and keeps the filter modal draft in step", () => {
+  it("sets the pipeline through the store", () => {
     render();
     harness.valueChanges.at(-1)?.(RENEWALS);
 
     expect(dealsStore.selectPipeline).toHaveBeenCalledWith(RENEWALS);
-    expect(editFiltersModalStore.syncDraftFromTable).toHaveBeenCalledWith(dealsStore);
   });
 
   it("clears the pipeline when the unfiltered board is chosen", () => {

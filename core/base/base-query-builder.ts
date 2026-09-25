@@ -137,7 +137,10 @@ export abstract class BaseQueryBuilder<TWhereInput extends Record<string, unknow
     return this.memoFilterableFields;
   }
 
-  getGroupableFields(_customColumns?: readonly CustomColumnDto[]): Promise<Array<GroupableFieldSpec>> {
+  getGroupableFields(
+    _customColumns?: readonly CustomColumnDto[],
+    _filters?: readonly Filter[],
+  ): Promise<Array<GroupableFieldSpec>> {
     return Promise.resolve([]);
   }
 

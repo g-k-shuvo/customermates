@@ -50,6 +50,9 @@ export function groupScopeFragment(scope: GroupScope, targetWhere: GroupTargetWh
         : { [spec.collection]: { some: { [spec.keyColumn]: key, ...target } } };
     }
 
+    case "stage":
+      return isNoValue ? { [spec.column]: null } : { [spec.column]: key };
+
     case "dateBucket": {
       const entry = dateBucketEntry(
         key,

@@ -83,7 +83,10 @@ export abstract class BaseGetRepo<T> {
   filterableFieldsOnce(): Promise<FilterableField[]> {
     return this.getFilterableFields();
   }
-  getGroupableFields(_customColumns?: readonly CustomColumnDto[]): Promise<GroupableFieldSpec[]> {
+  getGroupableFields(
+    _customColumns?: readonly CustomColumnDto[],
+    _filters?: readonly Filter[],
+  ): Promise<GroupableFieldSpec[]> {
     return Promise.resolve([]);
   }
   countByGroup(_args: {
@@ -201,7 +204,7 @@ export abstract class BaseGetInteractor<T> {
 
     const baseQuery: BaseQuery = { filters, searchTerm: resolved.searchTerm, sortDescriptor };
     const requested = normaliseGroupingRequest(params, resolved);
-    const groupableSpecs = await this.repo.getGroupableFields(customColumns);
+    const groupableSpecs = await this.repo.getGroupableFields(customColumns, filters);
     const resolvedGrouping = resolveGrouping(requested.grouping, groupableSpecs);
 
     const { items, total, grouping, groupCounts, groupValueSums } = resolvedGrouping
@@ -349,7 +352,7 @@ export abstract class BaseGetInteractor<T> {
       grouping: {
         grouping,
         kind: spec.kind,
-        supportsDragWriteBack: spec.kind === "customSingleSelect",
+        supportsDragWriteBack: spec.kind === "customSingleSelect" || spec.kind === "stage",
         ...(spec.kind === "customSingleSelect" ? { columnId: spec.columnId } : {}),
         partial: true,
         total: 0,
@@ -502,7 +505,7 @@ function assembleGroupedResult<T>(input: {
     grouping: {
       grouping: input.grouping,
       kind: input.spec.kind,
-      supportsDragWriteBack: input.spec.kind === "customSingleSelect",
+      supportsDragWriteBack: input.spec.kind === "customSingleSelect" || input.spec.kind === "stage",
       ...(input.spec.kind === "customSingleSelect" ? { columnId: input.spec.columnId } : {}),
       groups,
       total: input.total,

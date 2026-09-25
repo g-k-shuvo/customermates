@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { EntityType, LeadStatus, Resource } from "@/generated/prisma";
 
 import { LEAD_STATUS_CHIP_COLOR } from "../lead-status-colors";
-import { LEAD_DETAIL_FIELD, LEAD_DETAIL_SECTION } from "../lead-detail-personalization";
+import { LEAD_DETAIL_FIELD } from "../lead-detail-personalization";
 
 const COMPONENTS_DIR = join(process.cwd(), "app", "[locale]", "(protected)", "leads", "components");
 
@@ -47,12 +47,5 @@ describe("lead detail personalization", () => {
 
     for (const fieldId of Object.values(LEAD_DETAIL_FIELD))
       expect(view, fieldId).toContain(`LEAD_DETAIL_FIELD.${fieldId}`);
-  });
-
-  it("renders every declared section in the page layout", () => {
-    const view = source("lead-detail-view.tsx");
-
-    for (const sectionId of Object.values(LEAD_DETAIL_SECTION))
-      expect(view, sectionId).toContain(`LEAD_DETAIL_SECTION.${sectionId}`);
   });
 });

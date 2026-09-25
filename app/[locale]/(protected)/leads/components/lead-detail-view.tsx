@@ -19,7 +19,7 @@ import { useEntityTerminology } from "@/components/entity-terminology/use-entity
 import { useRootStore } from "@/core/stores/root-store.provider";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 
-import { LEAD_DETAIL_FIELD, LEAD_DETAIL_SECTION } from "./lead-detail-personalization";
+import { LEAD_DETAIL_FIELD } from "./lead-detail-personalization";
 import { LeadConvertAction } from "./lead-convert-action";
 
 type Props = {

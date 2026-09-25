@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { BaseDataViewStore, HasId } from "@/core/base/base-data-view.store";
 
@@ -16,6 +17,7 @@ type Props<E extends HasId> = {
   columns: ColumnDef<E>[];
   onRowClick?: (item: E) => void;
   rowHref?: (item: E) => string | undefined;
+  cardActions?: (item: E) => ReactNode;
   store: BaseDataViewStore<E>;
   view: DataViewView;
 };
@@ -24,6 +26,7 @@ export const DataViewContent = observer(function DataViewContent<E extends HasId
   columns,
   onRowClick,
   rowHref,
+  cardActions,
   store,
   view,
 }: Props<E>) {
@@ -53,6 +56,7 @@ export const DataViewContent = observer(function DataViewContent<E extends HasId
 
   return (
     <DataKanbanView
+      cardActions={cardActions}
       cardHref={rowHref}
       className="animate-page-result-in motion-reduce:animate-none"
       columns={resolvedColumns}

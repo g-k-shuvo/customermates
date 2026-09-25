@@ -29,10 +29,17 @@ import {
   bulkDeleteEntitiesAction,
   bulkUpdateCustomFieldValuesAction,
   updateEntityCustomFieldValueAction,
+  updateEntityStageAction,
 } from "@/app/actions";
 import { ALL_VIEW_KEY } from "@/core/data-view/data-view-keys";
 
 export const MAX_SELECTION_SIZE = 100;
+
+export type StageMoveOutcome =
+  | { status: "updated"; item: unknown }
+  | { status: "handled" }
+  | { status: "cancelled" }
+  | { status: "failed"; error: unknown };
 
 export interface HasId {
   id: string;
@@ -314,8 +321,9 @@ export abstract class BaseDataViewStore<Entity extends HasId> extends BaseStore 
     if (!entityType) return;
 
     const columnId = this.groupingResult?.columnId;
+    const isStageMove = this.groupingResult?.kind === "stage";
 
-    if (!columnId || !this.groupingResult?.supportsDragWriteBack) {
+    if (!this.groupingResult?.supportsDragWriteBack || (!isStageMove && !columnId)) {
       this.toastError("Common.notifications.unexpectedError");
       return;
     }
@@ -351,10 +359,22 @@ export abstract class BaseDataViewStore<Entity extends HasId> extends BaseStore 
     };
 
     try {
+      if (isStageMove) {
+        const outcome = await this.persistStageMove(params.item.id, params.value);
+
+        if (outcome.status === "updated") await this.upsertItem(outcome.item as Entity);
+        else if (outcome.status !== "handled") {
+          revert();
+          if (outcome.status === "failed") toastZodErrorTree(outcome.error);
+        }
+
+        return;
+      }
+
       const res = await updateEntityCustomFieldValueAction({
         entityType,
         entityId: params.item.id,
-        customFieldValues: [{ columnId, value: params.value }],
+        customFieldValues: [{ columnId: columnId as string, value: params.value }],
       });
       if (res?.ok) await this.upsertItem(res.data as unknown as Entity);
       else {
@@ -366,6 +386,12 @@ export abstract class BaseDataViewStore<Entity extends HasId> extends BaseStore 
       throw err;
     }
   };
+
+  protected async persistStageMove(entityId: string, stageId: string | null): Promise<StageMoveOutcome> {
+    const res = await updateEntityStageAction({ entityId, stageId });
+
+    return res?.ok ? { status: "updated", item: res.data } : { status: "failed", error: res?.error };
+  }
 
   get canBoard(): boolean {
     return this.groupableFields.length > 0 || Boolean(this.entityType);

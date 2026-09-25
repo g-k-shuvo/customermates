@@ -26,13 +26,19 @@ import { type DealDto } from "./deal.schema";
 
 import { BaseRepository } from "@/core/base/base-repository";
 import { Transaction } from "@/core/decorators/transaction.decorator";
-import { type Filter, type GetQueryParams } from "@/core/base/base-get.schema";
+import {
+  STAGE_GROUPING_FIELD,
+  STAGE_GROUPING_KEY,
+  type Filter,
+  type GetQueryParams,
+} from "@/core/base/base-get.schema";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 import {
   customSelectGroupables,
   dateGroupables,
   enumGroupables,
   relationGroupables,
+  stageGroupable,
 } from "@/core/base/grouping/groupable-field";
 import { FILTER_FIELD_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
@@ -377,10 +383,17 @@ export class PrismaDealRepo
     ];
   }
 
-  async getGroupableFields(customColumns?: readonly CustomColumnDto[]) {
+  async getGroupableFields(customColumns?: readonly CustomColumnDto[], filters?: readonly Filter[]) {
     if (!this.canAccess(Resource.deals)) return [];
 
     return [
+      stageGroupable({
+        model: "deal",
+        field: STAGE_GROUPING_KEY,
+        column: STAGE_GROUPING_FIELD,
+        labelKey: "Common.filters.fields.stageId",
+        stages: await this.getGroupOptions(filters ? [...filters] : undefined),
+      }),
       ...customSelectGroupables(EntityType.deal, customColumns ?? (await this.getCustomColumns())),
       ...relationGroupables("deal", {
         contactIds: this.canAccess(Resource.contacts),

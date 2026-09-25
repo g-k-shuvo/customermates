@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { DataViewGroup, GroupingResult } from "@/core/base/grouping/grouping.schema";
 import type { GetResult } from "../base-get.interactor";
 import type { RootStore } from "@/core/stores/root.store";
 
@@ -51,15 +52,36 @@ function rootStore() {
   } as unknown as RootStore;
 }
 
+function group(key: string, label: string, itemIds: string[], weight: number): DataViewGroup {
+  return {
+    key,
+    count: itemIds.length,
+    labelKind: "value",
+    label,
+    weight,
+    isNoValue: false,
+    materialised: true,
+    itemIds,
+    hasMore: false,
+  };
+}
+
+function grouping(): GroupingResult {
+  return {
+    grouping: { field: STAGE_GROUPING_KEY },
+    kind: "stage",
+    supportsDragWriteBack: true,
+    groups: [group(OPEN_STAGE, "Open", ["deal-1"], 10), group(WON_STAGE, "Won", [], 100)],
+    total: 1,
+  };
+}
+
 function stageResult(): GetResult<Item> {
   return {
     items: [{ id: "deal-1", stageId: OPEN_STAGE, totalValue: 300, weightedValue: 30 }],
+    grouping: grouping(),
     groupCounts: { [OPEN_STAGE]: 1, [WON_STAGE]: 0 },
     groupValueSums: { [OPEN_STAGE]: { totalValue: 300, weightedValue: 30 } },
-    groupOptions: [
-      { value: OPEN_STAGE, label: "Open", weight: 10 },
-      { value: WON_STAGE, label: "Won", weight: 100 },
-    ],
   };
 }
 
@@ -76,11 +98,11 @@ describe("BaseDataViewStore stage grouping", () => {
     updateEntityCustomFieldValueAction.mockReset();
   });
 
-  it("exposes the stage options the server reported, in order", () => {
+  it("exposes the stage groups the server reported, in order, keeping the empty one", () => {
     const store = createStore();
 
-    expect(store.groupOptions?.map((option) => option.value)).toEqual([OPEN_STAGE, WON_STAGE]);
-    expect(store.groupOptions?.map((option) => option.label)).toEqual(["Open", "Won"]);
+    expect(store.groupingResult?.groups.map((entry) => entry.key)).toEqual([OPEN_STAGE, WON_STAGE]);
+    expect(store.groupingResult?.groups.map((entry) => entry.label)).toEqual(["Open", "Won"]);
   });
 
   it("persists a stage move through the stage action and not the custom field action", async () => {
@@ -91,7 +113,6 @@ describe("BaseDataViewStore stage grouping", () => {
     await store.moveItemBetweenGroups({
       item,
       optimisticItem: { ...item, stageId: WON_STAGE },
-      columnId: STAGE_GROUPING_KEY,
       fromGroupKey: OPEN_STAGE,
       toGroupKey: WON_STAGE,
       value: WON_STAGE,
@@ -106,17 +127,16 @@ describe("BaseDataViewStore stage grouping", () => {
     const item = { id: "deal-1", stageId: OPEN_STAGE };
     updateEntityStageAction.mockResolvedValue({ ok: true, data: { ...item, stageId: WON_STAGE } });
 
-    const moved = await store.moveItemBetweenGroups({
+    await store.moveItemBetweenGroups({
       item,
       optimisticItem: { ...item, stageId: WON_STAGE },
-      columnId: STAGE_GROUPING_KEY,
       fromGroupKey: OPEN_STAGE,
       toGroupKey: WON_STAGE,
       value: WON_STAGE,
     });
 
-    expect(moved).not.toBe(false);
     expect(updateEntityStageAction).toHaveBeenCalledTimes(1);
+    expect(store.items.find((entry) => entry.id === "deal-1")?.stageId).toBe(WON_STAGE);
   });
 
   it("reverts the optimistic move when the stage write fails", async () => {
@@ -127,12 +147,11 @@ describe("BaseDataViewStore stage grouping", () => {
     await store.moveItemBetweenGroups({
       item,
       optimisticItem: { ...item, stageId: WON_STAGE },
-      columnId: STAGE_GROUPING_KEY,
       fromGroupKey: OPEN_STAGE,
       toGroupKey: WON_STAGE,
       value: WON_STAGE,
     });
 
-    expect(store.items.find((it) => it.id === "deal-1")?.stageId).toBe(OPEN_STAGE);
+    expect(store.items.find((entry) => entry.id === "deal-1")?.stageId).toBe(OPEN_STAGE);
   });
 });

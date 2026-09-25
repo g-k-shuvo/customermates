@@ -131,7 +131,10 @@ export const searchTool = {
   execute: async ({ query }: { query: string }) => {
     const recordGroups = await Promise.all(
       ENTITIES.map(async (entity) => {
-        const result = await requireEntityListExecutor(entity)({ searchTerm: query, pagination: { page: 1, pageSize: 5 } });
+        const result = await requireEntityListExecutor(entity)({
+          searchTerm: query,
+          pagination: { page: 1, pageSize: 5 },
+        });
         if (!result.ok) return [];
         return result.data.items.slice(0, 3).map((item: any) => ({
           id: `record:${entity}:${item.id}`,

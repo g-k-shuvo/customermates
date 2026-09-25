@@ -94,6 +94,22 @@ export function resolveGroupAxis(input: GroupAxisInput): GroupAxis {
       return truncate(groups, stored ? noValueGroup(stored, false) : undefined, valueRows.length > MAX_AXIS_GROUPS);
     }
 
+    case "stage": {
+      const groups = spec.stages.map((stage) =>
+        group({
+          key: stage.value,
+          row: countByKey.get(stage.value),
+          labelKind: "value",
+          label: stage.label,
+          ...(typeof stage.weight === "number" ? { weight: stage.weight } : {}),
+        }),
+      );
+
+      const stored = countByKey.get(NO_VALUE_GROUP_KEY);
+
+      return truncate(groups, stored ? noValueGroup(stored, false) : undefined);
+    }
+
     case "dateBucket": {
       const ladder = dateBucketLadder(
         input.bucket ?? DEFAULT_DATE_BUCKET,

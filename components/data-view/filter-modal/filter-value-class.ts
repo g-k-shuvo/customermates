@@ -4,7 +4,6 @@ import type { FilterValueKind } from "@/core/types/filter-field-value-kind";
 
 import { hasValidFilterConfiguration, isCustomField } from "@/components/data-view/table-view.utils";
 import { filterValueKind } from "@/core/types/filter-field-value-kind";
-import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { FilterOperatorKey, isStandaloneOperator } from "@/core/base/base-query-builder";
 
 export type FilterValueClass =
@@ -18,46 +17,6 @@ export type FilterValueClass =
   | "daysCount";
 
 export type FilterDateGranularity = "day" | "minute";
-
-const RELATION_FILTER_FIELDS = [
-  FilterFieldKey.userIds,
-  FilterFieldKey.contactIds,
-  FilterFieldKey.participantContactId,
-  FilterFieldKey.serviceIds,
-  FilterFieldKey.dealIds,
-  FilterFieldKey.organizationIds,
-  FilterFieldKey.taskIds,
-  FilterFieldKey.event,
-  FilterFieldKey.status,
-  FilterFieldKey.dealStatus,
-  FilterFieldKey.leadStatus,
-  FilterFieldKey.rotting,
-  FilterFieldKey.overdue,
-  FilterFieldKey.nextActivity,
-  FilterFieldKey.lostReasonId,
-  FilterFieldKey.pipelineId,
-  FilterFieldKey.stageId,
-  FilterFieldKey.provider,
-  FilterFieldKey.state,
-  FilterFieldKey.timelineKind,
-  FilterFieldKey.timelineThreadId,
-  FilterFieldKey.connectedAccountId,
-  FilterFieldKey.participants,
-  FilterFieldKey.plan,
-  FilterFieldKey.subscriptionStatus,
-  FilterFieldKey.isPlatformOperator,
-  FilterFieldKey.workspaceId,
-  FilterFieldKey.auditSource,
-  FilterFieldKey.adProvider,
-  FilterFieldKey.workspaceTags,
-];
-
-const DATE_FILTER_FIELDS = [
-  FilterFieldKey.updatedAt,
-  FilterFieldKey.createdAt,
-  FilterFieldKey.lastActiveAt,
-  FilterFieldKey.startsAt,
-];
 
 const DAY_GRANULARITY_COLUMN_TYPES = ["date", "dateRange"];
 

@@ -169,6 +169,12 @@ import { DomainEvent } from "@/features/event/domain-events";
 import { DealStageHistoryListener } from "../listener/deal-stage-history.listener";
 import { PrismaDealRepo } from "../prisma-deal.repository";
 
+const weightingRepo = { getDealWeightingColumnId: () => Promise.resolve(null) };
+
+function dealRepo() {
+  return new PrismaDealRepo(weightingRepo);
+}
+
 const user = createMockUser({ companyId: fake.ids.company });
 
 function withTenant<T>(run: () => Promise<T>) {
@@ -176,7 +182,7 @@ function withTenant<T>(run: () => Promise<T>) {
 }
 
 function groupOptions(filters?: Filter[]) {
-  return withTenant(() => new PrismaDealRepo().getGroupOptions(filters));
+  return withTenant(() => dealRepo().getGroupOptions(filters));
 }
 
 function makeHistoryRepo() {
@@ -238,7 +244,7 @@ describe("moving a deal to another pipeline", () => {
 
   it("lands the deal on the target pipeline's first stage and records the stage history", async () => {
     const updated = await withTenant(() =>
-      new PrismaDealRepo().updateDealOrThrow({ id: fake.ids.deal, pipelineId: fake.ids.renewalsPipeline }),
+      dealRepo().updateDealOrThrow({ id: fake.ids.deal, pipelineId: fake.ids.renewalsPipeline }),
     );
 
     expect(updated.pipelineId).toBe(fake.ids.renewalsPipeline);
@@ -280,7 +286,7 @@ describe("moving a deal to another pipeline", () => {
 
   it("leaves the placement alone when the pipeline does not change", async () => {
     await withTenant(() =>
-      new PrismaDealRepo().updateDealOrThrow({ id: fake.ids.deal, pipelineId: fake.ids.newBusinessPipeline }),
+      dealRepo().updateDealOrThrow({ id: fake.ids.deal, pipelineId: fake.ids.newBusinessPipeline }),
     );
 
     const [{ data }] = fake.dealUpdates as any[];

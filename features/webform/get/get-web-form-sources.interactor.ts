@@ -1,4 +1,5 @@
-import type { GetResult, DataViewStateRepo } from "@/core/base/base-get.interactor";
+import type { GetResult } from "@/core/base/base-get.interactor";
+import type { DataViewStateRepo } from "@/core/data-view/data-view-state.repo";
 import type { QueryParamsPrecheckInteractor } from "@/core/base/query-params-precheck.interactor";
 import type { Validated } from "@/core/validation/validation.utils";
 

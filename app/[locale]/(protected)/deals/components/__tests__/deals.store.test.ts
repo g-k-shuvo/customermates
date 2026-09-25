@@ -1,3 +1,4 @@
+import type { DataViewGroup, GroupingResult } from "@/core/base/grouping/grouping.schema";
 import type { GetResult } from "@/core/base/base-get.interactor";
 import type { RootStore } from "@/core/stores/root.store";
 import type { DealDto } from "@/features/deals/deal.schema";
@@ -81,12 +82,39 @@ function rootStore(): RootStore {
   } as unknown as RootStore;
 }
 
+function stageGroup(key: string, label: string, itemIds: string[]): DataViewGroup {
+  return {
+    key,
+    count: itemIds.length,
+    labelKind: "value",
+    label,
+    isNoValue: false,
+    materialised: true,
+    itemIds,
+    hasMore: false,
+  };
+}
+
+function stageGrouping(): GroupingResult {
+  return {
+    grouping: { field: STAGE_GROUPING_KEY },
+    kind: "stage",
+    supportsDragWriteBack: true,
+    groups: [
+      stageGroup(OPEN_STAGE, "Proposal", [DEAL_ID]),
+      stageGroup(WON_STAGE, "Won", []),
+      stageGroup(LOST_STAGE, "Lost", []),
+    ],
+    total: 1,
+  };
+}
+
 function boardResult(): GetResult<DealDto> {
   return {
     items: [{ id: DEAL_ID, stageId: OPEN_STAGE } as DealDto],
+    grouping: stageGrouping(),
     groupCounts: { [OPEN_STAGE]: 1, [WON_STAGE]: 0, [LOST_STAGE]: 0 },
     groupValueSums: {},
-    groupOptions: [],
   } as unknown as GetResult<DealDto>;
 }
 
@@ -104,7 +132,6 @@ async function dragTo(store: DealsStore, stageId: string) {
   await store.moveItemBetweenGroups({
     item,
     optimisticItem: { ...item, stageId } as DealDto,
-    columnId: STAGE_GROUPING_KEY,
     fromGroupKey: OPEN_STAGE,
     toGroupKey: stageId,
     value: stageId,

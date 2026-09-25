@@ -127,7 +127,7 @@ const FullAppSidebar = observer(
     const intlPathname = useIntlPathname();
     const router = useRouter();
     const rootStore = useRootStore();
-    const { feedbackModalStore, globalSearchModalStore, terminologyStore, userStore } = rootStore;
+    const { globalSearchModalStore, terminologyStore, userStore } = rootStore;
     const { singular, plural } = useEntityTerminology();
 
     const { isMobile, setOpenMobile } = useSidebar();

@@ -1033,10 +1033,10 @@ export const getWebFormSourceWritePrecheck = () =>
   new WebFormSourceWritePrecheckInteractor(getWebFormSourceIdsValidator(), getUserIdsValidator());
 
 export const getGetWebFormSourcesInteractor = () =>
-  new GetWebFormSourcesInteractor(getWebFormRepo(), getP13nRepo(), "interactive", getQueryParamsPrecheck());
+  new GetWebFormSourcesInteractor(getWebFormRepo(), getDataViewStateRepo(), "interactive", getQueryParamsPrecheck());
 
 export const getGetWebFormSourcesApiInteractor = () =>
-  new GetWebFormSourcesInteractor(getWebFormRepo(), getP13nRepo(), "api", getQueryParamsPrecheck());
+  new GetWebFormSourcesInteractor(getWebFormRepo(), getDataViewStateRepo(), "api", getQueryParamsPrecheck());
 
 export const getGetWebFormSourceByIdInteractor = () => new GetWebFormSourceByIdInteractor(getWebFormRepo());
 
@@ -1047,10 +1047,10 @@ export const getDeleteWebFormSourceInteractor = () =>
   new DeleteWebFormSourceInteractor(getWebFormRepo(), getWebFormSourceWritePrecheck());
 
 export const getGetLeadsInteractor = () =>
-  new GetLeadsInteractor(getLeadRepo(), getP13nRepo(), "interactive", getQueryParamsPrecheck());
+  new GetLeadsInteractor(getLeadRepo(), getDataViewStateRepo(), "interactive", getQueryParamsPrecheck());
 
 export const getGetLeadsApiInteractor = () =>
-  new GetLeadsInteractor(getLeadRepo(), getP13nRepo(), "api", getQueryParamsPrecheck());
+  new GetLeadsInteractor(getLeadRepo(), getDataViewStateRepo(), "api", getQueryParamsPrecheck());
 
 export const getGetLeadsConfigurationInteractor = () => new GetLeadsConfigurationInteractor(getLeadRepo());
 

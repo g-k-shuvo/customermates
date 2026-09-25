@@ -178,14 +178,14 @@ export class PrismaRoutineEventAccess extends BaseRepository implements RoutineE
         },
       }),
     );
-    const relationFields = RELATED_FILTER_FIELDS[entityType]
+    const relationFields = (RELATED_FILTER_FIELDS[entityType] ?? [])
       .filter(({ resource }) => this.readAccess(user, resource))
       .map(({ field }) => ({
         field,
         operators: FILTER_FIELD_DEFAULT_OPERATORS[field],
       }));
     const filterableFields = [
-      ...INTRINSIC_FILTER_FIELDS[entityType],
+      ...(INTRINSIC_FILTER_FIELDS[entityType] ?? []),
       ...relationFields,
       ...customColumns.map((column) => ({
         field: column.id,

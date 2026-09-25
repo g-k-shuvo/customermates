@@ -97,7 +97,7 @@ export const TaskAgendaView = observer(function TaskAgendaView() {
   if (groups.length === 0) {
     return (
       <PageState
-        background={<TasksPageSkeleton animated={false} view="cards" />}
+        background={<TasksPageSkeleton animated={false} view="board" />}
         description={t("Activities.agenda.emptyBody", { plural: plural(EntityType.task) })}
         icon={CalendarCheck}
         state="empty"

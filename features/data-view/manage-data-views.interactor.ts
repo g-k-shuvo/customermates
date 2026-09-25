@@ -1,4 +1,4 @@
-import type { FilterableField } from "@/core/base/base-get.schema";
+import type { Filter, FilterableField } from "@/core/base/base-get.schema";
 import type { SearchableField, SortableField } from "@/core/base/base-query-builder";
 import type { GroupableFieldSpec } from "@/core/base/grouping/groupable-field";
 import type { QueryParamsPrecheckInteractor } from "@/core/base/query-params-precheck.interactor";
@@ -48,7 +48,10 @@ export abstract class DataViewConfigurationRepo {
   abstract getSortableFields(): SortableField[];
   abstract getFilterableFields(): Promise<FilterableField[]>;
   abstract getCustomColumns(): Promise<CustomColumnDto[]>;
-  abstract getGroupableFields(customColumns?: readonly CustomColumnDto[]): Promise<GroupableFieldSpec[]>;
+  abstract getGroupableFields(
+    customColumns?: readonly CustomColumnDto[],
+    filters?: readonly Filter[],
+  ): Promise<GroupableFieldSpec[]>;
   setMessagingSourcesEnabled?(enabled: boolean): void;
 }
 

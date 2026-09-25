@@ -68,6 +68,12 @@ import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { Action, Resource } from "@/generated/prisma";
 import { PrismaDealRepo } from "../prisma-deal.repository";
 
+const weightingRepo = { getDealWeightingColumnId: () => Promise.resolve(null) };
+
+function dealRepo() {
+  return new PrismaDealRepo(weightingRepo);
+}
+
 const user = createMockUser({ companyId: fake.ids.company, id: fake.ids.user });
 
 const SCHEDULED_TASK = { completedAt: null, dueAt: { not: null } };
@@ -77,7 +83,7 @@ function nextActivityFilter(operator: FilterOperatorKey, value: string[]): Filte
 }
 
 function queryArgs(params: GetQueryParams) {
-  return runWithTenant(user, () => new PrismaDealRepo().buildQueryArgs(params));
+  return runWithTenant(user, () => dealRepo().buildQueryArgs(params));
 }
 
 function andClauses(where: Record<string, unknown>): unknown[] {
@@ -135,7 +141,7 @@ describe("next activity deal filter", () => {
     ]);
 
     const { where } = await runWithTenant(ownReader, () =>
-      new PrismaDealRepo().buildQueryArgs({ filters: [nextActivityFilter(FilterOperatorKey.in, ["false"])] }),
+      dealRepo().buildQueryArgs({ filters: [nextActivityFilter(FilterOperatorKey.in, ["false"])] }),
     );
 
     expect(andClauses(where)).toEqual([
@@ -172,7 +178,7 @@ describe("next activity deal filter", () => {
 
 describe("deal filterable fields", () => {
   it("offers the next activity and lost reason filters to a reader who may see both sources", async () => {
-    const fields = await runWithTenant(user, () => new PrismaDealRepo().getFilterableFields());
+    const fields = await runWithTenant(user, () => dealRepo().getFilterableFields());
     const offered = fields.map((field) => field.field);
 
     expect(offered).toContain(FilterFieldKey.nextActivity);
@@ -185,7 +191,7 @@ describe("deal filterable fields", () => {
       { resource: Resource.company, action: Action.readAll },
     ]);
 
-    const fields = await runWithTenant(reader, () => new PrismaDealRepo().getFilterableFields());
+    const fields = await runWithTenant(reader, () => dealRepo().getFilterableFields());
     const offered = fields.map((field) => field.field);
 
     expect(offered).not.toContain(FilterFieldKey.nextActivity);
@@ -198,7 +204,7 @@ describe("deal filterable fields", () => {
       { resource: Resource.tasks, action: Action.readAll },
     ]);
 
-    const fields = await runWithTenant(reader, () => new PrismaDealRepo().getFilterableFields());
+    const fields = await runWithTenant(reader, () => dealRepo().getFilterableFields());
     const offered = fields.map((field) => field.field);
 
     expect(offered).toContain(FilterFieldKey.nextActivity);
@@ -208,7 +214,7 @@ describe("deal filterable fields", () => {
 
 describe("lost reason on the deal record", () => {
   it("carries the reason name so a list row can label a lost deal", async () => {
-    const deal = await runWithTenant(user, () => new PrismaDealRepo().getDealById(fake.ids.deal));
+    const deal = await runWithTenant(user, () => dealRepo().getDealById(fake.ids.deal));
 
     expect(deal?.lostReasonName).toBe("Price");
     expect(deal).not.toHaveProperty("lostReason");

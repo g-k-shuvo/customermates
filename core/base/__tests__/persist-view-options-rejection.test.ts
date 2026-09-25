@@ -133,18 +133,15 @@ describe("persistViewState rejection handling", () => {
 });
 
 describe("Sentry reporting for handled application errors", () => {
-  const setHostname = (hostname: string) => {
-    Object.defineProperty(window, "location", {
-      configurable: true,
-      value: { ...window.location, hostname },
-    });
-  };
-
   beforeEach(() => captureException.mockClear());
+
+  afterEach(async () => {
+    const { setDemoEnvironment } = await import("@/core/errors/report-application-error");
+    setDemoEnvironment(false);
+  });
 
   it("reports a genuine failure to Sentry, because catching it hides it from the global handler", async () => {
     const { reportApplicationError } = await import("@/core/errors/report-application-error");
-    setHostname("app.customermates.com");
 
     const boom = new Error("network down");
     reportApplicationError(boom);
@@ -152,9 +149,9 @@ describe("Sentry reporting for handled application errors", () => {
     expect(captureException).toHaveBeenCalledExactlyOnceWith(boom);
   });
 
-  it("stays silent on the demo host, where the rejection is the expected demo guard", async () => {
-    const { reportApplicationError } = await import("@/core/errors/report-application-error");
-    setHostname("demo.customermates.com");
+  it("stays silent in demo mode, where the rejection is the expected demo guard", async () => {
+    const { reportApplicationError, setDemoEnvironment } = await import("@/core/errors/report-application-error");
+    setDemoEnvironment(true);
 
     reportApplicationError(new Error("Saving is not available in demo mode."));
 

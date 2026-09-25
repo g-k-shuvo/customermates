@@ -46,7 +46,9 @@ export const GROUPABLE_MODEL_BY_ENTITY_TYPE: Partial<Record<EntityType, EntityGr
   [EntityType.task]: "task",
 };
 
-export type GroupingKind = "customSingleSelect" | "enum" | "relation" | "dateBucket";
+export type GroupingKind = "customSingleSelect" | "enum" | "relation" | "dateBucket" | "stage";
+
+export type StageGroupOption = { value: string; label: string; weight?: number | null };
 
 export type RelationJoinWiring = {
   via?: "join";
@@ -356,12 +358,18 @@ export type GroupableFieldSpec =
       column: string;
       buckets: readonly DateBucket[];
       labelKey: string;
+    })
+  | (SpecBase & {
+      kind: "stage";
+      column: string;
+      labelKey: string;
+      stages: readonly StageGroupOption[];
     });
 
 export const GroupableFieldDtoSchema = z.object({
   id: z.string(),
   grouping: GroupingSchema,
-  kind: z.enum(["customSingleSelect", "enum", "relation", "dateBucket"]),
+  kind: z.enum(["customSingleSelect", "enum", "relation", "dateBucket", "stage"]),
   label: z.string().optional(),
   labelKey: z.string().optional(),
   bucket: z.enum(DATE_BUCKETS).optional(),
@@ -473,6 +481,23 @@ export function dateGroupables<M extends GroupableModel>(
   return claimedFields(claims).map((field) => dateGroupable({ model, field }));
 }
 
+export function stageGroupable(args: {
+  model: GroupableModel;
+  field: string;
+  column: string;
+  labelKey: string;
+  stages: readonly StageGroupOption[];
+}): GroupableFieldSpec {
+  return {
+    kind: "stage",
+    field: args.field,
+    model: args.model,
+    column: args.column,
+    labelKey: args.labelKey,
+    stages: args.stages,
+  };
+}
+
 export function groupableFieldDtos(specs: readonly GroupableFieldSpec[]): GroupableFieldDto[] {
   return specs.flatMap((spec): GroupableFieldDto[] => {
     switch (spec.kind) {
@@ -504,6 +529,16 @@ export function groupableFieldDtos(specs: readonly GroupableFieldSpec[]): Groupa
             kind: spec.kind,
             labelKey: spec.labelKey,
             supportsDragWriteBack: false,
+          },
+        ];
+      case "stage":
+        return [
+          {
+            id: spec.field,
+            grouping: { field: spec.field },
+            kind: spec.kind,
+            labelKey: spec.labelKey,
+            supportsDragWriteBack: true,
           },
         ];
       case "dateBucket":

@@ -105,7 +105,6 @@ export const PaginationResponseSchema = PaginationRequestSchema.extend({
 });
 export type PaginationResponse = Data<typeof PaginationResponseSchema>;
 
-const KANBAN_PER_GROUP_MAX = 500;
 export const KANBAN_PER_GROUP_DEFAULT = 10;
 export const KANBAN_EMPTY_GROUP_KEY = "__empty__";
 export const STAGE_GROUPING_KEY = "__stage__";

@@ -42,7 +42,6 @@ import { LeadDetailSummary } from "@/app/[locale]/(protected)/leads/components/l
 import {
   LEAD_DETAIL_FIELD,
   LEAD_DETAIL_P13N_ID,
-  LEAD_DETAIL_SECTION,
 } from "@/app/[locale]/(protected)/leads/components/lead-detail-personalization";
 
 type Translate = (key: string) => string;

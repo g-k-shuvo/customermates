@@ -117,6 +117,22 @@ export async function countGroupRows(runtime: GroupCountRuntime, request: GroupC
       }));
     }
 
+    case "stage": {
+      const sumFields = request.sumFields ?? [];
+      const rows = await runtime.delegate(spec.model).groupBy({
+        by: [spec.column],
+        where,
+        _count: { _all: true },
+        ...(sumFields.length > 0 ? { _sum: Object.fromEntries(sumFields.map((field) => [field, true])) } : {}),
+      });
+
+      return rows.map((row) => ({
+        key: row[spec.column] == null ? NO_VALUE_GROUP_KEY : String(row[spec.column]),
+        count: rowCount(row),
+        sums: pickNumericSums(row._sum as Record<string, unknown> | undefined, sumFields),
+      }));
+    }
+
     case "relation": {
       const column = spec.via === "column" ? spec.column : spec.keyColumn;
       const [rows, noValue] = await Promise.all([
