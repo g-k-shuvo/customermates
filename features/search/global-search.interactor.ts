@@ -16,8 +16,10 @@ const Schema = z.object({
 
 export type GlobalSearchData = z.infer<typeof Schema>;
 
+export type SearchableEntityType = Exclude<EntityType, "lead">;
+
 export type GlobalSearchResultItem = {
-  type: EntityType;
+  type: SearchableEntityType;
   id: string;
   name: string;
   pictureUrl: string | null;
@@ -31,7 +33,7 @@ export type GlobalSearchResult = {
 const OutputSchema = z.object({
   results: z.array(
     z.object({
-      type: z.enum(EntityType),
+      type: z.enum(EntityType).exclude(["lead"]),
       id: z.string(),
       name: z.string(),
       pictureUrl: z.string().nullable(),

@@ -241,7 +241,6 @@ export const ENTITY_DETAIL: Record<EntityType, EntityDetailConfig> = {
           [LEAD_DETAIL_FIELD.ownerUserId]: Resource.users,
         },
         customColumns,
-        sectionIds: Object.values(LEAD_DETAIL_SECTION),
         canAccess,
       }),
     identity: (lead, _t, fallbackName) => ({ name: lead.title || fallbackName }),

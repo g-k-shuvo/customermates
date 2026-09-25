@@ -118,7 +118,7 @@ const filterFieldKeyOf = (field: string): FilterFieldKey | undefined =>
 export function filterOptionSources(
   t: Translate,
   activityQueryRef: ActivityQueryRef,
-): Record<FilterFieldKey, FilterOptionSource> {
+): Partial<Record<FilterFieldKey, FilterOptionSource>> {
   return {
     [FilterFieldKey.userIds]: {
       getItems: (params) =>

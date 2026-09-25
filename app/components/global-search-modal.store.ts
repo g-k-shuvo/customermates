@@ -16,7 +16,7 @@ type GlobalSearchFormData = {
 };
 
 const RecentSearchItemSchema = z.object({
-  type: z.enum(EntityType),
+  type: z.enum(EntityType).exclude(["lead"]),
   id: z.uuid(),
   name: z.string(),
   pictureUrl: z.string().nullable(),
@@ -115,10 +115,11 @@ export class GlobalSearchModalStore extends BaseModalStore<GlobalSearchFormData>
   verifyRecentItem = async (item: GlobalSearchResultItem): Promise<boolean> => {
     this.syncRecentScope();
     const storageKey = this.recentStorageKey;
-    const exists = await checkSearchResultExistsAction({
-      type: item.type,
-      id: item.id,
-    });
+    const exists =
+      (await checkSearchResultExistsAction({
+        type: item.type,
+        id: item.id,
+      })) ?? false;
     this.syncRecentScope();
     if (storageKey !== this.recentStorageKey) return false;
     if (!exists) {
