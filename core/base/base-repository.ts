@@ -28,6 +28,7 @@ export type ModelWhereInputMap = {
   task: Prisma.TaskWhereInput;
   routine: Prisma.RoutineWhereInput;
   lead: Prisma.LeadWhereInput;
+  automation: Prisma.AutomationWhereInput;
 };
 
 export type SummableModel = keyof ModelWhereInputMap;
@@ -72,6 +73,7 @@ export abstract class BaseRepository<
       task: Resource.tasks,
       routine: Resource.routines,
       lead: Resource.leads,
+      automation: Resource.automations,
     };
 
     const permissionResource = modelToResourceMap[resource];
@@ -132,6 +134,7 @@ export abstract class BaseRepository<
     task: (companyId, userId) => ({ companyId, users: { some: { userId } } }),
     routine: (companyId, userId) => ({ companyId, ownerUserId: userId }),
     lead: (companyId, userId) => ({ companyId, ownerUserId: userId }),
+    automation: (companyId, userId) => ({ companyId, createdByUserId: userId }),
   };
 
   collator(): Pick<Intl.Collator, "compare"> {

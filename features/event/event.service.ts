@@ -8,9 +8,13 @@ import type { ChangeRecord } from "@/core/utils/calculate-changes";
 import type { BackgroundTaskService } from "@/core/utils/background-task.service";
 import type { TriggerRoutinesRepo } from "@/ee/routines/trigger-routines.repo";
 import type { RoutineEventAccess } from "@/ee/routines/routine-event-access";
+import type { TriggerAutomationsRepo } from "@/features/automation/trigger-automations.repo";
+import type { AutomationConditionMatcher } from "@/features/automation/automation-condition-matcher";
 
 import { UserAccessor } from "@/core/base/user-accessor";
 import { currentRoutineContext } from "@/core/decorators/routine-context";
+import { automationCausationExhausted } from "@/core/decorators/automation-context";
+import { automationTriggerForEvent, changedFieldsMatch } from "@/features/automation/automation-trigger-map";
 import { carriesChangedFields, changedFieldsOf, matchesChangedFields } from "@/ee/routines/routine-event-filter";
 import { WebhookEventSchema } from "@/features/webhook/webhook.schema";
 import { env } from "@/env";
@@ -57,6 +61,8 @@ export class EventService extends UserAccessor {
     private backgroundTaskService: BackgroundTaskService,
     private routineRepo: TriggerRoutinesRepo,
     private routineEventAccess: RoutineEventAccess,
+    private automationRepo: TriggerAutomationsRepo,
+    private automationConditions: AutomationConditionMatcher,
   ) {
     super();
   }
@@ -87,6 +93,7 @@ export class EventService extends UserAccessor {
       this.createAuditLog(event, eventData, system),
       this.createWebhookDeliveries(event, eventData, companyId, system),
       this.createRoutineRuns(event, eventData, companyId),
+      this.createAutomationRuns(event, eventData, companyId),
     ]);
 
     return this.logAndReturn({
@@ -129,6 +136,65 @@ export class EventService extends UserAccessor {
       eventData: payload as Record<string, unknown>,
       entityId: payload.entityId,
     });
+  }
+
+  private async createAutomationRuns(
+    event: DomainEvent,
+    payload: DomainEventMap[DomainEvent],
+    companyId: string,
+  ): Promise<number> {
+    const trigger = automationTriggerForEvent(event);
+    if (!trigger) return 0;
+    if (automationCausationExhausted()) return 0;
+
+    const subscribed = await this.automationRepo.findEventAutomationsUnscoped(
+      companyId,
+      trigger.entityType,
+      trigger.triggerKind,
+    );
+    if (subscribed.length === 0) return 0;
+
+    const changed = changedFieldsOf(payload);
+    const fieldMatches = carriesChangedFields(payload)
+      ? subscribed.filter((automation) => changedFieldsMatch(automation.changedFields, changed))
+      : subscribed;
+    if (fieldMatches.length === 0) return 0;
+
+    const entityId = payload.entityId;
+    const matched = (
+      await Promise.all(
+        fieldMatches.map(async (automation) => ({
+          automation,
+          matches:
+            !automation.conditions || automation.conditions.length === 0 || !entityId
+              ? !automation.conditions || automation.conditions.length === 0
+              : await this.automationConditions.matchesUnscoped({
+                  companyId,
+                  entityType: trigger.entityType,
+                  entityId,
+                  conditions: automation.conditions,
+                }),
+        })),
+      )
+    ).flatMap(({ automation, matches }) => (matches ? [automation.id] : []));
+    if (matched.length === 0) return 0;
+
+    const admitted = await this.automationRepo.admitAutomationRunsUnscoped({
+      companyId,
+      automationIds: matched,
+      entityType: trigger.entityType,
+      entityId: entityId ?? null,
+      triggerEvent: event,
+      triggerPayload: payload,
+    });
+
+    await Promise.all(
+      admitted.map((run) =>
+        this.backgroundTaskService.dispatch("run-automation", { automationRunId: run.id, companyId }),
+      ),
+    );
+
+    return admitted.length;
   }
 
   private async createRoutineRuns(

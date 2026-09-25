@@ -44,29 +44,31 @@ export const UpsertAutomationSchema = z
     if (!data.id) {
       if (data.name === undefined)
         ctx.addIssue({ code: "custom", path: ["name"], params: { error: CustomErrorCode.automationNameRequired } });
-      if (data.triggerKind === undefined)
+      if (data.triggerKind === undefined) {
         ctx.addIssue({
           code: "custom",
           path: ["triggerKind"],
           params: { error: CustomErrorCode.automationTriggerRequired },
         });
+      }
       if (data.steps === undefined)
         ctx.addIssue({ code: "custom", path: ["steps"], params: { error: CustomErrorCode.automationStepsRequired } });
     }
 
     if (data.triggerKind === AutomationTriggerKind.schedule) {
-      if (!data.schedule)
+      if (!data.schedule) {
         ctx.addIssue({
           code: "custom",
           path: ["schedule"],
           params: { error: CustomErrorCode.automationScheduleRequired },
         });
-      else if (!isSupportedAutomationSchedule(data.schedule))
+      } else if (!isSupportedAutomationSchedule(data.schedule)) {
         ctx.addIssue({
           code: "custom",
           path: ["schedule"],
           params: { error: CustomErrorCode.automationScheduleInvalid },
         });
+      }
     } else if (data.triggerKind !== undefined && !data.entityType) {
       ctx.addIssue({
         code: "custom",

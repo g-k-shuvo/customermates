@@ -20,6 +20,17 @@ import { DomainEvent } from "../domain-events";
 import { runWithTenant } from "@/core/decorators/tenant-context";
 import { runInRoutineContext } from "@/core/decorators/routine-context";
 
+function automationTriggerRepoStub() {
+  return {
+    findEventAutomationsUnscoped: async () => [],
+    admitAutomationRunsUnscoped: async () => [],
+  } as never;
+}
+
+function automationConditionMatcherStub() {
+  return { matchesUnscoped: async () => true } as never;
+}
+
 function routineTriggerRepoStub() {
   return {
     findEventRoutinesUnscoped: () => Promise.resolve([]),
@@ -58,6 +69,8 @@ describe("EventService webhook dispatch", () => {
       backgroundTaskService as never,
       routineTriggerRepoStub(),
       routineEventAccessStub(),
+      automationTriggerRepoStub(),
+      automationConditionMatcherStub(),
     );
   });
 
@@ -126,6 +139,8 @@ describe("EventService no-op update skip", () => {
       backgroundTaskService as never,
       routineTriggerRepoStub(),
       routineEventAccessStub(),
+      automationTriggerRepoStub(),
+      automationConditionMatcherStub(),
     );
   });
 
@@ -189,6 +204,8 @@ describe("EventService audit log routing", () => {
       backgroundTaskService as never,
       routineTriggerRepoStub(),
       routineEventAccessStub(),
+      automationTriggerRepoStub(),
+      automationConditionMatcherStub(),
     );
   });
 
@@ -297,6 +314,8 @@ describe("EventService routine triggers", () => {
       backgroundTaskService as never,
       routineRepo as never,
       routineEventAccess as never,
+      automationTriggerRepoStub(),
+      automationConditionMatcherStub(),
     );
   });
 

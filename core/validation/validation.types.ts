@@ -171,6 +171,7 @@ export enum CustomErrorCode {
   automationEntityTypeRequired = "automationEntityTypeRequired",
   automationActionNotAvailableForEntity = "automationActionNotAvailableForEntity",
   automationNotFound = "automationNotFound",
+  automationStepFailed = "automationStepFailed",
   webhookHeadersRequireHttps = "webhookHeadersRequireHttps",
   activityScopeTooManyIds = "activityScopeTooManyIds",
   activitySourcesUnavailable = "activitySourcesUnavailable",

@@ -211,6 +211,16 @@ import { DeleteLostReasonInteractor } from "@/features/lost-reasons/delete/delet
 // Web form interactors
 import { IngestWebFormSubmissionInteractor } from "@/features/webform/ingest/ingest-web-form-submission.interactor";
 import { ProcessWebFormSubmissionInteractor } from "@/features/webform/process/process-web-form-submission.interactor";
+import { PrismaAutomationRepo } from "@/features/automation/prisma-automation.repository";
+import { PrismaAutomationConditionMatcher } from "@/features/automation/prisma-automation-condition-matcher";
+import { PrismaAutomationRecordWriter } from "@/features/automation/run/prisma-automation-record-writer";
+import { CrmAutomationActionExecutor } from "@/features/automation/run/crm-automation-action-executor";
+import { CrmAutomationEmailSender } from "@/features/automation/run/crm-automation-email-sender";
+import { PrepareAutomationRunInteractor } from "@/features/automation/run/prepare-automation-run.interactor";
+import { ExecuteAutomationStepInteractor } from "@/features/automation/run/execute-automation-step.interactor";
+import { GetAutomationsInteractor } from "@/features/automation/get/get-automations.interactor";
+import { UpsertAutomationInteractor } from "@/features/automation/upsert/upsert-automation.interactor";
+import { DeleteAutomationInteractor } from "@/features/automation/delete/delete-automation.interactor";
 import { PublishLeadCreatedInteractor } from "@/features/webform/process/publish-lead-created.interactor";
 import { CreateWebFormSourceInteractor } from "@/features/webform/upsert/create-web-form-source.interactor";
 import { RotateWebFormSecretInteractor } from "@/features/webform/upsert/rotate-web-form-secret.interactor";
@@ -592,8 +602,41 @@ export const getEventService = () => {
     getBackgroundTaskService(),
     getRoutineRepo(),
     getRoutineEventAccess(),
+    getAutomationRepo(),
+    getAutomationConditionMatcher(),
   );
 };
+
+export const getAutomationRepo = () => new PrismaAutomationRepo();
+
+export const getAutomationConditionMatcher = () => new PrismaAutomationConditionMatcher();
+
+export const getAutomationRecordWriter = () => new PrismaAutomationRecordWriter();
+
+export const getAutomationEmailSender = () => new CrmAutomationEmailSender(getEmailService());
+
+export const getAutomationActionExecutor = () =>
+  new CrmAutomationActionExecutor(
+    getAutomationRecordWriter(),
+    getCreateTaskInteractor(),
+    getCreateDealInteractor(),
+    getCreateLeadInteractor(),
+    getUpdateDealInteractor(),
+    getAutomationEmailSender(),
+  );
+
+export const getPrepareAutomationRunInteractor = () => new PrepareAutomationRunInteractor(getAutomationRepo());
+
+export const getExecuteAutomationStepInteractor = () =>
+  new ExecuteAutomationStepInteractor(getAutomationRepo(), getAutomationActionExecutor());
+
+export const getGetAutomationsInteractor = () => new GetAutomationsInteractor(getAutomationRepo());
+
+export const getUpsertAutomationInteractor = () =>
+  new UpsertAutomationInteractor(getAutomationRepo(), getEventService());
+
+export const getDeleteAutomationInteractor = () =>
+  new DeleteAutomationInteractor(getAutomationRepo(), getEventService());
 export const getWidgetDataFetcher = () => new WidgetDataFetcher();
 export const getWidgetGroupingService = () => new WidgetGroupingService();
 export const getSubscriptionService = () => new SubscriptionService(getCompanyRepo());

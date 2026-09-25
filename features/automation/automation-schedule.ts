@@ -60,8 +60,8 @@ export function scheduleIntervalMinutes(minutes: readonly number[], hours: reado
 
   let smallest = Number.POSITIVE_INFINITY;
   for (let index = 0; index < firings.length; index += 1) {
-    const current = firings[index] as number;
-    const previous = index === 0 ? (firings[firings.length - 1] as number) - 24 * 60 : (firings[index - 1] as number);
+    const current = firings[index];
+    const previous = index === 0 ? firings[firings.length - 1] - 24 * 60 : firings[index - 1];
     smallest = Math.min(smallest, current - previous);
   }
 

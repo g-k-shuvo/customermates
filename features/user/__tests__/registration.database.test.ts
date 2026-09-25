@@ -10,6 +10,17 @@ import { createTranslator } from "next-intl";
 
 import messages from "@/i18n/locales/en.json";
 
+function automationTriggerRepoStub() {
+  return {
+    findEventAutomationsUnscoped: async () => [],
+    admitAutomationRunsUnscoped: async () => [],
+  } as never;
+}
+
+function automationConditionMatcherStub() {
+  return { matchesUnscoped: async () => true } as never;
+}
+
 function routineTriggerRepoStub() {
   return {
     findEventRoutinesUnscoped: () => Promise.resolve([]),
@@ -124,6 +135,8 @@ function newEventService() {
     { dispatch: vi.fn().mockResolvedValue(undefined) } as never,
     routineTriggerRepoStub(),
     routineEventAccessStub(),
+    automationTriggerRepoStub(),
+    automationConditionMatcherStub(),
   );
 }
 
@@ -345,6 +358,8 @@ describeDatabase("registration against a real database", () => {
       { dispatch: vi.fn().mockResolvedValue(undefined) } as never,
       routineTriggerRepoStub(),
       routineEventAccessStub(),
+      automationTriggerRepoStub(),
+      automationConditionMatcherStub(),
     );
     const interactor = new RegisterUserInteractor(
       authService as never,
@@ -502,6 +517,8 @@ describeDatabase("registration against a real database", () => {
       { dispatch: vi.fn().mockResolvedValue(undefined) } as never,
       routineTriggerRepoStub(),
       routineEventAccessStub(),
+      automationTriggerRepoStub(),
+      automationConditionMatcherStub(),
     );
     const interactor = new RegisterUserInteractor(
       {
@@ -1114,6 +1131,8 @@ describeDatabase("registration against a real database", () => {
       { dispatch: vi.fn().mockResolvedValue(undefined) } as never,
       routineTriggerRepoStub(),
       routineEventAccessStub(),
+      automationTriggerRepoStub(),
+      automationConditionMatcherStub(),
     );
     const versions = currentLegalDocumentVersions();
     await runWithoutTenant(async () => {
@@ -1220,6 +1239,8 @@ describeDatabase("registration against a real database", () => {
       { dispatch: vi.fn().mockResolvedValue(undefined) } as never,
       routineTriggerRepoStub(),
       routineEventAccessStub(),
+      automationTriggerRepoStub(),
+      automationConditionMatcherStub(),
     );
     const interactor = new RegisterUserInteractor(
       {

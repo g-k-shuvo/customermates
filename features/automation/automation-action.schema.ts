@@ -2,7 +2,7 @@ import type { Data } from "@/core/validation/validation.utils";
 
 import { z } from "zod";
 
-import { AutomationActionKind, EntityType, TaskType } from "@/generated/prisma";
+import { ActivityKind, AutomationActionKind, EntityType } from "@/generated/prisma";
 import { zx } from "@/core/validation/validation.utils";
 
 export const AUTOMATION_DELAY_MAX_SECONDS = 60 * 60 * 24 * 30;
@@ -24,7 +24,7 @@ export const AddLabelConfigSchema = z.object({
 
 export const CreateTaskConfigSchema = z.object({
   name: z.string().trim().min(1).max(200),
-  type: z.enum(TaskType).default(TaskType.custom),
+  activityKind: z.enum(ActivityKind).nullable().default(null),
   dueInDays: z.number().int().min(0).max(365).nullable().default(null),
   assigneeUserId: z.uuid().nullable().default(null),
   linkToTriggerRecord: z.boolean().default(true),

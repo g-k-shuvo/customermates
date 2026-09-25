@@ -21,6 +21,17 @@ import { PrismaRoutineFilterMatcher } from "../routine-filter-matcher";
 const databaseUrl = getLocalDatabaseTestUrl();
 const describeDatabase = databaseUrl ? describe : describe.skip;
 
+function automationTriggerRepoStub() {
+  return {
+    findEventAutomationsUnscoped: async () => [],
+    admitAutomationRunsUnscoped: async () => [],
+  } as never;
+}
+
+function automationConditionMatcherStub() {
+  return { matchesUnscoped: async () => true } as never;
+}
+
 describeDatabase("routine event access against PostgreSQL", () => {
   const client = new Client({ connectionString: databaseUrl ?? undefined });
   const companyId = randomUUID();
@@ -543,6 +554,8 @@ describeDatabase("routine event access against PostgreSQL", () => {
       background as never,
       routineRepo,
       access,
+      automationTriggerRepoStub(),
+      automationConditionMatcherStub(),
     );
     const publisher = createMockUser({ id: readAllOwnerId, companyId });
 
