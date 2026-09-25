@@ -84,7 +84,7 @@ async function runAction(
   workspace: { companyId: string; userId: string; roleId: string },
   kind: string,
   config: unknown,
-  context: { entityType: EntityTypeValue | null; entityId: string | null },
+  context: { entityType: EntityTypeValue | null; entityId: string | null; triggerEvent?: string },
 ) {
   return runWithTenant(tenantUser(workspace), () =>
     executor().execute({
@@ -98,7 +98,7 @@ async function runAction(
           companyId: workspace.companyId,
           entityType: context.entityType,
           entityId: context.entityId,
-          triggerEvent: "deal.created",
+          triggerEvent: context.triggerEvent ?? "deal.created",
           conditions: null,
           steps: [],
         },
@@ -265,6 +265,37 @@ describeDatabase("every action an automation can run", () => {
       prisma.taskDeal.findMany({ where: { dealId: deal.id }, select: { task: { select: { name: true } } } }),
     );
     expect(links.map((link) => link.task.name)).toEqual(["Follow up"]);
+  });
+
+  it("createTask leaves the task unlinked when the trigger record was deleted", async () => {
+    const workspace = await makeWorkspace();
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.createTask,
+      {
+        name: "Org removed follow-up",
+        activityKind: null,
+        dueInDays: null,
+        assigneeUserId: null,
+        linkToTriggerRecord: true,
+      },
+      {
+        entityType: EntityType.organization,
+        entityId: "00000000-0000-4000-8000-0000000000ff",
+        triggerEvent: "organization.deleted",
+      },
+    );
+
+    expect(outcome.ok).toBe(true);
+    const tasks = await runWithoutTenant(() =>
+      prisma.task.findMany({
+        where: { companyId: workspace.companyId, name: "Org removed follow-up" },
+        select: { organizations: true },
+      }),
+    );
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0]?.organizations).toEqual([]);
   });
 
   it("createDeal creates a standalone deal", async () => {

@@ -10,7 +10,9 @@ import type { UpdateDealInteractor } from "@/features/deals/upsert/update-deal.i
 import type { AutomationRecordWriter } from "./automation-record-writer";
 import type { AutomationEmailSender } from "./automation-email-sender";
 
-import { AutomationActionKind, EntityType, LeadStatus } from "@/generated/prisma";
+import { AutomationActionKind, AutomationTriggerKind, EntityType, LeadStatus } from "@/generated/prisma";
+
+import { automationTriggerForEvent } from "../automation-trigger-map";
 
 import {
   AddLabelConfigSchema,
@@ -35,6 +37,12 @@ function invalid(): AutomationActionOutcome {
 
 function noRecord(): AutomationActionOutcome {
   return { ok: false, error: NO_RECORD };
+}
+
+function triggerRecordSurvives(context: AutomationActionContext): boolean {
+  const trigger = context.run.triggerEvent ? automationTriggerForEvent(context.run.triggerEvent) : undefined;
+
+  return trigger?.triggerKind !== AutomationTriggerKind.recordDeleted;
 }
 
 export class CrmAutomationActionExecutor implements AutomationActionExecutor {
@@ -142,7 +150,7 @@ export class CrmAutomationActionExecutor implements AutomationActionExecutor {
     const dueAt =
       parsed.data.dueInDays === null ? null : new Date(Date.now() + parsed.data.dueInDays * 24 * 60 * 60 * 1000);
     const links =
-      parsed.data.linkToTriggerRecord && context.entityId && context.entityType
+      parsed.data.linkToTriggerRecord && triggerRecordSurvives(context) && context.entityId && context.entityType
         ? this.records.taskLinksFor(context.entityType, context.entityId)
         : {};
 
