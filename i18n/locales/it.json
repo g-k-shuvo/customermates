@@ -2629,6 +2629,8 @@
       "howRecordsConnect": "Come si collegano i record",
       "include": "includono",
       "involvedIn": "sono coinvolti in",
+      "leadDealSummary": "Le voci «{leads}» vengono convertite in voci «{deals}».",
+      "leadScope": "Le voci «{leads}» vengono convertite in voci «{deals}».",
       "linkedTo": "sono collegati a",
       "organizationDealSummary": "Le voci «{organizations}» sono collegate alle voci «{deals}».",
       "selectLabel": "Nome per {entity}",

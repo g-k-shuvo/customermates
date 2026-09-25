@@ -81,6 +81,10 @@ export function TerminologyRelationshipDiagram({ selections, onPreset, readOnly 
   const taskScopeLabel = t("EntityTerminology.relationships.taskScope", {
     tasks: entityLabel(EntityType.task),
   });
+  const leadScopeLabel = t("EntityTerminology.relationships.leadScope", {
+    leads: entityLabel(EntityType.lead),
+    deals: entityLabel(EntityType.deal),
+  });
 
   const node = (entityType: EntityType) => {
     const style = ENTITY_STYLE[entityType];
@@ -155,6 +159,13 @@ export function TerminologyRelationshipDiagram({ selections, onPreset, readOnly 
           {t("EntityTerminology.relationships.organizationDealSummary", {
             deals: entityLabel(EntityType.deal),
             organizations: entityLabel(EntityType.organization),
+          })}
+        </li>
+
+        <li className="rounded-md border bg-muted px-2.5 py-2" data-relationship="lead-deal">
+          {t("EntityTerminology.relationships.leadDealSummary", {
+            leads: entityLabel(EntityType.lead),
+            deals: entityLabel(EntityType.deal),
           })}
         </li>
 
@@ -276,6 +287,31 @@ export function TerminologyRelationshipDiagram({ selections, onPreset, readOnly 
       </p>
 
       <div className="flex flex-col gap-3 sm:gap-0">
+        <div aria-labelledby="terminology-lead-relationship-label" className="flex flex-col items-center" role="group">
+          <span className="sr-only" id="terminology-lead-relationship-label">
+            {leadScopeLabel}
+          </span>
+
+          <div data-lead-selector className="w-full">
+            {node(EntityType.lead)}
+          </div>
+
+          <div className="relative flex min-h-0 w-full flex-col items-center justify-center sm:min-h-14">
+            <span aria-hidden="true" className="hidden w-px flex-1 bg-border sm:block" />
+
+            <Badge
+              aria-hidden="true"
+              className="pointer-events-none hidden max-w-[calc(100%-2rem)] text-center text-[10px] leading-relaxed sm:inline-flex"
+              data-relationship-label="lead-deal"
+              variant="secondary"
+            >
+              {leadScopeLabel}
+            </Badge>
+
+            <span aria-hidden="true" className="hidden w-px flex-1 bg-border sm:block" />
+          </div>
+        </div>
+
         {relationshipMap()}
 
         <div aria-labelledby="terminology-task-relationship-label" className="flex flex-col items-center" role="group">

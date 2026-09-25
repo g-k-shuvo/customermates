@@ -2629,6 +2629,8 @@
       "howRecordsConnect": "Cómo se conectan los registros",
       "include": "incluyen",
       "involvedIn": "participan en",
+      "leadDealSummary": "Los elementos «{leads}» se convierten en elementos «{deals}».",
+      "leadScope": "Los elementos «{leads}» se convierten en elementos «{deals}».",
       "linkedTo": "están vinculados a",
       "organizationDealSummary": "Los elementos «{organizations}» están vinculados a los elementos «{deals}».",
       "selectLabel": "Nombre para {entity}",

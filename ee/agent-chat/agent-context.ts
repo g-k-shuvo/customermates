@@ -13,6 +13,7 @@ export const AGENT_CONTEXT_RECORD_ENTITIES = [
   "deal",
   "service",
   "task",
+  "lead",
 ] as const satisfies readonly EntityType[];
 
 const AgentDataViewCreateContextReferenceSchema = z

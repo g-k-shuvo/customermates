@@ -59,7 +59,7 @@ const selections = {
 };
 
 describe("TerminologyRelationshipDiagram", () => {
-  it("renders five editable selectors and the exact four Task options", () => {
+  it("renders six editable selectors and the exact four Task options", () => {
     const html = renderToStaticMarkup(
       createElement(TerminologyRelationshipDiagram, {
         selections,
@@ -79,7 +79,7 @@ describe("TerminologyRelationshipDiagram", () => {
       "followUp",
     ]);
     expect(taskSelect).toContain("Follow-ups");
-    expect(html.match(/data-selected=/g)).toHaveLength(5);
+    expect(html.match(/data-selected=/g)).toHaveLength(6);
     expect(html).toContain("Follow-ups can be linked to any record in this model.");
     expect(html).toContain("Your data model: choose the names your team uses; relationships stay the same.");
     expect(html).not.toContain("—");
@@ -99,7 +99,7 @@ describe("TerminologyRelationshipDiagram", () => {
     expect(html).not.toContain('role="tablist"');
   });
 
-  it("renders all four record relationships, including Organization to Deal", () => {
+  it("renders all five record relationships, including Organization to Deal and Lead to Deal", () => {
     const html = renderToStaticMarkup(
       createElement(TerminologyRelationshipDiagram, {
         selections,
@@ -123,16 +123,16 @@ describe("TerminologyRelationshipDiagram", () => {
     ] as const)
       expect(html).toMatch(new RegExp(`data-relationship-connector="${connector}"[^>]*x1="${x1}"[^>]*x2="${x2}"`));
 
-    expect(html.match(/data-relationship-label=/g)).toHaveLength(5);
-    expect(html.match(/data-slot="badge"/g)).toHaveLength(5);
-    expect(html.match(/data-variant="secondary"/g)).toHaveLength(5);
+    expect(html.match(/data-relationship-label=/g)).toHaveLength(6);
+    expect(html.match(/data-slot="badge"/g)).toHaveLength(6);
+    expect(html.match(/data-variant="secondary"/g)).toHaveLength(6);
     expect(html).toMatch(
       /class="[^"]*top-\[13%\][^"]*-translate-1\/2[^"]*"[^>]*data-relationship-label="contact-organization"/,
     );
     expect(html).toMatch(
       /class="[^"]*top-\[87%\][^"]*-translate-1\/2[^"]*"[^>]*data-relationship-label="deal-service"/,
     );
-    expect(html.match(/<li\s[^>]+data-relationship=/g)).toHaveLength(4);
+    expect(html.match(/<li\s[^>]+data-relationship=/g)).toHaveLength(5);
     expect(html).toContain("Companies are linked to Jobs.");
     expect(html).not.toContain("border-l-");
   });

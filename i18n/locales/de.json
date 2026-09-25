@@ -2629,6 +2629,8 @@
       "howRecordsConnect": "So sind Datensätze verknüpft",
       "include": "enthalten",
       "involvedIn": "sind beteiligt an",
+      "leadDealSummary": "{leads} werden in {deals} umgewandelt.",
+      "leadScope": "{leads} werden in {deals} umgewandelt.",
       "linkedTo": "sind verknüpft mit",
       "organizationDealSummary": "{organizations} sind mit Datensätzen vom Typ „{deals}“ verknüpft.",
       "selectLabel": "Bezeichnung für {entity}",

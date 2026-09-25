@@ -795,6 +795,17 @@ export class PrismaContactRepo
       });
     }
 
+    if (entityType === EntityType.lead) {
+      return linkedContactIds({
+        leads: {
+          some: {
+            ...(ids ? { id: { in: ids } } : {}),
+            ...this.accessWhere("lead"),
+          },
+        },
+      });
+    }
+
     if (entityType === EntityType.task) {
       return linkedContactIds({
         tasks: {

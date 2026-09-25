@@ -2629,6 +2629,8 @@
       "howRecordsConnect": "How records connect",
       "include": "include",
       "involvedIn": "are involved in",
+      "leadDealSummary": "{leads} convert into {deals}.",
+      "leadScope": "{leads} convert into {deals}.",
       "linkedTo": "are linked to",
       "organizationDealSummary": "{organizations} are linked to {deals}.",
       "selectLabel": "Name for {entity}",
