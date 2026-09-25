@@ -218,6 +218,7 @@ import { CrmAutomationActionExecutor } from "@/features/automation/run/crm-autom
 import { CrmAutomationEmailSender } from "@/features/automation/run/crm-automation-email-sender";
 import { PrepareAutomationRunInteractor } from "@/features/automation/run/prepare-automation-run.interactor";
 import { ExecuteAutomationStepInteractor } from "@/features/automation/run/execute-automation-step.interactor";
+import { SweepDueAutomationsInteractor } from "@/features/automation/run/sweep-due-automations.interactor";
 import { GetAutomationsInteractor } from "@/features/automation/get/get-automations.interactor";
 import { UpsertAutomationInteractor } from "@/features/automation/upsert/upsert-automation.interactor";
 import { DeleteAutomationInteractor } from "@/features/automation/delete/delete-automation.interactor";
@@ -629,6 +630,9 @@ export const getPrepareAutomationRunInteractor = () => new PrepareAutomationRunI
 
 export const getExecuteAutomationStepInteractor = () =>
   new ExecuteAutomationStepInteractor(getAutomationRepo(), getAutomationActionExecutor());
+
+export const getSweepDueAutomationsInteractor = () =>
+  new SweepDueAutomationsInteractor(getAutomationRepo(), getBackgroundTaskService());
 
 export const getGetAutomationsInteractor = () => new GetAutomationsInteractor(getAutomationRepo());
 

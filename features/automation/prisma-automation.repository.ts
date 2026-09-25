@@ -4,6 +4,7 @@ import type { AutomationRunPlan, ExecuteAutomationRunRepo } from "./run/execute-
 import type { UpsertAutomationData, UpsertAutomationRepo } from "./upsert/upsert-automation.interactor";
 import type { DeleteAutomationRepo } from "./delete/delete-automation.interactor";
 import type { GetAutomationsRepo } from "./get/get-automations.interactor";
+import type { DueAutomation, SweepDueAutomationsRepo } from "./run/sweep-due-automations.interactor";
 import type { AutomationDto } from "./automation.schema";
 import type { Filter } from "@/core/base/base-get.schema";
 
@@ -13,6 +14,7 @@ import { AutomationRunStatus, AutomationTriggerKind, Status } from "@/generated/
 import { BaseRepository } from "@/core/base/base-repository";
 import { Transaction } from "@/core/decorators/transaction.decorator";
 import { BypassTenantGuard } from "@/core/decorators/bypass-tenant.decorator";
+import { nextAutomationRunAt } from "./automation-next-run";
 
 const automationSelect = {
   id: true,
@@ -45,7 +47,8 @@ export class PrismaAutomationRepo
     ExecuteAutomationRunRepo,
     UpsertAutomationRepo,
     DeleteAutomationRepo,
-    GetAutomationsRepo
+    GetAutomationsRepo,
+    SweepDueAutomationsRepo
 {
   private toDto(row: AutomationRow): AutomationDto {
     return {
@@ -142,6 +145,15 @@ export class PrismaAutomationRepo
           kind: step.kind,
           config: step.config as unknown as Prisma.InputJsonValue,
         })),
+      });
+    }
+
+    const saved = await this.getAutomationByIdOrThrow(automationId);
+
+    if (saved.triggerKind === AutomationTriggerKind.schedule && saved.schedule && saved.enabled) {
+      await this.prisma.automation.updateMany({
+        where: { id: automationId, ...this.accessWhere("automation") },
+        data: { nextRunAt: nextAutomationRunAt(saved.schedule, saved.scheduleTimeZone, new Date()) },
       });
     }
 
@@ -298,6 +310,64 @@ export class PrismaAutomationRepo
       where: { id: run.automationId, companyId: run.companyId },
       data: { lastRunAt: new Date() },
     });
+  }
+
+  @BypassTenantGuard
+  async findDueAutomationsUnscoped(now: Date, limit: number): Promise<DueAutomation[]> {
+    const rows = await this.prisma.automation.findMany({
+      where: {
+        enabled: true,
+        triggerKind: AutomationTriggerKind.schedule,
+        schedule: { not: null },
+        nextRunAt: { lte: now },
+      },
+      select: { id: true, companyId: true, schedule: true, scheduleTimeZone: true },
+      orderBy: { nextRunAt: "asc" },
+      take: limit,
+    });
+
+    return rows.flatMap((row) => (row.schedule ? [{ ...row, schedule: row.schedule }] : []));
+  }
+
+  @BypassTenantGuard
+  @Transaction
+  async claimScheduledAutomationUnscoped(args: {
+    automationId: string;
+    companyId: string;
+    nextRunAt: Date | null;
+  }): Promise<string | null> {
+    const { count } = await this.prisma.automation.updateMany({
+      where: { id: args.automationId, companyId: args.companyId, nextRunAt: { lte: new Date() } },
+      data: { nextRunAt: args.nextRunAt },
+    });
+    if (count !== 1) return null;
+
+    const steps = await this.prisma.automationStep.findMany({
+      where: { automationId: args.automationId, companyId: args.companyId },
+      select: { id: true, position: true },
+      orderBy: { position: "asc" },
+    });
+    if (steps.length === 0) return null;
+
+    const run = await this.prisma.automationRun.create({
+      data: {
+        companyId: args.companyId,
+        automationId: args.automationId,
+        status: AutomationRunStatus.queued,
+        triggerEvent: "schedule",
+        steps: {
+          create: steps.map((step) => ({
+            companyId: args.companyId,
+            stepId: step.id,
+            position: step.position,
+            status: AutomationRunStatus.queued,
+          })),
+        },
+      },
+      select: { id: true },
+    });
+
+    return run.id;
   }
 
   @BypassTenantGuard
