@@ -3,6 +3,7 @@
 import type { AutomationStepData } from "@/features/automation/automation-action.schema";
 import type { EntityType } from "@/generated/prisma";
 
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { AutomationActionKind } from "@/generated/prisma";
@@ -77,11 +78,20 @@ function textFieldsFor(kind: AutomationActionKind): string[] {
 export function AutomationStepFields({ step, entityType, onChange }: Props) {
   const t = useTranslations();
   const config = (step.config ?? {}) as Record<string, unknown>;
+  const listField = listFieldFor(step.kind);
+  const storedList = Array.isArray(config[listField ?? ""]) ? (config[listField ?? ""] as string[]) : [];
+  const [listDraft, setListDraft] = useState(storedList.join(", "));
+
+  useEffect(() => {
+    setListDraft(storedList.join(", "));
+  }, [step.kind]);
 
   const setKind = (kind: AutomationActionKind) =>
     onChange({ kind, config: DEFAULT_CONFIG[kind] } as AutomationStepData);
 
-  const setList = (field: string, value: string) =>
+  const setList = (field: string, value: string) => {
+    setListDraft(value);
+
     onChange({
       kind: step.kind,
       config: {
@@ -92,6 +102,7 @@ export function AutomationStepFields({ step, entityType, onChange }: Props) {
           .filter(Boolean),
       },
     } as AutomationStepData);
+  };
 
   const setField = (field: string, value: string) =>
     onChange({
@@ -121,18 +132,15 @@ export function AutomationStepFields({ step, entityType, onChange }: Props) {
         </Select>
       </div>
 
-      {listFieldFor(step.kind) ? (
+      {listField ? (
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="automation-step-labels">{t("Automations.actionFields.labels")}</Label>
 
           <Input
             id="automation-step-labels"
             placeholder={t("Automations.actionFields.labelsPlaceholder")}
-            value={(Array.isArray(config[listFieldFor(step.kind) as string])
-              ? (config[listFieldFor(step.kind) as string] as string[])
-              : []
-            ).join(", ")}
-            onChange={(event) => setList(listFieldFor(step.kind) as string, event.target.value)}
+            value={listDraft}
+            onChange={(event) => setList(listField, event.target.value)}
           />
         </div>
       ) : null}
