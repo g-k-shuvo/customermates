@@ -40,6 +40,9 @@ export enum DomainEvent {
   ROLE_DELETED = "role.deleted",
   WEBHOOK_CREATED = "webhook.created",
   WEBHOOK_UPDATED = "webhook.updated",
+  AUTOMATION_CREATED = "automation.created",
+  AUTOMATION_UPDATED = "automation.updated",
+  AUTOMATION_DELETED = "automation.deleted",
   WEBHOOK_DELETED = "webhook.deleted",
   CUSTOM_COLUMN_CREATED = "custom_column.created",
   CUSTOM_COLUMN_UPDATED = "custom_column.updated",
@@ -264,6 +267,24 @@ export type DomainEventMap = {
     companyId: string;
     entityId: string;
     payload: WebhookEventPayload;
+  };
+  [DomainEvent.AUTOMATION_CREATED]: {
+    userId: string;
+    companyId: string;
+    entityId: string;
+    payload: { id: string; name: string; enabled: boolean };
+  };
+  [DomainEvent.AUTOMATION_UPDATED]: {
+    userId: string;
+    companyId: string;
+    entityId: string;
+    payload: { id: string; name: string; enabled: boolean };
+  };
+  [DomainEvent.AUTOMATION_DELETED]: {
+    userId: string;
+    companyId: string;
+    entityId: string;
+    payload: { id: string; name: string };
   };
   [DomainEvent.WEBHOOK_UPDATED]: {
     userId: string;

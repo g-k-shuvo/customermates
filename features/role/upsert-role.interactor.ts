@@ -70,6 +70,10 @@ export const UpsertRoleSchema = z.object({
       canManage: z.enum(["yes", "no"]),
       readAccess: z.enum(["none", "own", "all"]),
     }),
+    automations: z.object({
+      canManage: z.enum(["yes", "no"]),
+      readAccess: z.enum(["none", "own", "all"]),
+    }),
   }),
 });
 export type UpsertRoleData = Data<typeof UpsertRoleSchema>;

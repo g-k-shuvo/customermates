@@ -3668,6 +3668,7 @@
     "resources": {
       "api": "API y webhooks",
       "auditLog": "Registro de auditoría",
+      "automations": "Automatizaciones",
       "company": "Empresa",
       "contacts": "Contactos",
       "deals": "Oportunidades",

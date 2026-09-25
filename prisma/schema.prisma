@@ -197,6 +197,7 @@ model User {
   agentConversations              AgentConversation[]
   agentRunLeases                  AgentRunLease[]
   ownedRoutines                   Routine[]
+  createdAutomations              Automation[]
   agentCreditAdjustments          AgentCreditAdjustment[]
   adAttributions                  AdAttribution[]
   dealStageHistories              DealStageHistory[]
@@ -251,6 +252,10 @@ model Company {
   dataViews                   DataView[]
   webhooks                    Webhook[]
   webhookDeliveries           WebhookDelivery[]
+  automations                 Automation[]
+  automationSteps             AutomationStep[]
+  automationRuns              AutomationRun[]
+  automationRunSteps          AutomationRunStep[]
   connectedAccounts           ConnectedAccount[]
   mailboxCredentials          MailboxCredential[]
   messagingThreads            MessagingThread[]
@@ -294,26 +299,26 @@ model EntityTerminology {
 }
 
 model P13n {
-  id                 String   @id @default(uuid())
-  userId             String
-  companyId          String
-  p13nId             String
-  filters            Json?
-  searchTerm         String?
-  sortDescriptor     Json?
-  pagination         Json?
-  columnOrder        String[]
-  columnWidths       Json?
-  hiddenColumns      String[]
-  viewMode           String?  @default("table")
-  groupingColumnId   String?
-  grouping           Json?
-  detailOptions      Json?
-  activeViewKey      String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  company            Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id               String   @id @default(uuid())
+  userId           String
+  companyId        String
+  p13nId           String
+  filters          Json?
+  searchTerm       String?
+  sortDescriptor   Json?
+  pagination       Json?
+  columnOrder      String[]
+  columnWidths     Json?
+  hiddenColumns    String[]
+  viewMode         String?  @default("table")
+  groupingColumnId String?
+  grouping         Json?
+  detailOptions    Json?
+  activeViewKey    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company          Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@unique([companyId, userId, p13nId])
   @@index([companyId])
@@ -1013,6 +1018,7 @@ enum Resource {
   auditLog
   inboxMessages
   routines
+  automations
 }
 
 enum MessagingThreadState {
@@ -1297,29 +1303,29 @@ enum StageKind {
 }
 
 model Lead {
-  id              String              @id @default(uuid())
-  companyId       String
-  title           String
-  status          LeadStatus          @default(new)
-  sourceOrigin    String              @default("manual")
-  sourceId        String?
-  contactId       String?
-  organizationId  String?
-  ownerUserId     String?
-  labels          String[]            @default([])
-  value           Float?
-  notes           Json?
-  convertedDealId String?
-  convertedAt     DateTime?
-  archivedAt      DateTime?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  company         Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  source          WebFormSource?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
-  contact         Contact?            @relation(fields: [contactId], references: [id], onDelete: SetNull)
-  organization    Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
-  owner           User?               @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
-  submissions     WebFormSubmission[]
+  id                String              @id @default(uuid())
+  companyId         String
+  title             String
+  status            LeadStatus          @default(new)
+  sourceOrigin      String              @default("manual")
+  sourceId          String?
+  contactId         String?
+  organizationId    String?
+  ownerUserId       String?
+  labels            String[]            @default([])
+  value             Float?
+  notes             Json?
+  convertedDealId   String?
+  convertedAt       DateTime?
+  archivedAt        DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  company           Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  source            WebFormSource?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  contact           Contact?            @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  organization      Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  owner             User?               @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  submissions       WebFormSubmission[]
   customFieldValues CustomFieldValue[]
 
   @@index([companyId])
@@ -2207,28 +2213,28 @@ enum RoutineRunStatus {
 }
 
 model Routine {
-  id                   String               @id @default(uuid())
-  companyId            String
-  ownerUserId          String?
-  name                 String
-  prompt               String
-  enabled              Boolean              @default(true)
-  triggerKind          RoutineTriggerKind
-  cronExpression       String?
-  timezone             String?
-  triggerEvents        String[]
-  changedFields        String[]
-  triggerFilters       Json                 @default("[]")
-  debounceSeconds      Int                  @default(300)
-  nextRunAt            DateTime?
-  lastRunAt            DateTime?
-  lastRunStatus        RoutineRunStatus?
-  disabledReason       String?
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
-  company              Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  owner                User?                @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
-  runs                 RoutineRun[]
+  id              String             @id @default(uuid())
+  companyId       String
+  ownerUserId     String?
+  name            String
+  prompt          String
+  enabled         Boolean            @default(true)
+  triggerKind     RoutineTriggerKind
+  cronExpression  String?
+  timezone        String?
+  triggerEvents   String[]
+  changedFields   String[]
+  triggerFilters  Json               @default("[]")
+  debounceSeconds Int                @default(300)
+  nextRunAt       DateTime?
+  lastRunAt       DateTime?
+  lastRunStatus   RoutineRunStatus?
+  disabledReason  String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  company         Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  owner           User?              @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  runs            RoutineRun[]
 
   @@index([companyId])
   @@index([companyId, enabled])
@@ -2377,4 +2383,123 @@ model DealStageHistory {
   @@index([companyId, enteredAt])
   @@index([dealId, enteredAt])
   @@index([toStageId])
+}
+
+enum AutomationTriggerKind {
+  recordCreated
+  recordUpdated
+  recordDeleted
+  schedule
+}
+
+enum AutomationActionKind {
+  updateField
+  assignOwner
+  addLabel
+  createTask
+  createNote
+  createDeal
+  createLead
+  moveStage
+  sendEmail
+  callWebhook
+  delay
+}
+
+enum AutomationRunStatus {
+  queued
+  running
+  succeeded
+  failed
+  skipped
+  cancelled
+}
+
+model Automation {
+  id               String                @id @default(uuid())
+  companyId        String
+  name             String
+  description      String?
+  enabled          Boolean               @default(false)
+  entityType       EntityType?
+  triggerKind      AutomationTriggerKind
+  changedFields    String[]              @default([])
+  conditions       Json?
+  schedule         String?
+  scheduleTimeZone String?
+  nextRunAt        DateTime?
+  lastRunAt        DateTime?
+  createdByUserId  String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  company          Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdBy        User?                 @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+  steps            AutomationStep[]
+  runs             AutomationRun[]
+
+  @@index([companyId])
+  @@index([companyId, enabled, triggerKind, entityType])
+  @@index([companyId, nextRunAt])
+}
+
+model AutomationStep {
+  id           String               @id @default(uuid())
+  companyId    String
+  automationId String
+  position     Int
+  kind         AutomationActionKind
+  config       Json
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  company      Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  automation   Automation           @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  runSteps     AutomationRunStep[]
+
+  @@unique([automationId, position])
+  @@index([companyId])
+  @@index([automationId, position])
+}
+
+model AutomationRun {
+  id             String              @id @default(uuid())
+  companyId      String
+  automationId   String
+  status         AutomationRunStatus @default(queued)
+  entityType     EntityType?
+  entityId       String?
+  triggerEvent   String?
+  triggerPayload Json?
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  error          String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  company        Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  automation     Automation          @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  steps          AutomationRunStep[]
+
+  @@index([companyId])
+  @@index([companyId, createdAt])
+  @@index([automationId, createdAt])
+  @@index([companyId, status])
+}
+
+model AutomationRunStep {
+  id         String              @id @default(uuid())
+  companyId  String
+  runId      String
+  stepId     String?
+  position   Int
+  status     AutomationRunStatus @default(queued)
+  output     Json?
+  error      String?
+  startedAt  DateTime?
+  finishedAt DateTime?
+  createdAt  DateTime            @default(now())
+  company    Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  run        AutomationRun       @relation(fields: [runId], references: [id], onDelete: Cascade)
+  step       AutomationStep?     @relation(fields: [stepId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([runId, position])
 }
