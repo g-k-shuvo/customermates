@@ -179,7 +179,7 @@ function writeSites(): WriteSite[] {
 
   for (const file of sourceFiles()) {
     const text = readFileSync(file, "utf8");
-    const relativePath = relative(REPO_ROOT, file);
+    const relativePath = relative(REPO_ROOT, file).replaceAll("\\", "/");
     const strict = STRICT_TENANT_WRITE_FILES.has(relativePath);
     const operations = strict ? STRICT_WRITE_OPERATIONS : WRITE_OPERATIONS;
     if (!operations.values().some((operation) => text.includes(`.${operation}(`))) continue;
@@ -197,11 +197,10 @@ function writeSites(): WriteSite[] {
         if (operations.has(operation) && PRISMA_TARGET.test(target) && !GUARD_EXEMPT_MODELS.has(model)) {
           const method = enclosingMethod(node);
           const methodName = method?.name.getText(source) ?? "";
-          const relativePath = relative(REPO_ROOT, file).replaceAll("\\", "/");
           const line = source.getLineAndCharacterOfPosition(node.getStart()).line + 1;
           const isBypassed = bypassed.has(methodName);
 
-          if (!bypassed.has(methodName))
+          if (strict || !isBypassed)
             sites.push({
               file: relativePath,
               line,
