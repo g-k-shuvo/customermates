@@ -5,6 +5,8 @@ import { Building2, CheckCircle2, Package, TrendingUp, UserPlus, Users } from "l
 
 export const RELATION_ENTITY_TYPES = ["contact", "organization", "deal", "service", "task"] as const;
 
+export const DRAWER_ENTITY_TYPES = ["contact", "organization", "deal", "service", "task", "lead"] as const;
+
 export type RelationEntityType = (typeof RELATION_ENTITY_TYPES)[number];
 
 export const RELATION_FILTER_FIELD: Record<RelationEntityType, string> = {

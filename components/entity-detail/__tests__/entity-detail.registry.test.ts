@@ -33,6 +33,7 @@ vi.mock("@/app/[locale]/(protected)/tasks/components/task-detail-summary", () =>
 }));
 
 import { ENTITY_DETAIL } from "../entity-detail.registry";
+import { DRAWER_ENTITY_TYPES } from "../entity-relations";
 
 const t = (key: string) => `translated:${key}`;
 
@@ -91,5 +92,11 @@ describe("entity detail personalization registry", () => {
     expect(contact?.defaultStarredFieldIds).not.toContain("organizationIds");
     expect(contact?.defaultStarredFieldIds).not.toContain("userIds");
     expect(contact?.availableFieldIds).toContain("identifiers");
+  });
+});
+
+describe("the entity types a drawer may open", () => {
+  it("covers every entity type the detail registry can render", () => {
+    expect([...DRAWER_ENTITY_TYPES].sort()).toEqual(Object.keys(ENTITY_DETAIL).sort());
   });
 });

@@ -2,7 +2,7 @@
 
 import type { EntityType } from "@/generated/prisma";
 
-import { ENTITY_URL_SEGMENT, RELATION_ENTITY_TYPES } from "../entity-relations";
+import { DRAWER_ENTITY_TYPES, ENTITY_URL_SEGMENT } from "../entity-relations";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 
@@ -47,7 +47,7 @@ export type EntityDrawerEntry = {
   id: string;
 };
 
-const VALID_ENTITY_TYPES: readonly EntityType[] = RELATION_ENTITY_TYPES;
+const VALID_ENTITY_TYPES: readonly EntityType[] = DRAWER_ENTITY_TYPES;
 
 export function parseOpenParam(raw: string | null): EntityDrawerEntry[] {
   if (!raw) return [];
