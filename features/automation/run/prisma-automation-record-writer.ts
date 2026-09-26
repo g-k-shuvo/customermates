@@ -2,7 +2,7 @@ import type { AutomationActionOutcome } from "./automation-action-executor";
 import type { AutomationRecordWriter, AutomationTaskLinks } from "./automation-record-writer";
 
 import type { Prisma } from "@/generated/prisma";
-import { EntityType } from "@/generated/prisma";
+import { EntityType, LeadStatus } from "@/generated/prisma";
 
 import { BaseRepository } from "@/core/base/base-repository";
 import { parseMarkdownToJSON, serializeJSONToMarkdown } from "@/components/editor/editor.utils";
@@ -26,6 +26,40 @@ const WRITABLE_SCALARS: Partial<Record<EntityType, readonly string[]>> = {
   [EntityType.lead]: ["title", "status", "value"],
   [EntityType.task]: ["name", "dueAt"],
 };
+
+type ScalarKind = "text" | "number" | "date" | "leadStatus";
+
+const SCALAR_KINDS: Record<string, ScalarKind> = {
+  "deal.probability": "number",
+  "deal.expectedCloseDate": "date",
+  "lead.value": "number",
+  "lead.status": "leadStatus",
+  "task.dueAt": "date",
+};
+
+function coerceScalar(kind: ScalarKind, value: unknown): { ok: true; value: unknown } | { ok: false } {
+  if (value === null) return { ok: true, value: null };
+
+  if (kind === "number") {
+    const parsed = typeof value === "number" ? value : Number(String(value).trim());
+
+    return Number.isFinite(parsed) ? { ok: true, value: parsed } : { ok: false };
+  }
+
+  if (kind === "date") {
+    const parsed = value instanceof Date ? value : new Date(String(value));
+
+    return Number.isNaN(parsed.getTime()) ? { ok: false } : { ok: true, value: parsed };
+  }
+
+  if (kind === "leadStatus") {
+    const candidate = String(value);
+
+    return candidate in LeadStatus ? { ok: true, value: candidate } : { ok: false };
+  }
+
+  return { ok: true, value: String(value) };
+}
 
 const JOIN_TABLE_BY_ENTITY: Partial<Record<EntityType, string>> = {
   [EntityType.contact]: "contactUser",
@@ -79,9 +113,12 @@ export class PrismaAutomationRecordWriter extends BaseRepository implements Auto
     const delegate = this.delegate(model);
     if (!delegate) return { ok: false, error: `${args.entityType} cannot be written` };
 
+    const coerced = coerceScalar(SCALAR_KINDS[`${args.entityType}.${args.field}`] ?? "text", args.value);
+    if (!coerced.ok) return { ok: false, error: `${args.field} cannot hold that value` };
+
     const { count } = await delegate.updateMany({
       where: { id: args.entityId, companyId: this.companyId },
-      data: { [args.field]: args.value },
+      data: { [args.field]: coerced.value },
     });
 
     return count === 1 ? { ok: true, output: { field: args.field } } : { ok: false, error: "the record was not found" };

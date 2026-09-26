@@ -11,6 +11,7 @@ import type {
 import { MessagingProvider } from "@/generated/prisma";
 
 import { BaseRepository } from "@/core/base/base-repository";
+import { parseMarkdownToJSON } from "@/components/editor/editor.utils";
 import { BypassTenantGuard } from "@/core/decorators/bypass-tenant.decorator";
 import { channelClass } from "@/ee/messaging/provider";
 import { WebFormFieldMappingSchema } from "../ingest/field-mapping";
@@ -122,7 +123,7 @@ export class PrismaProcessWebFormSubmissionRepo extends BaseRepository implement
         organizationId: args.organizationId,
         ownerUserId: args.ownerUserId,
         labels: args.labels,
-        notes: (args.message ? { message: args.message } : undefined) as Prisma.InputJsonValue | undefined,
+        notes: (args.message ? parseMarkdownToJSON(args.message) : undefined) as Prisma.InputJsonValue | undefined,
       },
       select: { id: true },
     });

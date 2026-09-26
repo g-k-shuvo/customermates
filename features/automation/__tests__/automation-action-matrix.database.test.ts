@@ -190,6 +190,42 @@ describeDatabase("every action an automation can run", () => {
     expect(links.map(({ userId }) => userId)).toEqual([workspace.userId]);
   });
 
+  it("updateField writes a numeric field given as text", async () => {
+    const workspace = await makeWorkspace();
+    const deal = await runWithoutTenant(() =>
+      prisma.deal.create({ data: { companyId: workspace.companyId, name: "Numeric" }, select: { id: true } }),
+    );
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.updateField,
+      { field: "probability", value: "50" },
+      { entityType: EntityType.deal, entityId: deal.id },
+    );
+
+    expect(outcome.ok).toBe(true);
+    const after = await runWithoutTenant(() => prisma.deal.findUnique({ where: { id: deal.id } }));
+    expect(after?.probability).toBe(50);
+  });
+
+  it("updateField refuses a numeric field given something that is not a number", async () => {
+    const workspace = await makeWorkspace();
+    const deal = await runWithoutTenant(() =>
+      prisma.deal.create({ data: { companyId: workspace.companyId, name: "Rejected" }, select: { id: true } }),
+    );
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.updateField,
+      { field: "probability", value: "quite likely" },
+      { entityType: EntityType.deal, entityId: deal.id },
+    );
+
+    expect(outcome.ok).toBe(false);
+    const after = await runWithoutTenant(() => prisma.deal.findUnique({ where: { id: deal.id } }));
+    expect(after?.probability).toBeNull();
+  });
+
   it("assignOwner keeps the assignees the deal already has", async () => {
     const workspace = await makeWorkspace();
     const { deal, existing } = await runWithoutTenant(async () => {

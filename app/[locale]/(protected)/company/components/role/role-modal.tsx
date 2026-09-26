@@ -181,7 +181,7 @@ export const RoleModal = observer(({ store }: Props) => {
 
               {renderResourcePermissions(Resource.services)}
 
-              {store.rootStore.appMode !== "self-hosted" && renderResourcePermissions(Resource.inboxMessages)}
+              {renderResourcePermissions(Resource.inboxMessages)}
 
               {store.rootStore.appMode !== "self-hosted" && renderResourcePermissions(Resource.routines)}
 
