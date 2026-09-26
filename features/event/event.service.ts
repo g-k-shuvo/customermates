@@ -14,7 +14,7 @@ import { UserAccessor } from "@/core/base/user-accessor";
 import { currentRoutineContext } from "@/core/decorators/routine-context";
 import { automationCausationExhausted } from "@/core/decorators/automation-context";
 import { automationTriggerForEvent, changedFieldsMatch } from "@/features/automation/automation-trigger-map";
-import { carriesChangedFields, changedFieldsOf, matchesChangedFields } from "@/ee/routines/routine-event-filter";
+import { carriesChangedFields, changedFieldsOf } from "@/features/event/changed-fields";
 import { WebhookEventSchema } from "@/features/webhook/webhook.schema";
 import { env } from "@/env";
 
@@ -153,9 +153,12 @@ export class EventService extends UserAccessor {
     if (subscribed.length === 0) return 0;
 
     const changed = changedFieldsOf(payload);
-    const fieldMatches = carriesChangedFields(payload)
-      ? subscribed.filter((automation) => changedFieldsMatch(automation.changedFields, changed))
-      : subscribed;
+    const carriesChanges = carriesChangedFields(payload);
+    const fieldMatches = subscribed.filter(
+      (automation) =>
+        automation.changedFields.length === 0 ||
+        (carriesChanges && changedFieldsMatch(automation.changedFields, changed)),
+    );
     if (fieldMatches.length === 0) return 0;
 
     const entityId = payload.entityId;
@@ -192,7 +195,7 @@ export class EventService extends UserAccessor {
 
     const changed = changedFieldsOf(payload);
     const changedFieldMatches = carriesChangedFields(payload)
-      ? subscribed.filter((routine) => matchesChangedFields(routine.changedFields, changed))
+      ? subscribed.filter((routine) => changedFieldsMatch(routine.changedFields, changed))
       : subscribed;
     const routines = (
       await Promise.all(
