@@ -20,6 +20,7 @@ const { createMockUser } = await import("@/tests/helpers/mock-user");
 const { AutomationActionKind, EntityType } = await import("@/generated/prisma");
 const { CrmAutomationActionExecutor } = await import("@/features/automation/run/crm-automation-action-executor");
 const { PrismaAutomationRecordWriter } = await import("@/features/automation/run/prisma-automation-record-writer");
+const { parseMarkdownToJSON, serializeJSONToMarkdown } = await import("@/components/editor/editor.utils");
 const di = await import("@/core/di");
 
 const describeDatabase = getLocalDatabaseTestUrl() ? describe : describe.skip;
@@ -189,6 +190,79 @@ describeDatabase("every action an automation can run", () => {
     expect(links.map(({ userId }) => userId)).toEqual([workspace.userId]);
   });
 
+  it("assignOwner keeps the assignees the deal already has", async () => {
+    const workspace = await makeWorkspace();
+    const { deal, existing } = await runWithoutTenant(async () => {
+      const created = await prisma.deal.create({
+        data: { companyId: workspace.companyId, name: "Shared" },
+        select: { id: true },
+      });
+      const other = await prisma.user.create({
+        data: {
+          companyId: workspace.companyId,
+          roleId: workspace.roleId,
+          email: `colleague-${created.id}@example.invalid`,
+          firstName: "Colleague",
+          lastName: "User",
+          status: "active",
+        },
+        select: { id: true },
+      });
+      await prisma.dealUser.create({
+        data: { companyId: workspace.companyId, dealId: created.id, userId: other.id },
+      });
+
+      return { deal: created, existing: other.id };
+    });
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.assignOwner,
+      { userId: workspace.userId },
+      { entityType: EntityType.deal, entityId: deal.id },
+    );
+
+    expect(outcome.ok).toBe(true);
+    const links = await runWithoutTenant(() => prisma.dealUser.findMany({ where: { dealId: deal.id } }));
+    expect(links.map(({ userId }) => userId).sort()).toEqual([existing, workspace.userId].sort());
+  });
+
+  it("assignOwner assigning the same user twice leaves one join row", async () => {
+    const workspace = await makeWorkspace();
+    const deal = await runWithoutTenant(() =>
+      prisma.deal.create({ data: { companyId: workspace.companyId, name: "Twice" }, select: { id: true } }),
+    );
+    const config = { userId: workspace.userId };
+    const target = { entityType: EntityType.deal, entityId: deal.id };
+
+    expect((await runAction(workspace, AutomationActionKind.assignOwner, config, target)).ok).toBe(true);
+    expect((await runAction(workspace, AutomationActionKind.assignOwner, config, target)).ok).toBe(true);
+
+    const links = await runWithoutTenant(() => prisma.dealUser.findMany({ where: { dealId: deal.id } }));
+    expect(links).toHaveLength(1);
+  });
+
+  it("assignOwner refuses a step that configured no user", async () => {
+    const workspace = await makeWorkspace();
+    const deal = await runWithoutTenant(() =>
+      prisma.deal.create({ data: { companyId: workspace.companyId, name: "Unconfigured" }, select: { id: true } }),
+    );
+    await runWithoutTenant(() =>
+      prisma.dealUser.create({ data: { companyId: workspace.companyId, dealId: deal.id, userId: workspace.userId } }),
+    );
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.assignOwner,
+      { userId: null },
+      { entityType: EntityType.deal, entityId: deal.id },
+    );
+
+    expect(outcome.ok).toBe(false);
+    const links = await runWithoutTenant(() => prisma.dealUser.findMany({ where: { dealId: deal.id } }));
+    expect(links).toHaveLength(1);
+  });
+
   it("addLabel appends labels to a lead without losing the existing ones", async () => {
     const workspace = await makeWorkspace();
     const lead = await runWithoutTenant(() =>
@@ -244,7 +318,36 @@ describeDatabase("every action an automation can run", () => {
 
     expect(outcome.ok).toBe(true);
     const after = await runWithoutTenant(() => prisma.contact.findUnique({ where: { id: contact.id } }));
-    expect(after?.notes).toBe("written by an automation");
+    expect(typeof after?.notes).toBe("object");
+    expect(serializeJSONToMarkdown(after?.notes as object)).toContain("written by an automation");
+  });
+
+  it("createNote keeps the note the record already carries", async () => {
+    const workspace = await makeWorkspace();
+    const contact = await runWithoutTenant(() =>
+      prisma.contact.create({
+        data: {
+          companyId: workspace.companyId,
+          firstName: "Noted",
+          lastName: "Before",
+          notes: parseMarkdownToJSON("written by a person") as never,
+        },
+        select: { id: true },
+      }),
+    );
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.createNote,
+      { body: "written by an automation" },
+      { entityType: EntityType.contact, entityId: contact.id },
+    );
+
+    expect(outcome.ok).toBe(true);
+    const after = await runWithoutTenant(() => prisma.contact.findUnique({ where: { id: contact.id } }));
+    const markdown = serializeJSONToMarkdown(after?.notes as object);
+    expect(markdown).toContain("written by a person");
+    expect(markdown).toContain("written by an automation");
   });
 
   it("createTask creates a task linked to the trigger record", async () => {

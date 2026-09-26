@@ -5,6 +5,7 @@ import type { Prisma } from "@/generated/prisma";
 import { EntityType } from "@/generated/prisma";
 
 import { BaseRepository } from "@/core/base/base-repository";
+import { parseMarkdownToJSON, serializeJSONToMarkdown } from "@/components/editor/editor.utils";
 
 const OWNER_COLUMN_MODELS: Partial<Record<EntityType, string>> = {
   [EntityType.lead]: "lead",
@@ -47,6 +48,13 @@ type Delegate = {
   createMany: (args: unknown) => Promise<{ count: number }>;
 };
 
+function notesAsMarkdown(notes: unknown): string {
+  if (!notes) return "";
+  if (typeof notes === "string") return notes.trim();
+
+  return serializeJSONToMarkdown(notes as object).trim();
+}
+
 export class PrismaAutomationRecordWriter extends BaseRepository implements AutomationRecordWriter {
   private delegate(model: string): Delegate | undefined {
     return (this.prisma as unknown as Record<string, Delegate>)[model];
@@ -84,6 +92,8 @@ export class PrismaAutomationRecordWriter extends BaseRepository implements Auto
     entityId: string;
     userId: string | null;
   }): Promise<AutomationActionOutcome> {
+    if (!args.userId) return { ok: false, error: "no user was configured for this action" };
+
     const ownerColumnModel = OWNER_COLUMN_MODELS[args.entityType];
 
     if (ownerColumnModel) {
@@ -107,12 +117,10 @@ export class PrismaAutomationRecordWriter extends BaseRepository implements Auto
     const delegate = this.delegate(joinModel);
     if (!delegate) return { ok: false, error: `${args.entityType} cannot be written` };
 
-    await delegate.deleteMany({ where: { [joinKey]: args.entityId, companyId: this.companyId } });
-    if (args.userId) {
-      await delegate.createMany({
-        data: [{ [joinKey]: args.entityId, userId: args.userId, companyId: this.companyId }],
-      });
-    }
+    await delegate.createMany({
+      data: [{ [joinKey]: args.entityId, userId: args.userId, companyId: this.companyId }],
+      skipDuplicates: true,
+    });
 
     return { ok: true, output: { ownerUserId: args.userId } };
   }
@@ -139,9 +147,18 @@ export class PrismaAutomationRecordWriter extends BaseRepository implements Auto
     const delegate = model ? this.delegate(model) : undefined;
     if (!delegate) return { ok: false, error: `${args.entityType} carries no notes` };
 
+    const existing = await delegate.findFirst({
+      where: { id: args.entityId, companyId: this.companyId },
+      select: { notes: true },
+    });
+    if (!existing) return { ok: false, error: "the record was not found" };
+
+    const previous = notesAsMarkdown(existing.notes);
+    const combined = previous ? `${previous}\n\n${args.body}` : args.body;
+
     const { count } = await delegate.updateMany({
       where: { id: args.entityId, companyId: this.companyId },
-      data: { notes: args.body as unknown as Prisma.InputJsonValue },
+      data: { notes: parseMarkdownToJSON(combined) as Prisma.InputJsonValue },
     });
 
     return count === 1 ? { ok: true, output: { written: true } } : { ok: false, error: "the record was not found" };
