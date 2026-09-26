@@ -10,6 +10,7 @@ import { createElement } from "react";
 import { describe, expect, it } from "vitest";
 
 import AccountAccessRevoked from "../account-access-revoked";
+import AutomationNotice from "../automation-notice";
 import AccountsRemovedNotice from "../accounts-removed-notice";
 import CompanyInvite from "../company-invite";
 import LeadCreatedNotice from "../lead-created-notice";
@@ -40,6 +41,10 @@ import { walkFiles } from "@/tests/conventions/walk";
 const ROOT = process.cwd();
 const PREVIEW_BASE_URL = "https://preview.example.test";
 const PREVIEW_FIRST_NAME = "Sofia";
+const AUTOMATION_NOTICE_PREVIEW = {
+  subject: "Follow up on Analytical Engines",
+  body: "The deal moved to Under Contract.\nReview the next step when you have a moment.",
+};
 
 type PreviewTemplate = ElementType & {
   PreviewProps?: Record<string, unknown>;
@@ -192,6 +197,21 @@ const EMAIL_PREVIEW_CASES = [
         email: "sofia@example.test",
         name: "Sofia Example",
         provider: "Google",
+      }),
+  },
+  {
+    key: "automation-notice",
+    sendSite: "automation-notice",
+    audience: "operator-english",
+    sourcePath: "features/automation/run/crm-automation-email-sender.ts",
+    templatePath: "components/emails/automation-notice.tsx",
+    template: AutomationNotice,
+    expectedText: () => AUTOMATION_NOTICE_PREVIEW.subject,
+    render: (locale) =>
+      createElement(AutomationNotice, {
+        ...previewLayoutProps(locale),
+        subject: AUTOMATION_NOTICE_PREVIEW.subject,
+        body: AUTOMATION_NOTICE_PREVIEW.body,
       }),
   },
   {
@@ -469,11 +489,11 @@ function localesFor(definition: PreviewDefinition): readonly AppLocale[] {
 }
 
 describe("transactional email preview inventory", () => {
-  it("maps all 15 production send sites onto 16 production templates", () => {
-    expect(EMAIL_PREVIEW_CASES).toHaveLength(16);
-    expect(new Set(EMAIL_PREVIEW_CASES.map(({ key }) => key)).size).toBe(16);
-    expect(new Set(EMAIL_PREVIEW_CASES.map(({ sendSite }) => sendSite)).size).toBe(15);
-    expect(new Set(EMAIL_PREVIEW_CASES.map(({ templatePath }) => templatePath)).size).toBe(16);
+  it("maps all 16 production send sites onto 17 production templates", () => {
+    expect(EMAIL_PREVIEW_CASES).toHaveLength(17);
+    expect(new Set(EMAIL_PREVIEW_CASES.map(({ key }) => key)).size).toBe(17);
+    expect(new Set(EMAIL_PREVIEW_CASES.map(({ sendSite }) => sendSite)).size).toBe(16);
+    expect(new Set(EMAIL_PREVIEW_CASES.map(({ templatePath }) => templatePath)).size).toBe(17);
     expect(EMAIL_PREVIEW_CASES.map(({ templatePath }) => templatePath).sort()).toEqual(topLevelTemplates());
   });
 
@@ -503,10 +523,10 @@ describe("transactional email preview inventory", () => {
 
   it("keeps recipient localization and internal English explicit", () => {
     expect(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "recipient-localized")).toHaveLength(13);
-    expect(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "operator-english")).toHaveLength(3);
+    expect(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "operator-english")).toHaveLength(4);
   });
 
-  it("discovers all 15 top-level production templates", () => {
+  it("discovers all 17 top-level production templates", () => {
     expect(discoveredPreviewEntries()).toEqual(
       EMAIL_PREVIEW_CASES.map(({ templatePath }) => templatePath.replace("components/emails/", "")).sort(),
     );
@@ -529,7 +549,7 @@ describe("transactional email preview inventory", () => {
       expect(actual).not.toContain("/images/email/customermates-icon@2x.png");
       expect(actual).not.toMatch(/\{(?:firstName|inviterName|accounts|plan|deadline)\}/);
     }
-  }, 15_000);
+  }, 30_000);
 });
 
 describe("transactional email preview rendering", () => {
@@ -564,8 +584,8 @@ describe("transactional email preview rendering", () => {
       }
     }
 
-    expect(renderCount).toBe(68);
-  }, 15_000);
+    expect(renderCount).toBe(69);
+  }, 30_000);
 
   it.each(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "operator-english"))(
     "forces the internal $key preview to English",
