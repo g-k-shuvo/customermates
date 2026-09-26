@@ -1087,9 +1087,9 @@
       "schedule": "On a schedule"
     },
     "triggers": {
-      "recordCreated": "When a {entity} is created",
-      "recordDeleted": "When a {entity} is deleted",
-      "recordUpdated": "When a {entity} changes",
+      "recordCreated": "When {entity} is created",
+      "recordDeleted": "When {entity} is deleted",
+      "recordUpdated": "When {entity} changes",
       "schedule": "On a schedule"
     }
   },
