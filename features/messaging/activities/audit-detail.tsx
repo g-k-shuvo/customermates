@@ -266,6 +266,7 @@ export const AuditDetail = observer(({ entry, customColumns }: Props) => {
       case "lastName":
       case "name":
         return String(value);
+      case "baseValue":
       case "totalValue":
       case "amount":
         return intlStore.formatCurrency(value as number);

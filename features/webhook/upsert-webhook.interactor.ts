@@ -7,7 +7,7 @@ import type { z as zType } from "zod";
 import z from "zod";
 import { Resource, Action } from "@/generated/prisma";
 
-import { WebhookEventSchema, WebhookDtoSchema } from "./webhook.schema";
+import { SubscribableWebhookEventSchema, WebhookDtoSchema } from "./webhook.schema";
 import { WebhookHeadersSchema, allowsCredentialedHeaders } from "./webhook-headers";
 import { toWebhookEventPayload } from "./webhook-event-payload";
 import { WEBHOOK_BODY_TEMPLATE_MAX_CHARS, isRenderableWebhookBodyTemplate } from "./webhook-body-template";
@@ -26,7 +26,7 @@ export const UpsertWebhookSchema = z
     url: zx.secureUrl().optional(),
     description: z.string().max(500).nullable().optional(),
     events: z
-      .array(WebhookEventSchema)
+      .array(SubscribableWebhookEventSchema)
       .meta({ minItems: 1 })
       .superRefine((events, ctx) => {
         if (events.length === 0)

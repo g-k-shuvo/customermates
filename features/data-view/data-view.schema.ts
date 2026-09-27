@@ -21,6 +21,7 @@ const CreateDataViewSchema = z
     name: DataViewNameSchema,
     position: DataViewPositionSchema.optional(),
     state: DataViewStateSchema,
+    shared: z.boolean().optional(),
   })
   .strict();
 
@@ -31,12 +32,14 @@ const UpdateDataViewSchema = z
     name: DataViewNameSchema.optional(),
     position: DataViewPositionSchema.optional(),
     state: DataViewStateSchema.optional(),
+    shared: z.boolean().optional(),
   })
   .strict()
   .superRefine((data, ctx) => {
     if (
       data.name !== undefined ||
       data.position !== undefined ||
+      data.shared !== undefined ||
       (data.state !== undefined && Object.keys(data.state).length > 0)
     )
       return;

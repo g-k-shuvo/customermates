@@ -1,4 +1,4 @@
-import type { ProcessWebFormSubmissionRepo } from "./process-web-form-submission.repo";
+import type { PendingSubmission, ProcessWebFormSubmissionRepo } from "./process-web-form-submission.repo";
 import type { Data, Validated } from "@/core/validation/validation.utils";
 
 import { z } from "zod";
@@ -7,6 +7,7 @@ import { SystemInteractor } from "@/core/decorators/system-interactor.decorator"
 import { Validate } from "@/core/decorators/validate.decorator";
 import { ValidateOutput } from "@/core/decorators/validate-output.decorator";
 import { mapWebFormFields, readDotPath, renderTitle } from "../ingest/field-mapping";
+import { webFormCustomFieldValues } from "../ingest/web-form-custom-fields";
 
 export const ProcessWebFormSubmissionSchema = z.object({
   submissionId: z.uuid(),
@@ -34,6 +35,7 @@ export class ProcessWebFormSubmissionInteractor {
 
     try {
       const fields = mapWebFormFields(submission.rawPayload, submission.fieldMapping);
+      const publisherUserId = await this.publisherFor(submission);
 
       const contactId = await this.repo.resolveContactUnscoped({
         companyId: submission.companyId,
@@ -52,21 +54,29 @@ export class ProcessWebFormSubmissionInteractor {
         sourceName: submission.sourceName,
       });
 
+      const columns = await this.repo.findMappableCustomColumnsUnscoped(
+        submission.companyId,
+        fields.customFields.map((entry) => entry.columnId),
+      );
+      const customFields = webFormCustomFieldValues(fields.customFields, columns);
+
       const leadId = await this.repo.createLeadFromSubmissionUnscoped({
         companyId: submission.companyId,
         sourceId: submission.sourceId,
         title,
         contactId,
         organizationId,
-        ownerUserId: submission.defaultOwnerId,
+        ownerUserId: submission.defaultOwnerId ? publisherUserId : null,
         labels: submission.defaultLabels,
         message: fields.message,
+        value: fields.value,
+        customFieldValues: customFields.lead,
       });
 
-      await this.repo.markSubmissionProcessedUnscoped(submission.id, leadId);
+      if (contactId)
+        await this.repo.fillEmptyContactCustomFieldsUnscoped(submission.companyId, contactId, customFields.contact);
 
-      const publisherUserId =
-        submission.defaultOwnerId ?? (await this.repo.findTaskCapableUserIdUnscoped(submission.companyId));
+      await this.repo.markSubmissionProcessedUnscoped(submission.id, leadId);
 
       return {
         ok: true as const,
@@ -80,5 +90,13 @@ export class ProcessWebFormSubmissionInteractor {
 
       throw error;
     }
+  }
+
+  private async publisherFor(submission: PendingSubmission): Promise<string | null> {
+    const sourceOwnerId = submission.defaultOwnerId
+      ? await this.repo.findActiveCompanyUserIdUnscoped(submission.companyId, submission.defaultOwnerId)
+      : null;
+
+    return sourceOwnerId ?? (await this.repo.findTaskCapableUserIdUnscoped(submission.companyId));
   }
 }

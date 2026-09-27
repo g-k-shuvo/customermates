@@ -9,6 +9,7 @@ const customFieldValueSelect = { columnId: true, value: true } as const;
 export const dealSeedSelect = {
   id: true,
   name: true,
+  baseValue: true,
   totalValue: true,
   totalQuantity: true,
   weightedValue: true,

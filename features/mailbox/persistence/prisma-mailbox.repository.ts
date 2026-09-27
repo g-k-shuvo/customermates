@@ -24,6 +24,7 @@ export type MailboxAccount = {
   sealedSecret: string;
   syncCursors: MailboxFolderCursorDto[];
   backfillFrom: Date | null;
+  sentFolderIds: string[];
 };
 
 export type StoredThread = { id: string; threadKey: string; created: boolean };
@@ -165,7 +166,7 @@ export class PrismaMailboxRepo extends BaseRepository {
         sealedSecret: true,
         syncCursors: true,
         backfillFrom: true,
-        connectedAccount: { select: { emailAddress: true, displayName: true } },
+        connectedAccount: { select: { emailAddress: true, displayName: true, sentFolderIds: true } },
       },
     });
 
@@ -180,7 +181,18 @@ export class PrismaMailboxRepo extends BaseRepository {
       sealedSecret: row.sealedSecret,
       syncCursors: MailboxFolderCursorListSchema.catch([]).parse(row.syncCursors),
       backfillFrom: row.backfillFrom,
+      sentFolderIds: row.connectedAccount.sentFolderIds,
     }));
+  }
+
+  async saveFolderSelection(
+    connectedAccountId: string,
+    selection: { selectedFolderIds: string[]; sentFolderIds: string[] },
+  ): Promise<void> {
+    await this.prisma.connectedAccount.updateMany({
+      where: { id: connectedAccountId, companyId: this.companyId, userId: this.userId },
+      data: selection,
+    });
   }
 
   async getMailboxAccount(connectedAccountId: string): Promise<MailboxAccount | null> {
@@ -507,6 +519,82 @@ export class PrismaMailboxRepo extends BaseRepository {
     });
 
     return rows.map((row) => row.contactId);
+  }
+
+  async findContactIdsOfOrganization(organizationId: string): Promise<string[]> {
+    const rows = await this.prisma.contactOrganization.findMany({
+      where: {
+        companyId: this.companyId,
+        organizationId,
+        organization: { is: this.accessWhere("organization") },
+        contact: { is: this.accessWhere("contact") },
+      },
+      select: { contactId: true },
+    });
+
+    return rows.map((row) => row.contactId);
+  }
+
+  async findDealIdsOfOrganization(organizationId: string): Promise<string[]> {
+    const rows = await this.prisma.dealOrganization.findMany({
+      where: {
+        companyId: this.companyId,
+        organizationId,
+        organization: { is: this.accessWhere("organization") },
+        deal: { is: this.accessWhere("deal") },
+      },
+      select: { dealId: true },
+    });
+
+    return rows.map((row) => row.dealId);
+  }
+
+  async findContactIdOfLead(leadId: string): Promise<string | null> {
+    const lead = await this.prisma.lead.findFirst({
+      where: { id: leadId, ...this.accessWhere("lead") },
+      select: { contactId: true },
+    });
+
+    return lead?.contactId ?? null;
+  }
+
+  async findThreadsLinkedToDealsCompanyWide(dealIds: readonly string[]) {
+    if (dealIds.length === 0) return [];
+
+    return await this.prisma.messagingThread.findMany({
+      where: {
+        companyId: this.companyId,
+        provider: "mail",
+        sharedToCrm: true,
+        linkedDealId: { in: [...dealIds] },
+        linkedDeal: { is: this.accessWhere("deal") },
+      },
+      select: THREAD_SUMMARY_SELECT,
+      orderBy: [{ lastMessageAt: "desc" }, { id: "asc" }],
+      take: 100,
+    });
+  }
+
+  async findSharedThreadsForDomainsCompanyWide(domains: readonly string[]) {
+    if (domains.length === 0) return [];
+
+    return await this.prisma.messagingThread.findMany({
+      where: {
+        companyId: this.companyId,
+        provider: "mail",
+        sharedToCrm: true,
+        participants: {
+          some: {
+            companyId: this.companyId,
+            isSelf: false,
+            OR: domains.map((domain) => ({ identifier: { endsWith: `@${domain}`, mode: "insensitive" as const } })),
+          },
+        },
+      },
+      select: THREAD_SUMMARY_SELECT,
+      orderBy: [{ lastMessageAt: "desc" }, { id: "asc" }],
+      take: 100,
+    });
   }
 
   async listThreadsForMailboxes(limit: number, filter: MailboxThreadFilter) {

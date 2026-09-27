@@ -15,11 +15,13 @@ import { useRouter } from "@/i18n/navigation";
 type Props = {
   contactId?: string;
   dealId?: string;
+  organizationId?: string;
+  leadId?: string;
 };
 
 type PanelState = { status: "loading" } | { status: "ready"; threads: MailboxThreadSummaryDto[] } | { status: "error" };
 
-export function EntityEmailsPanel({ contactId, dealId }: Props) {
+export function EntityEmailsPanel({ contactId, dealId, organizationId, leadId }: Props) {
   const t = useTranslations();
   const intlStore = useHydratedIntlStore();
   const router = useRouter();
@@ -30,7 +32,7 @@ export function EntityEmailsPanel({ contactId, dealId }: Props) {
     setState({ status: "loading" });
 
     runUserAction(async () => {
-      const result = await getRecordThreadsAction({ contactId, dealId });
+      const result = await getRecordThreadsAction({ contactId, dealId, organizationId, leadId });
       if (!active) return;
 
       setState(result.ok ? { status: "ready", threads: result.data } : { status: "error" });
@@ -39,7 +41,7 @@ export function EntityEmailsPanel({ contactId, dealId }: Props) {
     return () => {
       active = false;
     };
-  }, [contactId, dealId]);
+  }, [contactId, dealId, organizationId, leadId]);
 
   if (state.status === "loading")
     return <p className="p-4 text-sm text-muted-foreground">{t("Mailbox.loadingThread")}</p>;

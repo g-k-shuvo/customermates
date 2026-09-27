@@ -18,8 +18,10 @@ cat > /etc/crontabs/root <<'CRONTAB'
 */5 * * * * . /etc/cron-env.sh && /usr/local/bin/run-cron-job sync-mailboxes
 0 * * * * . /etc/cron-env.sh && /usr/local/bin/run-cron-job reprocess-webhook-events
 0 9 * * * . /etc/cron-env.sh && /usr/local/bin/run-cron-job lifecycle
+20 * * * * . /etc/cron-env.sh && /usr/local/bin/run-cron-job sweep-record-files
+25 * * * * . /etc/cron-env.sh && /usr/local/bin/run-cron-job sweep-record-documents
 CRONTAB
 
-echo "cron: scheduling sync-mailboxes (*/5), reprocess-webhook-events (hourly), lifecycle (daily 09:00) against ${APP_INTERNAL_URL}"
+echo "cron: scheduling sync-mailboxes (*/5), reprocess-webhook-events (hourly), lifecycle (daily 09:00), sweep-record-files and sweep-record-documents (hourly) against ${APP_INTERNAL_URL}"
 
 exec crond -f -l 8

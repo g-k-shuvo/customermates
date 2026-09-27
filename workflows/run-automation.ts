@@ -2,6 +2,7 @@ import { sleep } from "workflow";
 
 import { getExecuteAutomationStepInteractor, getPrepareAutomationRunInteractor } from "@/core/di";
 import { isInteractorFailure } from "@/core/validation/validation.utils";
+import { runAsBackgroundTenant } from "@/core/decorators/background-tenant";
 
 import { reportFailure, toWorkflowFailure } from "./capture-failure";
 
@@ -20,18 +21,47 @@ type PreparedRun = {
 async function prepareRun(automationRunId: string, companyId: string): Promise<PreparedRun | null> {
   "use step";
 
-  const outcome = await getPrepareAutomationRunInteractor().invoke({ automationRunId, companyId });
+  const prepare = getPrepareAutomationRunInteractor();
+  const outcome = await prepare.invoke({ automationRunId, companyId });
+  if (isInteractorFailure(outcome)) return null;
 
-  return isInteractorFailure(outcome) ? null : outcome.data;
+  const { ownerUserId, steps, conditionCheck } = outcome.data;
+  if (!ownerUserId || !conditionCheck) return { ownerUserId, steps };
+
+  const matches = await runAsBackgroundTenant(ownerUserId, () => prepare.matchesConditions(conditionCheck));
+  if (matches) return { ownerUserId, steps };
+
+  await prepare.skip({ automationRunId });
+
+  return { ownerUserId: null, steps: [] };
 }
 prepareRun.maxRetries = 3;
 
-async function executeStep(automationRunId: string, runStepId: string, ownerUserId: string): Promise<boolean> {
+export async function executeStep(automationRunId: string, runStepId: string, ownerUserId: string): Promise<boolean> {
   "use step";
 
-  const outcome = await getExecuteAutomationStepInteractor().invoke({ automationRunId, runStepId, ownerUserId });
+  const step = getExecuteAutomationStepInteractor();
+  const begun = await step.invoke({ automationRunId, runStepId });
+  if (isInteractorFailure(begun)) return false;
+  if (!begun.data.claimed) return begun.data.succeeded;
 
-  return !isInteractorFailure(outcome);
+  const claimed = begun.data;
+  const outcome = await runAsBackgroundTenant(ownerUserId, () => step.perform(claimed)).catch(
+    async (error: unknown) => {
+      const failure = step.failureFor(error);
+
+      if (failure.unexpected) {
+        await reportFailure(WORKFLOW_NAME, toWorkflowFailure(error), {
+          userId: ownerUserId,
+          companyId: claimed.context.run.companyId,
+        });
+      }
+
+      return failure.outcome;
+    },
+  );
+
+  return !isInteractorFailure(await step.finish(claimed, outcome));
 }
 executeStep.maxRetries = 2;
 

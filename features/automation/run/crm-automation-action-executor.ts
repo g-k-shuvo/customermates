@@ -6,13 +6,16 @@ import type {
 import type { CreateTaskInteractor } from "@/features/tasks/upsert/create-task.interactor";
 import type { CreateDealInteractor } from "@/features/deals/upsert/create-deal.interactor";
 import type { CreateLeadInteractor } from "@/features/leads/upsert/create-lead.interactor";
-import type { UpdateDealInteractor } from "@/features/deals/upsert/update-deal.interactor";
+import type { UpdateDealData, UpdateDealInteractor } from "@/features/deals/upsert/update-deal.interactor";
 import type { AutomationRecordWriter } from "./automation-record-writer";
 import type { AutomationEmailSender } from "./automation-email-sender";
+import type { AutomationStepError } from "../automation-step-errors";
+import type { InteractorFailure } from "@/core/validation/validation.utils";
 
 import { AutomationActionKind, AutomationTriggerKind, EntityType, LeadStatus } from "@/generated/prisma";
 
 import { automationTriggerForEvent } from "../automation-trigger-map";
+import { DEAL_WRITABLE_FIELDS, resolveFieldWrite } from "./automation-field-writes";
 
 import {
   AddLabelConfigSchema,
@@ -26,7 +29,7 @@ import {
   SendEmailConfigSchema,
   UpdateFieldConfigSchema,
 } from "../automation-action.schema";
-import { isInteractorFailure } from "@/core/validation/validation.utils";
+import { interactorFailureKind, isInteractorFailure } from "@/core/validation/validation.utils";
 
 const CONFIG_INVALID = "configuration is not valid for this action";
 const NO_RECORD = "the trigger carried no record to act on";
@@ -43,6 +46,15 @@ function triggerRecordSurvives(context: AutomationActionContext): boolean {
   const trigger = context.run.triggerEvent ? automationTriggerForEvent(context.run.triggerEvent) : undefined;
 
   return trigger?.triggerKind !== AutomationTriggerKind.recordDeleted;
+}
+
+function dealUpdateRefusal(error: InteractorFailure["error"]): AutomationStepError {
+  const kind = interactorFailureKind(error);
+
+  if (kind === "not_found") return "recordMissing";
+  if (kind === "authorization") return "ownerNotPermitted";
+
+  return "fieldValueInvalid";
 }
 
 export class CrmAutomationActionExecutor implements AutomationActionExecutor {
@@ -91,12 +103,26 @@ export class CrmAutomationActionExecutor implements AutomationActionExecutor {
     if (!parsed.success) return invalid();
     if (!context.entityType || !context.entityId) return noRecord();
 
+    if (context.entityType === EntityType.deal)
+      return await this.updateDealField(context.entityId, parsed.data.field, parsed.data.value);
+
     return await this.records.setField({
       entityType: context.entityType,
       entityId: context.entityId,
       field: parsed.data.field,
       value: parsed.data.value,
     });
+  }
+
+  private async updateDealField(dealId: string, field: string, value: unknown): Promise<AutomationActionOutcome> {
+    const write = resolveFieldWrite(DEAL_WRITABLE_FIELDS, field, value);
+    if (!write.ok) return { ok: false, error: write.error };
+
+    const outcome = await this.updateDeal.invoke({ id: dealId, [write.field]: write.value } as UpdateDealData);
+
+    return isInteractorFailure(outcome)
+      ? { ok: false, error: dealUpdateRefusal(outcome.error) }
+      : { ok: true, output: { field: write.field } };
   }
 
   private async runAssignOwner(config: unknown, context: AutomationActionContext): Promise<AutomationActionOutcome> {

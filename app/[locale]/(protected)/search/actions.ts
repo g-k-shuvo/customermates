@@ -9,6 +9,7 @@ import {
   getGetDealByIdInteractor,
   getGetServiceByIdInteractor,
   getGetTaskByIdInteractor,
+  getGetLeadByIdInteractor,
 } from "@/core/di";
 import { serializeResult } from "@/core/utils/action-result";
 
@@ -37,6 +38,10 @@ export async function checkSearchResultExistsAction(data: { type: GlobalSearchRe
     case "task": {
       const result = await getGetTaskByIdInteractor().invoke({ id: data.id });
       return result.ok && result.data.task !== null;
+    }
+    case "lead": {
+      const result = await getGetLeadByIdInteractor().invoke({ id: data.id });
+      return result.ok && result.data.lead !== null;
     }
   }
 }

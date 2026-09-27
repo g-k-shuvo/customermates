@@ -69,6 +69,15 @@ vi.mock("../profile/components/connect-upsell-modal", () => ({
 vi.mock("../deals/components/mark-deal-lost-modal", () => ({
   MarkDealLostModal: () => "mark-deal-lost-modal",
 }));
+vi.mock("../leads/components/lead-convert-modal", () => ({
+  LeadConvertModal: () => "lead-convert-modal",
+}));
+vi.mock("../company/components/webform/web-form-submission-modal", () => ({
+  WebFormSubmissionModal: () => "web-form-submission-modal",
+}));
+vi.mock("../company/components/webform/web-form-source-modal", () => ({
+  WebFormSourceModal: () => "web-form-source-modal",
+}));
 vi.mock("../tasks/components/schedule-follow-up-modal", () => ({
   ScheduleFollowUpModal: () => "schedule-follow-up-modal",
 }));
@@ -153,6 +162,8 @@ describe("ProtectedLayout account-state boundary", () => {
     expect(container.textContent).not.toContain("entity-drawer");
     expect(container.textContent).not.toContain("routine-modal");
     expect(container.textContent).not.toContain("import-wizard");
+    expect(container.textContent).not.toContain("lead-convert-modal");
+    expect(container.textContent).not.toContain("web-form-submission-modal");
     expect(container.textContent).not.toContain("agent-chat");
     expect(state.getGlobalSearchStore).not.toHaveBeenCalled();
     expect(state.getAgentChatStore).not.toHaveBeenCalled();
@@ -171,6 +182,8 @@ describe("ProtectedLayout account-state boundary", () => {
     expect(container.textContent).toContain("entity-drawer");
     expect(container.textContent).toContain("routine-modal");
     expect(container.textContent).toContain("import-wizard");
+    expect(container.textContent).toContain("lead-convert-modal");
+    expect(container.textContent).toContain("web-form-submission-modal");
     expect(container.textContent).not.toContain("agent-chat");
     expect(state.getGlobalSearchStore).toHaveBeenCalledOnce();
     expect(state.getAgentChatStore).not.toHaveBeenCalled();

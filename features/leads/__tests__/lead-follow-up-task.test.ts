@@ -1,8 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { LeadStatus } from "@/generated/prisma";
+import { DomainEvent } from "@/features/event/domain-events";
+
 import {
   LEAD_FOLLOW_UP_BUSINESS_DAYS,
   LEAD_FOLLOW_UP_HOUR,
+  LeadCreatedFollowUpTaskListener,
   leadFollowUpDueAt,
 } from "../listener/lead-created-follow-up-task.listener";
 
@@ -48,4 +52,44 @@ describe("lead follow-up due date", () => {
   it("uses a single business day, which is the promise the copy makes", () => {
     expect(LEAD_FOLLOW_UP_BUSINESS_DAYS).toBe(1);
   });
+});
+
+describe("lead follow-up task on creation", () => {
+  function listener() {
+    const createLeadFollowUpTaskOrThrow = vi.fn(() => Promise.resolve(undefined));
+    const findLeadOwnerCompanyWide = vi.fn(() => Promise.resolve(null));
+    const instance = new LeadCreatedFollowUpTaskListener(
+      { createLeadFollowUpTaskOrThrow } as never,
+      { findLeadOwnerCompanyWide } as never,
+    );
+    const created = (status: LeadStatus) =>
+      instance.handlers[DomainEvent.LEAD_CREATED]?.({
+        entityId: "lead-1",
+        payload: { title: "Market assessment", status, createdAt: new Date("2026-09-23T10:00:00Z") },
+      } as never);
+
+    return { created, createLeadFollowUpTaskOrThrow };
+  }
+
+  it.each([LeadStatus.new, LeadStatus.working, LeadStatus.qualified])(
+    "schedules a follow-up for a lead that starts %s",
+    async (status) => {
+      const { created, createLeadFollowUpTaskOrThrow } = listener();
+
+      await created(status);
+
+      expect(createLeadFollowUpTaskOrThrow).toHaveBeenCalledOnce();
+    },
+  );
+
+  it.each([LeadStatus.archived, LeadStatus.converted, LeadStatus.unqualified])(
+    "schedules nothing for a lead that is already %s, such as an archived lead brought over from Pipedrive",
+    async (status) => {
+      const { created, createLeadFollowUpTaskOrThrow } = listener();
+
+      await created(status);
+
+      expect(createLeadFollowUpTaskOrThrow).not.toHaveBeenCalled();
+    },
+  );
 });

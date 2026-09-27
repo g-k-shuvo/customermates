@@ -193,6 +193,9 @@ model User {
   widgets                         Widget[]
   p13n                            P13n[]
   dataViews                       DataView[]
+  uploadedRecordFiles             RecordFile[]
+  createdRecordDocuments          RecordDocument[]
+  uploadedRecordDocumentFiles     RecordDocumentFile[]
   connectedAccounts               ConnectedAccount[]
   agentConversations              AgentConversation[]
   agentRunLeases                  AgentRunLease[]
@@ -250,6 +253,9 @@ model Company {
   rolePermissions             RolePermission[]
   p13n                        P13n[]
   dataViews                   DataView[]
+  recordFiles                 RecordFile[]
+  recordDocuments             RecordDocument[]
+  recordDocumentFiles         RecordDocumentFile[]
   webhooks                    Webhook[]
   webhookDeliveries           WebhookDelivery[]
   automations                 Automation[]
@@ -342,6 +348,7 @@ model DataView {
   columnWidths     Json?
   hiddenColumns    Json?
   pageSize         Int?
+  shared           Boolean  @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -350,6 +357,7 @@ model DataView {
   @@index([companyId])
   @@index([userId])
   @@index([companyId, surfaceKey, userId])
+  @@index([companyId, surfaceKey, shared])
 }
 
 model Task {
@@ -436,6 +444,8 @@ model Contact {
   customFieldValues CustomFieldValue[]
   identifiers       ContactIdentifier[]
   leads             Lead[]
+  files             RecordFile[]
+  documents         RecordDocument[]
 
   @@index([companyId])
   @@index([firstName])
@@ -458,6 +468,8 @@ model Organization {
   tasks             TaskOrganization[]
   customFieldValues CustomFieldValue[]
   leads             Lead[]
+  files             RecordFile[]
+  documents         RecordDocument[]
 
   @@index([companyId])
   @@index([name])
@@ -532,6 +544,7 @@ model CustomFieldValue {
 model Deal {
   id                String             @id @default(uuid())
   name              String
+  baseValue         Float              @default(0)
   totalValue        Float              @default(0)
   totalQuantity     Float              @default(0)
   weightedValue     Float?
@@ -562,6 +575,8 @@ model Deal {
   stage             PipelineStage?     @relation(fields: [stageId], references: [id], onDelete: SetNull)
   lostReason        LostReason?        @relation(fields: [lostReasonId], references: [id], onDelete: SetNull)
   stageHistory      DealStageHistory[]
+  files             RecordFile[]
+  documents         RecordDocument[]
   mailThreads       MessagingThread[]
 
   @@index([companyId])
@@ -2502,4 +2517,119 @@ model AutomationRunStep {
 
   @@index([companyId])
   @@index([runId, position])
+}
+
+enum RecordFileStatus {
+  pending
+  ready
+}
+
+model RecordFile {
+  id               String           @id @default(uuid())
+  companyId        String
+  entityType       EntityType
+  contactId        String?
+  organizationId   String?
+  dealId           String?
+  storageKey       String           @unique
+  fileName         String
+  contentType      String
+  byteSize         Int
+  status           RecordFileStatus @default(pending)
+  uploadedByUserId String?
+  createdAt        DateTime         @default(now())
+  completedAt      DateTime?
+  company          Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact          Contact?         @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  organization     Organization?    @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  deal             Deal?            @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  uploadedBy       User?            @relation(fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([companyId, status, createdAt])
+  @@index([contactId])
+  @@index([organizationId])
+  @@index([dealId])
+}
+
+enum RecordDocumentStatus {
+  draft
+  sent
+  completed
+  declined
+  voided
+}
+
+enum RecordDocumentSigningProvider {
+  docusign
+}
+
+enum RecordDocumentEnvelopeStatus {
+  sent
+  delivered
+  completed
+  declined
+  voided
+}
+
+enum RecordDocumentFileKind {
+  original
+  signed
+}
+
+enum RecordDocumentFileStatus {
+  pending
+  ready
+}
+
+model RecordDocument {
+  id                 String                         @id @default(uuid())
+  companyId          String
+  entityType         EntityType
+  contactId          String?
+  organizationId     String?
+  dealId             String?
+  title              String
+  status             RecordDocumentStatus           @default(draft)
+  statusChangedAt    DateTime                       @default(now())
+  signingProvider    RecordDocumentSigningProvider?
+  envelopeId         String?                        @unique
+  envelopeStatus     RecordDocumentEnvelopeStatus?
+  envelopeSentAt     DateTime?
+  envelopeRecipients Json?
+  createdByUserId    String?
+  createdAt          DateTime                       @default(now())
+  updatedAt          DateTime                       @updatedAt
+  company            Company                        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact            Contact?                       @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  organization       Organization?                  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  deal               Deal?                          @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  createdBy          User?                          @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+  files              RecordDocumentFile[]
+
+  @@index([companyId])
+  @@index([contactId])
+  @@index([organizationId])
+  @@index([dealId])
+}
+
+model RecordDocumentFile {
+  id               String                   @id @default(uuid())
+  companyId        String
+  documentId       String
+  kind             RecordDocumentFileKind
+  storageKey       String                   @unique
+  fileName         String
+  byteSize         Int
+  status           RecordDocumentFileStatus @default(pending)
+  uploadedByUserId String?
+  createdAt        DateTime                 @default(now())
+  completedAt      DateTime?
+  company          Company                  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  document         RecordDocument           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  uploadedBy       User?                    @relation(fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([documentId, kind, status])
+  @@index([companyId, status, createdAt])
 }

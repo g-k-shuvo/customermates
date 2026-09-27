@@ -27,6 +27,12 @@ export type DealActivityReference = Data<typeof DealActivityReferenceSchema>;
 export const DealDtoSchema = z.object({
   id: z.uuid(),
   name: z.string(),
+  baseValue: z
+    .number()
+    .default(0)
+    .describe(
+      "The deal's own value, set directly or taken from the lead it was converted from. totalValue is baseValue plus every service line (amount x quantity).",
+    ),
   totalValue: z.number(),
   totalQuantity: z.number(),
   weightedValue: z.number().nullable(),

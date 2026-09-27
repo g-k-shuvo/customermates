@@ -74,7 +74,26 @@
     },
     "tabs": {
       "agenda": "Agenda",
-      "list": "Vue liste"
+      "list": "Vue liste",
+      "week": "Semaine"
+    },
+    "week": {
+      "allDay": "Toute la journée",
+      "draggableActivity": "Activité déplaçable",
+      "emptyDay": "Aucune activité ce jour-là.",
+      "gridLabel": "Calendrier de la semaine",
+      "loadError": "Impossible de charger la semaine.",
+      "moveHint": "Faites glisser une activité pour la replanifier, ou sélectionnez-la et appuyez sur Alt avec une touche fléchée.",
+      "nextWeek": "Semaine suivante",
+      "noUnscheduled": "Chaque activité ouverte a une date.",
+      "onlyMine": "Uniquement les miennes",
+      "pickDay": "Choisir un jour",
+      "previousWeek": "Semaine précédente",
+      "retry": "Réessayer",
+      "today": "Aujourd'hui",
+      "truncated": "Seules les premières activités de cette semaine sont affichées. Affinez les filtres pour toutes les voir.",
+      "unscheduled": "Activités non planifiées",
+      "unscheduledCount": "{count, plural, =0 {Aucune activité non planifiée} one {# activité non planifiée} other {# activités non planifiées}}"
     }
   },
   "AgentChat": {
@@ -1078,6 +1097,20 @@
     "runStepSummary": "Étape {position} : {action} — {status}",
     "runsTitle": "Historique des exécutions",
     "stepCount": "{count, plural, =1 {1 action} other {# actions}}",
+    "stepErrors": {
+      "assigneeUnavailable": "L’utilisateur à attribuer n’est pas un membre actif de cet espace de travail",
+      "fieldNotWritable": "Une automatisation ne peut pas modifier ce champ",
+      "fieldValueInvalid": "La valeur ne convient pas à ce champ",
+      "fieldValueMissing": "L’étape n’indique pas quelle valeur écrire",
+      "interrupted": "L’action a été interrompue et n’a peut-être pas abouti",
+      "notesTooLong": "La note rendrait les notes plus longues que la limite autorisée",
+      "notesUnreadable": "Les notes existantes n’ont pas pu être lues et n’ont donc pas été modifiées",
+      "ownerInactive": "Le compte sous lequel l’automatisation s’exécute n’est plus actif",
+      "ownerNotPermitted": "Le compte sous lequel l’automatisation s’exécute n’est pas autorisé à effectuer cette action",
+      "recordMissing": "Un enregistrement nécessaire à l’action n’existe plus",
+      "recordUnsupported": "Cette action ne peut pas être utilisée sur ce type d’enregistrement",
+      "unexpectedError": "L’action s’est arrêtée à cause d’une erreur inattendue"
+    },
     "title": "Automatisations",
     "toggleLabel": "Activer ou désactiver l’automatisation {name}",
     "triggerKinds": {
@@ -1325,6 +1358,8 @@
       "dealNotClosed": "Cette affaire est déjà ouverte, il n’y a donc rien à rouvrir.",
       "dealNotFound": "ID d'affaire introuvable ou inaccessible.",
       "demoMode": "Cette action n’est pas disponible en mode démo. Connectez-vous pour accéder à toutes les fonctionnalités.",
+      "documentNotPdf": "Les documents doivent être des fichiers PDF.",
+      "documentNotSendable": "Seul un document au statut brouillon, refusé ou annulé peut être envoyé pour signature.",
       "draftMessageNotFound": "Ce brouillon est introuvable. Il a peut-être déjà été envoyé ou supprimé.",
       "draftThreadNotSent": "Ce brouillon n'a pas encore de conversation. Envoyez-le depuis la boîte de réception.",
       "duplicateChannel": "Ce canal figure plusieurs fois. N’ajoutez chaque adresse e-mail, numéro de téléphone ou identifiant qu’une seule fois.",
@@ -1339,6 +1374,14 @@
       "emailMismatch": "Les adresses e-mail doivent correspondre.",
       "emailNotVerified": "Adresse e-mail non vérifiée.",
       "enterpriseCheckoutUnavailable": "Les espaces de travail Enterprise sont facturés manuellement et ne peuvent pas lancer le paiement en libre-service.",
+      "fileEmpty": "Le fichier est vide.",
+      "fileExtensionMissing": "Le nom du fichier doit comporter une extension, par exemple .pdf.",
+      "fileStorageNotConfigured": "Aucun stockage de fichiers n'est configuré sur cette installation.",
+      "fileStorageUnavailable": "Le stockage de fichiers est injoignable. Réessayez dans un instant.",
+      "fileTooLarge": "Le fichier dépasse la limite d'import.",
+      "fileTypeMismatch": "L'extension du fichier ne correspond pas à son contenu.",
+      "fileTypeNotAllowed": "Ce type de fichier ne peut pas être importé.",
+      "fileUploadIncomplete": "L'import ne s'est pas terminé. Réessayez.",
       "filterBetweenInvalidArrayLength": "L'opérateur 'between' requiert un tableau contenant exactement 2 éléments.",
       "generic": "Une erreur est survenue.",
       "importKeyUnsupported": "Cette colonne ne peut pas servir à rapprocher des enregistrements existants.",
@@ -1400,6 +1443,8 @@
       "pipelineStageMismatch": "L’étape sélectionnée n’appartient pas au pipeline sélectionné.",
       "pipelineStageNotFound": "ID d’étape de pipeline introuvable ou inaccessible.",
       "privacyAcknowledgementRequired": "Veuillez confirmer que vous avez lu la politique de confidentialité.",
+      "recordDocumentNotFound": "Document introuvable ou inaccessible.",
+      "recordFileNotFound": "Fichier introuvable ou inaccessible.",
       "relationNotAllowed": "La relation '{relation}' n'est pas autorisée sur {entity}. Relations autorisées : {allowed}.",
       "roleAssignedCannotDelete": "Un rôle attribué à des utilisateurs ne peut pas être supprimé.",
       "roleNotFound": "ID de rôle introuvable ou inaccessible.",
@@ -1424,6 +1469,13 @@
       "salesNavigatorRequiresLinkedin": "Sales Navigator nécessite un compte LinkedIn connecté, or ce compte est {provider}.",
       "sendEmailTargetRequired": "Sélectionnez une conversation ou un compte pour l'envoi.",
       "serviceNotFound": "ID de service introuvable ou inaccessible.",
+      "signatureInProgress": "Ce document est en attente de signature. Annulez d'abord la demande de signature.",
+      "signatureNotInProgress": "Ce document n'est pas en attente de signature.",
+      "signatureRecipientDuplicate": "Chaque signataire doit avoir une adresse e-mail différente.",
+      "signingConsentRequired": "DocuSign n'a pas encore été autorisé pour cette installation. Un administrateur doit d'abord donner son consentement.",
+      "signingNotConfigured": "La signature électronique n'est pas configurée sur cette installation.",
+      "signingRejected": "DocuSign a refusé la demande. Vérifiez les noms et adresses e-mail des signataires, puis réessayez.",
+      "signingUnavailable": "Impossible de joindre DocuSign. Réessayez dans un instant.",
       "socialActionRequiresSocialAccount": "Cette action nécessite un compte LinkedIn ou Instagram connecté, or ce compte est {provider}.",
       "socialPostsRequireSocialAccount": "Les publications sociales nécessitent un compte LinkedIn ou Instagram connecté, or ce compte est {provider}.",
       "subjectRequired": "Ajoutez un objet.",
@@ -1451,6 +1503,8 @@
       "userSelfAdminUpdateForbidden": "Vous ne pouvez pas mettre à jour votre propre compte depuis l’administration de l’équipe.",
       "webFormSourceNotFound": "ID de source de formulaire web introuvable ou inaccessible.",
       "webFormSourceSlugTaken": "Une source de formulaire web avec cette adresse existe déjà. Choisissez-en une autre.",
+      "webFormSubmissionNotFound": "ID de soumission de formulaire web introuvable ou inaccessible.",
+      "webFormSubmissionNotRetryable": "Seule une soumission en échec qui n’a pas encore créé de piste peut être réessayée.",
       "webhookBodyTemplateInvalid": "Le modèle de corps doit produire un objet JSON valide.",
       "webhookDeliveryNotFound": "ID de livraison de webhook introuvable ou inaccessible.",
       "webhookEventsRequired": "Sélectionnez au moins un évènement.",
@@ -1483,6 +1537,11 @@
       "widgetWeightedValueNotAllowedForService": "L'agrégation de valeur pondérée n'est pas autorisée pour le type d'élément Service."
     },
     "events": {
+      "automation": {
+        "created": "Automatisation créée",
+        "deleted": "Automatisation supprimée",
+        "updated": "Automatisation mise à jour"
+      },
       "company": {
         "updated": "Entreprise mise à jour"
       },
@@ -1612,6 +1671,7 @@
         "startsAt": "Commence le",
         "state": "État",
         "status": "Statut",
+        "submissionStatus": "Statut de la soumission",
         "subscriptionStatus": "Abonnement",
         "timelineKind": "Type",
         "timelineThreadId": "Conversation",
@@ -1820,6 +1880,7 @@
         "allowance": "Allocation",
         "amount": "Montant",
         "avatarUrl": "Avatar",
+        "baseValue": "Valeur de base",
         "channels": "Canaux",
         "completedAt": "Terminée",
         "contact": "Contact",
@@ -1839,6 +1900,7 @@
         "entity": "Élément",
         "entityId": "ID de l'élément",
         "entityType": "Type d'enregistrement",
+        "error": "Erreur",
         "event": "Évènement",
         "events": "Évènements",
         "expiresAt": "Expire le",
@@ -1851,6 +1913,7 @@
         "lastName": "Nom",
         "lastRequest": "Dernière utilisation",
         "lastRunAt": "Dernière exécution",
+        "lead": "Piste",
         "lostReason": "Motif de perte",
         "members": "Membres",
         "name": "Nom",
@@ -1866,6 +1929,7 @@
         "plan": "Forfait",
         "provider": "Fournisseur",
         "reason": "Motif",
+        "receivedAt": "Reçue",
         "role": "Rôle",
         "rottingAt": "Stagnant",
         "secret": "Secret",
@@ -1873,6 +1937,7 @@
         "source": "Source",
         "status": "Statut",
         "statusCode": "Code de statut",
+        "submitter": "Expéditeur",
         "subscription": "Abonnement",
         "tags": "Étiquettes",
         "target": "Cible",
@@ -2415,7 +2480,14 @@
       "name": "Nom",
       "namePlaceholder": "Nom de la vue",
       "railLabel": "Vues enregistrées",
-      "recordCount": "{count, plural, one {# enregistrement} other {# enregistrements}}"
+      "recordCount": "{count, plural, one {# enregistrement} other {# enregistrements}}",
+      "share": "Partager avec l'équipe",
+      "sharedBy": "Partagée par {name}",
+      "sharedChangesNotSaved": "Les modifications d'une vue partagée par un collègue ne sont pas enregistrées. Dupliquez-la pour les conserver.",
+      "sharedWithTeam": "Partagée avec votre équipe",
+      "shareSuccess": "Votre équipe peut maintenant utiliser cette vue",
+      "unshare": "Ne plus partager",
+      "unshareSuccess": "Vous seul voyez maintenant cette vue"
     }
   },
   "DealModal": {
@@ -2446,6 +2518,16 @@
       "switcherLabel": "Pipeline"
     },
     "quantityLabel": "Quantité",
+    "stageBar": {
+      "currentStage": "{name}, étape actuelle : {duration}",
+      "days": "{count, plural, one {# jour} other {# jours}}",
+      "hours": "{count, plural, one {# heure} other {# heures}}",
+      "label": "Temps dans l'étape",
+      "lessThanMinute": "Moins d'une minute",
+      "minutes": "{count, plural, one {# minute} other {# minutes}}",
+      "notEntered": "Non atteinte",
+      "stage": "{name} : {duration}"
+    },
     "title": "Affaire",
     "valueLabel": "Valeur"
   },
@@ -2510,6 +2592,14 @@
     "quickstart": "Démarrage rapide",
     "selfHosting": "Auto-hébergement",
     "webhooks": "Webhooks"
+  },
+  "DocumentSignedNotice": {
+    "cta": "Ouvrir l'enregistrement",
+    "fallback": "Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur : ",
+    "intro": "Tout le monde a signé {title}. La copie signée est enregistrée sur l'enregistrement.",
+    "preview": "{title} est signé",
+    "signers": "Signé par {names}",
+    "subject": "Signé : {title}"
   },
   "Editor": {
     "blockQuote": "Citation",
@@ -2579,7 +2669,7 @@
   },
   "EntityDetail": {
     "computedFieldHelp": {
-      "dealValue": "Somme du prix unitaire × la quantité pour chaque élément lié dans « {services} ». Modifiez-y les éléments liés ou les quantités pour l’actualiser.",
+      "dealValue": "Valeur de base plus la somme du prix unitaire × la quantité pour chaque élément lié dans « {services} ». Modifiez la valeur de base, ou les éléments liés et les quantités, pour l’actualiser.",
       "serviceLineValue": "Prix de « {service} » × quantité. Modifiez ici l’élément ou la quantité ; modifiez l’élément lié pour changer son prix.",
       "serviceQuantity": "Somme des quantités de tous les éléments liés dans « {services} ». Modifiez-y les quantités pour actualiser la valeur.",
       "weightedValue": "{dealValue} × probabilité de conclusion de {percent} % pour l’étape actuelle ({stage}). Modifiez « {services} », les quantités ou l’étape ; gérez les probabilités dans « {company} ».",
@@ -2595,6 +2685,7 @@
     "personalize": "Personnaliser",
     "pinField": "Épingler {field} dans l’aperçu",
     "sections": {
+      "label": "Sections de la fiche",
       "notes": "Notes"
     },
     "showField": "Afficher {field} dans les détails",
@@ -2816,7 +2907,7 @@
   },
   "GlobalSearch": {
     "clearRecent": "Effacer",
-    "emptyDescription": "Recherchez {contacts}, {organizations}, {deals}, {services} et {tasks} au même endroit.",
+    "emptyDescription": "Recherchez {contacts}, {organizations}, {leads}, {deals}, {services} et {tasks} au même endroit.",
     "emptyTitle": "Trouvez tout dans votre espace de travail",
     "groupRecent": "Ouverts récemment",
     "hintNavigate": "Naviguer",
@@ -3040,7 +3131,9 @@
   },
   "LeadDetail": {
     "convert": "Convertir en affaire",
+    "convertDescription": "« {title} » est converti avec son contact, son organisation, son responsable et ses notes. La piste reste enregistrée, marquée comme convertie.",
     "owner": "Responsable",
+    "probabilityPlaceholder": "Valeur de l’étape : {percent} %",
     "source": "Source",
     "title": "Piste"
   },
@@ -3174,6 +3267,7 @@
     "sendForward": "Envoyer le transfert",
     "sendingOff": "Réception seule",
     "sendReply": "Envoyer",
+    "sentCopyNotSaved": "Envoyé. Une copie n’a pas pu être enregistrée dans votre dossier Envoyés.",
     "shareDescriptionOff": "Vous seul pouvez lire cette conversation. Le partage l'ajoute aux fiches correspondantes, où toute personne y ayant accès pourra la lire.",
     "shareDescriptionOn": "Toute personne ayant accès aux fiches correspondantes peut lire cette conversation. Désactivez le partage pour la garder pour vous.",
     "shareDisabled": "La conversation est de nouveau privée",
@@ -3731,6 +3825,92 @@
   "ProfileSections": {
     "apiKeysDescription": "Clés API de longue durée pour un accès programmatique."
   },
+  "RecordDocuments": {
+    "actions": "Actions pour {title}",
+    "add": "Ajouter un document",
+    "added": "{name} ajouté",
+    "addFailed": "{name} n'a pas pu être importé.",
+    "addHint": "Fichiers PDF jusqu'à {size} chacun.",
+    "adding": "Ajout de {name}...",
+    "delete": "Supprimer",
+    "deleted": "{title} supprimé",
+    "emptyDescription": "Ajoutez un contrat ou un autre PDF pour suivre l'état de sa signature.",
+    "emptyReadOnly": "Les documents de cet enregistrement apparaissent ici.",
+    "emptyTitle": "Aucun document pour l'instant",
+    "loadErrorDescription": "Réessayez dans un instant.",
+    "loadErrorTitle": "Impossible de charger les documents",
+    "loading": "Chargement des documents...",
+    "metaAdded": "Ajouté par {name}, {date}",
+    "metaAddedWithoutName": "Ajouté le {date}",
+    "notConfigured": "Aucun stockage de fichiers n'est configuré sur cette installation : impossible d'ajouter ou d'ouvrir des documents.",
+    "open": "Ouvrir {title}",
+    "openOriginal": "Ouvrir le PDF d'origine",
+    "openSigned": "Ouvrir la copie signée",
+    "rename": "Renommer",
+    "renamed": "Document renommé",
+    "renameLabel": "Titre de {title}",
+    "signature": {
+      "addSigner": "Ajouter un signataire",
+      "cancel": "Annuler la demande de signature",
+      "cancelConfirm": "Annuler la demande",
+      "cancelMessage": "{title} sera annulé dans DocuSign et ses signataires ne pourront plus le signer.",
+      "cancelTitle": "Annuler la demande de signature ?",
+      "defaultSubject": "À signer : {title}",
+      "description": "{title} est envoyé via DocuSign. Chaque signataire reçoit un e-mail avec un lien pour signer, et la copie signée est enregistrée ici une fois que tout le monde a signé.",
+      "emailPlaceholder": "Adresse e-mail",
+      "message": "Message (facultatif)",
+      "namePlaceholder": "Nom",
+      "progress": "{signed} sur {total} signé",
+      "refresh": "Actualiser le statut de signature",
+      "refreshed": "Statut de signature de {title} actualisé",
+      "removeSigner": "Retirer le signataire {number}",
+      "send": "Envoyer",
+      "sendAction": "Envoyer pour signature",
+      "sent": "{title} a été envoyé pour signature",
+      "signerEmail": "E-mail du signataire {number}",
+      "signerName": "Nom du signataire {number}",
+      "signers": "Signataires",
+      "subject": "Objet de l'e-mail",
+      "title": "Envoyer pour signature",
+      "waiting": "En attente de signature"
+    },
+    "signedAttached": "Copie signée de {title} jointe",
+    "signedCopy": "Copie signée jointe",
+    "status": {
+      "completed": "Signé",
+      "declined": "Refusé",
+      "draft": "Brouillon",
+      "sent": "Envoyé",
+      "voided": "Annulé"
+    },
+    "statusChanged": "{title} est maintenant : {status}",
+    "statusLabel": "Statut de {title}",
+    "title": "Documents",
+    "uploadSigned": "Joindre la copie signée"
+  },
+  "RecordFiles": {
+    "delete": "Supprimer {name}",
+    "deleted": "{name} supprimé",
+    "download": "Télécharger {name}",
+    "dropHint": "Déposez les fichiers ici, jusqu'à {size} chacun.",
+    "emptyDescription": "Déposez les fichiers ici ou choisissez Importer des fichiers.",
+    "emptyReadOnly": "Les fichiers de cet enregistrement apparaissent ici.",
+    "emptyTitle": "Aucun fichier pour l'instant",
+    "loadErrorDescription": "Réessayez dans un instant.",
+    "loadErrorTitle": "Les fichiers n'ont pas pu être chargés",
+    "loading": "Chargement des fichiers...",
+    "meta": "{size} · {name} · {date}",
+    "metaWithoutUploader": "{size} · {date}",
+    "notConfigured": "Aucun stockage de fichiers n'est configuré sur cette installation : impossible d'importer ou d'ouvrir des fichiers.",
+    "sizeBytes": "{size} o",
+    "sizeKilobytes": "{size} Ko",
+    "sizeMegabytes": "{size} Mo",
+    "title": "Fichiers",
+    "upload": "Importer des fichiers",
+    "uploaded": "{name} importé",
+    "uploadFailed": "{name} n'a pas pu être importé.",
+    "uploading": "Import de {name}..."
+  },
   "ResetPassword": {
     "cta": "Réinitialiser le mot de passe",
     "fallback": "Si le bouton ci-dessus ne fonctionne pas, copiez et collez ce lien dans votre navigateur : ",
@@ -4132,12 +4312,20 @@
   },
   "WebFormSourceModal": {
     "active": "Accepte les envois",
+    "addCustomField": "Ajouter un champ",
+    "customFieldColumn": "Champ du CRM {number}",
+    "customFieldColumnOption": "{entity} · {column}",
+    "customFieldColumnPlaceholder": "Choisir un champ",
+    "customFieldIncomplete": "Chaque champ supplémentaire a besoin d’un champ du formulaire et d’un champ du CRM.",
+    "customFieldPath": "Champ du formulaire {number}",
+    "customFieldsDescription": "Associez tout autre champ du formulaire à un champ de la piste ou du contact : paramètres UTM, consentement, un numéro de téléphone (dans un champ téléphone) ou des réponses propres à ce formulaire. Une valeur qui ne convient pas à son champ, comme un numéro sans indicatif pays, est ignorée.",
+    "customFieldsTitle": "Autres champs",
     "defaultLabels": "Étiquettes par défaut",
     "inactive": "En pause",
     "mappingDescription": "Chemins pointés dans les données envoyées, par exemple fields.email ou data.contact.first_name. Laissez un champ vide pour l'ignorer.",
     "mappingTitle": "Correspondance des champs",
     "message": "Message",
-    "phone": "Téléphone",
+    "removeCustomField": "Retirer le champ {number}",
     "rotateSecret": "Renouveler le secret de signature",
     "secretRevealedDescription": "Copiez-le maintenant. Il s'affiche une seule fois et ne peut pas être récupéré.",
     "secretRevealedTitle": "Secret de signature",
@@ -4146,13 +4334,30 @@
     "slugImmutable": "Le slug ne peut pas changer, car un formulaire actif envoie déjà vers ce point de terminaison.",
     "title": "Source de formulaire web",
     "titleTemplate": "Modèle de titre de piste",
-    "titleTemplateDescription": "Les espaces réservés sont remplacés par les champs associés, par exemple '{organizationName}' — '{form_title}'."
+    "titleTemplateDescription": "Les espaces réservés sont remplacés par les champs associés, par exemple '{organizationName}' — '{form_title}'.",
+    "value": "Valeur de la piste"
   },
   "WebFormSourcesCard": {
     "emptyBody": "Créez une source pour obtenir un point de terminaison et un secret de signature pour le formulaire de votre site.",
     "emptyTitle": "Aucun formulaire web",
     "endpoint": "Point de terminaison",
     "title": "Formulaires web"
+  },
+  "WebFormSubmissions": {
+    "detailTitle": "Soumission de formulaire",
+    "emptyBody": "Chaque soumission de vos formulaires web apparaît ici, y compris celles qui n’ont pas pu devenir une piste.",
+    "emptyTitle": "Aucune soumission pour l’instant",
+    "externalId": "ID externe",
+    "openLead": "Ouvrir la piste",
+    "payload": "Données envoyées",
+    "processedAt": "Traitée le",
+    "retry": "Réessayer",
+    "statuses": {
+      "failed": "Échec",
+      "processed": "Piste créée",
+      "received": "En file d’attente"
+    },
+    "title": "Soumissions de formulaires"
   },
   "WebhookDeliveriesCard": {
     "emptyBody": "Les tentatives de livraison apparaîtront ici dès qu’un webhook sera déclenché.",

@@ -30,6 +30,8 @@ import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { type ChipColor } from "@/constants/chip-colors";
 import { USER_STATUS_COLORS_MAP } from "@/constants/user-statuses";
 import { LEAD_STATUS_CHIP_COLOR } from "@/app/[locale]/(protected)/leads/components/lead-status-colors";
+import { WEB_FORM_SUBMISSION_STATUSES } from "@/features/webform/submissions/web-form-submission.schema";
+import { WEB_FORM_SUBMISSION_STATUS_CHIP_COLOR } from "@/features/webform/submissions/web-form-submission-status-colors";
 import { SUBSCRIPTION_STATUS_COLOR_MAP } from "@/app/[locale]/(protected)/company/components/subscription/subscription-panel";
 import { OPERATOR_AUDIT_SOURCE } from "@/ee/operator/operator-lists.schema";
 import { getLostReasonsAction, getPipelinesAction, getUsersAction } from "@/app/[locale]/(protected)/company/actions";
@@ -243,6 +245,15 @@ export function filterOptionSources(
           value: status,
           textValue: t(`Common.leadStatuses.${status}`),
           color: LEAD_STATUS_CHIP_COLOR[status],
+        })),
+    },
+    [FilterFieldKey.submissionStatus]: {
+      items: () =>
+        WEB_FORM_SUBMISSION_STATUSES.map((status) => ({
+          key: status,
+          value: status,
+          textValue: t(`WebFormSubmissions.statuses.${status}`),
+          color: WEB_FORM_SUBMISSION_STATUS_CHIP_COLOR[status],
         })),
     },
     [FilterFieldKey.rotting]: {

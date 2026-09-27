@@ -19,6 +19,7 @@ export const SURFACE = Object.freeze({
   routines: "routines-card-store",
   leads: "leads-card-store",
   webFormSources: "web-form-sources-card-store",
+  webFormSubmissions: "web-form-submissions-card-store",
 } as const);
 
 export const DATA_VIEW_SURFACE_KEYS = [
@@ -40,6 +41,7 @@ export const DATA_VIEW_SURFACE_KEYS = [
   SURFACE.routines,
   SURFACE.leads,
   SURFACE.webFormSources,
+  SURFACE.webFormSubmissions,
 ] as const;
 
 export type DataViewSurfaceKey = (typeof DATA_VIEW_SURFACE_KEYS)[number];

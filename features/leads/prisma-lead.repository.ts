@@ -11,6 +11,7 @@ import type { UpdateLeadRepo } from "./upsert/update-lead.repo";
 import type { ConvertLeadToDealRepo } from "./convert/convert-lead-to-deal.repo";
 import type { DeleteLeadRepo } from "./delete/delete-lead.repo";
 import type { FindLeadsByIdsRepo } from "./find-leads-by-ids.repo";
+import type { FindLeadRelationsRepo, LeadRelations } from "./find-lead-relations.repo";
 import type { LeadNotificationRecipient, LeadNotificationRepo } from "./listener/lead-notification.repo";
 
 import { EntityType, LeadStatus, Resource } from "@/generated/prisma";
@@ -82,6 +83,7 @@ export class PrismaLeadRepo
     DeleteLeadRepo,
     ConvertLeadToDealRepo,
     FindLeadsByIdsRepo,
+    FindLeadRelationsRepo,
     LeadNotificationRepo,
     ExportRecordsRepo<LeadDto>
 {
@@ -220,6 +222,17 @@ export class PrismaLeadRepo
     return new Set(leads.map((lead) => lead.id));
   }
 
+  async findRelationsByLeadIds(ids: Set<string>): Promise<Map<string, LeadRelations>> {
+    if (ids.size === 0) return new Map();
+
+    const leads = await this.prisma.lead.findMany({
+      where: { id: { in: Array.from(ids) }, ...this.accessWhere("lead") },
+      select: { id: true, contactId: true, organizationId: true, ownerUserId: true, sourceId: true },
+    });
+
+    return new Map(leads.map(({ id, ...relations }) => [id, relations]));
+  }
+
   async findLeadOwnerCompanyWide(leadId: string): Promise<LeadNotificationRecipient | null> {
     const lead = await this.prisma.lead.findFirst({
       where: { companyId: this.companyId, id: leadId },
@@ -264,6 +277,8 @@ export class PrismaLeadRepo
   async updateLeadOrThrow(args: RepoArgs<UpdateLeadRepo, "updateLeadOrThrow">): Promise<LeadDto> {
     const { id, ...rest } = args;
 
+    await this.prisma.lead.findFirstOrThrow({ where: { ...this.accessWhere("lead"), id }, select: { id: true } });
+
     await this.prisma.lead.updateMany({
       where: { ...this.accessWhere("lead"), id },
       data: {
@@ -298,6 +313,7 @@ export class PrismaLeadRepo
 
   @Transaction()
   async deleteLeadOrThrow(id: string): Promise<string> {
+    await this.prisma.lead.findFirstOrThrow({ where: { ...this.accessWhere("lead"), id }, select: { id: true } });
     await this.prisma.lead.deleteMany({ where: { ...this.accessWhere("lead"), id } });
 
     return id;

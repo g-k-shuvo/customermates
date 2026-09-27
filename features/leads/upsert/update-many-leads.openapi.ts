@@ -10,7 +10,7 @@ export const updateManyLeadsOperation: ZodOpenApiOperationObject = {
   operationId: "updateManyLeads",
   summary: "Update many leads",
   description:
-    "Updates many leads in a single request. Each entry requires an id; every other field is optional and only the fields present are changed.",
+    "Updates many leads in a single request. Each entry requires an id; every other field is optional and only the fields present are changed. Set contactId, organizationId, ownerUserId, sourceId or value to null to clear it.",
   tags: ["leads"],
   security: [{ apiKeyAuth: [] }],
   requestBody: {

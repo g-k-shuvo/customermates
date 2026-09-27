@@ -15,6 +15,8 @@ import { Action, CustomColumnType } from "@/generated/prisma";
 
 import type { Resource, EntityType } from "@/generated/prisma";
 
+import { toast } from "sonner";
+
 import { toastZodErrorTree } from "../utils/toast-zod-error-tree";
 import { reportApplicationError } from "../errors/report-application-error";
 
@@ -1183,8 +1185,21 @@ export abstract class BaseDataViewStore<Entity extends HasId> extends BaseStore 
     return this.writeViewState();
   };
 
+  private sharedViewsWarned = new Set<string>();
+
+  get activeViewSharedBy(): string | undefined {
+    return this.views.find((view) => view.id === this.activeViewKey)?.sharedBy;
+  }
+
   private persistViewState = () => {
     if (!this.p13nId || !this.viewPersistable) return;
+
+    if (this.activeViewSharedBy !== undefined) {
+      if (this.sharedViewsWarned.has(this.activeViewKey)) return;
+      this.sharedViewsWarned.add(this.activeViewKey);
+      toast.info(this.t("DataView.views.sharedChangesNotSaved"));
+      return;
+    }
 
     this.cancelPendingPersist();
 

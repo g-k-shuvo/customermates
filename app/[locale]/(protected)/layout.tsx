@@ -8,6 +8,7 @@ import { CompanyUserModal } from "./company/components/user/user-modal";
 import { CompanyInviteModal } from "./company/components/company-invite/company-invite-modal";
 import { AuditLogModal } from "./company/components/audit-log/audit-log-modal";
 import { WebhookDeliveryModal } from "./company/components/webhook/webhook-delivery-modal";
+import { WebFormSubmissionModal } from "./company/components/webform/web-form-submission-modal";
 import { ImportWizard } from "@/components/data-transfer/import-wizard";
 import { WebhookModal } from "./company/components/webhook/webhook-modal";
 import { RoutineModal } from "./routines/components/routine-modal";
@@ -16,6 +17,7 @@ import { ApiKeyModal } from "./profile/components/api-key-modal";
 import { ConnectedAccountModal } from "./profile/components/connected-account-modal";
 import { ConnectUpsellModal } from "./profile/components/connect-upsell-modal";
 import { MarkDealLostModal } from "./deals/components/mark-deal-lost-modal";
+import { LeadConvertModal } from "./leads/components/lead-convert-modal";
 import { ScheduleFollowUpModal } from "./tasks/components/schedule-follow-up-modal";
 
 import { Toaster } from "@/components/ui/sonner";
@@ -108,11 +110,15 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
           <MarkDealLostModal />
 
+          <LeadConvertModal />
+
           <ScheduleFollowUpModal />
 
           <TimelineDetailModal />
 
           <WebhookDeliveryModal />
+
+          <WebFormSubmissionModal />
 
           <RoutineModal />
 

@@ -11,7 +11,7 @@ const { saveDataViewStateAction, selectDataViewAction, toastZodErrorTree } = vi.
   toastZodErrorTree: vi.fn(() => true),
 }));
 
-vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: { error: vi.fn(), info: vi.fn(), success: vi.fn() } }));
 vi.mock("@/app/actions", () => ({
   saveDataViewStateAction,
   selectDataViewAction,
@@ -21,6 +21,8 @@ vi.mock("@/app/actions", () => ({
   updateEntityCustomFieldValueAction: vi.fn(),
 }));
 vi.mock("../../utils/toast-zod-error-tree", () => ({ toastZodErrorTree }));
+
+import { toast } from "sonner";
 
 import { BaseDataViewStore } from "../base-data-view.store";
 import { ALL_VIEW_KEY, SURFACE } from "@/core/data-view/data-view-keys";
@@ -441,5 +443,55 @@ describe("data view autosave", () => {
     await vi.advanceTimersByTimeAsync(1500);
 
     expect(saveDataViewStateAction).not.toHaveBeenCalled();
+  });
+});
+
+describe("data view autosave on a view a colleague shared", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    saveDataViewStateAction.mockReset();
+    vi.mocked(toast.info).mockClear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("keeps the change on screen, writes nothing to the colleague's view, and says so once", async () => {
+    const store = new TestStore(rootStore());
+    const colleagueView: DataViewChipDto = { ...VIEW, shared: true, sharedBy: "Sofia Rossi" };
+    store.setItems({
+      ...serverEcho({ viewId: VIEW_ID, pagination: { page: 1, pageSize: 25 } }),
+      views: [colleagueView],
+      activeViewKey: VIEW_ID,
+    });
+    store.nextRefresh = () =>
+      Promise.resolve({ ...serverEcho(store.requestedParams.at(-1)), views: [colleagueView], activeViewKey: VIEW_ID });
+
+    store.setQueryOptions({ searchTerm: "acme" });
+    await vi.advanceTimersByTimeAsync(1500);
+    store.setQueryOptions({ searchTerm: "acme corp" });
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(store.activeViewSharedBy).toBe("Sofia Rossi");
+    expect(store.searchTerm).toBe("acme corp");
+    expect(saveDataViewStateAction).not.toHaveBeenCalled();
+    expect(toast.info).toHaveBeenCalledExactlyOnceWith("DataView.views.sharedChangesNotSaved");
+  });
+
+  it("still saves the owner's changes to a view they shared", async () => {
+    saveDataViewStateAction.mockResolvedValue({ ok: true, data: { viewKey: VIEW_ID } });
+    const store = new TestStore(rootStore());
+    store.setItems({
+      ...serverEcho({ viewId: VIEW_ID, pagination: { page: 1, pageSize: 25 } }),
+      views: [{ ...VIEW, shared: true }],
+      activeViewKey: VIEW_ID,
+    });
+
+    store.setQueryOptions({ searchTerm: "acme" });
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(saveDataViewStateAction).toHaveBeenCalledOnce();
+    expect(toast.info).not.toHaveBeenCalled();
   });
 });

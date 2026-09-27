@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { CountryCode, Currency } from "@/generated/prisma";
 
 import {
   customMcpFailure,
@@ -26,8 +25,6 @@ import { UpdateCompanySettingsSchema } from "@/features/company/update-company-s
 import { InviteUsersByEmailSchema } from "@/features/company/invite-users-by-email.interactor";
 import { ENTITY_TERMINOLOGY_PRESETS } from "@/features/entity-terminology/entity-terminology.constants";
 
-const countryValues = Object.values(CountryCode);
-const currencyValues = Object.values(Currency);
 const memberStatusValues = AdminUpdateUserDetailsSchema.shape.status.options;
 
 const UpdateWorkspaceSettingsSchema = z.object({
@@ -36,15 +33,13 @@ const UpdateWorkspaceSettingsSchema = z.object({
     .describe("profile = the authenticated user's own profile, company = the company profile (admin rights required)"),
   firstName: UpdateUserDetailsSchema.shape.firstName.describe("profile target: omit to keep existing"),
   lastName: UpdateUserDetailsSchema.shape.lastName.describe("profile target: omit to keep existing"),
-  country: UpdateUserDetailsSchema.shape.country.describe(
-    `profile target: ISO country code ${enumHint(countryValues)}. Omit to keep existing.`,
-  ),
+  country: UpdateUserDetailsSchema.shape.country.describe("profile target: ISO country code. Omit to keep existing."),
   avatarUrl: UpdateUserDetailsSchema.shape.avatarUrl.describe(
     "profile target: HTTPS avatar URL, or '' / null to clear. Omit to keep existing.",
   ),
   currency: UpdateCompanySettingsSchema.shape.currency
     .optional()
-    .describe(`company target: ${enumHint(currencyValues)}. Omit to keep existing.`),
+    .describe("company target: ISO currency code. Omit to keep existing."),
   terminology: UpdateCompanySettingsSchema.shape.terminology.describe(
     `company target: optional entity label presets ${JSON.stringify(ENTITY_TERMINOLOGY_PRESETS)}. Pass only the entities to change.`,
   ),

@@ -31,7 +31,7 @@ There is no rotate or revoke button: create a new key, update the client, then d
 
 ## Mailboxes tab
 
-Route `/profile/mailboxes`, sidebar id `#nav-profile-mailboxes`. Mail accounts you connect with their own IMAP and SMTP credentials, which is how a self-hosted install reads and sends mail without the hosted connector. Each row shows the address, its connection state and when it last synced, and offers a resync and a disconnect. Disconnecting removes the stored credentials; the messages already imported stay.
+Route `/profile/mailboxes`, sidebar id `#nav-profile-mailboxes`. Mail accounts you connect with their own IMAP and SMTP credentials, which is how a self-hosted install reads and sends mail without the hosted connector. Each row shows the address, its connection state and when it last synced, and offers a resync and a disconnect. Disconnecting removes the stored credentials; the messages already imported stay. **Sync now** walks the inbox, the Sent and Archive folders and your own subscribed folders; a message in Sent that carries no readable sender counts as sent by you. A reply sent from Mail is also filed in the account's Sent folder, marked as read (Gmail and Microsoft 365 file it themselves); when the account has no Sent folder the reply still goes out, and a warning says the copy was not saved.
 
 ## Connected accounts tab
 

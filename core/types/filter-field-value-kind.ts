@@ -1,4 +1,5 @@
 import { AD_PROVIDER_ORDER } from "@/features/acquisition/ad-provider-registry";
+import { WEB_FORM_SUBMISSION_STATUSES } from "@/features/webform/submissions/web-form-submission.schema";
 import { FilterFieldKey } from "./filter-field-key";
 import { FILTER_FIELD_DEFAULT_OPERATORS } from "./filter-field-operators";
 
@@ -64,6 +65,7 @@ export const DEFAULT_FILTER_VALUE_KIND: Record<FilterFieldKey, FilterValueKind> 
   [FilterFieldKey.status]: { kind: "enum", values: enumValues(Status) },
   [FilterFieldKey.dealStatus]: { kind: "enum", values: enumValues(DealStatus) },
   [FilterFieldKey.leadStatus]: { kind: "enum", values: enumValues(LeadStatus) },
+  [FilterFieldKey.submissionStatus]: { kind: "enum", values: WEB_FORM_SUBMISSION_STATUSES },
   [FilterFieldKey.rotting]: { kind: "enum", values: BOOLEAN_FILTER_VALUES },
   [FilterFieldKey.overdue]: { kind: "enum", values: BOOLEAN_FILTER_VALUES },
   [FilterFieldKey.nextActivity]: { kind: "enum", values: BOOLEAN_FILTER_VALUES },

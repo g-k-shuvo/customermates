@@ -4,7 +4,7 @@ import { WebFormSourcesPageView } from "../components/webform/web-form-sources-p
 
 import { getGetWebFormSourcesInteractor } from "@/core/di";
 import { requireAccess } from "@/features/auth/next/require";
-import { decodeGetParams } from "@/core/utils/get-params";
+import { readSurfaceParams } from "@/core/data-view/next/read-surface-params";
 import { SURFACE } from "@/core/data-view/data-view-keys";
 import { PageContainer } from "@/components/shared/page-container";
 import { unwrapValidated } from "@/core/validation/validation.utils";
@@ -16,12 +16,9 @@ type Props = {
 export default async function CompanyWebFormsPage({ searchParams }: Props) {
   await requireAccess({ resource: Resource.leads });
 
-  const params = await searchParams;
-  const sourceParams = decodeGetParams(params);
+  const sourceParams = await readSurfaceParams(SURFACE.webFormSources, searchParams);
 
-  const sources = await unwrapValidated(
-    getGetWebFormSourcesInteractor().invoke({ ...sourceParams, p13nId: SURFACE.webFormSources }),
-  );
+  const sources = await unwrapValidated(getGetWebFormSourcesInteractor().invoke(sourceParams));
 
   return (
     <PageContainer padded={false}>

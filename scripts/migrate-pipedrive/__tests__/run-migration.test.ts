@@ -25,6 +25,8 @@ import type {
   PipedriveDeal,
   PipedriveDealField,
   PipedriveFlowEntry,
+  PipedriveLead,
+  PipedriveLeadLabel,
   PipedriveNote,
   PipedriveOrganization,
   PipedrivePerson,
@@ -42,6 +44,7 @@ import {
   PIPEDRIVE_ADDRESS_COLUMN,
   PIPEDRIVE_CLOSED_AT_COLUMN,
   PIPEDRIVE_CURRENCY_COLUMN,
+  PIPEDRIVE_EXPECTED_CLOSE_COLUMN,
   PIPEDRIVE_ID_COLUMN,
   PIPEDRIVE_NOTE_IDS_COLUMN,
   PIPEDRIVE_PHONE_COLUMN,
@@ -85,9 +88,11 @@ type SourceData = {
   dealFlow?: Record<number, PipedriveFlowEntry[]>;
   activities?: PipedriveActivity[];
   notes?: PipedriveNote[];
+  leads?: PipedriveLead[];
+  leadLabels?: PipedriveLeadLabel[];
 };
 
-const ENTITY_PATHS = ["organizations", "contacts", "deals", "tasks"] as const;
+const ENTITY_PATHS = ["organizations", "contacts", "deals", "tasks", "leads"] as const;
 
 const COLUMN_LABELS: Record<(typeof ENTITY_PATHS)[number], string[]> = {
   organizations: [PIPEDRIVE_ID_COLUMN, PIPEDRIVE_ADDRESS_COLUMN, PIPEDRIVE_NOTE_IDS_COLUMN],
@@ -100,6 +105,7 @@ const COLUMN_LABELS: Record<(typeof ENTITY_PATHS)[number], string[]> = {
     PIPEDRIVE_NOTE_IDS_COLUMN,
   ],
   tasks: [PIPEDRIVE_ID_COLUMN],
+  leads: [PIPEDRIVE_ID_COLUMN, PIPEDRIVE_NOTE_IDS_COLUMN, PIPEDRIVE_EXPECTED_CLOSE_COLUMN],
 };
 
 const ENTITY_TYPES: Record<(typeof ENTITY_PATHS)[number], EntityType> = {
@@ -107,6 +113,7 @@ const ENTITY_TYPES: Record<(typeof ENTITY_PATHS)[number], EntityType> = {
   contacts: EntityType.contact,
   deals: EntityType.deal,
   tasks: EntityType.task,
+  leads: EntityType.lead,
 };
 
 class FakeWorkspace {
@@ -124,12 +131,14 @@ class FakeWorkspace {
     contacts: [],
     deals: [],
     tasks: [],
+    leads: [],
   };
   readonly columns: Record<string, CrmCustomColumn[]> = {
     organizations: [],
     contacts: [],
     deals: [],
     tasks: [],
+    leads: [],
   };
   readonly pipelines: CrmPipeline[] = [];
   readonly lostReasons: CrmLostReason[] = [];
@@ -346,6 +355,8 @@ function fakeSource(data: SourceData): PipedriveSource {
     dealFlow: (dealId) => Promise.resolve(data.dealFlow?.[dealId] ?? []),
     activities: () => Promise.resolve(data.activities ?? []),
     notes: () => Promise.resolve(data.notes ?? []),
+    leads: () => Promise.resolve(data.leads ?? []),
+    leadLabels: () => Promise.resolve(data.leadLabels ?? []),
   };
 }
 
@@ -475,6 +486,42 @@ describe("deal closing transitions", () => {
 
     expect(world.calls.some((call) => call.kind === "markDealLost")).toBe(true);
     expect(report.reconciled).toBe(true);
+  });
+});
+
+describe("deal value", () => {
+  const valuedDeal: PipedriveDeal = {
+    id: 101,
+    title: "Worth something",
+    status: "open",
+    pipeline_id: 1,
+    stage_id: 10,
+    user_id: 1,
+    value: 2500,
+  };
+
+  const dealWrites = (world: FakeWorkspace) =>
+    world.calls.filter((call) => call.kind === "createRecord" && call.entityPath === "deals");
+
+  it("writes the Pipedrive value to baseValue and provisions no value service", async () => {
+    const world = new FakeWorkspace();
+
+    await migrate({ world, source: { ...ONE_PIPELINE, deals: [valuedDeal] } });
+
+    const [write] = dealWrites(world);
+    expect(write).toMatchObject({ payload: { baseValue: 2500 } });
+    expect(write && "payload" in write ? write.payload : {}).not.toHaveProperty("services");
+    expect(world.calls.some((call) => call.kind === "createService")).toBe(false);
+  });
+
+  it("refuses to migrate deals while the pre-baseValue value service still exists", async () => {
+    const world = new FakeWorkspace();
+    world.services.push({ id: "legacy-value-service", name: "Pipedrive deal value", amount: 1 });
+
+    await expect(migrate({ world, source: { ...ONE_PIPELINE, deals: [valuedDeal] } })).rejects.toThrow(
+      /migrate:pipedrive:base-value/,
+    );
+    expect(dealWrites(world)).toHaveLength(0);
   });
 });
 
@@ -935,5 +982,162 @@ describe("a whole run", () => {
     expect(report.skipped).toEqual([]);
     expect(report.reconciled).toBe(true);
     expect(report.entities.every((entry) => entry.reconciled)).toBe(true);
+  });
+});
+
+describe("leads", () => {
+  const LEAD_ID = "adf21080-0e10-11eb-879b-05d71fb426ec";
+  const lead: PipedriveLead = {
+    id: LEAD_ID,
+    title: "Market assessment",
+    owner_id: 1,
+    person_id: 20,
+    organization_id: 30,
+    label_ids: ["label-hot"],
+    value: { amount: 42000, currency: "EUR" },
+    expected_close_date: "2026-11-30",
+  };
+  const source: SourceData = {
+    users: PIPEDRIVE_USERS,
+    organizations: [{ id: 30, name: "Acme" }],
+    persons: [{ id: 20, name: "Ada Lovelace", org_id: 30 }],
+    leads: [lead],
+    leadLabels: [{ id: "label-hot", name: "Hot" }],
+  };
+
+  function createdLeads(world: FakeWorkspace) {
+    return world.calls.flatMap((call) =>
+      call.kind === "createRecord" && call.entityPath === "leads" ? [call.payload] : [],
+    );
+  }
+
+  it("imports a lead linked to the contact and organization the same run created", async () => {
+    const world = new FakeWorkspace();
+
+    const report = await migrate({ world, source });
+
+    const contactId = world.records.contacts[0]?.id;
+    const organizationId = world.records.organizations[0]?.id;
+    expect(createdLeads(world)).toEqual([
+      {
+        title: "Market assessment",
+        status: "new",
+        sourceOrigin: "pipedrive",
+        labels: ["Hot"],
+        contactId,
+        organizationId,
+        ownerUserId: "user-ada",
+        value: 42000,
+        customFieldValues: [
+          { columnId: world.columnId("leads", PIPEDRIVE_ID_COLUMN), value: LEAD_ID },
+          { columnId: world.columnId("leads", PIPEDRIVE_EXPECTED_CLOSE_COLUMN), value: "2026-11-30" },
+        ],
+      },
+    ]);
+    expect(line(report, "leads")).toMatchObject({ sourceCount: 1, targetCount: 1, created: 1, reconciled: true });
+    expect(
+      world.calls.flatMap((call) =>
+        call.kind === "createCustomColumn" && call.input.entityType === EntityType.lead ? [call.input] : [],
+      ),
+    ).toEqual([
+      expect.objectContaining({ label: PIPEDRIVE_ID_COLUMN, type: CustomColumnType.plain }),
+      expect.objectContaining({ label: PIPEDRIVE_NOTE_IDS_COLUMN, type: CustomColumnType.plain }),
+      expect.objectContaining({ label: PIPEDRIVE_EXPECTED_CLOSE_COLUMN, type: CustomColumnType.date }),
+    ]);
+  });
+
+  it("recognises a lead an earlier run imported by its UUID and leaves it alone", async () => {
+    const world = new FakeWorkspace();
+    await migrate({ world, source });
+    world.calls.length = 0;
+
+    const report = await migrate({ world, source });
+
+    expect(createdLeads(world)).toEqual([]);
+    expect(world.calls.some((call) => call.kind === "updateRecord" && call.entityPath === "leads")).toBe(false);
+    expect(line(report, "leads")).toMatchObject({ sourceCount: 1, targetCount: 1, unchanged: 1, reconciled: true });
+  });
+
+  it("re-applies the mapping with --update-existing but never resets how far the CRM moved a lead", async () => {
+    const world = new FakeWorkspace();
+    await migrate({ world, source });
+    world.calls.length = 0;
+
+    await migrate({
+      world,
+      source: { ...source, leads: [{ ...lead, title: "Market assessment 2027" }] },
+      config: { updateExisting: true },
+    });
+    const renamed = world.calls.find((call) => call.kind === "updateRecord" && call.entityPath === "leads");
+    expect(renamed && "payload" in renamed ? renamed.payload : null).toMatchObject({ title: "Market assessment 2027" });
+    expect(renamed && "payload" in renamed ? renamed.payload : {}).not.toHaveProperty("status");
+
+    world.calls.length = 0;
+    await migrate({
+      world,
+      source: { ...source, leads: [{ ...lead, is_archived: true }] },
+      config: { updateExisting: true },
+    });
+    const archived = world.calls.find((call) => call.kind === "updateRecord" && call.entityPath === "leads");
+    expect(archived && "payload" in archived ? archived.payload : null).toMatchObject({ status: "archived" });
+  });
+
+  it("appends a lead's Pipedrive notes to the lead once", async () => {
+    const world = new FakeWorkspace();
+    const withNote: SourceData = {
+      ...source,
+      notes: [{ id: 700, content: "<p>Wants a call in Q4</p>", lead_id: LEAD_ID, add_time: "2026-09-01 09:00:00" }],
+    };
+
+    const report = await migrate({ world, source: withNote });
+
+    const update = world.calls.find((call) => call.kind === "updateRecord" && call.entityPath === "leads");
+    expect(update && "payload" in update ? String(update.payload.notes ?? "") : "").toContain("Pipedrive note 700");
+    expect(update && "payload" in update ? update.payload.customFieldValues : null).toEqual([
+      { columnId: world.columnId("leads", PIPEDRIVE_NOTE_IDS_COLUMN), value: "700" },
+    ]);
+    expect(line(report, "notes")).toMatchObject({ sourceCount: 1, targetCount: 1, reconciled: true });
+  });
+
+  it("skips a note whose lead this run did not import, saying which lead", async () => {
+    const world = new FakeWorkspace();
+
+    const report = await migrate({
+      world,
+      source: { users: PIPEDRIVE_USERS, notes: [{ id: 701, content: "orphan", lead_id: "not-imported" }] },
+    });
+
+    expect(report.skipped).toContainEqual(
+      expect.objectContaining({
+        entity: "notes",
+        sourceId: "701",
+        reason: "owning lead not-imported was not imported",
+      }),
+    );
+  });
+
+  it("leaves leads and their columns alone when --only excludes them", async () => {
+    const world = new FakeWorkspace();
+
+    const report = await migrate({ world, source, config: { only: ["organizations", "contacts"] } });
+
+    expect(createdLeads(world)).toEqual([]);
+    expect(world.columns.leads).toEqual([]);
+    expect(line(report, "leads")).toBeUndefined();
+  });
+
+  it("reports an activity that was attached to a lead, because a task cannot link to one", async () => {
+    const world = new FakeWorkspace();
+
+    const report = await migrate({
+      world,
+      source: {
+        users: PIPEDRIVE_USERS,
+        activities: [{ id: 800, subject: "Call back", type: "call", lead_id: LEAD_ID }],
+      },
+    });
+
+    expect(reported(report, "activity.lead_id")).toEqual(["lead"]);
+    expect(line(report, "tasks")).toMatchObject({ created: 1 });
   });
 });

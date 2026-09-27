@@ -117,12 +117,14 @@ function renderState(
     serverSnapshotApplied = true,
     showNotesPanel = true,
     summary,
+    extraPanels,
   }: {
     canManage?: boolean;
     isEditingCustomField?: boolean;
     serverSnapshotApplied?: boolean;
     showNotesPanel?: boolean;
     summary?: ReactNode;
+    extraPanels?: { id: string; label: string; content: ReactNode }[];
   } = {},
 ) {
   const entityId = "contact-1";
@@ -152,6 +154,7 @@ function renderState(
       canDelete: true,
       entityId,
       entityType: EntityType.contact,
+      extraPanels,
       fallbackTitle: "Contact",
       historyPanel: createElement("div", { "data-history": true }),
       identity: { name: "Ada Lovelace" },
@@ -267,6 +270,35 @@ describe("EntityDetailLayout", () => {
     expect(html).toContain("EntityDetail.overview");
     expect(html).toContain("EntityDetail.sections.notes");
     expect(html).toContain("EntityTimeline.types.activities");
+    expect(html).toContain("@6xl/detail:grid-cols-[minmax(0,3fr)_minmax(0,2fr)_360px]");
+  });
+
+  it("adds extra panels to the compact tabs and to a tabbed middle column on wide screens", () => {
+    harness.canReadHistory = true;
+    const emails = { id: "emails", label: "Mailbox.title", content: createElement("div", { "data-emails": true }) };
+
+    const { html } = renderState("content", { extraPanels: [emails] });
+
+    const compactTabs = [...html.matchAll(/id="[^"]*-(details|notes|emails|activities)-tab"/g)];
+    expect(compactTabs.map((match) => match[1])).toEqual(["details", "notes", "emails", "activities"]);
+    expect(html).toContain('data-detail-middle-column="true"');
+    const wideSwitcher = html.match(/data-detail-middle-switcher="true" class="([^"]+)"/)?.[1].split(" ");
+    expect(wideSwitcher).toEqual(expect.arrayContaining(["hidden", "@6xl/detail:block"]));
+    expect(html.match(/id="[^"]*-(notes|emails)-wide-tab"/g)).toHaveLength(2);
+    expect(html).toContain("EntityDetail.sections.label");
+    expect(html.match(/data-notes-panel="true"/g)).toHaveLength(1);
+    expect(html).toContain("@6xl/detail:grid-cols-[minmax(0,3fr)_minmax(0,2fr)_360px]");
+  });
+
+  it("gives a single middle panel no wide switcher, and keeps the middle column without notes", () => {
+    harness.canReadHistory = true;
+    const emails = { id: "emails", label: "Mailbox.title", content: createElement("div", { "data-emails": true }) };
+
+    const { html } = renderState("content", { extraPanels: [emails], showNotesPanel: false });
+
+    expect(html).toContain('data-detail-middle-column="true"');
+    expect(html).not.toContain("data-detail-middle-switcher");
+    expect(html).not.toContain('data-detail-panel="notes"');
     expect(html).toContain("@6xl/detail:grid-cols-[minmax(0,3fr)_minmax(0,2fr)_360px]");
   });
 

@@ -2,7 +2,7 @@
 
 import type { ComponentProps, ReactNode } from "react";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { observer } from "mobx-react-lite";
 
 import { Input } from "@/components/ui/input";
@@ -66,10 +66,17 @@ export const FormNumberInput = observer(
 
     const [focused, setFocused] = useState(false);
     const [text, setText] = useState<string>(formattedValue);
+    const reselectOnEdit = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
       if (!focused) setText(formattedValue);
     }, [formattedValue, focused]);
+
+    useLayoutEffect(() => {
+      if (!focused || !reselectOnEdit.current) return;
+      reselectOnEdit.current.select();
+      reselectOnEdit.current = null;
+    }, [focused, text]);
 
     function commit(n: number | undefined) {
       if (controlled) onValueChange?.(n);
@@ -121,6 +128,10 @@ export const FormNumberInput = observer(
             }}
             onFocus={(e) => {
               if (!isReadOnly) {
+                const input = e.currentTarget;
+                const selectedAll =
+                  input.value !== "" && input.selectionStart === 0 && input.selectionEnd === input.value.length;
+                reselectOnEdit.current = selectedAll ? input : null;
                 setText(intlStore.formatNumberForEditing(activeNumber));
                 setFocused(true);
               }

@@ -221,6 +221,17 @@ export class DealWritePrecheckInteractor {
     ]);
   }
 
+  async placement(data: { pipelineId?: string | null; stageId?: string | null }, ctx: z.RefinementCtx) {
+    await Promise.all([
+      this.pipelineValidator.invoke([{ ids: data.pipelineId, path: ["pipelineId"] }], ctx),
+      this.stageValidator.invoke([{ ids: data.stageId, path: ["stageId"] }], ctx),
+      this.checkPipelinePlacement(
+        [{ pipelineId: data.pipelineId, stageId: data.stageId, path: ["stageId"], pipelinePath: ["pipelineId"] }],
+        ctx,
+      ),
+    ]);
+  }
+
   async delete(data: DeleteDealData, ctx: z.RefinementCtx) {
     await this.dealValidator.invoke([{ ids: data.id, path: ["id"] }], ctx);
   }

@@ -8,7 +8,7 @@ import { Resource, Action } from "@/generated/prisma";
 
 import { type LeadDto, LeadDtoSchema } from "../lead.schema";
 
-import { BaseCreateLeadSchema } from "./create-lead-base.schema";
+import { BaseUpdateLeadSchema } from "./update-lead-base.schema";
 
 import { DomainEvent } from "@/features/event/domain-events";
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
@@ -21,11 +21,9 @@ import { validateNotes } from "@/core/validation/validate-notes";
 export const UpdateManyLeadsSchema = z.object({
   leads: z
     .array(
-      BaseCreateLeadSchema.partial()
-        .extend({ id: z.uuid() })
-        .superRefine((lead, ctx) => {
-          lead.notes = validateNotes(lead.notes, ctx, ["notes"]);
-        }),
+      BaseUpdateLeadSchema.superRefine((lead, ctx) => {
+        lead.notes = validateNotes(lead.notes, ctx, ["notes"]);
+      }),
     )
     .min(1)
     .max(100),

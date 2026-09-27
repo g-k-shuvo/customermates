@@ -67,6 +67,7 @@ export function MailReplyBox({ threadId, onSent }: Props) {
         }
 
         toast.success(forwarding ? t("Mailbox.forwardSent") : t("Mailbox.replySent"));
+        if (!result.data.sentCopySaved) toast.warning(t("Mailbox.sentCopyNotSaved"));
         setBody("");
         setRecipients("");
         onSent();

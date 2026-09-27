@@ -111,6 +111,49 @@ describe("field mapping", () => {
     expect(renderTitle(undefined, fields, { formTitle: null, sourceName: "Website" })).toBe("Website");
   });
 
+  it("accepts the single-brace placeholders the settings help text shows, and leaves unknown braces alone", () => {
+    const fields = mapWebFormFields(payload, { organizationName: "fields.company" });
+
+    expect(
+      renderTitle("{organizationName} enquiry {draft} — {form_title}", fields, {
+        formTitle: "Request a Call",
+        sourceName: "Website",
+      }),
+    ).toBe("Analytical enquiry {draft} — Request a Call");
+  });
+
+  it("reads a lead value in the formats a form sends, and refuses what is not an amount", () => {
+    const valueOf = (value: unknown) =>
+      mapWebFormFields({ fields: { budget: value } }, { value: "fields.budget" }).value;
+
+    expect(valueOf("50000")).toBe(50_000);
+    expect(valueOf(12500.5)).toBe(12_500.5);
+    expect(valueOf("€ 50,000")).toBe(50_000);
+    expect(valueOf("50.000,75 €")).toBe(50_000.75);
+    expect(valueOf("1,5")).toBe(1.5);
+    expect(valueOf("about fifty")).toBeNull();
+    expect(valueOf("-10")).toBeNull();
+    expect(valueOf(undefined)).toBeNull();
+  });
+
+  it("collects the configured extra fields that the payload actually has", () => {
+    const fields = mapWebFormFields(
+      { fields: { utm: { source: "linkedin" }, phone: "+49 30 1234567" } },
+      {
+        customFields: [
+          { columnId: "11111111-1111-4111-8111-111111111111", path: "fields.utm.source" },
+          { columnId: "22222222-2222-4222-8222-222222222222", path: "fields.phone" },
+          { columnId: "33333333-3333-4333-8333-333333333333", path: "fields.missing" },
+        ],
+      },
+    );
+
+    expect(fields.customFields).toEqual([
+      { columnId: "11111111-1111-4111-8111-111111111111", raw: "linkedin" },
+      { columnId: "22222222-2222-4222-8222-222222222222", raw: "+49 30 1234567" },
+    ]);
+  });
+
   it("drops placeholders that resolve to nothing", () => {
     const fields = mapWebFormFields({}, {});
 

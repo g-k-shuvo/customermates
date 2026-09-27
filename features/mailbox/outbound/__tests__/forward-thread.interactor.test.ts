@@ -78,6 +78,7 @@ function harness(found: unknown = context(), secretKey: typeof KEY | null = KEY)
     messageId: "<sent@agency.example>",
     raw: Buffer.from(""),
     recipients: ["carol@partner.example"],
+    sentCopySaved: true,
   });
 
   return {

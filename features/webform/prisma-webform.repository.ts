@@ -15,8 +15,11 @@ import type { FindWebFormSourcesByIdsRepo } from "./find-web-form-sources-by-ids
 import type { GetWebFormSourcesRepo } from "./get/get-web-form-sources.interactor";
 import type { RotateWebFormSecretRepo } from "./upsert/rotate-web-form-secret.repo";
 import type { UpdateWebFormSourceRepo } from "./upsert/update-web-form-source.repo";
+import type { FindWebFormMappableColumnsRepo } from "./upsert/find-web-form-mappable-columns.repo";
 
 import { randomBytes } from "node:crypto";
+
+import { EntityType } from "@/generated/prisma";
 
 import { type WebFormSourceDto, type WebFormSourceWithSecret } from "./webform-source.schema";
 import { WebFormFieldMappingSchema } from "./ingest/field-mapping";
@@ -52,7 +55,8 @@ export class PrismaWebFormRepo
     GetWebFormSourcesRepo,
     GetWebFormSourceByIdRepo,
     FindWebFormSourcesByIdsRepo,
-    RotateWebFormSecretRepo
+    RotateWebFormSecretRepo,
+    FindWebFormMappableColumnsRepo
 {
   private get sourceSelect() {
     return {
@@ -91,6 +95,21 @@ export class PrismaWebFormRepo
     });
 
     return existing !== null;
+  }
+
+  async findMappableColumnIds(ids: Set<string>): Promise<Set<string>> {
+    if (ids.size === 0) return new Set<string>();
+
+    const columns = await this.prisma.customColumn.findMany({
+      where: {
+        companyId: this.companyId,
+        id: { in: [...ids] },
+        entityType: { in: [EntityType.lead, EntityType.contact] },
+      },
+      select: { id: true },
+    });
+
+    return new Set(columns.map((column) => column.id));
   }
 
   getSearchableFields() {

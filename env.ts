@@ -6,6 +6,8 @@ import {
   resolveOptionalBigInt,
   resolveStrictBoolean,
 } from "@/core/config/environment";
+import { resolveStorageConfig } from "@/core/storage/storage-config";
+import { resolveSigningConfig } from "@/core/signing/signing-config";
 
 const BASE_URL = resolveBaseUrl(process.env);
 const oauthProxyUrl = process.env.OAUTH_PROXY_URL?.trim();
@@ -65,6 +67,9 @@ export const env = {
     "MAILBOX_ALLOW_PRIVATE_HOSTS",
     process.env.MAILBOX_ALLOW_PRIVATE_HOSTS,
   ),
+
+  STORAGE: resolveStorageConfig(process.env),
+  SIGNING: resolveSigningConfig(process.env),
 
   WORKFLOW_TARGET_WORLD: process.env.WORKFLOW_TARGET_WORLD,
   CRON_SECRET: process.env.CRON_SECRET,

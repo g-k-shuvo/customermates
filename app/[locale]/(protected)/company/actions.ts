@@ -12,6 +12,7 @@ import type { CreateWebFormSourceData } from "@/features/webform/upsert/create-w
 import type { UpdateWebFormSourceData } from "@/features/webform/upsert/update-web-form-source.interactor";
 import type { DeleteWebFormSourceData } from "@/features/webform/delete/delete-web-form-source.interactor";
 import type { RotateWebFormSecretData } from "@/features/webform/upsert/rotate-web-form-secret.interactor";
+import type { RetryWebFormSubmissionData } from "@/features/webform/submissions/web-form-submission.schema";
 import type { DeleteWebhookData } from "@/features/webhook/delete-webhook.interactor";
 import type { ResendWebhookDeliveryData } from "@/features/webhook/resend-webhook-delivery.interactor";
 import type { InviteUsersByEmailData } from "@/features/company/invite-users-by-email.interactor";
@@ -69,6 +70,8 @@ import {
   getRotateWebFormSecretInteractor,
   getDeleteWebhookInteractor,
   getGetWebhookDeliveriesInteractor,
+  getGetWebFormSubmissionsInteractor,
+  getRetryWebFormSubmissionInteractor,
   getResendWebhookDeliveryInteractor,
   getGetAuditLogsInteractor,
 } from "@/core/di";
@@ -244,6 +247,14 @@ export async function rotateWebFormSecretAction(data: RotateWebFormSecretData) {
 
 export async function getWebhooksAction(params?: GetQueryParams) {
   return unwrapValidated(getGetWebhooksInteractor().invoke(params));
+}
+
+export async function getWebFormSubmissionsAction(params?: GetQueryParams) {
+  return unwrapValidated(getGetWebFormSubmissionsInteractor().invoke(params));
+}
+
+export async function retryWebFormSubmissionAction(data: RetryWebFormSubmissionData) {
+  return serializeResult(getRetryWebFormSubmissionInteractor().invoke(data));
 }
 
 export async function getWebhookDeliveriesAction(params?: GetQueryParams) {

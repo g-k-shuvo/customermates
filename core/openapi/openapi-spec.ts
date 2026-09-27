@@ -51,6 +51,23 @@ import { updateManyDealsOperation } from "@/features/deals/upsert/update-many-de
 import { markDealWonOperation } from "@/features/deals/close/mark-deal-won.openapi";
 import { markDealLostOperation } from "@/features/deals/close/mark-deal-lost.openapi";
 import { reopenDealOperation } from "@/features/deals/close/reopen-deal.openapi";
+import { getDealStageDurationsOperation } from "@/features/deals/get/get-deal-stage-durations.openapi";
+import { createRecordFileUploadOperation } from "@/features/record-files/upload/create-record-file-upload.openapi";
+import { completeRecordFileUploadOperation } from "@/features/record-files/upload/complete-record-file-upload.openapi";
+import { getRecordFilesOperation } from "@/features/record-files/get/get-record-files.openapi";
+import { getRecordFileDownloadOperation } from "@/features/record-files/get/get-record-file-download.openapi";
+import { deleteRecordFileOperation } from "@/features/record-files/delete/delete-record-file.openapi";
+import { getRecordDocumentsOperation } from "@/features/record-documents/get/get-record-documents.openapi";
+import { getRecordDocumentDownloadOperation } from "@/features/record-documents/get/get-record-document-download.openapi";
+import { createRecordDocumentOperation } from "@/features/record-documents/upload/create-record-document.openapi";
+import { createSignedCopyUploadOperation } from "@/features/record-documents/upload/create-signed-copy-upload.openapi";
+import { completeRecordDocumentFileOperation } from "@/features/record-documents/upload/complete-record-document-file.openapi";
+import { updateRecordDocumentOperation } from "@/features/record-documents/update/update-record-document.openapi";
+import { deleteRecordDocumentOperation } from "@/features/record-documents/delete/delete-record-document.openapi";
+import { sendForSignatureOperation } from "@/features/record-documents/signing/send-for-signature.openapi";
+import { voidSignatureOperation } from "@/features/record-documents/signing/void-signature.openapi";
+import { refreshSignatureOperation } from "@/features/record-documents/signing/refresh-signature.openapi";
+import { getSignatureSuggestionsOperation } from "@/features/record-documents/signing/get-signature-suggestions.openapi";
 import { webhookDealCreatedOperation } from "@/features/deals/upsert/deal-created.openapi";
 import { webhookDealUpdatedOperation } from "@/features/deals/upsert/deal-updated.openapi";
 import { webhookDealDeletedOperation } from "@/features/deals/delete/deal-deleted.openapi";
@@ -102,6 +119,9 @@ import { updateManyTasksOperation } from "@/features/tasks/upsert/update-many-ta
 import { webhookTaskCreatedOperation } from "@/features/tasks/upsert/task-created.openapi";
 import { webhookTaskUpdatedOperation } from "@/features/tasks/upsert/task-updated.openapi";
 import { webhookTaskDeletedOperation } from "@/features/tasks/delete/task-deleted.openapi";
+import { webhookLeadCreatedOperation } from "@/features/leads/upsert/lead-created.openapi";
+import { webhookLeadUpdatedOperation } from "@/features/leads/upsert/lead-updated.openapi";
+import { webhookLeadDeletedOperation } from "@/features/leads/delete/lead-deleted.openapi";
 import { completeTaskOperation } from "@/features/tasks/complete/complete-task.openapi";
 import { uncompleteTaskOperation } from "@/features/tasks/complete/uncomplete-task.openapi";
 import { getUsersOperation } from "@/features/user/get/get-users.openapi";
@@ -217,6 +237,9 @@ import { WebhookServiceDeletedSchema } from "@/features/services/delete/service-
 import { WebhookTaskCreatedSchema } from "@/features/tasks/upsert/task-created.openapi";
 import { WebhookTaskUpdatedSchema } from "@/features/tasks/upsert/task-updated.openapi";
 import { WebhookTaskDeletedSchema } from "@/features/tasks/delete/task-deleted.openapi";
+import { WebhookLeadCreatedSchema } from "@/features/leads/upsert/lead-created.openapi";
+import { WebhookLeadUpdatedSchema } from "@/features/leads/upsert/lead-updated.openapi";
+import { WebhookLeadDeletedSchema } from "@/features/leads/delete/lead-deleted.openapi";
 import { WebhookMessagingMessageReceivedSchema } from "@/ee/messaging/webhooks/message/message-received.openapi";
 import { WebhookMessagingMessageUpdatedSchema } from "@/ee/messaging/webhooks/message/message-updated.openapi";
 import { WebhookMessagingMessageDeletedSchema } from "@/ee/messaging/webhooks/message/message-deleted.openapi";
@@ -349,6 +372,53 @@ export function generateOpenApiSpec() {
       },
       "/v1/deals/{id}/reopen": {
         post: reopenDealOperation,
+      },
+      "/v1/deals/{id}/stage-history": {
+        get: getDealStageDurationsOperation,
+      },
+      "/v1/files": {
+        get: getRecordFilesOperation,
+      },
+      "/v1/files/uploads": {
+        post: createRecordFileUploadOperation,
+      },
+      "/v1/files/{id}": {
+        delete: deleteRecordFileOperation,
+      },
+      "/v1/files/{id}/complete": {
+        post: completeRecordFileUploadOperation,
+      },
+      "/v1/files/{id}/download": {
+        get: getRecordFileDownloadOperation,
+      },
+      "/v1/documents": {
+        get: getRecordDocumentsOperation,
+        post: createRecordDocumentOperation,
+      },
+      "/v1/documents/{id}": {
+        put: updateRecordDocumentOperation,
+        delete: deleteRecordDocumentOperation,
+      },
+      "/v1/documents/{id}/signed-copy": {
+        post: createSignedCopyUploadOperation,
+      },
+      "/v1/documents/{id}/files/{fileId}/complete": {
+        post: completeRecordDocumentFileOperation,
+      },
+      "/v1/documents/{id}/download": {
+        get: getRecordDocumentDownloadOperation,
+      },
+      "/v1/documents/{id}/signature": {
+        post: sendForSignatureOperation,
+      },
+      "/v1/documents/{id}/signature/void": {
+        post: voidSignatureOperation,
+      },
+      "/v1/documents/{id}/signature/refresh": {
+        post: refreshSignatureOperation,
+      },
+      "/v1/documents/signature-suggestions": {
+        get: getSignatureSuggestionsOperation,
       },
       "/v1/pipelines": {
         get: getPipelinesOperation,
@@ -592,6 +662,15 @@ export function generateOpenApiSpec() {
       taskDeleted: {
         post: webhookTaskDeletedOperation,
       },
+      leadCreated: {
+        post: webhookLeadCreatedOperation,
+      },
+      leadUpdated: {
+        post: webhookLeadUpdatedOperation,
+      },
+      leadDeleted: {
+        post: webhookLeadDeletedOperation,
+      },
       messagingMessageReceived: {
         post: webhookMessagingMessageReceivedOperation,
       },
@@ -698,6 +777,9 @@ export function generateOpenApiSpec() {
         WebhookTaskCreatedSchema,
         WebhookTaskUpdatedSchema,
         WebhookTaskDeletedSchema,
+        WebhookLeadCreatedSchema,
+        WebhookLeadUpdatedSchema,
+        WebhookLeadDeletedSchema,
         WebhookMessagingMessageReceivedSchema,
         WebhookMessagingMessageUpdatedSchema,
         WebhookMessagingMessageDeletedSchema,

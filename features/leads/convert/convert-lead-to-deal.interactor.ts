@@ -14,10 +14,17 @@ import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator"
 import { Write } from "@/core/decorators/write.decorator";
 import { BULK_WRITE_TRANSACTION } from "@/core/decorators/transaction.decorator";
 import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
+import { NotesSchema } from "@/core/base/base-entity.schema";
 import { calculateChanges } from "@/core/utils/calculate-changes";
 import { failConflict } from "@/core/validation/interactor-failure-server";
+import { validateNotes } from "@/core/validation/validate-notes";
 import { CustomErrorCode } from "@/core/validation/validation.types";
 import { zx } from "@/core/validation/validation.utils";
+import { getZodParseContext } from "@/core/validation/zod-error-map-server";
+
+const CarriedNotesSchema = z.object({ notes: NotesSchema }).superRefine((carried, ctx) => {
+  carried.notes = validateNotes(carried.notes, ctx, ["notes"]);
+});
 
 export const ConvertLeadToDealSchema = z.object({
   id: z.uuid(),
@@ -26,6 +33,7 @@ export const ConvertLeadToDealSchema = z.object({
   stageId: z.uuid().optional(),
   expectedCloseDate: zx.isoDateTime().optional(),
   probability: z.number().min(0).max(100).optional(),
+  baseValue: z.number().min(0).optional().describe("The deal's own value. Defaults to the lead's value."),
 });
 export type ConvertLeadToDealData = Data<typeof ConvertLeadToDealSchema>;
 
@@ -57,13 +65,18 @@ export class ConvertLeadToDealInteractor extends AuthenticatedInteractor<Convert
 
     if (lead.convertedDealId) return failConflict(CustomErrorCode.leadAlreadyConverted, ["id"]);
 
+    const carried = await CarriedNotesSchema.safeParseAsync({ notes: lead.notes }, await getZodParseContext());
+
+    if (!carried.success) return { ok: false as const, error: carried.error };
+
     const deal = await this.dealRepo.createDealOrThrow({
       name: data.name ?? lead.title,
-      notes: lead.notes ?? null,
+      notes: carried.data.notes ?? null,
       pipelineId: data.pipelineId,
       stageId: data.stageId,
       expectedCloseDate: data.expectedCloseDate,
       probability: data.probability,
+      baseValue: data.baseValue ?? lead.value ?? 0,
       contactIds: lead.contact ? [lead.contact.id] : [],
       organizationIds: lead.organization ? [lead.organization.id] : [],
       userIds: lead.owner ? [lead.owner.id] : [],

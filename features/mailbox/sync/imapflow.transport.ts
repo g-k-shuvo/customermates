@@ -36,7 +36,7 @@ export type ImapFetchedMessage = {
   internalDate?: Date;
 };
 
-export type ImapSearchQuery = { since: Date };
+export type ImapSearchQuery = { since: Date } | { header: Record<string, string> };
 
 export type ImapClient = {
   connect(): Promise<void>;
@@ -46,7 +46,7 @@ export type ImapClient = {
   getMailboxLock(path: string): Promise<{ release(): void }>;
   search(query: ImapSearchQuery, options: { uid: boolean }): Promise<number[] | false | undefined>;
   fetch(range: string, options: Record<string, boolean>): AsyncIterable<ImapFetchedMessage>;
-  append(path: string, source: Buffer): Promise<unknown>;
+  append(path: string, source: Buffer, flags?: string[]): Promise<unknown>;
   mailbox: ImapMailboxState | false;
 };
 
@@ -240,13 +240,23 @@ export function createImapflowTransport(
       });
     },
 
-    async appendToSent(connection, source, path) {
+    async appendToSent(connection, source, path, messageId) {
       await withClient(connection, async (client) => {
         const entries = await client.list();
         const sent = path ?? entries.find((entry) => entry.specialUse === "\\Sent")?.path;
         if (!sent) throw new MailboxTransportError(MailboxTransportFailure.folderMissing);
 
-        await client.append(sent, source);
+        if (messageId) {
+          const lock = await client.getMailboxLock(sent);
+          try {
+            const existing = await client.search({ header: { "message-id": messageId } }, { uid: true });
+            if (Array.isArray(existing) && existing.length > 0) return;
+          } finally {
+            lock.release();
+          }
+        }
+
+        await client.append(sent, source, ["\\Seen"]);
       });
     },
   };

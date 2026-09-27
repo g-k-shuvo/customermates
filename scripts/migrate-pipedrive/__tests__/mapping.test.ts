@@ -6,10 +6,12 @@ import {
   distinctLostReasons,
   formatDealFieldValue,
   isCustomDealField,
+  leadLabelNames,
   mapActivity,
   mapActivityKind,
   mapDeal,
   mapDealFieldToCustomColumn,
+  mapLead,
   mapNoteToMarkdown,
   mapOrganization,
   mapPerson,
@@ -315,7 +317,6 @@ describe("deal mapping", () => {
     contactIdByPipedriveId: new Map([[5, "contact-1"]]),
     pipelineIdByPipedriveId: new Map([[1, "pipeline-1"]]),
     stageIdByPipedriveId: new Map([[10, "stage-1"]]),
-    valueServiceId: "service-1",
   };
 
   it("maps value, expected close date, relations and the Pipedrive id", () => {
@@ -351,7 +352,7 @@ describe("deal mapping", () => {
         organizationIds: ["organization-1"],
         contactIds: ["contact-1"],
         userIds: ["user-ada"],
-        services: [{ serviceId: "service-1", quantity: 2500 }],
+        baseValue: 2500,
       },
     });
 
@@ -386,8 +387,8 @@ describe("deal mapping", () => {
     expect(mapped).toMatchObject({
       skipped: false,
       warnings: ["negative deal value is not representable; value left at 0"],
-      payload: { services: [] },
     });
+    expect(mapped.skipped ? null : mapped.payload.baseValue).toBeUndefined();
   });
 
   it("skips deleted and untitled deals", () => {
@@ -590,5 +591,137 @@ describe("activity and note mapping", () => {
     expect(parseImportedNoteIds("3, 1 ,2")).toEqual(new Set(["3", "1", "2"]));
     expect(parseImportedNoteIds(null)).toEqual(new Set());
     expect(serializeImportedNoteIds(["2", "1", "2"])).toBe("1,2");
+  });
+});
+
+describe("leads", () => {
+  const LEAD_ID = "adf21080-0e10-11eb-879b-05d71fb426ec";
+  const columns = { pipedriveIdColumnId: "col-lead-id", expectedCloseColumnId: "col-expected-close" };
+
+  function context(overrides: Partial<Parameters<typeof mapLead>[1]> = {}) {
+    return {
+      columns,
+      owners,
+      contactIdByPipedriveId: new Map([[20, "contact-ada"]]),
+      organizationIdByPipedriveId: new Map([[30, "organization-acme"]]),
+      labelNameById: leadLabelNames([
+        { id: "label-hot", name: "Hot" },
+        { id: "label-warm", name: " Warm " },
+        { id: "label-blank", name: "  " },
+      ]),
+      defaultCurrency: "eur",
+      ...overrides,
+    };
+  }
+
+  it("carries the title, owner, person, organization, labels, value and expected close date", () => {
+    const mapped = mapLead(
+      {
+        id: LEAD_ID,
+        title: "Market assessment",
+        owner_id: 1,
+        person_id: 20,
+        organization_id: 30,
+        label_ids: ["label-hot", "label-warm", "label-hot"],
+        value: { amount: 42000, currency: "EUR" },
+        expected_close_date: "2026-11-30",
+      },
+      context(),
+    );
+
+    expect(mapped).toEqual({
+      skipped: false,
+      payload: {
+        title: "Market assessment",
+        status: "new",
+        sourceOrigin: "pipedrive",
+        labels: ["Hot", "Warm"],
+        contactId: "contact-ada",
+        organizationId: "organization-acme",
+        ownerUserId: "user-ada",
+        value: 42000,
+        customFieldValues: [
+          { columnId: "col-lead-id", value: LEAD_ID },
+          { columnId: "col-expected-close", value: "2026-11-30" },
+        ],
+      },
+      owner: { userIds: ["user-ada"], usedFallback: false, unmatched: null },
+      warnings: [],
+    });
+  });
+
+  it("keeps an archived lead archived and leaves out what it does not have", () => {
+    const mapped = mapLead({ id: LEAD_ID, title: "Went quiet", is_archived: true }, context());
+
+    expect(mapped.skipped).toBe(false);
+    if (mapped.skipped) return;
+    expect(mapped.payload).toEqual({
+      title: "Went quiet",
+      status: "archived",
+      sourceOrigin: "pipedrive",
+      labels: [],
+      customFieldValues: [{ columnId: "col-lead-id", value: LEAD_ID }],
+    });
+  });
+
+  it("reports links, labels and currencies it cannot carry over instead of guessing", () => {
+    const mapped = mapLead(
+      {
+        id: LEAD_ID,
+        title: "Partial",
+        person_id: 99,
+        organization_id: 98,
+        label_ids: ["label-gone"],
+        value: { amount: "1500", currency: "USD" },
+      },
+      context(),
+    );
+
+    if (mapped.skipped) throw new Error("expected a mapped lead");
+    expect(mapped.payload).not.toHaveProperty("contactId");
+    expect(mapped.payload).not.toHaveProperty("organizationId");
+    expect(mapped.payload.value).toBe(1500);
+    expect(mapped.warnings.map((warning) => [warning.kind, warning.value])).toEqual([
+      ["lead.person_id", "99"],
+      ["lead.organization_id", "98"],
+      ["lead.label_ids", "label-gone"],
+      ["lead.value.currency", "USD"],
+    ]);
+  });
+
+  it("drops a negative or unreadable amount rather than importing it", () => {
+    for (const amount of [-5, "lots", null]) {
+      const mapped = mapLead({ id: LEAD_ID, title: "No value", value: { amount, currency: "EUR" } }, context());
+      if (mapped.skipped) throw new Error("expected a mapped lead");
+      expect(mapped.payload, String(amount)).not.toHaveProperty("value");
+    }
+  });
+
+  it("assigns an unmatched Pipedrive owner to the fallback user and says so", () => {
+    const mapped = mapLead({ id: LEAD_ID, title: "Orphan", owner_id: 2 }, context());
+
+    if (mapped.skipped) throw new Error("expected a mapped lead");
+    expect(mapped.payload.ownerUserId).toBe("user-fallback");
+    expect(mapped.owner.unmatched).toEqual({ pipedriveUserId: 2, email: "ghost@example.com" });
+  });
+
+  it("skips a lead without a title or an id", () => {
+    expect(mapLead({ id: LEAD_ID, title: "  " }, context())).toEqual({ skipped: true, reason: "lead has no title" });
+    expect(mapLead({ id: " ", title: "Nameless" }, context())).toEqual({ skipped: true, reason: "lead has no id" });
+  });
+
+  it("files a note on its lead, but a deal still wins when a note names both", () => {
+    expect(noteOwner({ id: 1, lead_id: LEAD_ID, person_id: 20 })).toEqual({ entity: "lead", pipedriveId: LEAD_ID });
+    expect(noteOwner({ id: 2, lead_id: LEAD_ID, deal_id: 5 })).toEqual({ entity: "deal", pipedriveId: 5 });
+  });
+
+  it("names labels by id, trimmed, and ignores blank ones", () => {
+    expect([
+      ...leadLabelNames([
+        { id: "a", name: " Hot " },
+        { id: "b", name: "" },
+        { id: "", name: "Orphan" },
+      ]),
+    ]).toEqual([["a", "Hot"]]);
   });
 });

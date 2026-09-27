@@ -1,6 +1,8 @@
 import { getProcessWebFormSubmissionInteractor, getPublishLeadCreatedInteractor } from "@/core/di";
 import { isInteractorFailure } from "@/core/validation/validation.utils";
 import { runAsBackgroundTenant } from "@/core/decorators/background-tenant";
+import { AppErrorCode, appErrorDetailsInCauseChain } from "@/core/errors/app-errors";
+import { prismaClientError } from "@/core/errors/prisma-client-error";
 
 import { reportFailure, reportWarning, toWorkflowFailure } from "./capture-failure";
 
@@ -28,16 +30,46 @@ async function processSubmission(submissionId: string): Promise<ProcessedSubmiss
 }
 processSubmission.maxRetries = 3;
 
-async function publishLeadCreated(leadId: string, companyId: string, publisherUserId: string | null): Promise<void> {
+export async function publishLeadCreated(
+  leadId: string,
+  companyId: string,
+  publisherUserId: string | null,
+): Promise<void> {
   "use step";
 
-  const publish = () =>
-    getPublishLeadCreatedInteractor().invoke({ leadId, companyId, underTenant: publisherUserId !== null });
+  const publisher = getPublishLeadCreatedInteractor();
+  const loaded = await publisher.invoke({ leadId, companyId });
+  if (isInteractorFailure(loaded)) return;
 
-  if (publisherUserId) await runAsBackgroundTenant(publisherUserId, publish);
-  else await publish();
+  const reportUnpublished = (error: unknown) =>
+    reportFailure(
+      WORKFLOW_NAME,
+      toWorkflowFailure(error),
+      publisherUserId ? { userId: publisherUserId, companyId } : undefined,
+    );
+
+  const publishedAsTenant = publisherUserId
+    ? await runAsBackgroundTenant(publisherUserId, () =>
+        publisher.publishAsTenant(loaded.data, companyId).catch(reportUnpublished),
+      ).then(
+        () => true,
+        (error: unknown) => {
+          if (publisherCannotAct(error)) return false;
+
+          throw error;
+        },
+      )
+    : false;
+
+  if (!publishedAsTenant) await publisher.publishAsSystem(loaded.data, companyId).catch(reportUnpublished);
 }
 publishLeadCreated.maxRetries = 3;
+
+function publisherCannotAct(error: unknown): boolean {
+  return (
+    appErrorDetailsInCauseChain(error)?.code === AppErrorCode.inactiveUser || prismaClientError(error)?.status === 404
+  );
+}
 
 export async function processWebFormSubmission(payload: ProcessWebFormSubmissionPayload): Promise<void> {
   "use workflow";

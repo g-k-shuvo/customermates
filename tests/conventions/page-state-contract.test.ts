@@ -30,6 +30,7 @@ const collectionViews = [
   "app/[locale]/(protected)/routines/components/routines-page-view.tsx",
   "app/[locale]/(protected)/company/components/webhook/webhooks-page-view.tsx",
   "app/[locale]/(protected)/company/components/webhook/webhook-deliveries-page-view.tsx",
+  "app/[locale]/(protected)/company/components/webform/web-form-submissions-page-view.tsx",
 ] as const;
 
 const pureSkeletons = [
@@ -61,7 +62,7 @@ const exhaustiveResourceOwners = [
 
 describe("page-state ownership", () => {
   it("gives every protected product route a direct feature or family loader", () => {
-    expect(protectedLoaders).toHaveLength(38);
+    expect(protectedLoaders).toHaveLength(39);
     for (const path of protectedLoaders) {
       expect(existsSync(resolve(root, path)), path).toBe(true);
       expect(existsSync(resolve(root, dirname(path), "page.tsx")), `${path}:page`).toBe(true);

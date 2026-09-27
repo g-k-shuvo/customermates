@@ -1,6 +1,7 @@
 import type { CreateLeadRepo } from "./create-lead.repo";
 import type { EventService } from "@/features/event/event.service";
 import type { Data, Validated } from "@/core/validation/validation.utils";
+import type { LeadWritePrecheckInteractor } from "./lead-write-precheck.interactor";
 
 import { Resource, Action } from "@/generated/prisma";
 
@@ -27,6 +28,7 @@ export class CreateLeadInteractor extends AuthenticatedInteractor<CreateLeadData
   constructor(
     private repo: CreateLeadRepo,
     private eventService: EventService,
+    private precheck: LeadWritePrecheckInteractor,
   ) {
     super();
   }
@@ -34,6 +36,7 @@ export class CreateLeadInteractor extends AuthenticatedInteractor<CreateLeadData
   @Write({
     input: CreateLeadSchema,
     output: LeadDtoSchema,
+    precheck: (self, data, ctx) => self.precheck.create(data, ctx),
   })
   async invoke(data: CreateLeadData): Validated<LeadDto> {
     const lead = await this.repo.createLeadOrThrow(data);

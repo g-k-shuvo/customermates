@@ -1,11 +1,16 @@
 import type { AutomationActionOutcome } from "./automation-action-executor";
 import type { AutomationRecordWriter, AutomationTaskLinks } from "./automation-record-writer";
+import type { AutomationStepError } from "../automation-step-errors";
+import type { NotesAppendResult } from "@/components/editor/notes-document";
 
 import type { Prisma } from "@/generated/prisma";
-import { EntityType, LeadStatus } from "@/generated/prisma";
+import { EntityType } from "@/generated/prisma";
+
+import { RECORD_WRITABLE_FIELDS, resolveFieldWrite } from "./automation-field-writes";
 
 import { BaseRepository } from "@/core/base/base-repository";
-import { parseMarkdownToJSON, serializeJSONToMarkdown } from "@/components/editor/editor.utils";
+import { Transaction } from "@/core/decorators/transaction.decorator";
+import { appendMarkdownToNotes } from "@/components/editor/notes-document";
 
 const OWNER_COLUMN_MODELS: Partial<Record<EntityType, string>> = {
   [EntityType.lead]: "lead",
@@ -18,48 +23,6 @@ const NOTE_MODELS: Partial<Record<EntityType, string>> = {
   [EntityType.lead]: "lead",
   [EntityType.task]: "task",
 };
-
-const WRITABLE_SCALARS: Partial<Record<EntityType, readonly string[]>> = {
-  [EntityType.contact]: ["firstName", "lastName", "jobTitle"],
-  [EntityType.organization]: ["name", "website"],
-  [EntityType.deal]: ["name", "probability", "expectedCloseDate"],
-  [EntityType.lead]: ["title", "status", "value"],
-  [EntityType.task]: ["name", "dueAt"],
-};
-
-type ScalarKind = "text" | "number" | "date" | "leadStatus";
-
-const SCALAR_KINDS: Record<string, ScalarKind> = {
-  "deal.probability": "number",
-  "deal.expectedCloseDate": "date",
-  "lead.value": "number",
-  "lead.status": "leadStatus",
-  "task.dueAt": "date",
-};
-
-function coerceScalar(kind: ScalarKind, value: unknown): { ok: true; value: unknown } | { ok: false } {
-  if (value === null) return { ok: true, value: null };
-
-  if (kind === "number") {
-    const parsed = typeof value === "number" ? value : Number(String(value).trim());
-
-    return Number.isFinite(parsed) ? { ok: true, value: parsed } : { ok: false };
-  }
-
-  if (kind === "date") {
-    const parsed = value instanceof Date ? value : new Date(String(value));
-
-    return Number.isNaN(parsed.getTime()) ? { ok: false } : { ok: true, value: parsed };
-  }
-
-  if (kind === "leadStatus") {
-    const candidate = String(value);
-
-    return candidate in LeadStatus ? { ok: true, value: candidate } : { ok: false };
-  }
-
-  return { ok: true, value: String(value) };
-}
 
 const JOIN_TABLE_BY_ENTITY: Partial<Record<EntityType, string>> = {
   [EntityType.contact]: "contactUser",
@@ -75,6 +38,11 @@ const JOIN_KEY_BY_ENTITY: Partial<Record<EntityType, string>> = {
   [EntityType.task]: "taskId",
 };
 
+const NOTES_REFUSAL: Record<Extract<NotesAppendResult, { ok: false }>["reason"], AutomationStepError> = {
+  unreadable: "notesUnreadable",
+  tooLong: "notesTooLong",
+};
+
 type Delegate = {
   updateMany: (args: unknown) => Promise<{ count: number }>;
   findFirst: (args: unknown) => Promise<Record<string, unknown> | null>;
@@ -82,11 +50,8 @@ type Delegate = {
   createMany: (args: unknown) => Promise<{ count: number }>;
 };
 
-function notesAsMarkdown(notes: unknown): string {
-  if (!notes) return "";
-  if (typeof notes === "string") return notes.trim();
-
-  return serializeJSONToMarkdown(notes as object).trim();
+function refused(error: AutomationStepError): AutomationActionOutcome {
+  return { ok: false, error };
 }
 
 export class PrismaAutomationRecordWriter extends BaseRepository implements AutomationRecordWriter {
@@ -104,70 +69,77 @@ export class PrismaAutomationRecordWriter extends BaseRepository implements Auto
     field: string;
     value: unknown;
   }): Promise<AutomationActionOutcome> {
+    const write = resolveFieldWrite(RECORD_WRITABLE_FIELDS[args.entityType], args.field, args.value);
+    if (!write.ok) return refused(write.error);
+
     const model = this.modelFor(args.entityType);
-    const allowed = WRITABLE_SCALARS[args.entityType] ?? [];
-
-    if (!model || !allowed.includes(args.field))
-      return { ok: false, error: `${args.field} cannot be set by an automation` };
-
-    const delegate = this.delegate(model);
-    if (!delegate) return { ok: false, error: `${args.entityType} cannot be written` };
-
-    const coerced = coerceScalar(SCALAR_KINDS[`${args.entityType}.${args.field}`] ?? "text", args.value);
-    if (!coerced.ok) return { ok: false, error: `${args.field} cannot hold that value` };
+    const delegate = model ? this.delegate(model) : undefined;
+    if (!delegate) return refused("recordUnsupported");
 
     const { count } = await delegate.updateMany({
       where: { id: args.entityId, companyId: this.companyId },
-      data: { [args.field]: coerced.value },
+      data: { [write.field]: write.value },
     });
 
-    return count === 1 ? { ok: true, output: { field: args.field } } : { ok: false, error: "the record was not found" };
+    return count === 1 ? { ok: true, output: { field: write.field } } : refused("recordMissing");
   }
 
+  @Transaction
   async assignOwner(args: {
     entityType: EntityType;
     entityId: string;
     userId: string | null;
   }): Promise<AutomationActionOutcome> {
-    if (!args.userId) return { ok: false, error: "no user was configured for this action" };
+    if (!args.userId) return refused("fieldValueMissing");
+
+    const assignee = await this.prisma.user.findFirst({
+      where: { id: args.userId, companyId: this.companyId, status: "active" },
+      select: { id: true },
+    });
+    if (!assignee) return refused("assigneeUnavailable");
 
     const ownerColumnModel = OWNER_COLUMN_MODELS[args.entityType];
 
     if (ownerColumnModel) {
       const delegate = this.delegate(ownerColumnModel);
-      if (!delegate) return { ok: false, error: `${args.entityType} cannot be written` };
+      if (!delegate) return refused("recordUnsupported");
 
       const { count } = await delegate.updateMany({
         where: { id: args.entityId, companyId: this.companyId },
-        data: { ownerUserId: args.userId },
+        data: { ownerUserId: assignee.id },
       });
 
-      return count === 1
-        ? { ok: true, output: { ownerUserId: args.userId } }
-        : { ok: false, error: "the record was not found" };
+      return count === 1 ? { ok: true, output: { ownerUserId: assignee.id } } : refused("recordMissing");
     }
 
+    const recordModel = this.modelFor(args.entityType);
     const joinModel = JOIN_TABLE_BY_ENTITY[args.entityType];
     const joinKey = JOIN_KEY_BY_ENTITY[args.entityType];
-    if (!joinModel || !joinKey) return { ok: false, error: `${args.entityType} has no owner` };
+    const recordDelegate = recordModel ? this.delegate(recordModel) : undefined;
+    const joinDelegate = joinModel ? this.delegate(joinModel) : undefined;
+    if (!recordDelegate || !joinDelegate || !joinKey) return refused("recordUnsupported");
 
-    const delegate = this.delegate(joinModel);
-    if (!delegate) return { ok: false, error: `${args.entityType} cannot be written` };
+    const record = await recordDelegate.findFirst({
+      where: { id: args.entityId, companyId: this.companyId },
+      select: { id: true },
+    });
+    if (!record) return refused("recordMissing");
 
-    await delegate.createMany({
-      data: [{ [joinKey]: args.entityId, userId: args.userId, companyId: this.companyId }],
+    await joinDelegate.createMany({
+      data: [{ [joinKey]: args.entityId, userId: assignee.id, companyId: this.companyId }],
       skipDuplicates: true,
     });
 
-    return { ok: true, output: { ownerUserId: args.userId } };
+    return { ok: true, output: { ownerUserId: assignee.id } };
   }
 
+  @Transaction
   async addLeadLabels(args: { entityId: string; labels: string[] }): Promise<AutomationActionOutcome> {
     const lead = await this.prisma.lead.findFirst({
       where: { id: args.entityId, companyId: this.companyId },
       select: { labels: true },
     });
-    if (!lead) return { ok: false, error: "the record was not found" };
+    if (!lead) return refused("recordMissing");
 
     const labels = [...new Set([...lead.labels, ...args.labels])];
 
@@ -179,26 +151,29 @@ export class PrismaAutomationRecordWriter extends BaseRepository implements Auto
     return { ok: true, output: { labels } };
   }
 
+  @Transaction
   async appendNote(args: { entityType: EntityType; entityId: string; body: string }): Promise<AutomationActionOutcome> {
+    if (!args.body.trim()) return refused("fieldValueMissing");
+
     const model = this.modelFor(args.entityType);
     const delegate = model ? this.delegate(model) : undefined;
-    if (!delegate) return { ok: false, error: `${args.entityType} carries no notes` };
+    if (!delegate) return refused("recordUnsupported");
 
     const existing = await delegate.findFirst({
       where: { id: args.entityId, companyId: this.companyId },
       select: { notes: true },
     });
-    if (!existing) return { ok: false, error: "the record was not found" };
+    if (!existing) return refused("recordMissing");
 
-    const previous = notesAsMarkdown(existing.notes);
-    const combined = previous ? `${previous}\n\n${args.body}` : args.body;
+    const appended = appendMarkdownToNotes(existing.notes, args.body);
+    if (!appended.ok) return refused(NOTES_REFUSAL[appended.reason]);
 
     const { count } = await delegate.updateMany({
       where: { id: args.entityId, companyId: this.companyId },
-      data: { notes: parseMarkdownToJSON(combined) as Prisma.InputJsonValue },
+      data: { notes: appended.document as Prisma.InputJsonValue },
     });
 
-    return count === 1 ? { ok: true, output: { written: true } } : { ok: false, error: "the record was not found" };
+    return count === 1 ? { ok: true, output: { written: true } } : refused("recordMissing");
   }
 
   taskLinksFor(entityType: EntityType, entityId: string): AutomationTaskLinks {

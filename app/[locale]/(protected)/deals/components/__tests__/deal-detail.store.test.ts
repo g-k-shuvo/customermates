@@ -55,6 +55,7 @@ function deal(): DealDto {
   return {
     id: DEAL_ID,
     name: "Expansion",
+    baseValue: 0,
     totalValue: 1_000,
     totalQuantity: 10,
     weightedValue: null,

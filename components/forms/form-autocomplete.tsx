@@ -273,7 +273,7 @@ export const FormAutocomplete = observer(
         const itemKey = entry.key;
 
         const withClose =
-          isMulti && canEdit
+          (isMulti || !required) && canEdit
             ? React.cloneElement(el as React.ReactElement<{ endContent?: React.ReactNode }>, {
                 endContent: (
                   <span
@@ -356,7 +356,7 @@ export const FormAutocomplete = observer(
           </span>
         );
       });
-    }, [selectedItems, selectionMode, renderValue, onChipClick, canEdit, isDisabled, isOptionsLoading, t]);
+    }, [selectedItems, selectionMode, required, renderValue, onChipClick, canEdit, isDisabled, isOptionsLoading, t]);
 
     const fieldClassName = cn(
       "w-full justify-between font-normal h-auto min-h-9 px-3 py-1.5",

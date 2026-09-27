@@ -102,6 +102,7 @@ function makeDealDto(overrides: Record<string, unknown> = {}) {
   return {
     id: DEAL_ID,
     name: "Test Deal",
+    baseValue: 0,
     totalValue: 100,
     totalQuantity: 1,
     weightedValue: null,

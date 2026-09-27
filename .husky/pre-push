@@ -1,0 +1,72 @@
+#!/usr/bin/env sh
+# Blocks a push when tests/conventions fail, on Linux, for the commit being pushed.
+# Windows (Git Bash / MSYS / Cygwin): several suites build POSIX paths and scan nothing on a native
+# checkout, so each pushed commit is checked in a Linux container (scripts/conventions-in-docker.sh).
+# Elsewhere a clean checked-out HEAD is checked in place; any other commit goes to the container too.
+# Both paths regenerate prisma/openapi/raw-docs first and fail on stale committed generated files.
+# Both allow each test 120s where CI allows vitest's 5s default; scripts/conventions-in-docker.sh says why.
+# Bypass once: SKIP_CONVENTIONS=1 git push   (or git push --no-verify)
+set -eu
+
+if [ "${SKIP_CONVENTIONS:-0}" = "1" ]; then
+  echo "pre-push: SKIP_CONVENTIONS=1, convention checks not run" >&2
+  exit 0
+fi
+
+zero=0000000000000000000000000000000000000000
+targets=""
+while read -r _local_ref local_sha _remote_ref _remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue
+  commit=$(git rev-parse --verify --quiet "$local_sha^{commit}") || continue
+  case " $targets " in *" $commit "*) ;; *) targets="$targets $commit" ;; esac
+done
+[ -n "$targets" ] || exit 0
+
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+head_commit=$(git rev-parse --verify --quiet HEAD) || head_commit=""
+native=1
+case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*) native=0 ;; esac
+
+quietly() {
+  if ! output=$("$@" 2>&1); then
+    printf "pre-push: %s failed:\n%s\n" "$*" "$output" >&2
+    return 1
+  fi
+}
+
+check_in_place() {
+  export APP_MODE=self-hosted CI=true DATABASE_URL=postgresql://ci:ci@127.0.0.1:5432/ci DOTENV_CONFIG_PATH=/dev/null
+  unset DIRECT_URL
+  quietly npx --no-install prisma generate || return 1
+  quietly yarn -s openapi:generate || return 1
+  quietly yarn -s raw-docs:generate || return 1
+  in_place_status=0
+  if ! git diff --quiet; then
+    echo "pre-push: committed files differ from what the generators produce (CI step: Verify generated files are committed):" >&2
+    git diff --stat >&2
+    in_place_status=1
+  fi
+  yarn -s conventions:check --reporter=dot --testTimeout=120000 || in_place_status=1
+  return "$in_place_status"
+}
+
+failed=0
+# shellcheck disable=SC2086
+for commit in $targets; do
+  short=$(git rev-parse --short "$commit")
+  if [ "$native" = 1 ] && [ "$commit" = "$head_commit" ] && git diff --quiet HEAD -- && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+    echo "pre-push: tests/conventions @ $short in place" >&2
+    check_in_place || failed=1
+  else
+    if [ "$native" = 1 ]; then
+      echo "pre-push: $short is not the clean checked-out HEAD, checking it in Docker" >&2
+    fi
+    sh "$root/scripts/conventions-in-docker.sh" "$commit" || failed=1
+  fi
+done
+
+if [ "$failed" = 1 ]; then
+  echo "pre-push: push blocked by the convention checks above. Fix them, or bypass once with SKIP_CONVENTIONS=1 git push" >&2
+  exit 1
+fi

@@ -14,7 +14,7 @@ import {
 import { env } from "@/env";
 import { CONTENT_LOCALES, DEFAULT_LOCALE, isContentLocale } from "@/i18n/locale-registry";
 import { CustomErrorCode } from "@/core/validation/validation.types";
-import { serializeJSONToMarkdown } from "@/components/editor/editor.utils";
+import { storedNotesAsMarkdown } from "@/components/editor/notes-document";
 import { extractEntityName, requireEntityListExecutor } from "@/features/search/entity-list-executors";
 import {
   getGetContactByIdInteractor,
@@ -82,7 +82,7 @@ async function fetchRecord(entity: Entity, key: string) {
   if (!row) return customMcpFailure(entityNotFoundCode[entity]);
 
   const { notes, ...masterData } = row as Record<string, unknown> & { notes?: unknown };
-  const noteMarkdown = notes ? serializeJSONToMarkdown(notes as object) : null;
+  const noteMarkdown = storedNotesAsMarkdown(notes);
   const masterText = JSON.stringify(formatDatesInResponse(masterData), null, 2);
   const text = noteMarkdown
     ? `${masterText}\n\nNotes:\n${UNTRUSTED_NOTES_HANDLING}\n${UNTRUSTED_NOTES_OPEN}\n${stripUntrustedNotesMarkers(noteMarkdown)}\n${UNTRUSTED_NOTES_CLOSE}`

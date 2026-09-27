@@ -15,7 +15,7 @@ export abstract class ActiveViewKeyRepo {
 }
 
 export abstract class SelectDataViewRepo {
-  abstract findOwnedOrNull(id: string): Promise<DataViewDto | null>;
+  abstract findReadableOrNull(id: string): Promise<DataViewDto | null>;
 }
 
 @TenantInteractor()
@@ -30,7 +30,7 @@ export class SelectDataViewInteractor extends AuthenticatedInteractor<SelectData
   @Write({ input: SelectDataViewSchema, output: SelectDataViewResultSchema })
   async invoke({ surfaceKey, viewKey }: SelectDataViewData): Validated<SelectDataViewResult> {
     if (viewKey !== ALL_VIEW_KEY) {
-      const view = await this.views.findOwnedOrNull(viewKey);
+      const view = await this.views.findReadableOrNull(viewKey);
       if (!view || view.surfaceKey !== surfaceKey) return failNotFound(CustomErrorCode.dataViewNotFound, ["viewKey"]);
     }
 

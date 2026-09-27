@@ -8,6 +8,8 @@ import { createLeadAction, deleteLeadAction, getLeadByIdAction, updateLeadAction
 
 import { BaseCustomColumnEntityModalStore } from "@/core/base/base-custom-column-entity-modal.store";
 
+const CLEARABLE_RELATIONS = new Set(["contactId", "organizationId", "ownerUserId"]);
+
 export class LeadDetailStore extends BaseCustomColumnEntityModalStore<CreateLeadData & { id?: string }, LeadDto> {
   constructor(rootStore: RootStore) {
     super(
@@ -52,6 +54,18 @@ export class LeadDetailStore extends BaseCustomColumnEntityModalStore<CreateLead
       sourceOrigin: "manual",
       labels: [],
       notes: null,
+      contactId: undefined,
+      organizationId: undefined,
+      ownerUserId: this.canReadAll ? undefined : this.rootStore.userStore.user?.id,
     };
+  }
+
+  protected buildRecentSearchItem(entity: LeadDto) {
+    return { type: "lead" as const, id: entity.id, name: entity.title, pictureUrl: null };
+  }
+
+  protected override afterChange(id: string, value: unknown): void {
+    if (value === undefined && this.form.id && CLEARABLE_RELATIONS.has(id))
+      (this.form as Record<string, unknown>)[id] = null;
   }
 }

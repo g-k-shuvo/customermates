@@ -120,9 +120,48 @@ docker compose up -d
 
 `-v` deletes the Postgres volume. IRREVERSIBLE. Take a backup first if you need the data.
 
+## File storage
+
+Files, such as record attachments and the documents and invoices the app generates, live in an S3-compatible bucket, not in Postgres. Any S3-compatible service works: a managed bucket (AWS S3, Hetzner, Cloudflare R2, Backblaze B2) or a self-hosted server such as SeaweedFS or Garage. MinIO no longer publishes free community images. Without `STORAGE_*` variables the app still starts and file features stay unavailable. Set the four required variables together; a partial configuration stops the app at boot with a message naming what is missing.
+
+| Variable | Required | Meaning |
+|---|---|---|
+| `STORAGE_ENDPOINT` | yes | Origin the app uses for its own requests to the bucket |
+| `STORAGE_BUCKET` | yes | Bucket name |
+| `STORAGE_ACCESS_KEY_ID`, `STORAGE_SECRET_ACCESS_KEY` | yes | Credentials with read, write and delete on the bucket |
+| `STORAGE_PUBLIC_ENDPOINT` | no | Origin browsers reach, when it differs from `STORAGE_ENDPOINT` (a reverse proxy, a public hostname) |
+| `STORAGE_REGION` | no | Defaults to `us-east-1` |
+| `STORAGE_MAX_UPLOAD_MB` | no | Largest single upload, default 25 |
+
+Browsers upload and download directly against the bucket through links signed for 15 minutes. A link is signed for one host, so `STORAGE_PUBLIC_ENDPOINT` must be exactly the origin browsers use, and the server clock must stay within 15 minutes of true time. The bucket must also accept your site as a cross-origin caller. From a checkout of this repository, with the same `STORAGE_*` values and `STORAGE_ENDPOINT` set to an address reachable from where you run it:
+
+```bash
+yarn storage:setup
+```
+
+It creates the bucket if needed, allows `PUT`, `GET` and `HEAD` from `BASE_URL` (or from each `--origin` you pass), and finishes with the preflight a browser sends. You can instead set the same CORS rule in your provider's console.
+
+## E-signature (DocuSign)
+
+Documents can be sent for signature through DocuSign when an integration is configured. Without `DOCUSIGN_*` variables the app starts normally and documents stay manual: you upload the executed PDF yourself. Set the four required variables together; a partial configuration stops the app at boot with a message naming what is missing. Signing also needs file storage.
+
+| Variable | Required | Meaning |
+|---|---|---|
+| `DOCUSIGN_INTEGRATION_KEY` | yes | The integration key (client ID) of your DocuSign app |
+| `DOCUSIGN_USER_ID` | yes | The API user's GUID; envelopes are sent in this user's name |
+| `DOCUSIGN_PRIVATE_KEY` | yes | The app's RSA private key in PEM form; `\n` escapes are accepted for a single-line value |
+| `DOCUSIGN_CONNECT_HMAC_SECRET` | yes | A Connect HMAC key from DocuSign's admin settings, used to verify callbacks |
+| `DOCUSIGN_AUTH_SERVER` | no | `https://account.docusign.com` by default; `https://account-d.docusign.com` for the developer sandbox |
+| `DOCUSIGN_ACCOUNT_ID` | no | The account to send from, when the user has more than one; the user's default account otherwise |
+
+1. In DocuSign, create an app with **JWT grant**, generate an RSA key pair for it, and note the integration key and the API user's GUID.
+2. Grant consent once, signed in as the API user: open `{auth server}/oauth/auth?response_type=code&scope=signature%20impersonation&client_id={integration key}&redirect_uri={a redirect URI registered on the app}` and accept. Until then sending fails with a message that consent is missing.
+3. In **Settings → Connect → HMAC**, create a key and put it in `DOCUSIGN_CONNECT_HMAC_SECRET`. The app asks for HMAC-signed callbacks on every envelope and rejects any callback without a valid signature.
+4. Make `{BASE_URL}/api/webhooks/docusign` reachable from DocuSign. Each envelope carries this callback address, so no Connect configuration is needed beyond the HMAC key. When callbacks cannot reach the installation, **Refresh signature status** on a document asks DocuSign directly.
+
 ## Backups
 
-Back up Postgres with `pg_dump` on a schedule. The app container is stateless.
+Back up Postgres with `pg_dump` on a schedule, and the storage bucket with your provider's tools when files are configured. The app container is stateless.
 
 ```bash
 mkdir -p backups

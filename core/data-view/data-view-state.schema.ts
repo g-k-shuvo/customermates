@@ -56,6 +56,8 @@ export const DataViewChipDtoSchema = z.object({
   name: z.string(),
   position: z.number().int(),
   state: DataViewStateSchema,
+  shared: z.boolean().optional(),
+  sharedBy: z.string().optional(),
 });
 export type DataViewChipDto = Data<typeof DataViewChipDtoSchema>;
 

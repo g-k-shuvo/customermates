@@ -437,7 +437,7 @@ One tool with an `action` switch: list, upsert (create or update), delete. Upser
 
 One tool with an `action` switch: list, get, create, update, delete. Omitted create `kind` remains `chart`. Activity creation accepts `name`, optional `timelineFilters`, and optional `showFilters`; each activity filter field may appear once. Update infers the immutable stored kind, preserves omitted fields, and clears filters with `timelineFilters: []`. Create rejects newly inaccessible relationship UUIDs. Update may retain or remove an unavailable relationship UUID only when that UUID is already stored on the widget; adding another inaccessible UUID is rejected. list/get/create/update all return `kind`; get also returns chart data for charts and reusable `timelineFilters` for activity widgets. Chart-only and activity-only fields cannot be mixed.
 
-**IRREVERSIBLE.** Required: `action`. Optional: `kind`, `id`, `ids`, `name`, `entityType`, `entityFilters`, `dealFilters`, `displayType`, `groupByType`, `groupByCustomColumnId`, `aggregationType`, `reverseXAxis`, `reverseYAxis`, `barColors`, `timelineFilters`, `showFilters`.
+**IRREVERSIBLE.** Required: `action`. Optional: `kind`, `pipelineId`, `id`, `ids`, `name`, `entityType`, `entityFilters`, `dealFilters`, `displayType`, `groupByType`, `groupByCustomColumnId`, `aggregationType`, `periodDays`, `reverseXAxis`, `reverseYAxis`, `barColors`, `timelineFilters`, `showFilters`.
 {/* /mcp-catalog */}
 
 ### Routines

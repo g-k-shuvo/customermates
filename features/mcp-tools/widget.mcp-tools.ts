@@ -175,13 +175,8 @@ const ManageWidgetsSchema = z.object({
   kind: z
     .enum(WidgetKind)
     .optional()
-    .describe(
-      "create only. Omit for a chart; use activityTimeline for an activity widget, or funnel for a pipeline funnel.",
-    ),
-  pipelineId: z
-    .uuid()
-    .optional()
-    .describe("funnel create/update only. Pipeline the funnel is built over. Required when creating a funnel."),
+    .describe("create only. Omit for a chart; use activityTimeline for an activity widget, or funnel."),
+  pipelineId: z.uuid().optional().describe("funnel create/update only; required to create a funnel."),
   id: z.uuid().optional().describe("Widget id. Required for update and delete."),
   ids: z.array(z.uuid()).min(1).max(100).optional().describe("get only. Widget ids to fetch."),
   name: z
@@ -205,7 +200,7 @@ const ManageWidgetsSchema = z.object({
     .array(FilterSchema)
     .optional()
     .describe(
-      `create and update; on update REPLACES the deal filter array. Applied when aggregating dealValue/dealQuantity. Not allowed when entityType is deal. ${FILTER_FIELD_DESCRIPTION}`,
+      "create and update; on update REPLACES the deal filter array. Applied when aggregating dealValue/dealQuantity. Not allowed when entityType is deal. Same rule format as entityFilters, over deal fields.",
     ),
   displayType: z
     .enum(DisplayType)
@@ -270,8 +265,8 @@ export const manageWidgetsTool = {
     "Each chart data point has value and one of { labelKind: literal, label }, { labelKind: month, month } or { labelKind: system, systemLabelKey }, so it answers questions like total pipeline value by stage in one call. " +
     "For chart creation omit kind and provide name, entityType, displayType, groupByType, aggregationType. " +
     "For activityTimeline creation provide kind, name, and optional timelineFilters/showFilters. " +
-    "For funnel creation provide kind funnel, name, pipelineId and optional periodDays; the result reports, per open stage, " +
-    "the distinct deals that entered it in the period, how many went on to a later stage, and the conversion between them. " +
+    "For funnel creation provide kind funnel, name, pipelineId and optional periodDays; action get reports, per open stage, " +
+    "the distinct deals that entered it in the period, how many advanced, and the conversion. " +
     "Updates infer the immutable stored kind; only provided fields change and filter arrays replace their previous values. " +
     "Create rejects inaccessible relationship UUIDs; update may retain or remove an unavailable UUID only when that same UUID is already stored. " +
     "action delete is IRREVERSIBLE.",

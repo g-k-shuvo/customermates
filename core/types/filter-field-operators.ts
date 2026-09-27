@@ -76,6 +76,7 @@ export const FILTER_FIELD_DEFAULT_OPERATORS: Record<FilterFieldKey, FilterOperat
   [FilterFieldKey.status]: scalarSelectOperators,
   [FilterFieldKey.dealStatus]: scalarSelectOperators,
   [FilterFieldKey.leadStatus]: scalarSelectOperators,
+  [FilterFieldKey.submissionStatus]: scalarSelectOperators,
   [FilterFieldKey.rotting]: scalarSelectOperators,
   [FilterFieldKey.overdue]: scalarSelectOperators,
   [FilterFieldKey.nextActivity]: scalarSelectOperators,

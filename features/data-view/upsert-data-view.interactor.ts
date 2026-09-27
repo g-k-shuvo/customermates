@@ -24,12 +24,14 @@ export abstract class UpsertDataViewRepo {
     name: string;
     position: number;
     state: DataViewState;
+    shared?: boolean;
   }): Promise<DataViewDto>;
   abstract updateOwned(args: {
     id: string;
     name?: string;
     position?: number;
     state?: DataViewState;
+    shared?: boolean;
   }): Promise<DataViewDto | null>;
 }
 
@@ -63,6 +65,7 @@ export class UpsertDataViewInteractor extends AuthenticatedInteractor<UpsertData
       ...(data.name !== undefined ? { name: data.name } : {}),
       ...(data.position !== undefined ? { position: data.position } : {}),
       ...(data.state !== undefined ? { state: data.state } : {}),
+      ...(data.shared !== undefined ? { shared: data.shared } : {}),
     });
   }
 
@@ -74,6 +77,7 @@ export class UpsertDataViewInteractor extends AuthenticatedInteractor<UpsertData
       name: data.name,
       position,
       state: data.state,
+      ...(data.shared !== undefined ? { shared: data.shared } : {}),
     });
 
     await this.personalization.upsertP13n({ p13nId: data.surfaceKey, activeViewKey: created.id });

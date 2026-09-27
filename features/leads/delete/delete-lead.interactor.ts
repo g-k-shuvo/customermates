@@ -1,6 +1,7 @@
 import type { DeleteLeadRepo } from "./delete-lead.repo";
 import type { EventService } from "@/features/event/event.service";
 import type { Data, Validated } from "@/core/validation/validation.utils";
+import type { LeadWritePrecheckInteractor } from "../upsert/lead-write-precheck.interactor";
 
 import { z } from "zod";
 import { Resource, Action } from "@/generated/prisma";
@@ -20,6 +21,7 @@ export class DeleteLeadInteractor extends AuthenticatedInteractor<DeleteLeadData
   constructor(
     private repo: DeleteLeadRepo,
     private eventService: EventService,
+    private precheck: LeadWritePrecheckInteractor,
   ) {
     super();
   }
@@ -27,6 +29,7 @@ export class DeleteLeadInteractor extends AuthenticatedInteractor<DeleteLeadData
   @Write({
     input: DeleteLeadSchema,
     output: z.string(),
+    precheck: (self, data, ctx) => self.precheck.delete(data, ctx),
   })
   async invoke(data: DeleteLeadData): Validated<string> {
     const previousLead = await this.repo.getOrThrowCompanyWide(data.id);

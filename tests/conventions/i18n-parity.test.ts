@@ -72,6 +72,20 @@ const REQUIRED_TRANSLATION_FRAGMENTS: Record<string, Record<string, readonly str
 };
 
 const ALLOWED_SOURCE_IDENTICAL_TRANSLATIONS = new Set([
+  // A record file's detail line joins its size, uploader and time with separators that carry no words.
+  "de:RecordFiles.meta",
+  "es:RecordFiles.meta",
+  "fr:RecordFiles.meta",
+  "it:RecordFiles.meta",
+  "de:RecordFiles.metaWithoutUploader",
+  "es:RecordFiles.metaWithoutUploader",
+  "fr:RecordFiles.metaWithoutUploader",
+  "it:RecordFiles.metaWithoutUploader",
+  // The web form field picker joins the record type and the field name with a separator that carries no words.
+  "de:WebFormSourceModal.customFieldColumnOption",
+  "es:WebFormSourceModal.customFieldColumnOption",
+  "fr:WebFormSourceModal.customFieldColumnOption",
+  "it:WebFormSourceModal.customFieldColumnOption",
   // The automation row joins its trigger and action count with a separator that carries no words.
   "de:Automations.rowSummary",
   "es:Automations.rowSummary",
@@ -79,6 +93,12 @@ const ALLOWED_SOURCE_IDENTICAL_TRANSLATIONS = new Set([
   "it:Automations.rowSummary",
   // French spells action and its plural exactly as English does.
   "fr:Automations.stepCount",
+  // The stage name and its time in stage are joined by a colon that carries no words.
+  "de:DealModal.stageBar.stage",
+  "es:DealModal.stageBar.stage",
+  "it:DealModal.stageBar.stage",
+  // French spells minute and its plural exactly as English does.
+  "fr:DealModal.stageBar.minutes",
   // The localized view type and name use the same colon syntax in these languages.
   "de:AgentChat.context.viewLabel",
   "es:AgentChat.context.viewLabel",

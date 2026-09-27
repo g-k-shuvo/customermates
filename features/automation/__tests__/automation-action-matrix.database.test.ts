@@ -592,4 +592,428 @@ describeDatabase("every action an automation can run", () => {
 
     expect(outcome.ok).toBe(false);
   });
+
+  it("createNote folds a bare string the old writer left into the document", async () => {
+    const workspace = await makeWorkspace();
+    const contact = await runWithoutTenant(() =>
+      prisma.contact.create({
+        data: {
+          companyId: workspace.companyId,
+          firstName: "Bare",
+          lastName: "String",
+          notes: "left by the old writer",
+        },
+        select: { id: true },
+      }),
+    );
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.createNote,
+      { body: "written by an automation" },
+      { entityType: EntityType.contact, entityId: contact.id },
+    );
+
+    expect(outcome.ok).toBe(true);
+    const after = await runWithoutTenant(() => prisma.contact.findUnique({ where: { id: contact.id } }));
+    expect(after?.notes).toEqual({
+      type: "doc",
+      content: [paragraph("left by the old writer"), paragraph("written by an automation")],
+    });
+  });
+
+  it("createNote folds a web form message object, keeping the message literal", async () => {
+    const workspace = await makeWorkspace();
+    const lead = await runWithoutTenant(() =>
+      prisma.lead.create({
+        data: {
+          companyId: workspace.companyId,
+          title: "From the website",
+          notes: { message: "Call me back\n[prize](https://evil.test)" },
+        },
+        select: { id: true },
+      }),
+    );
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.createNote,
+      { body: "qualified by an automation" },
+      { entityType: EntityType.lead, entityId: lead.id, triggerEvent: "lead.created" },
+    );
+
+    expect(outcome.ok).toBe(true);
+    const after = await runWithoutTenant(() => prisma.lead.findUnique({ where: { id: lead.id } }));
+    expect(after?.notes).toEqual({
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            { type: "text", text: "Call me back" },
+            { type: "hardBreak" },
+            { type: "text", text: "[prize](https://evil.test)" },
+          ],
+        },
+        paragraph("qualified by an automation"),
+      ],
+    });
+  });
+
+  it("createNote refuses notes it cannot read and leaves them untouched", async () => {
+    const workspace = await makeWorkspace();
+    const unreadable = { legacy: { body: "kept as it was" } };
+    const deal = await runWithoutTenant(() =>
+      prisma.deal.create({
+        data: { companyId: workspace.companyId, name: "Unreadable", notes: unreadable },
+        select: { id: true },
+      }),
+    );
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.createNote,
+      { body: "must not replace them" },
+      { entityType: EntityType.deal, entityId: deal.id },
+    );
+
+    expect(outcome).toEqual({ ok: false, error: "notesUnreadable" });
+    const after = await runWithoutTenant(() => prisma.deal.findUnique({ where: { id: deal.id } }));
+    expect(after?.notes).toEqual(unreadable);
+  });
+
+  it("createNote keeps underline and the link target of the notes it appends to", async () => {
+    const workspace = await makeWorkspace();
+    const rich = {
+      type: "paragraph",
+      content: [
+        { type: "text", text: "underlined", marks: [{ type: "underline" }] },
+        { type: "text", text: " then " },
+        {
+          type: "text",
+          text: "a link",
+          marks: [
+            {
+              type: "link",
+              attrs: { href: "https://example.test/x", target: "_self", rel: "noopener", class: null, title: null },
+            },
+          ],
+        },
+      ],
+    };
+    const task = await runWithoutTenant(() =>
+      prisma.task.create({
+        data: { companyId: workspace.companyId, type: "custom", name: "Rich", notes: { type: "doc", content: [rich] } },
+        select: { id: true },
+      }),
+    );
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.createNote,
+      { body: "appended" },
+      { entityType: EntityType.task, entityId: task.id, triggerEvent: "task.updated" },
+    );
+
+    expect(outcome.ok).toBe(true);
+    const after = await runWithoutTenant(() => prisma.task.findUnique({ where: { id: task.id } }));
+    expect(after?.notes).toEqual({ type: "doc", content: [rich, paragraph("appended")] });
+  });
+
+  it("createNote from automations running at the same time keeps every note", async () => {
+    const workspace = await makeWorkspace();
+    const contact = await runWithoutTenant(() =>
+      prisma.contact.create({
+        data: { companyId: workspace.companyId, firstName: "Busy", lastName: "Contact" },
+        select: { id: true },
+      }),
+    );
+    const bodies = Array.from({ length: 6 }, (_, index) => `note ${index + 1}`);
+
+    const outcomes = await Promise.all(
+      bodies.map((body) =>
+        runAction(
+          workspace,
+          AutomationActionKind.createNote,
+          { body },
+          { entityType: EntityType.contact, entityId: contact.id, triggerEvent: "contact.updated" },
+        ),
+      ),
+    );
+
+    expect(outcomes.every((outcome) => outcome.ok)).toBe(true);
+    const after = await runWithoutTenant(() => prisma.contact.findUnique({ where: { id: contact.id } }));
+    const written = ((after?.notes as { content: Array<{ content: Array<{ text: string }> }> }).content ?? []).map(
+      (block) => block.content[0].text,
+    );
+    expect(written.toSorted()).toEqual(bodies);
+  });
+
+  it("addLabel from automations running at the same time keeps every label", async () => {
+    const workspace = await makeWorkspace();
+    const lead = await runWithoutTenant(() =>
+      prisma.lead.create({ data: { companyId: workspace.companyId, title: "Popular" }, select: { id: true } }),
+    );
+    const labels = Array.from({ length: 6 }, (_, index) => `label-${index + 1}`);
+
+    const outcomes = await Promise.all(
+      labels.map((label) =>
+        runAction(
+          workspace,
+          AutomationActionKind.addLabel,
+          { labels: [label] },
+          { entityType: EntityType.lead, entityId: lead.id, triggerEvent: "lead.created" },
+        ),
+      ),
+    );
+
+    expect(outcomes.every((outcome) => outcome.ok)).toBe(true);
+    const after = await runWithoutTenant(() => prisma.lead.findUnique({ where: { id: lead.id } }));
+    expect(after?.labels.toSorted()).toEqual(labels);
+  });
+
+  it("updateField refuses a deal probability above 100, and the deal can still be read", async () => {
+    const workspace = await makeWorkspace();
+    const deal = await runWithoutTenant(() =>
+      prisma.deal.create({ data: { companyId: workspace.companyId, name: "Bounded" }, select: { id: true } }),
+    );
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.updateField,
+      { field: "probability", value: "150" },
+      { entityType: EntityType.deal, entityId: deal.id },
+    );
+
+    expect(outcome).toEqual({ ok: false, error: "fieldValueInvalid" });
+    const stored = await runWithoutTenant(() => prisma.deal.findUnique({ where: { id: deal.id } }));
+    expect(stored?.probability).toBeNull();
+
+    const read = await runWithTenant(tenantUser(workspace), () =>
+      di.getGetDealByIdInteractor().invoke({ id: deal.id }),
+    );
+    expect(read.ok && read.data.deal?.id).toBe(deal.id);
+  });
+
+  it("updateField on a deal recalculates the weighted value and records the update", async () => {
+    const workspace = await makeWorkspace();
+    const deal = await runWithoutTenant(async () => {
+      const service = await prisma.service.create({
+        data: { companyId: workspace.companyId, name: "Licence", amount: 2000 },
+        select: { id: true },
+      });
+
+      return prisma.deal.create({
+        data: {
+          companyId: workspace.companyId,
+          name: "Weighted",
+          totalValue: 2000,
+          totalQuantity: 1,
+          services: { create: [{ companyId: workspace.companyId, serviceId: service.id, quantity: 1 }] },
+        },
+        select: { id: true },
+      });
+    });
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.updateField,
+      { field: "probability", value: "25" },
+      { entityType: EntityType.deal, entityId: deal.id },
+    );
+
+    expect(outcome).toEqual({ ok: true, output: { field: "probability" } });
+    const after = await runWithoutTenant(() => prisma.deal.findUnique({ where: { id: deal.id } }));
+    expect(after?.probability).toBe(25);
+    expect(after?.weightedValue).toBe(500);
+    const audits = await runWithoutTenant(() =>
+      prisma.auditLog.count({ where: { companyId: workspace.companyId, entityId: deal.id, event: "deal.updated" } }),
+    );
+    expect(audits).toBe(1);
+  });
+
+  it("updateField refuses a blank value instead of writing zero", async () => {
+    const workspace = await makeWorkspace();
+    const { dealId, leadId } = await runWithoutTenant(async () => {
+      const deal = await prisma.deal.create({
+        data: { companyId: workspace.companyId, name: "Blank", probability: 40 },
+        select: { id: true },
+      });
+      const lead = await prisma.lead.create({
+        data: { companyId: workspace.companyId, title: "Blank", value: 900 },
+        select: { id: true },
+      });
+
+      return { dealId: deal.id, leadId: lead.id };
+    });
+
+    const onDeal = await runAction(
+      workspace,
+      AutomationActionKind.updateField,
+      { field: "probability", value: "" },
+      { entityType: EntityType.deal, entityId: dealId },
+    );
+    const onLead = await runAction(
+      workspace,
+      AutomationActionKind.updateField,
+      { field: "value", value: "  " },
+      { entityType: EntityType.lead, entityId: leadId, triggerEvent: "lead.updated" },
+    );
+
+    expect(onDeal).toEqual({ ok: false, error: "fieldValueMissing" });
+    expect(onLead).toEqual({ ok: false, error: "fieldValueMissing" });
+    const [deal, lead] = await runWithoutTenant(() =>
+      Promise.all([
+        prisma.deal.findUnique({ where: { id: dealId } }),
+        prisma.lead.findUnique({ where: { id: leadId } }),
+      ]),
+    );
+    expect(deal?.probability).toBe(40);
+    expect(lead?.value).toBe(900);
+  });
+
+  it("updateField refuses a lead status that is only a key every object inherits", async () => {
+    const workspace = await makeWorkspace();
+    const lead = await runWithoutTenant(() =>
+      prisma.lead.create({ data: { companyId: workspace.companyId, title: "Status" }, select: { id: true } }),
+    );
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.updateField,
+      { field: "status", value: "constructor" },
+      { entityType: EntityType.lead, entityId: lead.id, triggerEvent: "lead.updated" },
+    );
+
+    expect(outcome).toEqual({ ok: false, error: "fieldValueInvalid" });
+    const after = await runWithoutTenant(() => prisma.lead.findUnique({ where: { id: lead.id } }));
+    expect(after?.status).toBe("new");
+  });
+
+  it("updateField refuses fields with no column and null for a name, without throwing", async () => {
+    const workspace = await makeWorkspace();
+    const { contactId, organizationId } = await runWithoutTenant(async () => {
+      const contact = await prisma.contact.create({
+        data: { companyId: workspace.companyId, firstName: "Kept", lastName: "Name" },
+        select: { id: true },
+      });
+      const organization = await prisma.organization.create({
+        data: { companyId: workspace.companyId, name: "Kept Ltd" },
+        select: { id: true },
+      });
+
+      return { contactId: contact.id, organizationId: organization.id };
+    });
+    const onContact = { entityType: EntityType.contact, entityId: contactId, triggerEvent: "contact.updated" };
+    const onOrganization = {
+      entityType: EntityType.organization,
+      entityId: organizationId,
+      triggerEvent: "organization.updated",
+    };
+
+    const results = [
+      await runAction(workspace, AutomationActionKind.updateField, { field: "jobTitle", value: "CTO" }, onContact),
+      await runAction(
+        workspace,
+        AutomationActionKind.updateField,
+        { field: "website", value: "https://kept.test" },
+        onOrganization,
+      ),
+      await runAction(workspace, AutomationActionKind.updateField, { field: "firstName", value: null }, onContact),
+      await runAction(workspace, AutomationActionKind.updateField, { field: "name", value: null }, onOrganization),
+    ];
+
+    expect(results).toEqual([
+      { ok: false, error: "fieldNotWritable" },
+      { ok: false, error: "fieldNotWritable" },
+      { ok: false, error: "fieldValueMissing" },
+      { ok: false, error: "fieldValueMissing" },
+    ]);
+    const [contact, organization] = await runWithoutTenant(() =>
+      Promise.all([
+        prisma.contact.findUnique({ where: { id: contactId } }),
+        prisma.organization.findUnique({ where: { id: organizationId } }),
+      ]),
+    );
+    expect(contact?.firstName).toBe("Kept");
+    expect(organization?.name).toBe("Kept Ltd");
+  });
+
+  it("assignOwner refuses a user from another company", async () => {
+    const workspace = await makeWorkspace();
+    const other = await makeWorkspace();
+    const deal = await runWithoutTenant(() =>
+      prisma.deal.create({ data: { companyId: workspace.companyId, name: "Foreign" }, select: { id: true } }),
+    );
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.assignOwner,
+      { userId: other.userId },
+      { entityType: EntityType.deal, entityId: deal.id },
+    );
+
+    expect(outcome).toEqual({ ok: false, error: "assigneeUnavailable" });
+    const links = await runWithoutTenant(() => prisma.dealUser.findMany({ where: { dealId: deal.id } }));
+    expect(links).toEqual([]);
+  });
+
+  it("assignOwner refuses a colleague who is no longer active", async () => {
+    const workspace = await makeWorkspace();
+    const { leadId, inactiveId } = await runWithoutTenant(async () => {
+      const lead = await prisma.lead.create({
+        data: { companyId: workspace.companyId, title: "Unowned" },
+        select: { id: true },
+      });
+      const inactive = await prisma.user.create({
+        data: {
+          companyId: workspace.companyId,
+          roleId: workspace.roleId,
+          email: `inactive-${lead.id}@example.invalid`,
+          firstName: "Former",
+          lastName: "Colleague",
+          status: "inactive",
+        },
+        select: { id: true },
+      });
+
+      return { leadId: lead.id, inactiveId: inactive.id };
+    });
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.assignOwner,
+      { userId: inactiveId },
+      { entityType: EntityType.lead, entityId: leadId, triggerEvent: "lead.created" },
+    );
+
+    expect(outcome).toEqual({ ok: false, error: "assigneeUnavailable" });
+    const after = await runWithoutTenant(() => prisma.lead.findUnique({ where: { id: leadId } }));
+    expect(after?.ownerUserId).toBeNull();
+  });
+
+  it("assignOwner reports a record that no longer exists instead of failing on the foreign key", async () => {
+    const workspace = await makeWorkspace();
+    const missing = "00000000-0000-4000-8000-00000000f00d";
+
+    const onDeal = await runAction(
+      workspace,
+      AutomationActionKind.assignOwner,
+      { userId: workspace.userId },
+      { entityType: EntityType.deal, entityId: missing },
+    );
+    const onLead = await runAction(
+      workspace,
+      AutomationActionKind.assignOwner,
+      { userId: workspace.userId },
+      { entityType: EntityType.lead, entityId: missing, triggerEvent: "lead.created" },
+    );
+
+    expect(onDeal).toEqual({ ok: false, error: "recordMissing" });
+    expect(onLead).toEqual({ ok: false, error: "recordMissing" });
+  });
 });
+
+function paragraph(text: string) {
+  return { type: "paragraph", content: [{ type: "text", text }] };
+}

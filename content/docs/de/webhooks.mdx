@@ -237,7 +237,7 @@ Delete-Events enthalten unter `payload` den vollständigen Record, wie er vor de
 
 ## Welche Ereignisse gibt es? [#which-events-exist]
 
-[[derived.webhooks.events.total]] Events können Sie abonnieren: [[derived.webhooks.events.records]] Record-Events über die fünf Entity-Typen und [[derived.webhooks.events.messaging]] Messaging-Events. Alle nutzen den Envelope oben. Routinen können durch dieselben Ereignisse ausgelöst werden, mit Ausnahme der beiden Ereignisse für gelöschte Nachrichten; siehe [Routinen](/docs/app-routines#how-do-event-triggers-work).
+[[derived.webhooks.events.total]] Events können Sie abonnieren: [[derived.webhooks.events.records]] Record-Events über die sechs Entity-Typen und [[derived.webhooks.events.messaging]] Messaging-Events. Alle nutzen den Envelope oben. Routinen können durch dieselben Ereignisse ausgelöst werden, mit Ausnahme der drei Lead-Ereignisse und der beiden Ereignisse für gelöschte Nachrichten; siehe [Routinen](/docs/app-routines#how-do-event-triggers-work).
 
 ### Record-Events
 
@@ -258,6 +258,9 @@ Delete-Events enthalten unter `payload` den vollständigen Record, wie er vor de
 | `task.created` | Ein Task wird erstellt | vollständiger Task |
 | `task.updated` | Ein Task-Feld ändert sich | `task`, `changes` |
 | `task.deleted` | Ein Task wird gelöscht | vollständiger Task |
+| `lead.created` | Ein Lead wird erstellt, auch über ein Webformular | vollständiger Lead |
+| `lead.updated` | Ein Lead-Feld ändert sich | `lead`, `changes` |
+| `lead.deleted` | Ein Lead wird gelöscht | vollständiger Lead |
 
 ### Messaging-Events
 

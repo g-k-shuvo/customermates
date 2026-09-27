@@ -13,6 +13,7 @@ export const MIGRATION_ENTITIES = [
   "stages",
   "lostReasons",
   "deals",
+  "leads",
   "tasks",
   "notes",
 ] as const;

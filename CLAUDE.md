@@ -5,8 +5,8 @@ Prisma 7, PostgreSQL, better-auth, Tailwind v4, MobX, TanStack Table). We are ex
 into a Pipedrive replacement for a client.
 
 **Read this file completely before writing any code.** This codebase enforces its
-architecture with 77 automated convention tests under `tests/conventions/`. Code that
-ignores the rules below will fail CI even when it compiles and works.
+architecture with over 90 automated convention test files under `tests/conventions/`. Code
+that ignores the rules below will fail CI even when it compiles and works.
 
 ---
 
@@ -33,20 +33,27 @@ default instinct to annotate will break the build.
 ### 3. Every user-visible string is translated
 
 Hardcoded copy in JSX, text-bearing props, conditional copy, object labels and prop
-defaults all fail `tests/conventions/*i18n*` and `terminology-boundary`. Add keys to
-**all five** locales — `i18n/locales/{en,de,es,fr,it}.json` — parity is enforced.
+defaults all fail `locale-consumer-audit`; `i18n-key-resolution` fails on any key that does
+not resolve and on any catalog key nothing uses. Add keys to **all five** locales —
+`i18n/locales/{en,de,es,fr,it}.json` — parity is enforced.
 
-Keys are namespaced by feature (`DealModal`, `DataView`, `CompanySettings`, …). Note the
-`Deals` namespace is currently empty; deal UI copy lives in `DealModal`, `DataView`,
-`EntityDetail`.
+Keys are namespaced by feature (`DealModal`, `DataView`, `CompanySettings`, …). Note there
+is no `Deals` namespace in any locale; deal UI copy lives in `DealModal`, `DataView`,
+`EntityDetail` and `Common`.
 
 Never call `createZodError` with a string or template literal — pass a key.
 
 ### 4. Never format dates, numbers or sort strings directly
 
 No ambient `Intl`, no `toLocaleString`/`toLocaleDateString`, no `localeCompare`. Use the
-shared formatting boundary in `i18n/formatters.tsx`. Enforced by
-`locale-consumer-audit` and `hydration-safe-intl`.
+shared formatting boundary: the `IntlStore` in `core/stores/intl.store.ts` (dates, numbers,
+currency, and `collator` for sorting) and the helpers in `core/stores/intl-number.ts`. TSX
+gets the store from `useHydratedIntlStore()`, never from `useRootStore().intlStore`. Code
+without the store (server code, emails) passes an explicit registry locale such as
+`formattingTagFor(locale)` from `i18n/locale-registry.ts`, never a literal.
+`i18n/formatters.tsx` is not the boundary: it only holds rich-text chunk renderers (`br`,
+`bold`, `italic`, `underline`). Enforced by `locale-consumer-audit` and
+`hydration-safe-intl`.
 
 ---
 
@@ -65,8 +72,8 @@ features/<entity>/
   __tests__/
 ```
 
-For scale: `features/deals` is 54 files, `features/services` 33, `features/tasks` 55,
-`features/mailbox` 87.
+For scale: `features/deals` is ~55 files, `features/services` ~35, `features/tasks` ~55,
+`features/mailbox` ~90.
 A new entity is not a small change — budget accordingly.
 
 ### Interactors
@@ -114,8 +121,9 @@ Extend `BaseRepository` (`core/base/base-repository.ts`).
 
 ### Dependency injection
 
-`core/di.ts` — 1,877 lines, 369 hand-written factory functions, no container. Register
-every new interactor and repository here. It is the one file allowed to contain comments.
+`core/di.ts` — over 2,300 lines, over 450 hand-written factory functions, no container.
+Register every new interactor and repository here. It is the one file allowed to contain
+comments.
 
 ### OpenAPI
 
@@ -129,7 +137,8 @@ every new interactor and repository here. It is the one file allowed to contain 
 ### Prisma
 
 - **Every model needs `companyId`** plus the relation and an index, unless it is on the
-  allowlist in `prisma-tenant-fk.test.ts`. Over 35 of the 40+ models have it.
+  allowlist in `prisma-tenant-fk.test.ts`. Only the allowlisted global models lack it —
+  `Company`, `OperatorAuditEvent` and the auth, API-key and OAuth tables.
 - Migrations are hand-named: `prisma/migrations/YYYYMMDDHHMMSS_snake_case_name/`.
 - Data migrations that backfill must be idempotent and safe to re-run.
 
@@ -152,22 +161,27 @@ inline in the interactor that caused them.
 ## Licence boundaries — do not cross these
 
 - Everything outside `ee/` is **AGPL-3.0-only**. Our changes go here.
-- **`ee/` is proprietary** (393 files, Customermates Commercial License). Do not modify
+- **`ee/` is proprietary** (~500 files, Customermates Commercial License). Do not modify
   anything under `ee/`, and do not make an Enterprise feature operational — unified inbox,
-  connected accounts, SSO, white-labelling. `tests/conventions/open-core-license.test.ts`
-  guards this.
-- Self-hosted mode (`APP_MODE=self-hosted`) redirects `/inbox`,
-  `/profile/connected-accounts` and `/company/subscription`. Do not build features that
-  depend on `ConnectedAccount` — it is unavailable in our deployment.
+  connected accounts, SSO, white-labelling. No test guards this:
+  `tests/conventions/open-core-license.test.ts`, the root `LICENSE`, `ee/LICENSE.md` and
+  `ee/README.md` are absent in this fork (commit `4c659ce0` removed them), and
+  `agpl-dispatch-boundary.test.ts` only keeps runtime `ee/` imports out of
+  `features/event` and `features/automation`.
+- Self-hosted mode (`APP_MODE=self-hosted`) redirects `/inbox`, `/routines`,
+  `/profile/connected-accounts`, `/company/subscription` and the public marketing pages
+  (the `(static)` route group) to `/dashboard`. Do not build features that depend on
+  `ConnectedAccount` — it is unavailable in our deployment.
 
 **The agreed exceptions.** Two, both of the same kind: a compiler- or test-enforced census
 under `ee/` that a core change is forced to bump. Both conflict on rebase. Neither makes an
 Enterprise Feature operational.
 
 1. `ee/agent-chat/__tests__/provider-safe-schema.test.ts` pins an exact census of MCP tool
-   schema formats (`{ uuid: N, email: 6, uri: 4 }`). Every uuid field we add to an MCP tool
-   input raises that count, so the constant must be bumped with the change or `yarn test`
-   fails. Bump the number; never remove fields to satisfy it.
+   schema formats (`{ uuid: N, "date-time": 3, email: 6, uri: 4 }`). Every uuid field we
+   add to an MCP tool input raises that count (a date-time, email or uri field raises its
+   own), so the constant must be bumped with the change or `yarn test` fails. Bump the
+   number; never remove fields to satisfy it.
 
 2. `ee/messaging/activities/` consumes `EntityType` exhaustively, so adding a member to that
    Prisma enum breaks it — at runtime as well as at compile time, since
@@ -187,7 +201,7 @@ yarn db:provision        # worktree-owned Postgres 17 container, deterministic p
 yarn db:reset            # apply migrations, seed, prepare workflow schemas
 yarn dev                 # localhost:4000
 yarn dev:become <email>  # mint a local session cookie — log in without sending mail
-yarn conventions:check   # the 76 convention tests. run before every commit
+yarn conventions:check   # the convention suite. run before every commit, on Linux (below)
 yarn typecheck           # fumadocs source config + tsc --noEmit
 yarn lint                # eslint, --max-warnings 0
 yarn test                # full vitest
@@ -197,8 +211,15 @@ yarn build
 ```
 
 Git hooks are active. `pre-commit` runs `yarn lint --max-warnings=0` and `tsc --noEmit`,
-and **fails if the hook modified files** — re-stage and commit again. `commit-msg` runs
-commitlint.
+then **fails on any unstaged change to a tracked file** (`git diff --quiet`); its "hook
+modified files" message means exactly that. Stage or stash everything before committing.
+`commit-msg` runs commitlint.
+
+Run the convention suite on Linux. Many suites compare paths against forward-slash
+allowlists and patterns; on Windows, where paths use backslashes, some then scan nothing and
+pass vacuously while others fail spuriously. About a quarter of the suite's files fail
+there, including `locale-consumer-audit`, which enforces rule 4. A pre-push hook runs the
+convention suite in a Linux container when you push from Windows.
 
 Node 24 is required (`.node-version`). The Docker build needs
 `NODE_OPTIONS="--max-old-space-size=5120"` in the builder stage or it OOMs, and a
@@ -219,17 +240,17 @@ CI (`.github/workflows/test.yml`) runs, in order: seed verification, `yarn opena
 `yarn raw-docs:generate`, **a check that generated files are committed**, `yarn typecheck`,
 `yarn lint`, `yarn test`, `yarn i18n:audit`. A second job verifies the schema against
 **PostgreSQL 16** as well as 17 — dev provisions 17, the self-host compose runs 16, so every
-migration must work on both.
+migration must work on both. Both jobs run only on pushes and pull requests to `main`.
 
 Before opening a PR:
 
 1. `yarn lint` clean, `yarn typecheck` clean.
-2. `yarn conventions:check` green — all 76.
+2. `yarn conventions:check` green on Linux — every file in `tests/conventions/`.
 3. `yarn test` green, with unit tests for new interactors in a colocated `__tests__/`.
 4. All five locales updated; `yarn i18n:audit` clean.
 5. `yarn openapi:generate` and `yarn raw-docs:generate` run **and the diffs committed** —
    CI fails if generated files are stale.
-6. `yarn build` succeeds.
+6. `yarn build` succeeds — CI does not run it.
 
 ## Keep the fork delta small
 

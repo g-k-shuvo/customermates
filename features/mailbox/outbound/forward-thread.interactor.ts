@@ -1,6 +1,6 @@
 import type { Validated } from "@/core/validation/validation.utils";
 import type { SecretBoxKey } from "../credentials/secret-box";
-import type { SendReplyService, SentReply } from "./send-reply.service";
+import type { SendReplyService, DeliveredReply } from "./send-reply.service";
 
 import { Resource, Action } from "@/generated/prisma";
 
@@ -136,7 +136,7 @@ export class ForwardThreadInteractor extends AuthenticatedInteractor<ForwardThre
       secret,
     };
 
-    let sent: SentReply;
+    let sent: DeliveredReply;
     try {
       sent = await this.service.send(
         {
@@ -170,7 +170,12 @@ export class ForwardThreadInteractor extends AuthenticatedInteractor<ForwardThre
 
     return {
       ok: true as const,
-      data: { threadId: thread.id, messageId: sent.messageId, recipients: sent.recipients },
+      data: {
+        threadId: thread.id,
+        messageId: sent.messageId,
+        recipients: sent.recipients,
+        sentCopySaved: sent.sentCopySaved,
+      },
     };
   }
 }

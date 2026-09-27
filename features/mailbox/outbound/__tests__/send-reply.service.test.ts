@@ -146,3 +146,38 @@ describe("SendReplyService host pinning", () => {
     );
   });
 });
+
+describe("SendReplyService sent copy", () => {
+  const publicLookup = lookupReturning({ address: "93.184.216.34", family: 4 });
+
+  it("files a copy in Sent under the sent Message-ID and reports it saved", async () => {
+    const { service, appendToSent } = serviceWith({ resolveAddresses: publicLookup });
+
+    const sent = await service.send(DELIVERY, REPLY, IMAP);
+
+    expect(appendToSent).toHaveBeenCalledWith(IMAP, Buffer.from(""), null, "<sent@vendor.example>");
+    expect(sent.sentCopySaved).toBe(true);
+  });
+
+  it("still delivers, but reports the copy unsaved, when Sent refuses it", async () => {
+    const { service, appendToSent } = serviceWith({ resolveAddresses: publicLookup });
+    appendToSent.mockRejectedValue(new MailboxTransportError(MailboxTransportFailure.folderMissing));
+
+    const sent = await service.send(DELIVERY, REPLY, IMAP);
+
+    expect(sent.messageId).toBe("<sent@vendor.example>");
+    expect(sent.sentCopySaved).toBe(false);
+  });
+
+  it.each(["imap.gmail.com", "outlook.office365.com", "imap-mail.outlook.com"])(
+    "leaves filing to %s, which already keeps its own copy of mail sent over smtp",
+    async (host) => {
+      const { service, appendToSent } = serviceWith({ resolveAddresses: publicLookup });
+
+      const sent = await service.send(DELIVERY, REPLY, { ...IMAP, host });
+
+      expect(appendToSent).not.toHaveBeenCalled();
+      expect(sent.sentCopySaved).toBe(true);
+    },
+  );
+});

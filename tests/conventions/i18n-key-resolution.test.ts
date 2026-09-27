@@ -9,6 +9,9 @@ import { REPO_ROOT, walkFiles } from "./walk";
 import {
   ActivityKind,
   AggregationType,
+  AutomationActionKind,
+  AutomationRunStatus,
+  AutomationTriggerKind,
   ConnectedAccountStatus,
   CustomColumnType,
   DealStatus,
@@ -35,6 +38,8 @@ import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { SignatureTemplate } from "@/ee/messaging/email-settings";
 import { AGENDA_BUCKETS } from "@/features/tasks/activity-agenda";
+import { WEB_FORM_SUBMISSION_STATUSES } from "@/features/webform/submissions/web-form-submission.schema";
+import { AUTOMATION_STEP_ERRORS } from "@/features/automation/automation-step-errors";
 import { CustomErrorCode } from "@/core/validation/validation.types";
 import { AGENT_ACTIVITY_KINDS, AGENT_APPROVAL_COPY_KINDS } from "@/ee/agent-chat/agent-activity";
 import { ROUTINE_SCHEDULE_PRESETS } from "@/ee/routines/routine-schedule-preset";
@@ -203,6 +208,11 @@ const AUDIT_FIELD_KEYS = [
 
 const TABLE_COLUMN_KEYS = [
   "Common.table.columns.actions",
+  "Common.table.columns.baseValue",
+  "Common.table.columns.receivedAt",
+  "Common.table.columns.submitter",
+  "Common.table.columns.lead",
+  "Common.table.columns.error",
   "Common.table.columns.activityKind",
   "Common.table.columns.completedAt",
   "Common.table.columns.dueAt",
@@ -287,6 +297,28 @@ const IMPORT_ISSUE_KEYS = IMPORT_ISSUE_CODES.map((code) => `DataTransfer.import.
 const USER_STATUS_KEYS = Object.values(Status).map((status) => `Common.userStatuses.${status}`);
 const LEAD_STATUS_KEYS = Object.values(LeadStatus).map((status) => `Common.leadStatuses.${status}`);
 const DEAL_STATUS_KEYS = Object.values(DealStatus).map((status) => `Common.dealStatuses.${status}`);
+const AUTOMATION_ACTION_KEYS = Object.values(AutomationActionKind).map((kind) => `Automations.actions.${kind}`);
+const AUTOMATION_ACTION_FIELD_KEYS = [
+  "body",
+  "field",
+  "name",
+  "seconds",
+  "stageId",
+  "subject",
+  "title",
+  "to",
+  "url",
+  "userId",
+  "value",
+].map((field) => `Automations.actionFields.${field}`);
+const AUTOMATION_RUN_STATUS_KEYS = Object.values(AutomationRunStatus).map(
+  (status) => `Automations.runStatuses.${status}`,
+);
+const AUTOMATION_TRIGGER_KIND_KEYS = Object.values(AutomationTriggerKind).map(
+  (kind) => `Automations.triggerKinds.${kind}`,
+);
+const AUTOMATION_TRIGGER_KEYS = Object.values(AutomationTriggerKind).map((kind) => `Automations.triggers.${kind}`);
+const AUTOMATION_STEP_ERROR_KEYS = AUTOMATION_STEP_ERRORS.map((code) => `Automations.stepErrors.${code}`);
 const LOCALE_KEYS = [...ROUTING_LOCALES, "system"].map((locale) => `Common.locales.${locale}`);
 const THEME_KEYS = Object.values(Theme).map((theme) => `Common.themes.${theme}`);
 const FILTER_OPERATOR_KEYS = Object.values(FilterOperatorKey).map((operator) => `Common.filters.operators.${operator}`);
@@ -295,6 +327,9 @@ const CUSTOM_COLUMN_TYPE_KEYS = Object.values(CustomColumnType).map(
   (columnType) => `Common.customColumnTypes.${columnType}`,
 );
 const THREAD_STATE_KEYS = Object.values(MessagingThreadState).map((state) => `Inbox.threadStates.${state}`);
+const WEB_FORM_SUBMISSION_STATUS_KEYS = WEB_FORM_SUBMISSION_STATUSES.map(
+  (status) => `WebFormSubmissions.statuses.${status}`,
+);
 const WEBHOOK_DELIVERY_STATUS_KEYS = Object.values(WebhookDeliveryStatus).map(
   (status) => `WebhookDeliveryModal.deliveryStatus.${status}`,
 );
@@ -533,6 +568,12 @@ const DYNAMIC_TEMPLATE_CONSUMERS = new Map<string, readonly string[]>([
   ["Common.themes.${*}", THEME_KEYS],
   ["Common.leadStatuses.${*}", LEAD_STATUS_KEYS],
   ["Common.dealStatuses.${*}", DEAL_STATUS_KEYS],
+  ["Automations.actionFields.${*}", AUTOMATION_ACTION_FIELD_KEYS],
+  ["Automations.actions.${*}", AUTOMATION_ACTION_KEYS],
+  ["Automations.runStatuses.${*}", AUTOMATION_RUN_STATUS_KEYS],
+  ["Automations.triggerKinds.${*}", AUTOMATION_TRIGGER_KIND_KEYS],
+  ["Automations.triggers.${*}", AUTOMATION_TRIGGER_KEYS],
+  ["Automations.stepErrors.${*}", AUTOMATION_STEP_ERROR_KEYS],
   ["Common.userStatuses.${*}", USER_STATUS_KEYS],
   ["ConnectedAccountsCard.statusLabels.${*}", CONNECTED_ACCOUNT_STATUS_KEYS],
   ["ConnectedAccountsCard.signatureTemplates.${*}", SIGNATURE_TEMPLATE_KEYS],
@@ -576,6 +617,7 @@ const DYNAMIC_TEMPLATE_CONSUMERS = new Map<string, readonly string[]>([
   ["Subscription.planNames.${*}", SUBSCRIPTION_PLAN_KEYS],
   ["Subscription.status.${*}", SUBSCRIPTION_STATUS_KEYS],
   ["WebhookDeliveryModal.deliveryStatus.${*}", WEBHOOK_DELIVERY_STATUS_KEYS],
+  ["WebFormSubmissions.statuses.${*}", WEB_FORM_SUBMISSION_STATUS_KEYS],
   ["documents.${*}", LEGAL_DOCUMENT_KEYS],
   ["AgentChat.activity.resource.${*}", AGENT_ACTIVITY_RESOURCE_KEYS],
   ["AgentChat.activity.resourceSingular.${*}", AGENT_ACTIVITY_RESOURCE_SINGULAR_KEYS],
@@ -617,6 +659,17 @@ export const DYNAMIC_KEY_SITES = [
   "app/[locale]/(protected)/leads/components/use-lead-columns.tsx :: t :: Common.leadStatuses.${row.original.status}",
   "components/data-view/filter-modal/inputs/use-filter-select-items.tsx :: t :: Common.dealStatuses.${status}",
   "components/data-view/filter-modal/inputs/use-filter-select-items.tsx :: t :: Common.leadStatuses.${status}",
+  "components/data-view/filter-modal/inputs/use-filter-select-items.tsx :: t :: WebFormSubmissions.statuses.${status}",
+  "app/[locale]/(protected)/company/components/webform/use-web-form-submission-columns.tsx :: t :: WebFormSubmissions.statuses.${row.original.status}",
+  "app/[locale]/(protected)/company/components/webform/web-form-submission-modal.tsx :: t :: WebFormSubmissions.statuses.${submission.status}",
+  "app/[locale]/(protected)/automations/components/automation-modal.tsx :: t :: Automations.triggerKinds.${kind}",
+  "app/[locale]/(protected)/automations/components/automation-row.tsx :: t :: Automations.triggers.${automation.triggerKind}",
+  "app/[locale]/(protected)/automations/components/automation-runs-modal.tsx :: t :: Automations.actions.${step.kind}",
+  "app/[locale]/(protected)/automations/components/automation-runs-modal.tsx :: t :: Automations.runStatuses.${run.status}",
+  "app/[locale]/(protected)/automations/components/automation-runs-modal.tsx :: t :: Automations.runStatuses.${step.status}",
+  "app/[locale]/(protected)/automations/components/automation-runs-modal.tsx :: t :: Automations.stepErrors.${step.error}",
+  "app/[locale]/(protected)/automations/components/automation-step-fields.tsx :: t :: Automations.actionFields.${field}",
+  "app/[locale]/(protected)/automations/components/automation-step-fields.tsx :: t :: Automations.actions.${kind}",
   "app/[locale]/(protected)/operator/components/workspaces/operator-workspace-modal.tsx :: t :: Common.providers.${channel.provider}",
   "app/[locale]/(protected)/operator/components/users/use-operator-user-columns.tsx :: t :: Common.userStatuses.${row.original.status}",
   "app/[locale]/(protected)/operator/components/users/use-operator-user-columns.tsx :: t :: Subscription.planNames.${row.original.plan}",
@@ -823,6 +876,7 @@ const NONLITERAL_T_CALL_SITES = new Map<string, number>([
   ["app/[locale]/(protected)/tasks/components/task-agenda-view.tsx :: t :: BUCKET_LABEL_KEY[group.bucket]", 1],
   ["app/[locale]/(protected)/tasks/components/task-agenda-view.tsx :: t :: nameKey", 1],
   ["app/[locale]/(protected)/tasks/components/task-detail.store.ts :: this.t :: nameTranslationKey", 1],
+  ["app/[locale]/(protected)/tasks/components/task-week-view.tsx :: t :: nameKey", 1],
   ["components/activity/activity-kind-icon.tsx :: t :: activityKindLabelKey(kind)", 1],
   ["app/[locale]/(protected)/tasks/components/use-task-columns.tsx :: t :: nameKey", 1],
   ["app/[locale]/(static)/docs/[slug]/page.tsx :: t :: navKey", 1],

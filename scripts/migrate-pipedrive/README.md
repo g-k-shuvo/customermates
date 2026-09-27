@@ -16,7 +16,7 @@ scoping. It never touches Prisma.
    URL).
 2. An API key for a user of the target workspace: **Profile → API Keys → New key**. The key
    inherits that user's permissions, so it needs create/update on contacts, organizations,
-   deals, tasks, services, pipelines, and `company.update` for lost reasons.
+   deals, leads, tasks, services, pipelines, and `company.update` for lost reasons.
 3. A Pipedrive export, or a Pipedrive API token.
 4. A decision on the gaps at the bottom of this file.
 
@@ -34,7 +34,7 @@ Everything can come from the environment (`.env` is loaded) or from a flag. Flag
 | `--fallback-owner` | `MIGRATION_FALLBACK_OWNER_EMAIL` | Nominated owner for records whose Pipedrive user has no match |
 | `--default-currency` | `MIGRATION_DEFAULT_CURRENCY` | Currency for the monetary custom columns, default `eur` |
 | `--dry-run` | — | Report only; writes nothing |
-| `--only` | — | Comma-separated subset of `organizations,contacts,pipelines,stages,lostReasons,deals,tasks,notes` |
+| `--only` | — | Comma-separated subset of `organizations,contacts,pipelines,stages,lostReasons,deals,leads,tasks,notes` |
 | `--limit` | — | Cap the source records read per entity (useful for a first pass) |
 | `--won-stage-name` / `--lost-stage-name` | — | Names of the terminal stages added to each imported pipeline (default `Won` / `Lost`) |
 | `--make-default-pipeline` | — | Mark the first imported pipeline as the workspace default |
@@ -53,7 +53,7 @@ exported"; a missing *directory* is a hard error.
 ```
 organizations.json   persons.json     pipelines.json   stages.json
 deals.json           deal-flow.json   activities.json  notes.json
-users.json           dealFields.json
+users.json           dealFields.json  leads.json       leadLabels.json
 ```
 
 `deal-flow.json` is the concatenation of `GET /deals/{id}/flow` for every deal; each entry is
@@ -100,10 +100,18 @@ The order is fixed and matters — deals cannot be placed before the things they
 4. **Organizations**
 5. **Persons** → contacts (linked to their organization)
 6. **Deals** → created open, stage history replayed, then closed
-7. **Activities** → tasks
-8. **Notes** → appended to the owning record
+7. **Leads** → leads (linked to the contact and organization imported above)
+8. **Activities** → tasks
+9. **Notes** → appended to the owning record
 
 The process exits non-zero if any entity fails to reconcile.
+
+**Automations, routines and webhooks fire during the run.** Every import goes through the same
+interactors a person would use, so each created record raises its domain event. A
+record-created automation runs once per imported record (a labelling automation labels every
+imported lead), routines and webhooks see every record, and each open imported lead gets the
+usual follow-up task (archived, converted and unqualified ones do not). Pause the workspace's
+automations and webhooks for the real run unless that is what you want.
 
 ## Re-running
 
@@ -146,28 +154,66 @@ often it occurred.
 | Stage (`name`, `order_nr`, `deal_probability`) | `PipelineStage` (`name`, `position`, `probability`); `rotten_days` → `rottingDays` when `rotten_flag` is set |
 | — | A terminal `Won` and `Lost` stage is appended to every imported pipeline, because the closing transitions move a deal to the stage of that kind |
 | Deal | `Deal` (`name` ← `title`, `expectedCloseDate` ← `expected_close_date`, `probability`) |
-| Deal `value` | `totalValue`, via the `Pipedrive deal value` service — see below |
+| Deal `value` | `baseValue` (so `totalValue` = value + any services added later) — see below |
 | Deal status `open`/`won`/`lost` | `MarkDealWon` / `MarkDealLost` / `ReopenDeal` |
 | `lost_reason` | `LostReason`, the distinct set created first and matched by name |
 | Deal custom fields | `CustomColumn` + `CustomFieldValue` (`enum` → `singleSelect`, `date` → `date`, `monetary` → `currency`, the rest → `plain`) |
 | Deal flow (`stage_id` changes) | `DealStageHistory`, replayed oldest first |
 | Activity | `Task` (`name` ← `subject`, `activityKind` ← `type`, `dueAt` ← `due_date` + `due_time`, `durationMinutes` ← `duration`) |
-| Note | `notes` on the owning deal, contact or organization, most specific first |
+| Lead | `Lead` (`title`, owner, contact ← `person_id`, organization ← `organization_id`, labels, `value`) — see below |
+| Note | `notes` on the owning deal, lead, contact or organization, most specific first |
 | Owner (`owner_id` / `user_id`) | `User` matched by email, else the nominated `--fallback-owner`, reported either way |
 | Pipedrive id of every record | `pipedrive_id` custom column on that entity |
 
-### Deal value goes through a service
+### Deal value lands in `baseValue`
 
-`Deal.totalValue` is derived from `sum(service.amount × quantity)` and there is no interactor
-that sets it directly. The migration therefore provisions **one** service, `Pipedrive deal
-value`, with `amount = 1`, and attaches it to each deal with `quantity = value`. `totalValue`
-is then exactly the Pipedrive amount.
+A deal's `totalValue` is `baseValue + sum(service.amount × quantity)`. The migration writes the
+Pipedrive amount to `baseValue` and attaches no services, so `totalValue` is exactly the
+Pipedrive amount and `totalQuantity` stays 0 until someone adds service lines. The raw amount
+and currency are also written to the `pipedrive_value` and `pipedrive_currency` columns.
+Negative Pipedrive values are not representable (`baseValue` cannot be negative); those deals
+import with a value of 0 and are reported.
 
-The consequence: `totalQuantity` on a migrated deal equals its value rather than a count of
-line items. The raw amount and currency are also written to the `pipedrive_value` and
-`pipedrive_currency` columns so nothing is inferred from the service. Negative Pipedrive
-values are not representable (quantity cannot be negative); those deals import with a value of
-0 and are reported.
+Runs made before `baseValue` existed carried the value on a unit-priced `Pipedrive deal value`
+service with `quantity = value`. Convert those deals once, before migrating deals again:
+
+```bash
+yarn migrate:pipedrive:base-value            # dry run: how many deals, how much value
+yarn migrate:pipedrive:base-value --apply    # move it into baseValue, delete the service
+```
+
+The conversion keeps every `totalValue` and `weightedValue` as it was and resets
+`totalQuantity` to the count of real service lines. It is safe to re-run. The deal step refuses
+to start while the `Pipedrive deal value` service still exists, because writing `baseValue` on
+top of that line would count the value twice.
+
+### Leads
+
+Pipedrive leads are read from `leads.json` and `leadLabels.json` (or `GET /leads?archived_status=all`
+and `GET /leadLabels`). A lead's id is a UUID, not a number, so it is tracked in the lead's own
+`pipedrive_id` column.
+
+- **Status.** Pipedrive leads have no workflow status. An open lead starts as `new` and an
+  archived one is imported as `archived`. With `--update-existing` a re-run never moves a lead
+  back to `new`: only an archive made in Pipedrive since the last run is carried over.
+- **Links.** The contact and the organization are linked when the same or an earlier run
+  imported them; a reference to one that was not imported is listed as unmapped
+  (`lead.person_id`, `lead.organization_id`).
+- **Labels** arrive by name. A label id missing from `leadLabels.json` is reported
+  (`lead.label_ids`).
+- **Value.** `value.amount` becomes the lead's value as it is. An amount in a currency other
+  than `--default-currency` is not converted and is reported (`lead.value.currency`).
+- **Expected close date** lands in `pipedrive_expected_close_date`, a date column, because a
+  lead has no close date of its own. The conversion dialog asks for one when the lead becomes a
+  deal.
+- **Source.** Every imported lead has the source origin `pipedrive`.
+- **Notes** with a `lead_id` are appended to the lead's notes, tracked in its own
+  `pipedrive_note_ids`, like the other entities.
+- **Activities.** A task cannot be linked to a lead in this product, so an activity attached to
+  a lead imports with its other links and is counted under `activity.lead_id` in the report.
+
+The lead columns are only provisioned when the run includes `leads` (or `notes`, for the note
+bookkeeping), so a run that leaves leads out needs no lead permissions.
 
 ### Custom columns are created over MCP
 

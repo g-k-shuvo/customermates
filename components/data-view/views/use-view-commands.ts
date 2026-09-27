@@ -17,6 +17,7 @@ import {
   duplicateView,
   moveView,
   selectView,
+  setViewShared,
   updateViewMeta,
   viewLink,
 } from "./view-actions";
@@ -34,6 +35,7 @@ export type ViewCommands = {
   move: (view: DataViewChipDto, offset: -1 | 1) => void;
   remove: (view: DataViewChipDto) => void;
   select: (viewKey: string) => void;
+  share: (view: DataViewChipDto, shared: boolean) => void;
   submitMeta: (draft: ViewMetaDraft, values: { name: string }) => Promise<void>;
 };
 
@@ -76,6 +78,12 @@ export function useViewCommands<E extends HasId>(args: {
       }, view.name),
 
     select: (viewKey) => runUserAction(() => selectView(store, viewKey, pathname)),
+
+    share: (view, shared) =>
+      runUserAction(async () => {
+        if (await setViewShared(store, view, shared))
+          toast.success(shared ? t("DataView.views.shareSuccess") : t("DataView.views.unshareSuccess"));
+      }),
 
     submitMeta: async (draft, values) => {
       const source = viewById(draft.viewId);

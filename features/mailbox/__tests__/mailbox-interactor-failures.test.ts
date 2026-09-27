@@ -266,6 +266,7 @@ describe("SendReplyInteractor failures", () => {
       messageId: "<sent@vendor.example>",
       raw: Buffer.from(""),
       recipients: ["anna@buyer.example"],
+      sentCopySaved: true,
     });
     const interactor = new SendReplyInteractor(repo, { send } as never, KEY, NOW);
     MOCK_PRISMA_DB_MODULE.prisma.$transaction.mockClear();

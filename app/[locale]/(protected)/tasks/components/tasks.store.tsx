@@ -10,7 +10,7 @@ import { getTasksAction } from "../actions";
 
 import { BaseDataViewStore } from "@/core/base/base-data-view.store";
 
-export const TASKS_PAGE_TABS = ["list", "agenda"] as const;
+export const TASKS_PAGE_TABS = ["list", "agenda", "week"] as const;
 
 export type TasksPageTab = (typeof TASKS_PAGE_TABS)[number];
 

@@ -49,6 +49,7 @@ const ACCOUNT: MailboxAccount = {
   sealedSecret: "sealed:secret",
   syncCursors: [],
   backfillFrom: null,
+  sentFolderIds: [],
 };
 
 function interactorFor(options: { account?: MailboxAccount | null; listSyncFolders?: () => Promise<string[]> } = {}) {

@@ -1,12 +1,18 @@
 "use server";
 
-import type { ConnectMailboxData, DisconnectMailboxData, SyncMailboxData } from "@/features/mailbox/mailbox.schema";
+import type {
+  ConnectMailboxData,
+  DisconnectMailboxData,
+  MailboxAccountRefData,
+  SyncMailboxData,
+} from "@/features/mailbox/mailbox.schema";
 
 import {
   getAdminDisconnectMailboxInteractor,
   getConnectMailboxInteractor,
   getDisconnectMailboxInteractor,
   getGetMailboxAccountsInteractor,
+  getListSyncFoldersInteractor,
   getSyncMailboxInteractor,
 } from "@/core/di";
 import { serializeResult } from "@/core/utils/action-result";
@@ -25,6 +31,10 @@ export async function disconnectMailboxAction(input: DisconnectMailboxData) {
 
 export async function adminDisconnectMailboxAction(input: DisconnectMailboxData) {
   return serializeResult(getAdminDisconnectMailboxInteractor().invoke(input));
+}
+
+export async function listSyncFoldersAction(input: MailboxAccountRefData) {
+  return serializeResult(getListSyncFoldersInteractor().invoke(input));
 }
 
 export async function syncMailboxAction(input: SyncMailboxData) {

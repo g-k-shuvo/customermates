@@ -2,9 +2,10 @@ import type { FormEvent } from "react";
 import type { RootStore } from "@/core/stores/root.store";
 import type { WebFormFieldMapping } from "@/features/webform/ingest/field-mapping";
 import type { WebFormSourceDto } from "@/features/webform/webform-source.schema";
+import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
 
 import { action, makeObservable, observable, toJS } from "mobx";
-import { Resource } from "@/generated/prisma";
+import { CustomColumnType, EntityType, Resource } from "@/generated/prisma";
 
 import {
   createWebFormSourceAction,
@@ -13,8 +14,10 @@ import {
   updateWebFormSourceAction,
 } from "../../actions";
 
+import { getCustomColumnsByEntityTypeAction } from "@/app/actions";
 import { BaseModalStore } from "@/core/base/base-modal.store";
 import { toastZodErrorTree } from "@/core/utils/toast-zod-error-tree";
+import { reportApplicationError } from "@/core/errors/report-application-error";
 
 export type WebFormSourceFormData = {
   id?: string;
@@ -25,6 +28,22 @@ export type WebFormSourceFormData = {
   fieldMapping: WebFormFieldMapping;
 };
 
+const MAPPING_PATH_KEYS = [
+  "firstName",
+  "lastName",
+  "email",
+  "organizationName",
+  "message",
+  "value",
+  "titleTemplate",
+] as const;
+
+export function withEveryMappingKey(mapping: WebFormFieldMapping): WebFormFieldMapping {
+  const keys = Object.fromEntries(MAPPING_PATH_KEYS.map((key) => [key, undefined]));
+
+  return { ...keys, ...mapping, customFields: [...(mapping.customFields ?? [])] };
+}
+
 export const EMPTY_WEB_FORM_SOURCE: WebFormSourceFormData = {
   name: "",
   slug: "",
@@ -33,16 +52,37 @@ export const EMPTY_WEB_FORM_SOURCE: WebFormSourceFormData = {
   fieldMapping: {},
 };
 
+export function adoptLegacyPhoneMapping(
+  mapping: WebFormFieldMapping,
+  columns: readonly CustomColumnDto[],
+): WebFormFieldMapping {
+  const { phone, ...rest } = mapping;
+  const path = phone?.trim();
+  if (!path) return rest;
+
+  const rows = rest.customFields ?? [];
+  if (rows.some((row) => row.path === path)) return rest;
+
+  const phoneColumns = columns.filter((column) => column.type === CustomColumnType.phone);
+
+  return { ...rest, customFields: [...rows, { path, columnId: phoneColumns.length === 1 ? phoneColumns[0].id : "" }] };
+}
+
 export class WebFormSourceModalStore extends BaseModalStore<WebFormSourceFormData> {
   revealedSecret: string | null = null;
+  mappableColumns: CustomColumnDto[] = [];
 
   constructor(rootStore: RootStore) {
     super(rootStore, EMPTY_WEB_FORM_SOURCE, Resource.leads);
 
     makeObservable(this, {
       revealedSecret: observable,
+      mappableColumns: observable,
 
       setRevealedSecret: action,
+      setMappableColumns: action,
+      addCustomField: action,
+      removeCustomField: action,
       delete: action,
       rotateSecret: action,
       onSubmit: action,
@@ -57,6 +97,38 @@ export class WebFormSourceModalStore extends BaseModalStore<WebFormSourceFormDat
     this.revealedSecret = secret;
   };
 
+  setMappableColumns = (columns: CustomColumnDto[]) => {
+    this.mappableColumns = columns;
+  };
+
+  loadMappableColumns = async (): Promise<void> => {
+    const [leadColumns, contactColumns] = await Promise.all([
+      getCustomColumnsByEntityTypeAction({ entityType: EntityType.lead }),
+      getCustomColumnsByEntityTypeAction({ entityType: EntityType.contact }),
+    ]);
+    this.setMappableColumns([...leadColumns, ...contactColumns]);
+
+    if (this.form.fieldMapping.phone?.trim()) {
+      this.onInitOrRefresh({
+        fieldMapping: withEveryMappingKey(adoptLegacyPhoneMapping(this.form.fieldMapping, this.mappableColumns)),
+      });
+    }
+  };
+
+  addCustomField = () => {
+    this.onChange("fieldMapping.customFields", [
+      ...(this.form.fieldMapping.customFields ?? []),
+      { path: "", columnId: "" },
+    ]);
+  };
+
+  removeCustomField = (index: number) => {
+    this.onChange(
+      "fieldMapping.customFields",
+      (this.form.fieldMapping.customFields ?? []).filter((_row, position) => position !== index),
+    );
+  };
+
   openForSource = (source: WebFormSourceDto) => {
     this.setRevealedSecret(null);
     this.openWith({
@@ -65,13 +137,15 @@ export class WebFormSourceModalStore extends BaseModalStore<WebFormSourceFormDat
       slug: source.slug,
       active: source.active,
       defaultLabels: [...source.defaultLabels],
-      fieldMapping: { ...source.fieldMapping },
+      fieldMapping: withEveryMappingKey(source.fieldMapping),
     });
+    void this.loadMappableColumns().catch(reportApplicationError);
   };
 
   openForCreate = () => {
     this.setRevealedSecret(null);
-    this.openWith(EMPTY_WEB_FORM_SOURCE);
+    this.openWith({ ...EMPTY_WEB_FORM_SOURCE, fieldMapping: withEveryMappingKey({}) });
+    void this.loadMappableColumns().catch(reportApplicationError);
   };
 
   delete = async (): Promise<boolean> => {
@@ -116,10 +190,22 @@ export class WebFormSourceModalStore extends BaseModalStore<WebFormSourceFormDat
 
   onSubmit = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
+
+    const draft = toJS(this.form);
+    const customFields = (draft.fieldMapping.customFields ?? []).filter(
+      (row) => row.path.trim() !== "" || row.columnId !== "",
+    );
+    if (customFields.some((row) => row.path.trim() === "" || row.columnId === "")) {
+      this.toastError("WebFormSourceModal.customFieldIncomplete");
+      return;
+    }
+
     this.setIsLoading(true);
 
     try {
-      const form = toJS(this.form);
+      const mapping: WebFormFieldMapping = { ...draft.fieldMapping, customFields };
+      delete mapping.phone;
+      const form = { ...draft, fieldMapping: mapping };
       const sourceId = form.id;
 
       if (sourceId) {

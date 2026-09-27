@@ -14,8 +14,8 @@ import { UserAccessor } from "@/core/base/user-accessor";
 import { currentRoutineContext } from "@/core/decorators/routine-context";
 import { automationCausationExhausted } from "@/core/decorators/automation-context";
 import { automationTriggerForEvent, changedFieldsMatch } from "@/features/automation/automation-trigger-map";
-import { carriesChangedFields, changedFieldsOf } from "@/features/event/changed-fields";
-import { WebhookEventSchema } from "@/features/webhook/webhook.schema";
+import { fieldChangesIn } from "@/features/event/changed-fields";
+import { SubscribableWebhookEventSchema, WebhookEventSchema } from "@/features/webhook/webhook.schema";
 import { env } from "@/env";
 
 export abstract class GetWebhooksForEventRepo {
@@ -152,12 +152,11 @@ export class EventService extends UserAccessor {
     );
     if (subscribed.length === 0) return 0;
 
-    const changed = changedFieldsOf(payload);
-    const carriesChanges = carriesChangedFields(payload);
+    const changes = fieldChangesIn(payload);
     const fieldMatches = subscribed.filter(
       (automation) =>
         automation.changedFields.length === 0 ||
-        (carriesChanges && changedFieldsMatch(automation.changedFields, changed)),
+        (changes !== null && changedFieldsMatch(automation.changedFields, changes)),
     );
     if (fieldMatches.length === 0) return 0;
 
@@ -193,10 +192,11 @@ export class EventService extends UserAccessor {
     const subscribed = await this.routineRepo.findEventRoutinesUnscoped(companyId, event);
     if (subscribed.length === 0) return 0;
 
-    const changed = changedFieldsOf(payload);
-    const changedFieldMatches = carriesChangedFields(payload)
-      ? subscribed.filter((routine) => changedFieldsMatch(routine.changedFields, changed))
-      : subscribed;
+    const changes = fieldChangesIn(payload);
+    const changedFieldMatches =
+      changes === null
+        ? subscribed
+        : subscribed.filter((routine) => changedFieldsMatch(routine.changedFields, changes));
     const routines = (
       await Promise.all(
         changedFieldMatches.map(async (routine) => ({
@@ -246,7 +246,7 @@ export class EventService extends UserAccessor {
     companyId: string,
     system: boolean,
   ): Promise<number> {
-    if (!WebhookEventSchema.options.some((option) => option === event)) return 0;
+    if (!SubscribableWebhookEventSchema.options.some((option) => option === event)) return 0;
 
     const webhooks = system
       ? await this.webhookRepo.getWebhooksForEventUnscoped(event, companyId)

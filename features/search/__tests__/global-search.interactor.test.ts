@@ -11,6 +11,7 @@ const harness = vi.hoisted(() => ({
   deal: vi.fn(),
   service: vi.fn(),
   task: vi.fn(),
+  lead: vi.fn(),
 }));
 
 vi.mock("../entity-list-executors", async (importOriginal) => ({
@@ -93,5 +94,45 @@ describe("GlobalSearchInteractor permissions and result limits", () => {
       searchTerm: "pending",
       pagination: { page: 1, pageSize: 100 },
     });
+  });
+});
+
+describe("GlobalSearchInteractor leads", () => {
+  it("finds leads by title and opens them as leads", async () => {
+    harness.lead.mockResolvedValue({
+      ok: true,
+      data: { items: [{ id: "lead-1", title: "Market assessment for Acme", contact: null }] },
+    });
+
+    const result = await runWithTenant(createMockUser(), () =>
+      new GlobalSearchInteractor().invoke({ searchTerm: "Acme" }),
+    );
+
+    expect(result.ok && result.data.results).toContainEqual({
+      id: "lead-1",
+      name: "Market assessment for Acme",
+      pictureUrl: null,
+      type: EntityType.lead,
+    });
+    expect(harness.lead).toHaveBeenCalledWith({ searchTerm: "Acme", pagination: { page: 1, pageSize: 100 } });
+  });
+
+  it("searches leads for a role that may only read its own leads, and nothing else", async () => {
+    const user = createMockUserWithPermissions([{ resource: Resource.leads, action: Action.readOwn }]);
+
+    const result = await runWithTenant(user, () => new GlobalSearchInteractor().invoke({ searchTerm: "Acme" }));
+
+    expect(result.ok).toBe(true);
+    expect(harness.lead).toHaveBeenCalledTimes(1);
+    expect(harness.contact).not.toHaveBeenCalled();
+    expect(harness.deal).not.toHaveBeenCalled();
+  });
+
+  it("leaves leads out for a role without lead access", async () => {
+    const user = createMockUserWithPermissions([{ resource: Resource.contacts, action: Action.readAll }]);
+
+    await runWithTenant(user, () => new GlobalSearchInteractor().invoke({ searchTerm: "Acme" }));
+
+    expect(harness.lead).not.toHaveBeenCalled();
   });
 });

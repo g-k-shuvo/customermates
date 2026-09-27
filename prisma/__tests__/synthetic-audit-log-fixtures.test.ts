@@ -131,6 +131,7 @@ function syntheticSnapshot(): SyntheticAuditSnapshot {
     return {
       id: fixtureId("80000000", index + 1),
       name: `Deal ${index + 1}`,
+      baseValue: 0,
       totalQuantity: quantity,
       totalValue: service.amount * quantity,
       weightedValue: null,

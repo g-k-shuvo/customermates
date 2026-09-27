@@ -17,6 +17,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { OverflowRail } from "@/components/shared/overflow-rail";
@@ -28,7 +29,14 @@ import { cn } from "@/core/utils/cn";
 import { VIEW_SURFACE_CLASS, VIEW_TAB_CLASS, ViewChip } from "./view-chip";
 import { ViewMenuItems } from "./view-menu-items";
 import { VIEW_META_NAME_INPUT_ID, ViewMetaOverlay } from "./view-meta-overlay";
-import { allViewMenuItems, orderChips, sortViewsByPosition, viewMenuItems } from "./view-rail-model";
+import {
+  allViewMenuItems,
+  colleagueViewMenuItems,
+  isOwnView,
+  orderChips,
+  ownViewsByPosition,
+  viewMenuItems,
+} from "./view-rail-model";
 import { viewHref } from "./view-actions";
 import { useRovingFocus } from "./use-roving-focus";
 import { useViewCommands } from "./use-view-commands";
@@ -82,7 +90,7 @@ export const DataViewViewsRail = observer(function DataViewViewsRail<E extends H
   if (!offersViews) return null;
 
   const activeName = activeView?.name ?? t("DataView.views.all");
-  const ordered = sortViewsByPosition(store.views);
+  const ordered = ownViewsByPosition(store.views);
   const isDrafting = meta !== null && meta.mode !== "edit";
   const menuTarget: DataViewChipDto = activeView ?? {
     id: ALL_VIEW_KEY,
@@ -90,16 +98,26 @@ export const DataViewViewsRail = observer(function DataViewViewsRail<E extends H
     position: -1,
     state: store.allViewState,
   };
-  const menuItems = activeView
-    ? viewMenuItems({
-        index: ordered.findIndex((candidate) => candidate.id === activeView.id),
-        total: ordered.length,
-      })
-    : allViewMenuItems();
+  const menuItems = !activeView
+    ? allViewMenuItems()
+    : isOwnView(activeView)
+      ? viewMenuItems({
+          index: ordered.findIndex((candidate) => candidate.id === activeView.id),
+          total: ordered.length,
+          shared: Boolean(activeView.shared),
+        })
+      : colleagueViewMenuItems();
 
-  const previewFor = (name: string, isActive: boolean): ReactNode => (
+  const sharedLabelFor = (view: DataViewChipDto): string | undefined => {
+    if (view.sharedBy !== undefined) return t("DataView.views.sharedBy", { name: view.sharedBy });
+    return view.shared ? t("DataView.views.sharedWithTeam") : undefined;
+  };
+
+  const previewFor = (name: string, isActive: boolean, sharedLabel?: string): ReactNode => (
     <>
       <span className="block font-medium">{name}</span>
+
+      {sharedLabel && <span className="block text-[11px] text-muted-foreground">{sharedLabel}</span>}
 
       {isActive && (
         <span className="block text-[11px] text-muted-foreground">
@@ -177,7 +195,8 @@ export const DataViewViewsRail = observer(function DataViewViewsRail<E extends H
                   href={viewHref(pathname, chip.view.id)}
                   isActive={chip.isActive}
                   label={chip.view.name}
-                  preview={previewFor(chip.view.name, chip.isActive)}
+                  preview={previewFor(chip.view.name, chip.isActive, sharedLabelFor(chip.view))}
+                  sharedLabel={sharedLabelFor(chip.view)}
                   tabIndex={tabIndexAt(index)}
                   onKeyDown={onKeyDownAt(index)}
                   onSelect={onChipClick(chip.view.id)}
@@ -257,6 +276,16 @@ export const DataViewViewsRail = observer(function DataViewViewsRail<E extends H
 
                 {t("DataView.views.askAi")}
               </DropdownMenuItem>
+            )}
+
+            {activeView?.sharedBy !== undefined && (
+              <DropdownMenuLabel className="max-w-64 text-xs font-normal text-muted-foreground">
+                <span className="block font-medium text-foreground">
+                  {t("DataView.views.sharedBy", { name: activeView.sharedBy })}
+                </span>
+
+                <span className="block">{t("DataView.views.sharedChangesNotSaved")}</span>
+              </DropdownMenuLabel>
             )}
 
             <ViewMenuItems commands={commands} items={menuItems} view={menuTarget} />

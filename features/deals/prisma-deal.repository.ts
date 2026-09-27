@@ -172,6 +172,7 @@ export class PrismaDealRepo
     return {
       id: true,
       name: true,
+      baseValue: true,
       totalValue: true,
       totalQuantity: true,
       weightedValue: true,
@@ -538,6 +539,7 @@ export class PrismaDealRepo
       stageId,
       expectedCloseDate,
       probability,
+      baseValue,
     } = args;
 
     const placement = await this.resolvePlacement(pipelineId, stageId);
@@ -551,6 +553,7 @@ export class PrismaDealRepo
       stageEnteredAt: placement.stageId ? new Date() : null,
       expectedCloseDate: expectedCloseDate ?? null,
       probability: probability ?? null,
+      baseValue: baseValue ?? 0,
     };
 
     const deal = await this.prisma.deal.create({
@@ -652,6 +655,7 @@ export class PrismaDealRepo
     if (dealData.pipelineId !== undefined) data.pipelineId = dealData.pipelineId;
     if (dealData.expectedCloseDate !== undefined) data.expectedCloseDate = dealData.expectedCloseDate;
     if (dealData.probability !== undefined) data.probability = dealData.probability;
+    if (dealData.baseValue !== undefined) data.baseValue = dealData.baseValue;
 
     if (dealData.stageId !== undefined) {
       const existing = await this.prisma.deal.findFirst({
@@ -1028,6 +1032,7 @@ export class PrismaDealRepo
         where: { id: { in: uniqueDealIds }, companyId },
         select: {
           id: true,
+          baseValue: true,
           totalValue: true,
           totalQuantity: true,
           weightedValue: true,
@@ -1042,7 +1047,7 @@ export class PrismaDealRepo
     ]);
 
     const computedTotalsByDealId = new Map<string, { totalValue: number; totalQuantity: number }>(
-      uniqueDealIds.map((id) => [id, { totalValue: 0, totalQuantity: 0 }]),
+      existingDeals.map((deal) => [deal.id, { totalValue: deal.baseValue, totalQuantity: 0 }]),
     );
 
     for (const serviceDeal of serviceDeals) {

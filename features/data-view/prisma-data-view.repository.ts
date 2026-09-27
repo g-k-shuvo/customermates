@@ -17,6 +17,7 @@ export type CreateDataViewArgs = {
   name: string;
   position: number;
   state: DataViewState;
+  shared?: boolean;
 };
 
 export type UpdateOwnedDataViewArgs = {
@@ -24,6 +25,7 @@ export type UpdateOwnedDataViewArgs = {
   name?: string;
   position?: number;
   state?: DataViewState;
+  shared?: boolean;
 };
 
 export type UpdateOwnedDataViewStateArgs = {
@@ -47,7 +49,16 @@ const VIEW_SELECT = {
   columnWidths: true,
   hiddenColumns: true,
   pageSize: true,
+  shared: true,
+  userId: true,
+  user: { select: { firstName: true, lastName: true } },
 } satisfies Prisma.DataViewSelect;
+
+type ReadableViewRow = StoredViewRow & {
+  shared: boolean;
+  userId: string;
+  user: { firstName: string; lastName: string };
+};
 
 const PERSONALIZATION_SELECT = {
   activeViewKey: true,
@@ -63,12 +74,27 @@ const PERSONALIZATION_SELECT = {
   hiddenColumns: true,
 } satisfies Prisma.P13nSelect;
 
-function toChip(row: StoredViewRow): DataViewChipDto {
-  return { id: row.id, name: row.name, position: row.position, state: readStoredState(row) };
+function toChip(row: ReadableViewRow, viewerId: string): DataViewChipDto {
+  return {
+    id: row.id,
+    name: row.name,
+    position: row.position,
+    state: readStoredState(row),
+    ...(row.shared ? { shared: true } : {}),
+    ...(row.userId === viewerId ? {} : { sharedBy: `${row.user.firstName} ${row.user.lastName}`.trim() }),
+  };
 }
 
-function toDto(row: StoredViewRow): DataViewDto {
-  return { ...toChip(row), surfaceKey: row.surfaceKey as DataViewDto["surfaceKey"] };
+function toDto(row: ReadableViewRow, viewerId: string): DataViewDto {
+  return { ...toChip(row, viewerId), surfaceKey: row.surfaceKey as DataViewDto["surfaceKey"] };
+}
+
+function ownFirst(rows: ReadableViewRow[], viewerId: string): ReadableViewRow[] {
+  return [...rows.filter((row) => row.userId === viewerId), ...rows.filter((row) => row.userId !== viewerId)];
+}
+
+function readableBy(userId: string) {
+  return { OR: [{ userId }, { shared: true }] } satisfies Prisma.DataViewWhereInput;
 }
 
 export class PrismaDataViewRepo extends BaseRepository implements DataViewStateRepo {
@@ -78,7 +104,7 @@ export class PrismaDataViewRepo extends BaseRepository implements DataViewStateR
 
       const [views, personalization] = await Promise.all([
         this.prisma.dataView.findMany({
-          where: { companyId, surfaceKey, userId },
+          where: { companyId, surfaceKey, ...readableBy(userId) },
           orderBy: [{ position: "asc" }, { createdAt: "asc" }],
           select: VIEW_SELECT,
         }),
@@ -90,7 +116,7 @@ export class PrismaDataViewRepo extends BaseRepository implements DataViewStateR
 
       return {
         activeViewKey: personalization?.activeViewKey ?? null,
-        views: views.map((row) => toChip(row as StoredViewRow)),
+        views: ownFirst(views as ReadableViewRow[], userId).map((row) => toChip(row, userId)),
         allState: personalization ? readStoredPersonalizationState(personalization) : {},
       };
     });
@@ -101,12 +127,12 @@ export class PrismaDataViewRepo extends BaseRepository implements DataViewStateR
       const { companyId, id: userId } = this.user;
 
       const rows = await this.prisma.dataView.findMany({
-        where: { companyId, surfaceKey, userId },
+        where: { companyId, surfaceKey, ...readableBy(userId) },
         orderBy: [{ position: "asc" }, { name: "asc" }],
         select: VIEW_SELECT,
       });
 
-      return rows.map((row) => toDto(row as StoredViewRow));
+      return ownFirst(rows as ReadableViewRow[], userId).map((row) => toDto(row, userId));
     });
   }
 
@@ -116,7 +142,20 @@ export class PrismaDataViewRepo extends BaseRepository implements DataViewStateR
 
       const row = await this.prisma.dataView.findFirst({ where: { id, companyId, userId }, select: VIEW_SELECT });
 
-      return row ? toDto(row as StoredViewRow) : null;
+      return row ? toDto(row as ReadableViewRow, userId) : null;
+    });
+  }
+
+  async findReadableOrNull(id: string): Promise<DataViewDto | null> {
+    return runAsViewOwner(async () => {
+      const { companyId, id: userId } = this.user;
+
+      const row = await this.prisma.dataView.findFirst({
+        where: { id, companyId, ...readableBy(userId) },
+        select: VIEW_SELECT,
+      });
+
+      return row ? toDto(row as ReadableViewRow, userId) : null;
     });
   }
 
@@ -144,12 +183,13 @@ export class PrismaDataViewRepo extends BaseRepository implements DataViewStateR
           surfaceKey: args.surfaceKey,
           name: args.name,
           position: args.position,
+          shared: args.shared ?? false,
           ...writeStoredState(args.state),
         },
         select: VIEW_SELECT,
       });
 
-      return toDto(row as StoredViewRow);
+      return toDto(row as ReadableViewRow, userId);
     });
   }
 
@@ -160,6 +200,7 @@ export class PrismaDataViewRepo extends BaseRepository implements DataViewStateR
       const data: Prisma.DataViewUpdateManyMutationInput = {};
       if (args.name !== undefined) data.name = args.name;
       if (args.position !== undefined) data.position = args.position;
+      if (args.shared !== undefined) data.shared = args.shared;
       if (args.state !== undefined) Object.assign(data, writePartialStoredState(args.state));
 
       const affected = await this.prisma.dataView.updateMany({ where: { id: args.id, companyId, userId }, data });
@@ -170,7 +211,7 @@ export class PrismaDataViewRepo extends BaseRepository implements DataViewStateR
         select: VIEW_SELECT,
       });
 
-      return row ? toDto(row as StoredViewRow) : null;
+      return row ? toDto(row as ReadableViewRow, userId) : null;
     });
   }
 

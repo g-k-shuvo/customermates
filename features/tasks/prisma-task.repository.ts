@@ -17,6 +17,7 @@ import type { CompleteTaskRepo } from "@/features/tasks/complete/complete-task.r
 import type { UncompleteTaskRepo } from "@/features/tasks/complete/uncomplete-task.repo";
 import type { FindNextActivitiesRepo } from "@/features/tasks/find-next-activities.repo";
 import type { ActivityCountsRepo } from "@/features/tasks/get/get-activity-counts.interactor";
+import type { ActivityWindowQuery, ActivityWindowRepo } from "@/features/tasks/get/get-activity-window.interactor";
 
 import { ActivityKind, EntityType, TaskType, Resource, Action } from "@/generated/prisma";
 
@@ -86,6 +87,10 @@ function existingAndClauses(where: Prisma.TaskWhereInput): Prisma.TaskWhereInput
   return Array.isArray(where.AND) ? where.AND : [where.AND];
 }
 
+function withAndClauses(where: Prisma.TaskWhereInput, clauses: Prisma.TaskWhereInput[]): Prisma.TaskWhereInput {
+  return { ...where, AND: [...existingAndClauses(where), ...clauses] };
+}
+
 export class PrismaTaskRepo
   extends BaseRepository<Prisma.TaskWhereInput>
   implements
@@ -107,6 +112,7 @@ export class PrismaTaskRepo
     UncompleteTaskRepo,
     FindNextActivitiesRepo,
     ActivityCountsRepo,
+    ActivityWindowRepo,
     ExportRecordsRepo<TaskDto>
 {
   private get userScopedSelect() {
@@ -339,6 +345,39 @@ export class PrismaTaskRepo
     ]);
 
     return { overdue, dueToday };
+  }
+
+  async findActivityWindow(query: ActivityWindowQuery) {
+    const { where } = await this.buildQueryArgs(
+      { searchTerm: query.searchTerm, filters: query.filters },
+      this.accessWhere("task"),
+    );
+    const scope = query.onlyMine ? withAndClauses(where, [{ users: { some: { userId: this.userId } } }]) : where;
+    const undatedWhere = withAndClauses(scope, [{ dueAt: null, completedAt: null }]);
+
+    const [dated, undated, undatedTotal] = await Promise.all([
+      query.window
+        ? this.prisma.task.findMany({
+            where: withAndClauses(scope, [{ dueAt: { gte: query.window.from, lt: query.window.to } }]),
+            select: this.userScopedSelect,
+            orderBy: [{ dueAt: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+            take: query.datedLimit,
+          })
+        : Promise.resolve([]),
+      this.prisma.task.findMany({
+        where: undatedWhere,
+        select: this.userScopedSelect,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take: query.undatedLimit,
+      }),
+      this.prisma.task.count({ where: undatedWhere }),
+    ]);
+
+    return {
+      dated: dated.map((task) => this.toDto(task)),
+      undated: undated.map((task) => this.toDto(task)),
+      undatedTotal,
+    };
   }
 
   async getSystemTasksCount() {

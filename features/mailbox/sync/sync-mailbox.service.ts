@@ -20,7 +20,15 @@ export class SyncMailboxService {
   ) {}
 
   async listSyncFolders(account: MailboxAccount): Promise<string[]> {
-    return selectSyncFolders(await this.transport.listFolders(this.connectionOf(account)));
+    const folders = await this.transport.listFolders(this.connectionOf(account));
+    const selectedFolderIds = selectSyncFolders(folders);
+
+    await this.repo.saveFolderSelection(account.connectedAccountId, {
+      selectedFolderIds,
+      sentFolderIds: folders.filter((folder) => folder.specialUse === "\\Sent").map((folder) => folder.path),
+    });
+
+    return selectedFolderIds;
   }
 
   async syncFolder(account: MailboxAccount, folderPath: string, batchSize: number): Promise<MailboxSyncOutcome> {
@@ -60,6 +68,7 @@ export class SyncMailboxService {
           messagingThreadId: stored.id,
           mailboxAddress: account.emailAddress,
           mailboxDisplayName: account.displayName,
+          sentFolderIds: account.sentFolderIds,
         });
 
         const created = await this.repo.storeMessage(normalized);

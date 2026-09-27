@@ -251,4 +251,53 @@ export class IntlStore {
 
     return format(date, this.rootStore.localeStore.locale);
   }
+
+  formatWeekday(date: Date | undefined): string {
+    if (date === undefined) return "";
+    if (!this.clientHydrated) return "";
+
+    return new Intl.DateTimeFormat(this.formattingLocale, { weekday: "short" as const }).format(date);
+  }
+
+  formatDayOfMonth(date: Date | undefined): string {
+    if (date === undefined) return "";
+    if (!this.clientHydrated) return "";
+
+    return new Intl.DateTimeFormat(this.formattingLocale, { day: "numeric" as const }).format(date);
+  }
+
+  formatWeekdayDate(date: Date | undefined): string {
+    if (date === undefined) return "";
+    if (!this.clientHydrated) return "";
+
+    return new Intl.DateTimeFormat(this.formattingLocale, {
+      weekday: "long" as const,
+      month: "long" as const,
+      day: "numeric" as const,
+    }).format(date);
+  }
+
+  formatWeekdayDateTime(date: Date | undefined): string {
+    if (date === undefined) return "";
+    if (!this.clientHydrated) return "";
+
+    return new Intl.DateTimeFormat(this.formattingLocale, {
+      weekday: "long" as const,
+      month: "long" as const,
+      day: "numeric" as const,
+      hour: "2-digit" as const,
+      minute: "2-digit" as const,
+    }).format(date);
+  }
+
+  formatDateRange(start: Date | undefined, end: Date | undefined): string {
+    if (start === undefined || end === undefined) return "";
+    if (!this.clientHydrated) return "";
+
+    return new Intl.DateTimeFormat(this.formattingLocale, {
+      year: "numeric" as const,
+      month: "short" as const,
+      day: "numeric" as const,
+    }).formatRange(start, end);
+  }
 }

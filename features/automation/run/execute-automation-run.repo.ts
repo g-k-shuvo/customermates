@@ -24,6 +24,9 @@ export type AutomationRunPlan = {
 export abstract class ExecuteAutomationRunRepo {
   abstract findRunPlanUnscoped(runId: string): Promise<AutomationRunPlan | null>;
   abstract claimRunUnscoped(runId: string): Promise<boolean>;
+  abstract claimRunStepUnscoped(args: { runStepId: string; startedAt: Date }): Promise<boolean>;
+  abstract findRunStepStatusUnscoped(runStepId: string): Promise<AutomationRunStatus | null>;
+  abstract failRunningRunStepUnscoped(args: { runStepId: string; error: string; finishedAt: Date }): Promise<boolean>;
   abstract markRunStepUnscoped(args: {
     runStepId: string;
     status: AutomationRunStatus;

@@ -156,6 +156,8 @@ export type GetMailboxThreadData = z.infer<typeof GetMailboxThreadSchema>;
 export const GetRecordThreadsSchema = z.object({
   contactId: z.string().uuid().optional(),
   dealId: z.string().uuid().optional(),
+  organizationId: z.string().uuid().optional(),
+  leadId: z.string().uuid().optional(),
 });
 
 export type GetRecordThreadsData = z.infer<typeof GetRecordThreadsSchema>;
@@ -187,6 +189,7 @@ export const SendReplyOutcomeSchema = z.object({
   threadId: z.string().uuid(),
   messageId: z.string(),
   recipients: z.array(z.string()),
+  sentCopySaved: z.boolean(),
 });
 
 export type SendReplyOutcome = z.infer<typeof SendReplyOutcomeSchema>;

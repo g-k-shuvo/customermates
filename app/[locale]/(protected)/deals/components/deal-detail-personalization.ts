@@ -8,6 +8,7 @@ export const DEAL_DETAIL_FIELD = {
   stageId: "stageId",
   nextActivity: "nextActivity",
   activities: "activities",
+  baseValue: "baseValue",
   totalValue: "totalValue",
   totalQuantity: "totalQuantity",
   weightedValue: "weightedValue",

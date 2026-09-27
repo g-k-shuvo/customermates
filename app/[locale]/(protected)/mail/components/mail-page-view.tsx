@@ -2,7 +2,7 @@
 
 import type { MailboxThreadDto, MailboxThreadSummaryDto } from "@/features/mailbox/mailbox.schema";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Mail, MailSearch } from "lucide-react";
 
@@ -19,6 +19,7 @@ import { ALL_FOLDERS_VALUE, MailThreadToolbar } from "./mail-thread-toolbar";
 type Props = {
   threads: MailboxThreadSummaryDto[];
   folders: string[];
+  initialThreadId?: string;
 };
 
 type PanelState =
@@ -35,13 +36,15 @@ function isFiltered(filters: AppliedFilters): boolean {
   return filters.query.length > 0 || filters.folder !== ALL_FOLDERS_VALUE;
 }
 
-export function MailPageView({ threads: initialThreads, folders }: Props) {
+export function MailPageView({ threads: initialThreads, folders, initialThreadId }: Props) {
   const t = useTranslations();
   const [threads, setThreads] = useState(initialThreads);
   const [draft, setDraft] = useState("");
   const [applied, setApplied] = useState<AppliedFilters>(NO_FILTERS);
   const [searching, setSearching] = useState(false);
-  const [panel, setPanel] = useState<PanelState>({ status: "idle" });
+  const [panel, setPanel] = useState<PanelState>(
+    initialThreadId ? { status: "loading", threadId: initialThreadId } : { status: "idle" },
+  );
   const [allowRemoteImages, setAllowRemoteImages] = useState(false);
   const [readThreadIds, setReadThreadIds] = useState<string[]>([]);
 
@@ -60,6 +63,13 @@ export function MailPageView({ threads: initialThreads, folders }: Props) {
       setReadThreadIds((seen) => (seen.includes(threadId) ? seen : [...seen, threadId]));
     });
   };
+
+  const openThreadRef = useRef(openThread);
+  openThreadRef.current = openThread;
+
+  useEffect(() => {
+    if (initialThreadId) openThreadRef.current(initialThreadId, false);
+  }, [initialThreadId]);
 
   const showRemoteImages = () => {
     if (panel.status !== "ready") return;
@@ -102,7 +112,9 @@ export function MailPageView({ threads: initialThreads, folders }: Props) {
     );
   };
 
-  if (threads.length === 0 && !isFiltered(applied)) {
+  const hasOpenThread = panel.status !== "idle";
+
+  if (threads.length === 0 && !isFiltered(applied) && !hasOpenThread) {
     return (
       <PageState
         background={<MailPageSkeleton animated={false} />}
@@ -128,7 +140,7 @@ export function MailPageView({ threads: initialThreads, folders }: Props) {
         onSubmit={() => applyFilters(draft.trim(), applied.folder)}
       />
 
-      {threads.length === 0 ? (
+      {threads.length === 0 && !hasOpenThread ? (
         <PageState
           background={<MailPageSkeleton animated={false} />}
           description={t("Mailbox.noMatchesDescription")}

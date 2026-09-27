@@ -16,7 +16,7 @@ const Schema = z.object({
 
 export type GlobalSearchData = z.infer<typeof Schema>;
 
-export type SearchableEntityType = Exclude<EntityType, "lead">;
+export type SearchableEntityType = EntityType;
 
 export type GlobalSearchResultItem = {
   type: SearchableEntityType;
@@ -33,7 +33,7 @@ export type GlobalSearchResult = {
 const OutputSchema = z.object({
   results: z.array(
     z.object({
-      type: z.enum(EntityType).exclude(["lead"]),
+      type: z.enum(EntityType),
       id: z.string(),
       name: z.string(),
       pictureUrl: z.string().nullable(),
@@ -48,6 +48,7 @@ const SEARCH_RESOURCE: Partial<Record<EntityType, Resource>> = {
   deal: Resource.deals,
   service: Resource.services,
   task: Resource.tasks,
+  lead: Resource.leads,
 };
 const UI_SEARCHABLE_ENTITIES = Object.keys(SEARCH_RESOURCE) as EntityType[];
 const DEFAULT_RESULTS_PER_ENTITY = 50;
@@ -65,6 +66,8 @@ const DEFAULT_RESULTS_PER_ENTITY = 50;
     { resource: Resource.services, action: Action.readOwn },
     { resource: Resource.tasks, action: Action.readAll },
     { resource: Resource.tasks, action: Action.readOwn },
+    { resource: Resource.leads, action: Action.readAll },
+    { resource: Resource.leads, action: Action.readOwn },
   ],
   condition: "OR",
 })

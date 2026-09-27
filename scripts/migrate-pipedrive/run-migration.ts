@@ -2,7 +2,7 @@
  * Orchestrates the migration in the order the PRD requires:
  *
  *   pipelines + stages + lost reasons  (deals cannot be placed without them)
- *   -> organizations -> persons -> deals -> activities -> notes
+ *   -> organizations -> persons -> deals -> leads -> activities -> notes
  *
  * Every write goes through `CrmWrites`, which is either the REST client or the
  * dry-run recorder. Re-running is safe because every imported record carries its
@@ -13,7 +13,14 @@
 import type { MigrationConfig } from "./config";
 import type { CrmCustomColumn, CrmReads, CrmRecord, CrmStage } from "./crm-client";
 import type { CrmWrites } from "./crm-writes";
-import type { DealCreatePayload, DealFieldBinding, OwnerLookup, TerminalStageNames } from "./mapping";
+import type {
+  DealCreatePayload,
+  DealFieldBinding,
+  LeadCreatePayload,
+  NoteOwner,
+  OwnerLookup,
+  TerminalStageNames,
+} from "./mapping";
 import type { PipedriveSource } from "./pipedrive-source";
 import type {
   PipedriveDeal,
@@ -32,11 +39,11 @@ import { referenceId } from "./pipedrive.types";
 import { serializeJSONToMarkdown } from "@/components/editor/editor.utils";
 
 import {
-  DEAL_VALUE_SERVICE_AMOUNT,
   DEAL_VALUE_SERVICE_NAME,
   PIPEDRIVE_ADDRESS_COLUMN,
   PIPEDRIVE_CLOSED_AT_COLUMN,
   PIPEDRIVE_CURRENCY_COLUMN,
+  PIPEDRIVE_EXPECTED_CLOSE_COLUMN,
   PIPEDRIVE_ID_COLUMN,
   PIPEDRIVE_NOTE_IDS_COLUMN,
   PIPEDRIVE_PHONE_COLUMN,
@@ -45,9 +52,11 @@ import {
   decideClosingTransition,
   distinctLostReasons,
   isCustomDealField,
+  leadLabelNames,
   mapActivity,
   mapDeal,
   mapDealFieldToCustomColumn,
+  mapLead,
   mapNoteToMarkdown,
   mapOrganization,
   mapPerson,
@@ -70,6 +79,7 @@ const ENTITY_PATHS = {
   contact: "contacts",
   deal: "deals",
   task: "tasks",
+  lead: "leads",
 } as const;
 
 type ProvisionedColumn = { id: string; existed: boolean };
@@ -149,6 +159,38 @@ async function buildPipedriveIdIndex(
   }
 
   return index;
+}
+
+/** Pipedrive lead ids are UUIDs, so leads get a string-keyed index of their own. */
+async function buildPipedriveLeadIndex(
+  client: CrmReads,
+  column: ProvisionedColumn | null,
+): Promise<Map<string, CrmRecord>> {
+  const index = new Map<string, CrmRecord>();
+  if (!column?.existed) return index;
+
+  const records = await client.searchAll<CrmRecord>(ENTITY_PATHS.lead, [{ field: column.id, operator: "isNotNull" }]);
+
+  for (const record of records) {
+    const raw = record.customFieldValues.find((value) => value.columnId === column.id)?.value;
+    const pipedriveId = typeof raw === "string" ? raw.trim() : "";
+    if (pipedriveId !== "") index.set(pipedriveId, record);
+  }
+
+  return index;
+}
+
+/**
+ * A re-run with --update-existing re-applies the mapping, but moving a lead on from
+ * "new" is the CRM's business: only an archive made in Pipedrive is carried over.
+ */
+function leadUpdatePayload(payload: LeadCreatePayload): Partial<LeadCreatePayload> {
+  if (payload.status === "archived") return payload;
+
+  const rest: Partial<LeadCreatePayload> = { ...payload };
+  delete rest.status;
+
+  return rest;
 }
 
 type ExistingNotes = { readable: true; markdown: string } | { readable: false };
@@ -275,6 +317,31 @@ export async function runMigration(args: {
     label: PIPEDRIVE_ID_COLUMN,
     type: CustomColumnType.plain,
   });
+  const touchesLeads = runs("leads") || runs("notes");
+  const leadIdColumn = touchesLeads
+    ? await columns.ensure({
+        entityPath: ENTITY_PATHS.lead,
+        entityType: EntityType.lead,
+        label: PIPEDRIVE_ID_COLUMN,
+        type: CustomColumnType.plain,
+      })
+    : null;
+  const leadNoteIdsColumn = touchesLeads
+    ? await columns.ensure({
+        entityPath: ENTITY_PATHS.lead,
+        entityType: EntityType.lead,
+        label: PIPEDRIVE_NOTE_IDS_COLUMN,
+        type: CustomColumnType.plain,
+      })
+    : null;
+  const leadExpectedCloseColumn = runs("leads")
+    ? await columns.ensure({
+        entityPath: ENTITY_PATHS.lead,
+        entityType: EntityType.lead,
+        label: PIPEDRIVE_EXPECTED_CLOSE_COLUMN,
+        type: CustomColumnType.date,
+      })
+    : null;
 
   log("Mapping Pipedrive deal fields to custom columns...");
   const dealFields = (await source.dealFields()).filter(isCustomDealField);
@@ -285,6 +352,7 @@ export async function runMigration(args: {
   const contactIndex = await buildPipedriveIdIndex(client, ENTITY_PATHS.contact, contactIdColumn);
   const dealIndex = await buildPipedriveIdIndex(client, ENTITY_PATHS.deal, dealIdColumn);
   const taskIndex = await buildPipedriveIdIndex(client, ENTITY_PATHS.task, taskIdColumn);
+  const leadIndex = await buildPipedriveLeadIndex(client, leadIdColumn);
 
   const pipelineIdByPipedriveId = new Map<number, string>();
   const stageIdByPipedriveId = new Map<number, string>();
@@ -422,7 +490,7 @@ export async function runMigration(args: {
 
   if (runs("deals")) {
     log("Migrating deals...");
-    const valueServiceId = await ensureValueService(client, writes);
+    await refuseLegacyValueService(client);
     const tally = ledger.tally("deals");
     tally.sourceCount = sourceDeals.length;
 
@@ -440,7 +508,6 @@ export async function runMigration(args: {
         contactIdByPipedriveId,
         pipelineIdByPipedriveId,
         stageIdByPipedriveId,
-        valueServiceId,
       });
 
       if (mapped.skipped) {
@@ -505,6 +572,65 @@ export async function runMigration(args: {
     }
   }
 
+  if (runs("leads") && leadIdColumn) {
+    log("Migrating leads...");
+    const labelNameById = leadLabelNames(await source.leadLabels());
+    const sourceLeads = limited(await source.leads(), config.limit);
+    const tally = ledger.tally("leads");
+    tally.sourceCount = sourceLeads.length;
+
+    for (const lead of sourceLeads) {
+      const mapped = mapLead(lead, {
+        columns: {
+          pipedriveIdColumnId: leadIdColumn.id,
+          expectedCloseColumnId: leadExpectedCloseColumn?.id ?? null,
+        },
+        owners,
+        contactIdByPipedriveId,
+        organizationIdByPipedriveId,
+        labelNameById,
+        defaultCurrency: config.defaultCurrency,
+      });
+
+      if (mapped.skipped) {
+        ledger.skip({
+          entity: "leads",
+          sourceId: String(lead.id ?? ""),
+          label: String(lead.title ?? ""),
+          reason: mapped.reason,
+        });
+        continue;
+      }
+
+      recordOwner(ledger, mapped.owner);
+      for (const warning of mapped.warnings) ledger.unmapped(warning.kind, warning.value, warning.detail);
+
+      const pipedriveId = String(lead.id).trim();
+      const existing = leadIndex.get(pipedriveId);
+
+      try {
+        const record = await upsertRecord({
+          writes,
+          entityPath: ENTITY_PATHS.lead,
+          existing,
+          payload: existing ? leadUpdatePayload(mapped.payload) : mapped.payload,
+          updateExisting: config.updateExisting,
+          tally,
+        });
+
+        if (!existing) leadIndex.set(pipedriveId, record);
+        tally.targetCount += 1;
+      } catch (error) {
+        ledger.skip({
+          entity: "leads",
+          sourceId: pipedriveId,
+          label: String(lead.title ?? ""),
+          reason: describeError(error),
+        });
+      }
+    }
+  }
+
   if (runs("tasks")) {
     log("Migrating activities as tasks...");
     const sourceActivities = limited(await source.activities(), config.limit);
@@ -531,6 +657,8 @@ export async function runMigration(args: {
       }
 
       recordOwner(ledger, mapped.owner);
+      if (typeof activity.lead_id === "string" && activity.lead_id.trim() !== "")
+        ledger.unmapped("activity.lead_id", "lead", "a task cannot be linked to a lead; imported with its other links");
       if (mapped.unmappedActivityType) {
         ledger.unmapped(
           "activity.type",
@@ -588,6 +716,9 @@ export async function runMigration(args: {
           entityPath: ENTITY_PATHS.organization,
           noteIdsColumnId: organizationNoteIdsColumn.id,
         },
+        lead: leadNoteIdsColumn
+          ? { records: leadIndex, entityPath: ENTITY_PATHS.lead, noteIdsColumnId: leadNoteIdsColumn.id }
+          : null,
       },
     });
   }
@@ -864,14 +995,17 @@ async function migrateLostReasons(args: {
   }
 }
 
-async function ensureValueService(client: CrmReads, writes: CrmWrites): Promise<string | null> {
+/**
+ * Deals migrated before Deal.baseValue carry their value on a service line. Writing
+ * baseValue on top of that line would count the value twice, so those deals are
+ * converted first with `yarn migrate:pipedrive:base-value`, which retires the service.
+ */
+async function refuseLegacyValueService(client: CrmReads): Promise<void> {
   const services = await client.services();
-  const existing = services.find((service) => service.name === DEAL_VALUE_SERVICE_NAME);
-  if (existing) return existing.id;
-
-  const created = await writes.createService({ name: DEAL_VALUE_SERVICE_NAME, amount: DEAL_VALUE_SERVICE_AMOUNT });
-
-  return created.id;
+  if (services.some((service) => service.name === DEAL_VALUE_SERVICE_NAME))
+    throw new Error(
+      `The "${DEAL_VALUE_SERVICE_NAME}" service still exists. Run \`yarn migrate:pipedrive:base-value --apply\` to move those deal values into Deal.baseValue before migrating deals again.`,
+    );
 }
 
 /**
@@ -923,7 +1057,7 @@ async function applyClosingTransition(args: {
 }
 
 type NoteTargetIndex = {
-  records: Map<number, CrmRecord>;
+  records: ReadonlyMap<number | string, CrmRecord>;
   entityPath: string;
   noteIdsColumnId: string;
 };
@@ -934,7 +1068,7 @@ async function migrateNotes(args: {
   ledger: MigrationLedger;
   source: PipedriveSource;
   pipedriveUsers: readonly { id: number; name?: string | null }[];
-  indexes: Record<"deal" | "contact" | "organization", NoteTargetIndex>;
+  indexes: Record<Exclude<NoteOwner["entity"], "lead">, NoteTargetIndex> & { lead: NoteTargetIndex | null };
 }): Promise<void> {
   const { writes, ledger, source, indexes } = args;
   const tally = ledger.tally("notes");
@@ -954,14 +1088,14 @@ async function migrateNotes(args: {
         entity: "notes",
         sourceId: String(note.id),
         label: "",
-        reason: "note is not attached to a deal, person or organization",
+        reason: "note is not attached to a deal, lead, person or organization",
       });
       continue;
     }
 
     const index = indexes[owner.entity];
-    const record = index.records.get(owner.pipedriveId);
-    if (!record) {
+    const record = index?.records.get(owner.pipedriveId);
+    if (!index || !record) {
       ledger.skip({
         entity: "notes",
         sourceId: String(note.id),

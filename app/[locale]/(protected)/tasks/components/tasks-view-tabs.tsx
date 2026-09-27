@@ -4,7 +4,7 @@ import type { TasksPageTab } from "./tasks.store";
 
 import { observer } from "mobx-react-lite";
 import { useTranslations } from "next-intl";
-import { CalendarRange, List } from "lucide-react";
+import { CalendarDays, CalendarRange, List } from "lucide-react";
 
 import { Icon } from "@/components/shared/icon";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,6 +27,12 @@ export const TasksViewTabs = observer(function TasksViewTabs() {
           <Icon icon={CalendarRange} size="sm" />
 
           <span className="hidden sm:inline">{t("Activities.tabs.agenda")}</span>
+        </TabsTrigger>
+
+        <TabsTrigger value="week">
+          <Icon icon={CalendarDays} size="sm" />
+
+          <span className="hidden sm:inline">{t("Activities.tabs.week")}</span>
         </TabsTrigger>
       </TabsList>
     </Tabs>

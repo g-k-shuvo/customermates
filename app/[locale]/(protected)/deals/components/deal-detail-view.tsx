@@ -16,6 +16,7 @@ import { AssignedUsersField, EntityRelationField } from "@/components/entity-det
 import { useColumnLabel } from "@/components/entity-terminology/use-column-label";
 import { useEntityTerminology } from "@/components/entity-terminology/use-entity-terminology";
 import { FormInput } from "@/components/forms/form-input";
+import { FormNumberInput } from "@/components/forms/form-number-input";
 import { useRootStore } from "@/core/stores/root-store.provider";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { reportApplicationError } from "@/core/errors/report-application-error";
@@ -117,6 +118,10 @@ export const DealDetailView = observer(({ layout = "drawer" }: Props) => {
         <CustomFieldInputs columns={customColumns} isEditing={isEditingCustomField} />
 
         <AssignedUsersField items={fetchedEntity?.users} visibilityFieldId={DEAL_DETAIL_FIELD.userIds} />
+
+        <EntityDetailField fieldId={DEAL_DETAIL_FIELD.baseValue}>
+          <FormNumberInput id="baseValue" label={columnLabel("baseValue")} />
+        </EntityDetailField>
 
         <DealServicesSelection />
       </>
@@ -230,6 +235,24 @@ export const DealDetailView = observer(({ layout = "drawer" }: Props) => {
             {
               id: DEAL_DETAIL_FIELD.activities,
               content: <DealActivitiesList showFieldActions activities={fetchedEntity?.tasks} />,
+            },
+            {
+              id: DEAL_DETAIL_FIELD.baseValue,
+              content: (
+                <EntityDetailField fieldId={DEAL_DETAIL_FIELD.baseValue}>
+                  <FormNumberInput
+                    controlStartAddon={<EntityDetailFieldDragHandle label={columnLabel("baseValue")} />}
+                    id="baseValue"
+                    label={columnLabel("baseValue")}
+                    labelEndAddon={
+                      <EntityDetailFieldActions
+                        fieldId={DEAL_DETAIL_FIELD.baseValue}
+                        label={columnLabel("baseValue")}
+                      />
+                    }
+                  />
+                </EntityDetailField>
+              ),
             },
             {
               id: DEAL_DETAIL_FIELD.serviceIds,

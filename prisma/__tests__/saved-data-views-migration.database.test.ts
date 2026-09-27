@@ -46,6 +46,7 @@ const DATA_VIEW_COLUMNS = [
   "pageSize",
   "position",
   "searchTerm",
+  "shared",
   "sortDescriptor",
   "surfaceKey",
   "updatedAt",

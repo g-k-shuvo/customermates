@@ -11,6 +11,7 @@ import { useRootStore } from "@/core/stores/root-store.provider";
 import { reportApplicationError } from "@/core/errors/report-application-error";
 
 import { DEAL_DETAIL_FIELD } from "./deal-detail-personalization";
+import { DealStageBar } from "./deal-stage-bar";
 
 type Props = {
   showFieldActions?: boolean;
@@ -38,6 +39,8 @@ export const DealPipelineFields = observer(function DealPipelineFields({ showFie
 
   return (
     <>
+      <DealStageBar />
+
       <EntityDetailField fieldId={DEAL_DETAIL_FIELD.pipelineId}>
         <FormSelect
           id="pipelineId"

@@ -15,12 +15,12 @@ import { FormInput } from "@/components/forms/form-input";
 import { FormInputChips } from "@/components/forms/form-input-chips";
 import { FormNumberInput } from "@/components/forms/form-number-input";
 import { FormSelect } from "@/components/forms/form-select";
-import { useEntityTerminology } from "@/components/entity-terminology/use-entity-terminology";
 import { useRootStore } from "@/core/stores/root-store.provider";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 
 import { LEAD_DETAIL_FIELD } from "./lead-detail-personalization";
 import { LeadConvertAction } from "./lead-convert-action";
+import { LeadContactField, LeadOrganizationField, LeadOwnerField } from "./lead-relation-fields";
 
 type Props = {
   layout?: "drawer" | "page";
@@ -28,7 +28,6 @@ type Props = {
 
 export const LeadDetailView = observer(({ layout = "drawer" }: Props) => {
   const t = useTranslations();
-  const { singular } = useEntityTerminology();
   const intlStore = useHydratedIntlStore();
   const { leadDetailStore } = useRootStore();
   const { canManage, isEditingCustomField, customColumns, fetchedEntity, toggleEditingCustomField } = leadDetailStore;
@@ -37,13 +36,6 @@ export const LeadDetailView = observer(({ layout = "drawer" }: Props) => {
     value: status,
     label: t(`Common.leadStatuses.${status}`),
   }));
-
-  const ownerName = fetchedEntity?.owner
-    ? `${fetchedEntity.owner.firstName} ${fetchedEntity.owner.lastName}`.trim()
-    : null;
-  const contactName = fetchedEntity?.contact
-    ? `${fetchedEntity.contact.firstName} ${fetchedEntity.contact.lastName}`.trim()
-    : null;
 
   const content =
     layout === "drawer" ? (
@@ -66,17 +58,9 @@ export const LeadDetailView = observer(({ layout = "drawer" }: Props) => {
           <FormInputChips arrayMode id="labels" />
         </EntityDetailField>
 
-        <EntityDetailStaticField
-          fieldId={LEAD_DETAIL_FIELD.contactId}
-          label={singular(EntityType.contact)}
-          value={contactName}
-        />
+        <LeadContactField />
 
-        <EntityDetailStaticField
-          fieldId={LEAD_DETAIL_FIELD.organizationId}
-          label={singular(EntityType.organization)}
-          value={fetchedEntity?.organization?.name ?? null}
-        />
+        <LeadOrganizationField />
 
         <EntityDetailStaticField
           fieldId={LEAD_DETAIL_FIELD.source}
@@ -84,11 +68,7 @@ export const LeadDetailView = observer(({ layout = "drawer" }: Props) => {
           value={fetchedEntity?.source?.name ?? fetchedEntity?.sourceOrigin ?? null}
         />
 
-        <EntityDetailStaticField
-          fieldId={LEAD_DETAIL_FIELD.ownerUserId}
-          label={t("LeadDetail.owner")}
-          value={ownerName}
-        />
+        <LeadOwnerField />
 
         <CustomFieldInputs columns={customColumns} isEditing={isEditingCustomField} />
       </>
@@ -143,23 +123,11 @@ export const LeadDetailView = observer(({ layout = "drawer" }: Props) => {
             },
             {
               id: LEAD_DETAIL_FIELD.contactId,
-              content: (
-                <EntityDetailStaticField
-                  fieldId={LEAD_DETAIL_FIELD.contactId}
-                  label={singular(EntityType.contact)}
-                  value={contactName}
-                />
-              ),
+              content: <LeadContactField />,
             },
             {
               id: LEAD_DETAIL_FIELD.organizationId,
-              content: (
-                <EntityDetailStaticField
-                  fieldId={LEAD_DETAIL_FIELD.organizationId}
-                  label={singular(EntityType.organization)}
-                  value={fetchedEntity?.organization?.name ?? null}
-                />
-              ),
+              content: <LeadOrganizationField />,
             },
             {
               id: LEAD_DETAIL_FIELD.source,
@@ -173,13 +141,7 @@ export const LeadDetailView = observer(({ layout = "drawer" }: Props) => {
             },
             {
               id: LEAD_DETAIL_FIELD.ownerUserId,
-              content: (
-                <EntityDetailStaticField
-                  fieldId={LEAD_DETAIL_FIELD.ownerUserId}
-                  label={t("LeadDetail.owner")}
-                  value={ownerName}
-                />
-              ),
+              content: <LeadOwnerField />,
             },
             {
               id: LEAD_DETAIL_FIELD.createdAt,

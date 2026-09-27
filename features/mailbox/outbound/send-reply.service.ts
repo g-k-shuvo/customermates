@@ -30,6 +30,15 @@ export type SentReply = {
   recipients: string[];
 };
 
+export type DeliveredReply = SentReply & { sentCopySaved: boolean };
+
+const SELF_FILING_IMAP_HOSTS =
+  /(^|\.)(gmail\.com|googlemail\.com|office365\.com|outlook\.com|hotmail\.com|live\.com)$/i;
+
+export function filesSentMailItself(imapHost: string): boolean {
+  return SELF_FILING_IMAP_HOSTS.test(imapHost.trim());
+}
+
 export type ReplyMailer = (delivery: PinnedSmtpDelivery, reply: BuiltReply, messageId: string) => Promise<SentReply>;
 
 export function messageIdFor(address: string): string {
@@ -78,7 +87,7 @@ export class SendReplyService {
     private options: SendReplyServiceOptions = {},
   ) {}
 
-  async send(delivery: SmtpDelivery, reply: BuiltReply, imap: MailboxConnection): Promise<SentReply> {
+  async send(delivery: SmtpDelivery, reply: BuiltReply, imap: MailboxConnection): Promise<DeliveredReply> {
     const target = await pinImapTarget(delivery.host, this.options.resolveAddresses, {
       allowPrivateHosts: this.options.allowPrivateHosts,
     });
@@ -89,8 +98,13 @@ export class SendReplyService {
       messageIdFor(delivery.username),
     );
 
-    await this.transport.appendToSent(imap, sent.raw, null).catch(() => undefined);
+    const sentCopySaved = filesSentMailItself(imap.host)
+      ? true
+      : await this.transport.appendToSent(imap, sent.raw, null, sent.messageId).then(
+          () => true,
+          () => false,
+        );
 
-    return sent;
+    return { ...sent, sentCopySaved };
   }
 }

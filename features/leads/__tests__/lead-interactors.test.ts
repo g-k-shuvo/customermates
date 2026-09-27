@@ -47,6 +47,41 @@ describe("update lead schema", () => {
 
     expect(parsed.success).toBe(true);
   });
+
+  it("carries only the fields a partial update names, so nothing it omits is reset", () => {
+    const parsed = UpdateLeadSchema.parse({ id: "3f4a1a52-6d0e-4f6f-9c29-3f6f0f7f5a11", title });
+
+    expect(Object.entries(parsed).filter(([, value]) => value !== undefined)).toEqual([
+      ["id", "3f4a1a52-6d0e-4f6f-9c29-3f6f0f7f5a11"],
+      ["title", title],
+    ]);
+  });
+
+  it("clears the relations and the value when they are sent as null", () => {
+    const parsed = UpdateLeadSchema.parse({
+      id: "3f4a1a52-6d0e-4f6f-9c29-3f6f0f7f5a11",
+      contactId: null,
+      organizationId: null,
+      ownerUserId: null,
+      sourceId: null,
+      value: null,
+    });
+
+    expect(parsed).toMatchObject({
+      contactId: null,
+      organizationId: null,
+      ownerUserId: null,
+      sourceId: null,
+      value: null,
+    });
+  });
+
+  it("refuses null for the fields a lead cannot be without", () => {
+    const id = "3f4a1a52-6d0e-4f6f-9c29-3f6f0f7f5a11";
+
+    for (const field of ["title", "status", "sourceOrigin", "labels", "customFieldValues"])
+      expect(UpdateLeadSchema.safeParse({ id, [field]: null }).success, field).toBe(false);
+  });
 });
 
 describe("create many leads schema", () => {
@@ -82,5 +117,14 @@ describe("update many leads schema", () => {
     });
 
     expect(parsed.success).toBe(true);
+  });
+
+  it("applies no create defaults to a partial row", () => {
+    const parsed = UpdateManyLeadsSchema.parse({ leads: [{ id: "3f4a1a52-6d0e-4f6f-9c29-3f6f0f7f5a11", title }] });
+
+    expect(parsed.leads[0].status).toBeUndefined();
+    expect(parsed.leads[0].sourceOrigin).toBeUndefined();
+    expect(parsed.leads[0].labels).toBeUndefined();
+    expect(parsed.leads[0].customFieldValues).toBeUndefined();
   });
 });

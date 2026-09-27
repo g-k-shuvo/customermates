@@ -8,13 +8,41 @@ import type {
   ResolveOrganizationArgs,
 } from "./process-web-form-submission.repo";
 
-import { MessagingProvider } from "@/generated/prisma";
+import type { WebFormCustomFieldValue } from "../ingest/web-form-custom-fields";
+import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
+
+import { CustomColumnType, EntityType, MessagingProvider } from "@/generated/prisma";
 
 import { BaseRepository } from "@/core/base/base-repository";
-import { parseMarkdownToJSON } from "@/components/editor/editor.utils";
+import { plainTextToNotesDocument } from "@/components/editor/notes-document";
 import { BypassTenantGuard } from "@/core/decorators/bypass-tenant.decorator";
 import { channelClass } from "@/ee/messaging/provider";
 import { WebFormFieldMappingSchema } from "../ingest/field-mapping";
+import { toCustomColumnDto } from "@/features/custom-column/custom-column.dto";
+
+function customFieldRows(
+  companyId: string,
+  entity: { entityType: EntityType; field: "leadId" | "contactId"; id: string },
+  values: readonly WebFormCustomFieldValue[],
+  typeByColumnId: ReadonlyMap<string, CustomColumnType>,
+): Prisma.CustomFieldValueCreateManyInput[] {
+  return values.flatMap(({ columnId, value }) => {
+    const type = typeByColumnId.get(columnId);
+    if (!type) return [];
+
+    return [
+      {
+        companyId,
+        entityType: entity.entityType,
+        [entity.field]: entity.id,
+        columnId,
+        value,
+        type,
+        numericValue: type === CustomColumnType.currency ? Number(value) : null,
+      },
+    ];
+  });
+}
 
 export class PrismaProcessWebFormSubmissionRepo extends BaseRepository implements ProcessWebFormSubmissionRepo {
   @BypassTenantGuard
@@ -113,6 +141,7 @@ export class PrismaProcessWebFormSubmissionRepo extends BaseRepository implement
 
   @BypassTenantGuard
   async createLeadFromSubmissionUnscoped(args: CreateLeadFromSubmissionArgs): Promise<string> {
+    const notes = args.message ? plainTextToNotesDocument(args.message) : null;
     const lead = await this.prisma.lead.create({
       data: {
         companyId: args.companyId,
@@ -123,12 +152,78 @@ export class PrismaProcessWebFormSubmissionRepo extends BaseRepository implement
         organizationId: args.organizationId,
         ownerUserId: args.ownerUserId,
         labels: args.labels,
-        notes: (args.message ? parseMarkdownToJSON(args.message) : undefined) as Prisma.InputJsonValue | undefined,
+        value: args.value,
+        notes: (notes ?? undefined) as Prisma.InputJsonValue | undefined,
       },
       select: { id: true },
     });
 
+    if (args.customFieldValues.length > 0) {
+      const columns = await this.prisma.customColumn.findMany({
+        where: {
+          companyId: args.companyId,
+          entityType: EntityType.lead,
+          id: { in: args.customFieldValues.map((entry) => entry.columnId) },
+        },
+        select: { id: true, type: true },
+      });
+      const data = customFieldRows(
+        args.companyId,
+        { entityType: EntityType.lead, field: "leadId", id: lead.id },
+        args.customFieldValues,
+        new Map(columns.map((column) => [column.id, column.type])),
+      );
+      if (data.length > 0) await this.prisma.customFieldValue.createMany({ data });
+    }
+
     return lead.id;
+  }
+
+  @BypassTenantGuard
+  async findMappableCustomColumnsUnscoped(companyId: string, columnIds: readonly string[]): Promise<CustomColumnDto[]> {
+    if (columnIds.length === 0) return [];
+
+    const rows = await this.prisma.customColumn.findMany({
+      where: { companyId, id: { in: [...columnIds] }, entityType: { in: [EntityType.lead, EntityType.contact] } },
+      select: { id: true, label: true, type: true, entityType: true, options: true },
+    });
+
+    return rows.map(toCustomColumnDto);
+  }
+
+  @BypassTenantGuard
+  async fillEmptyContactCustomFieldsUnscoped(
+    companyId: string,
+    contactId: string,
+    values: readonly WebFormCustomFieldValue[],
+  ): Promise<void> {
+    if (values.length === 0) return;
+
+    const columnIds = values.map((entry) => entry.columnId);
+    const [columns, filled] = await Promise.all([
+      this.prisma.customColumn.findMany({
+        where: { companyId, entityType: EntityType.contact, id: { in: columnIds } },
+        select: { id: true, type: true },
+      }),
+      this.prisma.customFieldValue.findMany({
+        where: { companyId, contactId, columnId: { in: columnIds }, value: { not: null } },
+        select: { columnId: true },
+      }),
+    ]);
+    const alreadySet = new Set(filled.map((row) => row.columnId));
+    const data = customFieldRows(
+      companyId,
+      { entityType: EntityType.contact, field: "contactId", id: contactId },
+      values.filter((entry) => !alreadySet.has(entry.columnId)),
+      new Map(columns.map((column) => [column.id, column.type])),
+    );
+
+    if (data.length === 0) return;
+
+    await this.prisma.customFieldValue.deleteMany({
+      where: { companyId, contactId, columnId: { in: data.map((row) => row.columnId) } },
+    });
+    await this.prisma.customFieldValue.createMany({ data });
   }
 
   @BypassTenantGuard
@@ -184,6 +279,16 @@ export class PrismaProcessWebFormSubmissionRepo extends BaseRepository implement
         },
       },
       orderBy: { createdAt: "asc" },
+      select: { id: true },
+    });
+
+    return user?.id ?? null;
+  }
+
+  @BypassTenantGuard
+  async findActiveCompanyUserIdUnscoped(companyId: string, userId: string): Promise<string | null> {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, companyId, status: "active" },
       select: { id: true },
     });
 

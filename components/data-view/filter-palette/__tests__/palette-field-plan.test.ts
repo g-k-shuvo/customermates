@@ -68,6 +68,7 @@ const EXPECTED_STANDARD: Record<FilterFieldKey, Expected> = {
   [FilterFieldKey.dealIds]: SELECT,
   [FilterFieldKey.dealStatus]: SELECT,
   [FilterFieldKey.leadStatus]: SELECT,
+  [FilterFieldKey.submissionStatus]: SELECT,
   [FilterFieldKey.lostReasonId]: SELECT,
   [FilterFieldKey.nextActivity]: SELECT,
   [FilterFieldKey.overdue]: SELECT,

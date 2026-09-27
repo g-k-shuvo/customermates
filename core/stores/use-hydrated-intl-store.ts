@@ -27,6 +27,11 @@ const ZONED_FORMATTERS = new Set<keyof IntlStore>([
   "formatDescriptiveLongDateTime",
   "formatTime",
   "formatRelativeTime",
+  "formatWeekday",
+  "formatDayOfMonth",
+  "formatWeekdayDate",
+  "formatWeekdayDateTime",
+  "formatDateRange",
 ]);
 
 declare const hydrationSafeIntlStore: unique symbol;

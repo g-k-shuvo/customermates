@@ -69,12 +69,15 @@ const NOT_FOUND_FAILURE_CODES = new Set<CustomErrorCode>([
   CustomErrorCode.organizationNotFound,
   CustomErrorCode.pipelineNotFound,
   CustomErrorCode.pipelineStageNotFound,
+  CustomErrorCode.recordDocumentNotFound,
+  CustomErrorCode.recordFileNotFound,
   CustomErrorCode.roleNotFound,
   CustomErrorCode.serviceNotFound,
   CustomErrorCode.taskNotFound,
   CustomErrorCode.threadNotFound,
   CustomErrorCode.userNotFound,
   CustomErrorCode.webFormSourceNotFound,
+  CustomErrorCode.webFormSubmissionNotFound,
   CustomErrorCode.webhookDeliveryNotFound,
   CustomErrorCode.webhookNotFound,
   CustomErrorCode.widgetNotFound,
@@ -87,6 +90,11 @@ const CONFLICT_FAILURE_CODES = new Set<CustomErrorCode>([
   CustomErrorCode.pipelineStageHasDeals,
   CustomErrorCode.pipelineStageLastInPipeline,
   CustomErrorCode.roleSystemImmutable,
+  CustomErrorCode.webFormSubmissionNotRetryable,
+  CustomErrorCode.fileUploadIncomplete,
+  CustomErrorCode.documentNotSendable,
+  CustomErrorCode.signatureInProgress,
+  CustomErrorCode.signatureNotInProgress,
 ]);
 
 function issueCustomCode(issue: $ZodIssue): CustomErrorCode | null {

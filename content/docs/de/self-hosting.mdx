@@ -120,9 +120,48 @@ docker compose up -d
 
 `-v` löscht das Postgres-Volume. IRREVERSIBLE. Vorher Backup ziehen, falls die Daten benötigt werden.
 
+## Dateispeicher
+
+Dateien, etwa Anhänge an Datensätzen und die Dokumente und Rechnungen, die die App erzeugt, liegen in einem S3-kompatiblen Bucket, nicht in Postgres. Jeder S3-kompatible Dienst funktioniert: ein verwalteter Bucket (AWS S3, Hetzner, Cloudflare R2, Backblaze B2) oder ein selbst betriebener Server wie SeaweedFS oder Garage. MinIO veröffentlicht keine freien Community-Images mehr. Ohne `STORAGE_*`-Variablen startet die App trotzdem, Dateifunktionen bleiben dann nicht verfügbar. Setzen Sie die vier Pflichtvariablen gemeinsam; eine unvollständige Konfiguration stoppt die App beim Start mit einer Meldung, die das Fehlende nennt.
+
+| Variable | Pflicht | Bedeutung |
+|---|---|---|
+| `STORAGE_ENDPOINT` | ja | Origin, über den die App selbst den Bucket anspricht |
+| `STORAGE_BUCKET` | ja | Name des Buckets |
+| `STORAGE_ACCESS_KEY_ID`, `STORAGE_SECRET_ACCESS_KEY` | ja | Zugangsdaten mit Lese-, Schreib- und Löschrecht auf den Bucket |
+| `STORAGE_PUBLIC_ENDPOINT` | nein | Origin, den Browser erreichen, wenn er von `STORAGE_ENDPOINT` abweicht (Reverse Proxy, öffentlicher Hostname) |
+| `STORAGE_REGION` | nein | Standard `us-east-1` |
+| `STORAGE_MAX_UPLOAD_MB` | nein | Größter einzelner Upload, Standard 25 |
+
+Browser laden direkt gegen den Bucket hoch und herunter, über Links, die 15 Minuten gültig signiert sind. Ein Link ist für genau einen Host signiert; `STORAGE_PUBLIC_ENDPOINT` muss also genau der Origin sein, den Browser verwenden, und die Serveruhr darf höchstens 15 Minuten abweichen. Außerdem muss der Bucket Ihre Seite als Cross-Origin-Aufrufer zulassen. Aus einem Checkout dieses Repositorys, mit denselben `STORAGE_*`-Werten und einem `STORAGE_ENDPOINT`, der von dort erreichbar ist:
+
+```bash
+yarn storage:setup
+```
+
+Das Skript legt den Bucket bei Bedarf an, erlaubt `PUT`, `GET` und `HEAD` von `BASE_URL` (oder von jedem übergebenen `--origin`) und prüft zum Schluss den Preflight, den ein Browser sendet. Alternativ setzen Sie dieselbe CORS-Regel in der Konsole Ihres Anbieters.
+
+## Elektronische Unterschrift (DocuSign)
+
+Dokumente lassen sich über DocuSign zur Unterschrift senden, wenn eine Integration eingerichtet ist. Ohne `DOCUSIGN_*`-Variablen startet die App normal, und Dokumente bleiben manuell: Sie laden die unterschriebene Fassung selbst hoch. Setzen Sie die vier Pflichtvariablen gemeinsam; eine unvollständige Konfiguration stoppt die App beim Start mit einer Meldung, die das Fehlende nennt. Unterschriften brauchen außerdem den Dateispeicher.
+
+| Variable | Pflicht | Bedeutung |
+|---|---|---|
+| `DOCUSIGN_INTEGRATION_KEY` | ja | Der Integration Key (Client-ID) Ihrer DocuSign-App |
+| `DOCUSIGN_USER_ID` | ja | Die GUID des API-Benutzers; Umschläge werden in seinem Namen versendet |
+| `DOCUSIGN_PRIVATE_KEY` | ja | Der private RSA-Schlüssel der App im PEM-Format; `\n`-Escapes sind für einen einzeiligen Wert erlaubt |
+| `DOCUSIGN_CONNECT_HMAC_SECRET` | ja | Ein Connect-HMAC-Schlüssel aus den DocuSign-Admin-Einstellungen, mit dem Rückmeldungen geprüft werden |
+| `DOCUSIGN_AUTH_SERVER` | nein | Standard ist `https://account.docusign.com`; `https://account-d.docusign.com` für die Entwickler-Sandbox |
+| `DOCUSIGN_ACCOUNT_ID` | nein | Das Konto, von dem versendet wird, wenn der Benutzer mehrere hat; sonst sein Standardkonto |
+
+1. Legen Sie in DocuSign eine App mit **JWT Grant** an, erzeugen Sie dafür ein RSA-Schlüsselpaar und notieren Sie den Integration Key und die GUID des API-Benutzers.
+2. Erteilen Sie einmalig die Zustimmung, angemeldet als API-Benutzer: Öffnen Sie `{Auth-Server}/oauth/auth?response_type=code&scope=signature%20impersonation&client_id={Integration Key}&redirect_uri={eine in der App hinterlegte Redirect-URI}` und bestätigen Sie. Bis dahin schlägt das Senden mit dem Hinweis fehl, dass die Zustimmung fehlt.
+3. Legen Sie unter **Settings → Connect → HMAC** einen Schlüssel an und tragen Sie ihn in `DOCUSIGN_CONNECT_HMAC_SECRET` ein. Die App fordert für jeden Umschlag HMAC-signierte Rückmeldungen an und weist jede Rückmeldung ohne gültige Signatur ab.
+4. Machen Sie `{BASE_URL}/api/webhooks/docusign` für DocuSign erreichbar. Jeder Umschlag trägt diese Rückmeldeadresse, eine weitere Connect-Konfiguration außer dem HMAC-Schlüssel ist nicht nötig. Wenn Rückmeldungen die Installation nicht erreichen, fragt **Signaturstatus aktualisieren** an einem Dokument DocuSign direkt ab.
+
 ## Backups
 
-Postgres per `pg_dump` auf Zeitplan. Der App-Container ist stateless.
+Postgres per `pg_dump` auf Zeitplan, und bei konfigurierten Dateien den Storage-Bucket mit den Werkzeugen Ihres Anbieters. Der App-Container ist stateless.
 
 ```bash
 mkdir -p backups

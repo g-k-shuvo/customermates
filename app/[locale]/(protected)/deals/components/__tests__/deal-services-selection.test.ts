@@ -14,7 +14,7 @@ const personalization = vi.hoisted(() => ({
 }));
 
 const dealDetailStore = vi.hoisted(() => ({
-  form: { services: [] as Array<{ quantity?: number; serviceId?: string }> },
+  form: { baseValue: 0 as number | undefined, services: [] as Array<{ quantity?: number; serviceId?: string }> },
   fetchedEntity: { id: "deal-1", services: [] as Array<{ id: string }> },
   canManage: true,
   addService: vi.fn(),
@@ -22,6 +22,7 @@ const dealDetailStore = vi.hoisted(() => ({
   serviceAmountById: new Map<string, number>(),
   totalQuantity: 0,
   totalValue: 0,
+  servicesValue: 0,
   weightedValueBreakdown: null as {
     percent: number;
     stage: string;
@@ -102,8 +103,10 @@ describe("DealServicesSelection relation actions", () => {
   beforeEach(() => {
     dealDetailStore.canManage = true;
     dealDetailStore.form.services = [];
+    dealDetailStore.form.baseValue = 0;
     dealDetailStore.totalQuantity = 0;
     dealDetailStore.totalValue = 0;
+    dealDetailStore.servicesValue = 0;
     dealDetailStore.weightedValueBreakdown = null;
     personalization.hiddenFieldIds = [];
   });
@@ -133,6 +136,7 @@ describe("DealServicesSelection relation actions", () => {
     dealDetailStore.form.services = [{ quantity: 2, serviceId: "service-1" }];
     dealDetailStore.totalQuantity = 2;
     dealDetailStore.totalValue = 400;
+    dealDetailStore.servicesValue = 400;
     dealDetailStore.weightedValueBreakdown = {
       percent: 50,
       stage: "Qualified",
@@ -153,6 +157,7 @@ describe("DealServicesSelection relation actions", () => {
     dealDetailStore.form.services = [{ quantity: 2, serviceId: "service-1" }];
     dealDetailStore.totalQuantity = 2;
     dealDetailStore.totalValue = 400;
+    dealDetailStore.servicesValue = 400;
 
     const markup = renderToStaticMarkup(
       createElement(DealServicesSelection, {
@@ -165,7 +170,7 @@ describe("DealServicesSelection relation actions", () => {
     expect(markup).toContain('data-deal-service-total="quantity"');
     expect(markup).toContain('aria-label="totalQuantity: 2"');
     expect(markup).toContain('data-deal-service-total="value"');
-    expect(markup).toContain('aria-label="totalValue: €400"');
+    expect(markup).toContain('aria-label="Value: €400"');
     expect(markup.indexOf("Add service")).toBeLessThan(markup.indexOf('data-deal-service-total="quantity"'));
     expect(markup).not.toContain('data-entity-field="weightedValue"');
   });
@@ -175,6 +180,7 @@ describe("DealServicesSelection relation actions", () => {
     dealDetailStore.form.services = [{ quantity: 1050, serviceId: "service-1" }];
     dealDetailStore.totalQuantity = 1050;
     dealDetailStore.totalValue = 342000;
+    dealDetailStore.servicesValue = 342000;
 
     const markup = renderToStaticMarkup(createElement(DealServicesSelection));
     const outputs = [...markup.matchAll(/<output\b[^>]*>[\s\S]*?<\/output>/g)].map(([output]) => output);
@@ -193,7 +199,7 @@ describe("DealServicesSelection relation actions", () => {
     expect(outputs[0]).toContain('aria-label="totalQuantity: 1050"');
     expect(outputs[1]).toContain("text-base");
     expect(outputs[1]).toContain("md:text-sm");
-    expect(outputs[1]).toContain('aria-label="totalValue: €342000"');
+    expect(outputs[1]).toContain('aria-label="Value: €342000"');
     expect(markup).toContain(
       'class="flex min-w-0 text-base text-right font-mono tabular-nums text-foreground/80 md:text-sm"',
     );
@@ -206,13 +212,14 @@ describe("DealServicesSelection relation actions", () => {
     expect(renderToStaticMarkup(createElement(DealServicesSelection, { showTotals: false }))).not.toContain("<output");
     const markup = renderToStaticMarkup(createElement(DealServicesSelection));
     expect(markup).toContain('aria-label="totalQuantity: 0"');
-    expect(markup).toContain('aria-label="totalValue: €0"');
+    expect(markup).toContain('aria-label="Value: €0"');
   });
 
   it("keeps contextual service totals visible when their standalone fields are hidden", () => {
     dealDetailStore.form.services = [{ quantity: 2, serviceId: "service-1" }];
     dealDetailStore.totalQuantity = 2;
     dealDetailStore.totalValue = 400;
+    dealDetailStore.servicesValue = 400;
     dealDetailStore.weightedValueBreakdown = {
       percent: 50,
       stage: "Qualified",
@@ -228,5 +235,37 @@ describe("DealServicesSelection relation actions", () => {
       expect(markup).toContain('data-deal-service-total="value"');
       expect(markup.includes('data-entity-field="weightedValue"')).toBe(hiddenFieldId !== "weightedValue");
     }
+  });
+
+  it("sums only the service lines and shows the deal value beside them when the deal has a base value", () => {
+    dealDetailStore.form.baseValue = 2500;
+    dealDetailStore.form.services = [{ quantity: 1, serviceId: "service-1" }];
+    dealDetailStore.totalQuantity = 1;
+    dealDetailStore.totalValue = 2620;
+    dealDetailStore.servicesValue = 120;
+
+    const drawer = renderToStaticMarkup(createElement(DealServicesSelection));
+    expect(drawer).toContain('aria-label="Value: €120"');
+    expect(drawer).toContain('data-entity-field="totalValue"');
+    expect(drawer).toContain("€2620");
+    expect(drawer).toContain("EntityDetail.computedFieldHelp.dealValue");
+
+    const page = renderToStaticMarkup(createElement(DealServicesSelection, { showWeightedValue: false }));
+    expect(page).toContain('aria-label="Value: €120"');
+    expect(page).not.toContain('data-entity-field="totalValue"');
+  });
+
+  it("shows the deal value and weighted value of a deal that has a base value but no services", () => {
+    dealDetailStore.form.baseValue = 50000;
+    dealDetailStore.totalValue = 50000;
+    dealDetailStore.weightedValueBreakdown = { percent: 40, stage: "Qualified", weightedValue: 20000 };
+
+    const markup = renderToStaticMarkup(createElement(DealServicesSelection));
+
+    expect(markup).not.toContain("<output");
+    expect(markup).toContain('data-entity-field="totalValue"');
+    expect(markup).toContain("€50000");
+    expect(markup).toContain('data-entity-field="weightedValue"');
+    expect(markup).toContain("€20000");
   });
 });

@@ -129,6 +129,15 @@ describe("GlobalSearchModalStore recent searches", () => {
     ]);
   });
 
+  it("keeps a recently opened lead", () => {
+    const leadId = "40000000-0000-4000-8000-000000000001";
+    stubBrowser({ [FIRST_KEY]: [recent(EntityType.lead, leadId, "Market assessment", 1)] });
+
+    const store = new GlobalSearchModalStore(root({ user: { id: "user-1", companyId: "company-1" } }) as never);
+
+    expect(store.recentItems).toEqual([recent(EntityType.lead, leadId, "Market assessment", 1)]);
+  });
+
   it("removes only the stale entity when different record types share an id", () => {
     stubBrowser({
       [FIRST_KEY]: [

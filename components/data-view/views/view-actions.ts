@@ -8,7 +8,7 @@ import { deleteDataViewAction, upsertDataViewAction } from "@/app/actions";
 import { ALL_VIEW_KEY } from "@/core/data-view/data-view-keys";
 import { toastZodErrorTree } from "@/core/utils/toast-zod-error-tree";
 
-import { sortViewsByPosition } from "./view-rail-model";
+import { isOwnView, ownViewsByPosition } from "./view-rail-model";
 
 type UpsertResult = Awaited<ReturnType<typeof upsertDataViewAction>>;
 
@@ -72,10 +72,11 @@ export async function duplicateView<E extends HasId>(
   source: DataViewChipDto,
   args: { name: string },
 ): Promise<DataViewChipDto | null> {
+  const keepsUnsavedChanges = source.id === store.activeViewKey && !isOwnView(source);
   const copy = unwrap(
     await upsertDataViewAction({
       name: args.name,
-      state: toJS(source.state),
+      state: keepsUnsavedChanges ? currentViewState(store) : toJS(source.state),
       surfaceKey: surfaceKeyOf(store),
     }),
   );
@@ -108,12 +109,24 @@ export async function moveView<E extends HasId>(
   view: DataViewChipDto,
   offset: -1 | 1,
 ): Promise<boolean> {
-  const ordered = sortViewsByPosition(store.views);
+  const ordered = ownViewsByPosition(store.views);
   const neighbour = ordered[ordered.findIndex((candidate) => candidate.id === view.id) + offset];
   if (!neighbour) return false;
 
   if (!(await updateViewMeta(store, view, { position: neighbour.position }))) return false;
   if (!(await updateViewMeta(store, neighbour, { position: view.position }))) return false;
+
+  await store.refresh();
+  return true;
+}
+
+export async function setViewShared<E extends HasId>(
+  store: BaseDataViewStore<E>,
+  view: DataViewChipDto,
+  shared: boolean,
+): Promise<boolean> {
+  const updated = unwrap(await upsertDataViewAction({ id: view.id, shared, surfaceKey: surfaceKeyOf(store) }));
+  if (!updated) return false;
 
   await store.refresh();
   return true;

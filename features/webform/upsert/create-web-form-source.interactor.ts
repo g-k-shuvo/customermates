@@ -1,5 +1,6 @@
 import type { CreateWebFormSourceRepo } from "./create-web-form-source.repo";
 import type { Data, Validated } from "@/core/validation/validation.utils";
+import type { WebFormSourceWritePrecheckInteractor } from "./web-form-source-write-precheck.interactor";
 
 import { z } from "zod";
 import { Resource, Action } from "@/generated/prisma";
@@ -35,7 +36,10 @@ export class CreateWebFormSourceInteractor extends AuthenticatedInteractor<
   CreateWebFormSourceData,
   WebFormSourceWithSecret
 > {
-  constructor(private repo: CreateWebFormSourceRepo) {
+  constructor(
+    private repo: CreateWebFormSourceRepo,
+    private writePrecheck: WebFormSourceWritePrecheckInteractor,
+  ) {
     super();
   }
 
@@ -49,6 +53,8 @@ export class CreateWebFormSourceInteractor extends AuthenticatedInteractor<
   }
 
   private async precheck(data: CreateWebFormSourceData, ctx: z.RefinementCtx) {
+    await this.writePrecheck.create(data, ctx);
+
     if (await this.repo.slugExists(data.slug))
       ctx.addIssue({ code: "custom", params: { error: CustomErrorCode.webFormSourceSlugTaken }, path: ["slug"] });
   }

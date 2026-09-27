@@ -74,7 +74,26 @@
     },
     "tabs": {
       "agenda": "Agenda",
-      "list": "Vista de lista"
+      "list": "Vista de lista",
+      "week": "Semana"
+    },
+    "week": {
+      "allDay": "Todo el día",
+      "draggableActivity": "Actividad que se puede arrastrar",
+      "emptyDay": "No hay actividades este día.",
+      "gridLabel": "Calendario semanal",
+      "loadError": "No se pudo cargar la semana.",
+      "moveHint": "Arrastra una actividad para reprogramarla, o enfócala y pulsa Alt con una tecla de flecha.",
+      "nextWeek": "Semana siguiente",
+      "noUnscheduled": "Todas las actividades abiertas tienen fecha.",
+      "onlyMine": "Solo las mías",
+      "pickDay": "Elegir un día",
+      "previousWeek": "Semana anterior",
+      "retry": "Inténtalo de nuevo",
+      "today": "Hoy",
+      "truncated": "Solo se muestran las primeras actividades de esta semana. Acota los filtros para verlas todas.",
+      "unscheduled": "Actividades sin programar",
+      "unscheduledCount": "{count, plural, =0 {Ninguna actividad sin programar} one {# actividad sin programar} other {# actividades sin programar}}"
     }
   },
   "AgentChat": {
@@ -1078,6 +1097,20 @@
     "runStepSummary": "Paso {position}: {action} — {status}",
     "runsTitle": "Historial de ejecuciones",
     "stepCount": "{count, plural, =1 {1 acción} other {# acciones}}",
+    "stepErrors": {
+      "assigneeUnavailable": "El usuario que se va a asignar no es un miembro activo de este espacio de trabajo",
+      "fieldNotWritable": "Una automatización no puede cambiar este campo",
+      "fieldValueInvalid": "El valor no es válido para este campo",
+      "fieldValueMissing": "El paso no indica qué valor escribir",
+      "interrupted": "La acción se interrumpió y es posible que no se haya completado",
+      "notesTooLong": "La nota haría que las notas superaran la longitud permitida",
+      "notesUnreadable": "No se pudieron leer las notas existentes, así que no se modificaron",
+      "ownerInactive": "La cuenta con la que se ejecuta la automatización ya no está activa",
+      "ownerNotPermitted": "La cuenta con la que se ejecuta la automatización no tiene permiso para hacer esto",
+      "recordMissing": "Un registro que necesita la acción ya no existe",
+      "recordUnsupported": "Esta acción no se puede usar con este tipo de registro",
+      "unexpectedError": "La acción se detuvo por un error inesperado"
+    },
     "title": "Automatizaciones",
     "toggleLabel": "Activar o desactivar la automatización {name}",
     "triggerKinds": {
@@ -1325,6 +1358,8 @@
       "dealNotClosed": "Esta oportunidad ya está abierta, así que no hay nada que reabrir.",
       "dealNotFound": "ID de oportunidad no encontrado o no accesible.",
       "demoMode": "Esta acción no está disponible en el modo de demostración. Inicia sesión para acceder a todas las funciones.",
+      "documentNotPdf": "Los documentos deben ser archivos PDF.",
+      "documentNotSendable": "Solo se puede enviar para firmar un documento en borrador, rechazado o anulado.",
       "draftMessageNotFound": "No se ha encontrado ese borrador. Puede que ya se haya enviado o descartado.",
       "draftThreadNotSent": "Este borrador aún no tiene conversación. Envíalo desde la bandeja de entrada.",
       "duplicateChannel": "Este canal aparece más de una vez. Añade cada dirección de correo, número de teléfono o identificador una sola vez.",
@@ -1339,6 +1374,14 @@
       "emailMismatch": "Las direcciones de correo deben coincidir.",
       "emailNotVerified": "Correo no verificado.",
       "enterpriseCheckoutUnavailable": "Los espacios de trabajo Enterprise se facturan manualmente y no pueden iniciar el pago de autoservicio.",
+      "fileEmpty": "El archivo está vacío.",
+      "fileExtensionMissing": "El nombre del archivo necesita una extensión, como .pdf.",
+      "fileStorageNotConfigured": "Esta instalación no tiene almacenamiento de archivos.",
+      "fileStorageUnavailable": "No se pudo acceder al almacenamiento de archivos. Vuelve a intentarlo en un momento.",
+      "fileTooLarge": "El archivo supera el límite de subida.",
+      "fileTypeMismatch": "La extensión del archivo no coincide con su contenido.",
+      "fileTypeNotAllowed": "No se pueden subir archivos de este tipo.",
+      "fileUploadIncomplete": "La subida no terminó. Vuelve a intentarlo.",
       "filterBetweenInvalidArrayLength": "El operador 'between' requiere un array con exactamente 2 elementos.",
       "generic": "Se ha producido un error.",
       "importKeyUnsupported": "Esa columna no se puede usar para buscar registros existentes.",
@@ -1400,6 +1443,8 @@
       "pipelineStageMismatch": "La etapa seleccionada no pertenece al pipeline seleccionado.",
       "pipelineStageNotFound": "ID de etapa del pipeline no encontrado o no accesible.",
       "privacyAcknowledgementRequired": "Confirma que has leído la Política de privacidad.",
+      "recordDocumentNotFound": "Documento no encontrado o no accesible.",
+      "recordFileNotFound": "Archivo no encontrado o no accesible.",
       "relationNotAllowed": "La relación '{relation}' no está permitida en {entity}. Relaciones permitidas: {allowed}.",
       "roleAssignedCannotDelete": "No se puede eliminar un rol asignado a usuarios.",
       "roleNotFound": "ID de rol no encontrado o no accesible.",
@@ -1424,6 +1469,13 @@
       "salesNavigatorRequiresLinkedin": "Sales Navigator requiere una cuenta de LinkedIn conectada, pero esta cuenta es {provider}.",
       "sendEmailTargetRequired": "Selecciona una conversación o una cuenta desde la que enviar.",
       "serviceNotFound": "ID de servicio no encontrado o no accesible.",
+      "signatureInProgress": "Este documento está pendiente de firma. Cancela primero la solicitud de firma.",
+      "signatureNotInProgress": "Este documento no está pendiente de firma.",
+      "signatureRecipientDuplicate": "Cada firmante necesita una dirección de correo distinta.",
+      "signingConsentRequired": "DocuSign aún no está autorizado para esta instalación. Un administrador debe dar su consentimiento primero.",
+      "signingNotConfigured": "Esta instalación no tiene configurada la firma electrónica.",
+      "signingRejected": "DocuSign rechazó la solicitud. Revisa los nombres y correos de los firmantes e inténtalo de nuevo.",
+      "signingUnavailable": "No se pudo contactar con DocuSign. Vuelve a intentarlo en un momento.",
       "socialActionRequiresSocialAccount": "Esta acción requiere una cuenta de LinkedIn o Instagram conectada, pero esta cuenta es {provider}.",
       "socialPostsRequireSocialAccount": "Las publicaciones sociales requieren una cuenta de LinkedIn o Instagram conectada, pero esta cuenta es {provider}.",
       "subjectRequired": "Añade un asunto.",
@@ -1451,6 +1503,8 @@
       "userSelfAdminUpdateForbidden": "No puedes actualizar tu propia cuenta desde la administración del equipo.",
       "webFormSourceNotFound": "ID de origen de formulario web no encontrado o no accesible.",
       "webFormSourceSlugTaken": "Ya existe un origen de formulario web con esta dirección. Elige otra.",
+      "webFormSubmissionNotFound": "ID de envío de formulario web no encontrado o no accesible.",
+      "webFormSubmissionNotRetryable": "Solo se puede reintentar un envío fallido que aún no haya creado un lead.",
       "webhookBodyTemplateInvalid": "La plantilla del cuerpo debe producir un objeto JSON válido.",
       "webhookDeliveryNotFound": "ID de entrega de webhook no encontrado o no accesible.",
       "webhookEventsRequired": "Selecciona al menos un evento.",
@@ -1483,6 +1537,11 @@
       "widgetWeightedValueNotAllowedForService": "La agregación de valor ponderado no está permitida para el tipo de elemento Servicio."
     },
     "events": {
+      "automation": {
+        "created": "Automatización creada",
+        "deleted": "Automatización eliminada",
+        "updated": "Automatización actualizada"
+      },
       "company": {
         "updated": "Empresa actualizada"
       },
@@ -1612,6 +1671,7 @@
         "startsAt": "Comienza el",
         "state": "Estado",
         "status": "Estado",
+        "submissionStatus": "Estado del envío",
         "subscriptionStatus": "Suscripción",
         "timelineKind": "Tipo",
         "timelineThreadId": "Conversación",
@@ -1820,6 +1880,7 @@
         "allowance": "Asignación",
         "amount": "Importe",
         "avatarUrl": "Avatar",
+        "baseValue": "Valor base",
         "channels": "Canales",
         "completedAt": "Completada",
         "contact": "Contacto",
@@ -1839,6 +1900,7 @@
         "entity": "Elemento",
         "entityId": "ID del elemento",
         "entityType": "Tipo de registro",
+        "error": "Error",
         "event": "Evento",
         "events": "Eventos",
         "expiresAt": "Caduca el",
@@ -1851,6 +1913,7 @@
         "lastName": "Apellidos",
         "lastRequest": "Último uso",
         "lastRunAt": "Última ejecución",
+        "lead": "Lead",
         "lostReason": "Motivo de pérdida",
         "members": "Miembros",
         "name": "Nombre",
@@ -1866,6 +1929,7 @@
         "plan": "Plan",
         "provider": "Proveedor",
         "reason": "Motivo",
+        "receivedAt": "Recibido",
         "role": "Rol",
         "rottingAt": "Estancado",
         "secret": "Secreto",
@@ -1873,6 +1937,7 @@
         "source": "Origen",
         "status": "Estado",
         "statusCode": "Código de estado",
+        "submitter": "Remitente",
         "subscription": "Suscripción",
         "tags": "Etiquetas",
         "target": "Objetivo",
@@ -2415,7 +2480,14 @@
       "name": "Nombre",
       "namePlaceholder": "Nombre de la vista",
       "railLabel": "Vistas guardadas",
-      "recordCount": "{count, plural, one {# registro} other {# registros}}"
+      "recordCount": "{count, plural, one {# registro} other {# registros}}",
+      "share": "Compartir con el equipo",
+      "sharedBy": "Compartida por {name}",
+      "sharedChangesNotSaved": "Los cambios en una vista que ha compartido un compañero no se guardan. Duplícala para conservarlos.",
+      "sharedWithTeam": "Compartida con tu equipo",
+      "shareSuccess": "Tu equipo ya puede usar esta vista",
+      "unshare": "Dejar de compartir",
+      "unshareSuccess": "Ahora solo tú ves esta vista"
     }
   },
   "DealModal": {
@@ -2446,6 +2518,16 @@
       "switcherLabel": "Embudo"
     },
     "quantityLabel": "Cantidad",
+    "stageBar": {
+      "currentStage": "{name}, etapa actual: {duration}",
+      "days": "{count, plural, one {# día} other {# días}}",
+      "hours": "{count, plural, one {# hora} other {# horas}}",
+      "label": "Tiempo en la etapa",
+      "lessThanMinute": "Menos de un minuto",
+      "minutes": "{count, plural, one {# minuto} other {# minutos}}",
+      "notEntered": "Sin alcanzar",
+      "stage": "{name}: {duration}"
+    },
     "title": "Oportunidad",
     "valueLabel": "Valor"
   },
@@ -2510,6 +2592,14 @@
     "quickstart": "Inicio rápido",
     "selfHosting": "Autoalojamiento",
     "webhooks": "Webhooks"
+  },
+  "DocumentSignedNotice": {
+    "cta": "Abrir el registro",
+    "fallback": "Si el botón no funciona, copia y pega este enlace en tu navegador: ",
+    "intro": "Todos han firmado {title}. La copia firmada está guardada en el registro.",
+    "preview": "{title} está firmado",
+    "signers": "Firmado por {names}",
+    "subject": "Firmado: {title}"
   },
   "Editor": {
     "blockQuote": "Cita",
@@ -2579,7 +2669,7 @@
   },
   "EntityDetail": {
     "computedFieldHelp": {
-      "dealValue": "Suma del precio unitario × la cantidad de cada registro vinculado en «{services}». Edita allí los registros vinculados o las cantidades para actualizarlo.",
+      "dealValue": "Valor base más la suma del precio unitario × la cantidad de cada registro vinculado en «{services}». Edita el valor base, o allí los registros vinculados y las cantidades, para actualizarlo.",
       "serviceLineValue": "Precio de «{service}» × cantidad. Cambia aquí el registro o la cantidad; edita el registro vinculado para cambiar su precio.",
       "serviceQuantity": "Suma de las cantidades de todos los registros vinculados en «{services}». Edita allí las cantidades para actualizar el valor.",
       "weightedValue": "{dealValue} × {percent} % de probabilidad de cierre de la etapa actual ({stage}). Edita «{services}», las cantidades o la etapa; gestiona las probabilidades en «{company}».",
@@ -2595,6 +2685,7 @@
     "personalize": "Personalizar",
     "pinField": "Fijar {field} en el resumen",
     "sections": {
+      "label": "Secciones del registro",
       "notes": "Notas"
     },
     "showField": "Mostrar {field} en los detalles",
@@ -2816,7 +2907,7 @@
   },
   "GlobalSearch": {
     "clearRecent": "Borrar",
-    "emptyDescription": "Busca {contacts}, {organizations}, {deals}, {services} y {tasks} en un solo lugar.",
+    "emptyDescription": "Busca {contacts}, {organizations}, {leads}, {deals}, {services} y {tasks} en un solo lugar.",
     "emptyTitle": "Encuentra todo en tu espacio de trabajo",
     "groupRecent": "Abiertos recientemente",
     "hintNavigate": "Navegar",
@@ -3040,7 +3131,9 @@
   },
   "LeadDetail": {
     "convert": "Convertir en oportunidad",
+    "convertDescription": "«{title}» se convierte con su contacto, organización, responsable y notas. El lead se conserva, marcado como convertido.",
     "owner": "Responsable",
+    "probabilityPlaceholder": "Valor de la etapa: {percent} %",
     "source": "Origen",
     "title": "Lead"
   },
@@ -3174,6 +3267,7 @@
     "sendForward": "Enviar reenvío",
     "sendingOff": "Solo recepción",
     "sendReply": "Enviar",
+    "sentCopyNotSaved": "Enviado. No se pudo guardar una copia en tu carpeta de enviados.",
     "shareDescriptionOff": "Solo usted puede leer esta conversación. Al compartirla aparecerá en los registros que coincidan, donde podrá leerla cualquiera que tenga acceso a ellos.",
     "shareDescriptionOn": "Cualquiera con acceso a los registros coincidentes puede leer esta conversación. Desactívelo para conservarla en privado.",
     "shareDisabled": "La conversación vuelve a ser privada",
@@ -3731,6 +3825,92 @@
   "ProfileSections": {
     "apiKeysDescription": "Claves de API de larga duración para el acceso programático."
   },
+  "RecordDocuments": {
+    "actions": "Acciones de {title}",
+    "add": "Añadir documento",
+    "added": "{name} añadido",
+    "addFailed": "No se pudo subir {name}.",
+    "addHint": "Archivos PDF de hasta {size} cada uno.",
+    "adding": "Añadiendo {name}...",
+    "delete": "Eliminar",
+    "deleted": "{title} eliminado",
+    "emptyDescription": "Añade un contrato u otro PDF para seguir el estado de su firma.",
+    "emptyReadOnly": "Aquí aparecen los documentos de este registro.",
+    "emptyTitle": "Aún no hay documentos",
+    "loadErrorDescription": "Vuelve a intentarlo en un momento.",
+    "loadErrorTitle": "No se pudieron cargar los documentos",
+    "loading": "Cargando documentos...",
+    "metaAdded": "Añadido por {name}, {date}",
+    "metaAddedWithoutName": "Añadido el {date}",
+    "notConfigured": "Esta instalación no tiene almacenamiento de archivos, así que no se pueden añadir ni abrir documentos.",
+    "open": "Abrir {title}",
+    "openOriginal": "Abrir el PDF original",
+    "openSigned": "Abrir la copia firmada",
+    "rename": "Cambiar nombre",
+    "renamed": "Documento renombrado",
+    "renameLabel": "Título de {title}",
+    "signature": {
+      "addSigner": "Añadir firmante",
+      "cancel": "Cancelar la solicitud de firma",
+      "cancelConfirm": "Cancelar solicitud",
+      "cancelMessage": "{title} se anulará en DocuSign y sus firmantes ya no podrán firmarlo.",
+      "cancelTitle": "¿Cancelar la solicitud de firma?",
+      "defaultSubject": "Firma, por favor: {title}",
+      "description": "{title} se envía a través de DocuSign. Cada firmante recibe un correo con un enlace para firmarlo, y la copia firmada se guarda aquí cuando todos han firmado.",
+      "emailPlaceholder": "Correo electrónico",
+      "message": "Mensaje (opcional)",
+      "namePlaceholder": "Nombre",
+      "progress": "{signed} de {total} firmado",
+      "refresh": "Actualizar el estado de la firma",
+      "refreshed": "Estado de firma de {title} actualizado",
+      "removeSigner": "Quitar al firmante {number}",
+      "send": "Enviar",
+      "sendAction": "Enviar para firmar",
+      "sent": "{title} se envió para firmar",
+      "signerEmail": "Correo del firmante {number}",
+      "signerName": "Nombre del firmante {number}",
+      "signers": "Firmantes",
+      "subject": "Asunto del correo",
+      "title": "Enviar para firmar",
+      "waiting": "Pendiente de firma"
+    },
+    "signedAttached": "Copia firmada de {title} adjuntada",
+    "signedCopy": "Copia firmada adjunta",
+    "status": {
+      "completed": "Firmado",
+      "declined": "Rechazado",
+      "draft": "Borrador",
+      "sent": "Enviado",
+      "voided": "Anulado"
+    },
+    "statusChanged": "{title} ahora está: {status}",
+    "statusLabel": "Estado de {title}",
+    "title": "Documentos",
+    "uploadSigned": "Adjuntar copia firmada"
+  },
+  "RecordFiles": {
+    "delete": "Eliminar {name}",
+    "deleted": "{name} eliminado",
+    "download": "Descargar {name}",
+    "dropHint": "Suelta aquí los archivos, hasta {size} cada uno.",
+    "emptyDescription": "Suelta aquí los archivos o elige Subir archivos.",
+    "emptyReadOnly": "Aquí aparecen los archivos de este registro.",
+    "emptyTitle": "Aún no hay archivos",
+    "loadErrorDescription": "Vuelve a intentarlo en un momento.",
+    "loadErrorTitle": "No se pudieron cargar los archivos",
+    "loading": "Cargando archivos...",
+    "meta": "{size} · {name} · {date}",
+    "metaWithoutUploader": "{size} · {date}",
+    "notConfigured": "Esta instalación no tiene almacenamiento de archivos, así que no se pueden subir ni abrir archivos.",
+    "sizeBytes": "{size} B",
+    "sizeKilobytes": "{size} KB",
+    "sizeMegabytes": "{size} MB",
+    "title": "Archivos",
+    "upload": "Subir archivos",
+    "uploaded": "{name} subido",
+    "uploadFailed": "No se pudo subir {name}.",
+    "uploading": "Subiendo {name}..."
+  },
   "ResetPassword": {
     "cta": "Restablecer la contraseña",
     "fallback": "Si el botón de arriba no funciona, copia y pega este enlace en tu navegador: ",
@@ -4132,12 +4312,20 @@
   },
   "WebFormSourceModal": {
     "active": "Acepta envíos",
+    "addCustomField": "Añadir campo",
+    "customFieldColumn": "Campo del CRM {number}",
+    "customFieldColumnOption": "{entity} · {column}",
+    "customFieldColumnPlaceholder": "Elige un campo",
+    "customFieldIncomplete": "Cada campo adicional necesita un campo del formulario y un campo del CRM.",
+    "customFieldPath": "Campo del formulario {number}",
+    "customFieldsDescription": "Asigna cualquier otro campo del formulario a un campo del lead o del contacto: parámetros UTM, consentimiento, un teléfono (en un campo de teléfono) o respuestas que solo pide este formulario. Un valor que no encaja en su campo, como un teléfono sin prefijo internacional, se omite.",
+    "customFieldsTitle": "Más campos",
     "defaultLabels": "Etiquetas predeterminadas",
     "inactive": "En pausa",
     "mappingDescription": "Rutas con puntos dentro del contenido enviado, por ejemplo fields.email o data.contact.first_name. Deja un campo vacío para ignorarlo.",
     "mappingTitle": "Asignación de campos",
     "message": "Mensaje",
-    "phone": "Teléfono",
+    "removeCustomField": "Quitar campo {number}",
     "rotateSecret": "Rotar el secreto de firma",
     "secretRevealedDescription": "Cópialo ahora. Se muestra una sola vez y no se puede recuperar.",
     "secretRevealedTitle": "Secreto de firma",
@@ -4146,13 +4334,30 @@
     "slugImmutable": "El slug no se puede cambiar, porque un formulario activo ya envía a este endpoint.",
     "title": "Origen de formulario web",
     "titleTemplate": "Plantilla del título del lead",
-    "titleTemplateDescription": "Los marcadores se sustituyen con los campos asignados, por ejemplo '{organizationName}' — '{form_title}'."
+    "titleTemplateDescription": "Los marcadores se sustituyen con los campos asignados, por ejemplo '{organizationName}' — '{form_title}'.",
+    "value": "Valor del lead"
   },
   "WebFormSourcesCard": {
     "emptyBody": "Crea un origen para obtener un endpoint y un secreto de firma para el formulario de tu sitio web.",
     "emptyTitle": "Aún no hay formularios web",
     "endpoint": "Endpoint",
     "title": "Formularios web"
+  },
+  "WebFormSubmissions": {
+    "detailTitle": "Envío de formulario",
+    "emptyBody": "Aquí aparece cada envío de tus formularios web, incluidos los que no pudieron convertirse en un lead.",
+    "emptyTitle": "Aún no hay envíos de formularios",
+    "externalId": "ID externo",
+    "openLead": "Abrir lead",
+    "payload": "Datos enviados",
+    "processedAt": "Procesado el",
+    "retry": "Reintentar",
+    "statuses": {
+      "failed": "Fallido",
+      "processed": "Lead creado",
+      "received": "En cola"
+    },
+    "title": "Envíos de formularios"
   },
   "WebhookDeliveriesCard": {
     "emptyBody": "Los intentos de entrega aparecerán aquí cuando se active un webhook.",

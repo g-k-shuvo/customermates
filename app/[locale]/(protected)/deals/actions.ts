@@ -8,6 +8,7 @@ import type { UpdateDealData } from "@/features/deals/upsert/update-deal.interac
 import type { MarkDealWonData } from "@/features/deals/close/mark-deal-won.interactor";
 import type { MarkDealLostData } from "@/features/deals/close/mark-deal-lost.interactor";
 import type { ReopenDealData } from "@/features/deals/close/reopen-deal.interactor";
+import type { GetDealStageDurationsData } from "@/features/deals/get/get-deal-stage-durations.interactor";
 
 import {
   getGetDealsInteractor,
@@ -18,6 +19,7 @@ import {
   getMarkDealWonInteractor,
   getMarkDealLostInteractor,
   getReopenDealInteractor,
+  getGetDealStageDurationsInteractor,
 } from "@/core/di";
 import { serializeResult } from "@/core/utils/action-result";
 import { unwrapValidated } from "@/core/validation/validation.utils";
@@ -53,6 +55,10 @@ export async function reopenDealAction(data: ReopenDealData) {
 export async function getDealByIdAction(data: GetDealByIdData) {
   const result = await unwrapValidated(getGetDealByIdInteractor().invoke(data));
   return { entity: result.deal, customColumns: result.customColumns };
+}
+
+export async function getDealStageDurationsAction(data: GetDealStageDurationsData) {
+  return serializeResult(getGetDealStageDurationsInteractor().invoke(data));
 }
 
 export async function createDealByNameAction(name: string, userId: string | null | undefined) {

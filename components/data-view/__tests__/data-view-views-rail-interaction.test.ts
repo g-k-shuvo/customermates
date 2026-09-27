@@ -601,6 +601,7 @@ describe("data view rail interaction", () => {
       "DataView.views.duplicate",
       "DataView.views.moveLeft",
       "DataView.views.moveRight",
+      "DataView.views.share",
       "DataView.views.copyLink",
       "DataView.views.delete",
     ]);

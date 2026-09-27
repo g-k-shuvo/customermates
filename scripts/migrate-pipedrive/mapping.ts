@@ -13,6 +13,8 @@ import type {
   PipedriveDealField,
   PipedriveDealStatus,
   PipedriveFlowEntry,
+  PipedriveLead,
+  PipedriveLeadLabel,
   PipedriveNote,
   PipedriveOrganization,
   PipedrivePerson,
@@ -43,12 +45,12 @@ export const PIPEDRIVE_CURRENCY_COLUMN = "pipedrive_currency";
 export const PIPEDRIVE_CLOSED_AT_COLUMN = "pipedrive_closed_at";
 export const PIPEDRIVE_PHONE_COLUMN = "pipedrive_phone";
 export const PIPEDRIVE_ADDRESS_COLUMN = "pipedrive_address";
+export const PIPEDRIVE_EXPECTED_CLOSE_COLUMN = "pipedrive_expected_close_date";
 
 /**
- * A single service carries every migrated deal's monetary value. `totalValue` is
- * derived from `sum(service.amount * quantity)`, so a unit-priced service with
- * `quantity = value` is the only way to land the Pipedrive amount through the
- * interactors. See the README for the consequence on `totalQuantity`.
+ * Migrations run before Deal.baseValue existed carried every deal's value on this
+ * unit-priced service (`quantity = value`). New runs write `baseValue` instead;
+ * move-value-service-to-base-value.ts converts deals migrated the old way.
  */
 export const DEAL_VALUE_SERVICE_NAME = "Pipedrive deal value";
 export const DEAL_VALUE_SERVICE_AMOUNT = 1;
@@ -483,7 +485,7 @@ export type DealCreatePayload = {
   organizationIds: string[];
   contactIds: string[];
   userIds: string[];
-  services: { serviceId: string; quantity: number }[];
+  baseValue?: number;
   customFieldValues: CustomFieldValueInput[];
 };
 
@@ -502,7 +504,6 @@ export type DealMappingContext = {
   contactIdByPipedriveId: ReadonlyMap<number, string>;
   pipelineIdByPipedriveId: ReadonlyMap<number, string>;
   stageIdByPipedriveId: ReadonlyMap<number, string>;
-  valueServiceId: string | null;
 };
 
 export type DealMapping = {
@@ -557,10 +558,10 @@ export function mapDeal(deal: PipedriveDeal, context: DealMappingContext): Mappi
   if (closedAt && context.columns.closedAtColumnId)
     customFieldValues.push({ columnId: context.columns.closedAtColumnId, value: closedAt.toISOString() });
 
-  const services: { serviceId: string; quantity: number }[] = [];
-  if (value !== null && context.valueServiceId) {
+  let baseValue: number | undefined;
+  if (value !== null) {
     if (value < 0) warnings.push("negative deal value is not representable; value left at 0");
-    else services.push({ serviceId: context.valueServiceId, quantity: value / DEAL_VALUE_SERVICE_AMOUNT });
+    else baseValue = value;
   }
 
   const expectedCloseDate = parsePipedriveDate(deal.expected_close_date);
@@ -577,7 +578,7 @@ export function mapDeal(deal: PipedriveDeal, context: DealMappingContext): Mappi
       organizationIds: organizationId ? [organizationId] : [],
       contactIds: contactId ? [contactId] : [],
       userIds: owner.userIds,
-      services,
+      ...(baseValue === undefined ? {} : { baseValue }),
       customFieldValues,
     },
     owner,
@@ -796,13 +797,17 @@ function lookup(index: ReadonlyMap<number, string>, reference: PipedriveReferenc
 
 export type NoteOwner =
   | { entity: "deal"; pipedriveId: number }
+  | { entity: "lead"; pipedriveId: string }
   | { entity: "contact"; pipedriveId: number }
   | { entity: "organization"; pipedriveId: number };
 
-/** Notes belong to the most specific record they reference: deal, then person, then org. */
+/** Notes belong to the most specific record they reference: deal, then lead, then person, then org. */
 export function noteOwner(note: PipedriveNote): NoteOwner | null {
   const dealId = referenceId(note.deal_id);
   if (dealId !== null) return { entity: "deal", pipedriveId: dealId };
+
+  const leadId = nonBlank(note.lead_id);
+  if (leadId) return { entity: "lead", pipedriveId: leadId };
 
   const personId = referenceId(note.person_id);
   if (personId !== null) return { entity: "contact", pipedriveId: personId };
@@ -835,6 +840,131 @@ export function parseImportedNoteIds(value: string | null | undefined): Set<stri
 
 export function serializeImportedNoteIds(ids: Iterable<string>): string {
   return [...new Set(ids)].sort().join(MULTI_VALUE_SEPARATOR);
+}
+
+export type LeadCreatePayload = {
+  title: string;
+  status: "new" | "archived";
+  sourceOrigin: string;
+  labels: string[];
+  contactId?: string;
+  organizationId?: string;
+  ownerUserId?: string;
+  value?: number;
+  customFieldValues: CustomFieldValueInput[];
+};
+
+export type LeadColumns = { pipedriveIdColumnId: string; expectedCloseColumnId: string | null };
+
+export type LeadMappingContext = {
+  columns: LeadColumns;
+  owners: OwnerLookup;
+  contactIdByPipedriveId: ReadonlyMap<number, string>;
+  organizationIdByPipedriveId: ReadonlyMap<number, string>;
+  labelNameById: ReadonlyMap<string, string>;
+  defaultCurrency: string;
+};
+
+export type LeadWarning = { kind: string; value: string; detail: string };
+
+export type LeadMapping = { payload: LeadCreatePayload; owner: OwnerResolution; warnings: LeadWarning[] };
+
+export const LEAD_SOURCE_ORIGIN = "pipedrive";
+
+const LEAD_LABEL_MAX_LENGTH = 64;
+
+/** Label id -> name, for resolving `label_ids` on each lead. */
+export function leadLabelNames(labels: readonly PipedriveLeadLabel[]): Map<string, string> {
+  const names = new Map<string, string>();
+
+  for (const label of labels) {
+    const id = nonBlank(label.id);
+    const name = nonBlank(label.name);
+    if (id && name) names.set(id, clamp(name, LEAD_LABEL_MAX_LENGTH));
+  }
+
+  return names;
+}
+
+/**
+ * A Pipedrive lead becomes a lead. Pipedrive leads have no workflow status, so an
+ * open lead starts as "new" and an archived one stays archived. The person and the
+ * organization are linked when an earlier arm of the run imported them; anything
+ * that cannot be carried over is returned as a warning for the report.
+ */
+export function mapLead(lead: PipedriveLead, context: LeadMappingContext): MappingResult<LeadMapping> {
+  const pipedriveId = nonBlank(lead.id);
+  if (!pipedriveId) return { skipped: true, reason: "lead has no id" };
+
+  const title = nonBlank(lead.title);
+  if (!title) return { skipped: true, reason: "lead has no title" };
+
+  const warnings: LeadWarning[] = [];
+  const owner = resolveOwner(lead.owner_id, context.owners);
+
+  const sourcePersonId = referenceId(lead.person_id);
+  const contactId = sourcePersonId === null ? undefined : context.contactIdByPipedriveId.get(sourcePersonId);
+  if (sourcePersonId !== null && !contactId)
+    warnings.push({ kind: "lead.person_id", value: String(sourcePersonId), detail: "person was not imported" });
+
+  const sourceOrganizationId = referenceId(lead.organization_id);
+  const organizationId =
+    sourceOrganizationId === null ? undefined : context.organizationIdByPipedriveId.get(sourceOrganizationId);
+  if (sourceOrganizationId !== null && !organizationId)
+    warnings.push({
+      kind: "lead.organization_id",
+      value: String(sourceOrganizationId),
+      detail: "organization was not imported",
+    });
+
+  const labels: string[] = [];
+  for (const labelId of lead.label_ids ?? []) {
+    const name = context.labelNameById.get(labelId);
+    if (!name) {
+      warnings.push({ kind: "lead.label_ids", value: labelId, detail: "label is not in the lead label export" });
+      continue;
+    }
+    if (!labels.includes(name)) labels.push(name);
+  }
+
+  const amount = parsePipedriveNumber(lead.value?.amount);
+  const value = amount !== null && amount >= 0 ? amount : undefined;
+  const currency = nonBlank(lead.value?.currency)?.toLowerCase() ?? null;
+  if (value !== undefined && currency && currency !== context.defaultCurrency.toLowerCase())
+    warnings.push({
+      kind: "lead.value.currency",
+      value: currency.toUpperCase(),
+      detail: "amount imported as is, not converted to the workspace currency",
+    });
+
+  const customFieldValues: CustomFieldValueInput[] = [
+    { columnId: context.columns.pipedriveIdColumnId, value: pipedriveId },
+  ];
+  const expectedClose = parsePipedriveDate(lead.expected_close_date);
+  if (expectedClose && context.columns.expectedCloseColumnId)
+    customFieldValues.push({
+      columnId: context.columns.expectedCloseColumnId,
+      value: expectedClose.toISOString().slice(0, 10),
+    });
+
+  const ownerUserId = owner.userIds[0];
+
+  return {
+    skipped: false,
+    payload: {
+      title: clamp(title, 255),
+      status: lead.is_archived === true ? "archived" : "new",
+      sourceOrigin: LEAD_SOURCE_ORIGIN,
+      labels,
+      ...(contactId ? { contactId } : {}),
+      ...(organizationId ? { organizationId } : {}),
+      ...(ownerUserId ? { ownerUserId } : {}),
+      ...(value === undefined ? {} : { value }),
+      customFieldValues,
+    },
+    owner,
+    warnings,
+  };
 }
 
 /** The distinct, non-blank lost reasons a deal export refers to, in stable order. */

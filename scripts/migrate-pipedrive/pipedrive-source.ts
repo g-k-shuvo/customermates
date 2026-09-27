@@ -9,6 +9,8 @@ import type {
   PipedriveDeal,
   PipedriveDealField,
   PipedriveFlowEntry,
+  PipedriveLead,
+  PipedriveLeadLabel,
   PipedriveNote,
   PipedriveOrganization,
   PipedrivePerson,
@@ -32,6 +34,8 @@ export type PipedriveSource = {
   dealFlow(dealId: number): Promise<PipedriveFlowEntry[]>;
   activities(): Promise<PipedriveActivity[]>;
   notes(): Promise<PipedriveNote[]>;
+  leads(): Promise<PipedriveLead[]>;
+  leadLabels(): Promise<PipedriveLeadLabel[]>;
 };
 
 /**
@@ -76,6 +80,8 @@ const DIRECTORY_FILES = {
   activities: "activities.json",
   notes: "notes.json",
   dealFlow: "deal-flow.json",
+  leads: "leads.json",
+  leadLabels: "leadLabels.json",
 } as const;
 
 async function readOptional<T extends PipedriveRecord>(directory: string, file: string): Promise<T[]> {
@@ -147,6 +153,8 @@ function createDirectorySource(directory: string): PipedriveSource {
     dealFlow: async (dealId) => (await loadFlow()).get(dealId) ?? [],
     activities: () => read<PipedriveActivity>(DIRECTORY_FILES.activities),
     notes: () => read<PipedriveNote>(DIRECTORY_FILES.notes),
+    leads: () => read<PipedriveLead>(DIRECTORY_FILES.leads),
+    leadLabels: () => read<PipedriveLeadLabel>(DIRECTORY_FILES.leadLabels),
   };
 }
 
@@ -169,14 +177,16 @@ function createApiSource(domain: string, token: string): PipedriveSource {
       const response = await fetch(url, { headers: { accept: "application/json" } });
       if (!response.ok) throw new Error(`Pipedrive GET /${path} failed with ${response.status}.`);
 
+      type Pagination = { more_items_in_collection?: boolean; next_start?: number };
       const body = (await response.json()) as {
         data?: T[] | null;
-        additional_data?: { pagination?: { more_items_in_collection?: boolean; next_start?: number } };
+        additional_data?: Pagination & { pagination?: Pagination };
       };
 
       collected.push(...(body.data ?? []));
 
-      const pagination = body.additional_data?.pagination;
+      // The leads endpoints report pagination flat on additional_data rather than nested.
+      const pagination = body.additional_data?.pagination ?? body.additional_data;
       if (!pagination?.more_items_in_collection) return collected;
 
       start = pagination.next_start ?? start + API_PAGE_SIZE;
@@ -194,6 +204,8 @@ function createApiSource(domain: string, token: string): PipedriveSource {
     dealFlow: (dealId) => request<PipedriveFlowEntry>(`deals/${dealId}/flow`),
     activities: () => request<PipedriveActivity>("activities", { user_id: "0" }),
     notes: () => request<PipedriveNote>("notes"),
+    leads: () => request<PipedriveLead>("leads", { archived_status: "all" }),
+    leadLabels: () => request<PipedriveLeadLabel>("leadLabels"),
   };
 }
 

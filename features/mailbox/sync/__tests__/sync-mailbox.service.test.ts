@@ -9,7 +9,9 @@ const KEY = parseSecretBoxKey(Buffer.alloc(32, 5).toString("base64"));
 const ACCOUNT_ID = "00000000-0000-4000-8000-0000000000b1";
 const NOW = () => new Date("2026-09-09T10:00:00Z");
 
-function account(overrides: { syncCursors?: MailboxFolderCursor[]; backfillFrom?: Date | null } = {}) {
+function account(
+  overrides: { syncCursors?: MailboxFolderCursor[]; backfillFrom?: Date | null; sentFolderIds?: string[] } = {},
+) {
   return {
     connectedAccountId: ACCOUNT_ID,
     emailAddress: "max@vendor.example",
@@ -21,6 +23,7 @@ function account(overrides: { syncCursors?: MailboxFolderCursor[]; backfillFrom?
     sealedSecret: sealSecret(KEY, "app-password"),
     syncCursors: overrides.syncCursors ?? [],
     backfillFrom: overrides.backfillFrom ?? null,
+    sentFolderIds: overrides.sentFolderIds ?? [],
   };
 }
 
@@ -200,5 +203,28 @@ describe("SyncMailboxService thread creation", () => {
 
     expect(deleteThreadIfEmpty).not.toHaveBeenCalled();
     expect(refreshThreadSummary).toHaveBeenCalled();
+  });
+});
+
+describe("SyncMailboxService folder selection", () => {
+  it("records which folders it syncs and which of them hold sent mail, for a sender it cannot read", async () => {
+    const listFolders = vi.fn(() =>
+      Promise.resolve([
+        { path: "INBOX", name: "INBOX", specialUse: null, subscribed: true },
+        { path: "Sent Items", name: "Sent Items", specialUse: "\\Sent", subscribed: false },
+        { path: "Trash", name: "Trash", specialUse: "\\Trash", subscribed: true },
+      ]),
+    );
+    const saveFolderSelection = vi.fn(() => Promise.resolve(undefined));
+    const repo = { companyId: "test-company-id", saveFolderSelection } as never;
+    const service = new SyncMailboxService(repo, { listFolders } as unknown as MailboxTransport, KEY, NOW);
+
+    const folders = await service.listSyncFolders(account());
+
+    expect(folders).toEqual(["INBOX", "Sent Items"]);
+    expect(saveFolderSelection).toHaveBeenCalledWith(ACCOUNT_ID, {
+      selectedFolderIds: ["INBOX", "Sent Items"],
+      sentFolderIds: ["Sent Items"],
+    });
   });
 });

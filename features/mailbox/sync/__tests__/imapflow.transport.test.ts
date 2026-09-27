@@ -451,7 +451,40 @@ describe("createImapflowTransport", () => {
 
     await createImapflowTransport(() => client, PUBLIC_LOOKUP).appendToSent(CONNECTION, Buffer.from("raw"), null);
 
-    expect(append).toHaveBeenCalledWith("[Gmail]/Sent Mail", Buffer.from("raw"));
+    expect(append).toHaveBeenCalledWith("[Gmail]/Sent Mail", Buffer.from("raw"), ["\\Seen"]);
+  });
+
+  it("does not append a second copy when the sent folder already holds that Message-ID", async () => {
+    const { client, append, search, released } = stubClient({
+      list: vi.fn(() => Promise.resolve([{ path: "Sent", name: "Sent", specialUse: "\\Sent" }])),
+      search: vi.fn(() => Promise.resolve([7])),
+    });
+
+    await createImapflowTransport(() => client, PUBLIC_LOOKUP).appendToSent(
+      CONNECTION,
+      Buffer.from("raw"),
+      null,
+      "<sent@vendor.example>",
+    );
+
+    expect(search).toHaveBeenCalledWith({ header: { "message-id": "<sent@vendor.example>" } }, { uid: true });
+    expect(append).not.toHaveBeenCalled();
+    expect(released.count).toBe(1);
+  });
+
+  it("appends when the Message-ID is not there yet", async () => {
+    const { client, append } = stubClient({
+      list: vi.fn(() => Promise.resolve([{ path: "Sent", name: "Sent", specialUse: "\\Sent" }])),
+    });
+
+    await createImapflowTransport(() => client, PUBLIC_LOOKUP).appendToSent(
+      CONNECTION,
+      Buffer.from("raw"),
+      null,
+      "<sent@vendor.example>",
+    );
+
+    expect(append).toHaveBeenCalledWith("Sent", Buffer.from("raw"), ["\\Seen"]);
   });
 
   it("reports a missing sent folder rather than silently dropping the copy", async () => {

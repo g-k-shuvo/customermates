@@ -4,7 +4,7 @@ import { LeadsPageView } from "./components/leads-page-view";
 
 import { getGetLeadsInteractor } from "@/core/di";
 import { requireAccess } from "@/features/auth/next/require";
-import { decodeGetParams } from "@/core/utils/get-params";
+import { readSurfaceParams } from "@/core/data-view/next/read-surface-params";
 import { SURFACE } from "@/core/data-view/data-view-keys";
 import { PageContainer } from "@/components/shared/page-container";
 import { unwrapValidated } from "@/core/validation/validation.utils";
@@ -18,15 +18,9 @@ type Props = {
 export default async function LeadsPage({ searchParams }: Props) {
   await requireAccess({ resource: Resource.leads });
 
-  const params = await searchParams;
-  const leadParams = decodeGetParams(params);
+  const leadParams = await readSurfaceParams(SURFACE.leads, searchParams);
 
-  const leads = await unwrapValidated(
-    getGetLeadsInteractor().invoke({
-      ...leadParams,
-      p13nId: SURFACE.leads,
-    }),
-  );
+  const leads = await unwrapValidated(getGetLeadsInteractor().invoke(leadParams));
 
   return (
     <PageContainer padded={false}>

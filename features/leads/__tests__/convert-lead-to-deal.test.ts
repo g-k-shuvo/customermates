@@ -34,6 +34,14 @@ describe("convert lead to deal schema", () => {
     expect(ConvertLeadToDealSchema.safeParse({ id, probability: -1 }).success).toBe(false);
   });
 
+  it("accepts a value override and a date-only expected close date, and refuses a negative value", () => {
+    const parsed = ConvertLeadToDealSchema.safeParse({ id, baseValue: 42_000, expectedCloseDate: "2026-11-30" });
+
+    expect(parsed.success && parsed.data.baseValue).toBe(42_000);
+    expect(parsed.success && parsed.data.expectedCloseDate?.toISOString()).toBe("2026-11-30T00:00:00.000Z");
+    expect(ConvertLeadToDealSchema.safeParse({ id, baseValue: -1 }).success).toBe(false);
+  });
+
   it("rejects a non-uuid lead id", () => {
     expect(ConvertLeadToDealSchema.safeParse({ id: "not-a-uuid" }).success).toBe(false);
   });

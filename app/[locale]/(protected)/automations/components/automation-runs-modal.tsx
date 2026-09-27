@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { AutomationRunStatus } from "@/generated/prisma";
+import { isAutomationStepError } from "@/features/automation/automation-step-errors";
 
 import { AppChip } from "@/components/chip/app-chip";
 import { AppModal } from "@/components/modal";
@@ -78,7 +79,9 @@ export function AutomationRunsModal({ automation, isOpen, onClose }: Props) {
                         status: t(`Automations.runStatuses.${step.status}`),
                       })}
 
-                      {step.error ? ` — ${step.error}` : ""}
+                      {step.error
+                        ? ` — ${isAutomationStepError(step.error) ? t(`Automations.stepErrors.${step.error}`) : step.error}`
+                        : ""}
                     </span>
                   ))}
                 </li>

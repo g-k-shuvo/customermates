@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { useRootStore } from "@/core/stores/root-store.provider";
 
 import { TaskAgendaView } from "./task-agenda-view";
+import { TaskWeekView } from "./task-week-view";
 import { TasksPageSkeleton } from "./tasks-page-skeleton";
 import { TasksViewTabs } from "./tasks-view-tabs";
 import { useTaskColumns } from "./use-task-columns";
@@ -130,6 +131,8 @@ export const TasksPageView = observer(function TasksPageView({ tasks }: Props) {
       body =
         tasksStore.activeTab === "agenda" ? (
           <TaskAgendaView />
+        ) : tasksStore.activeTab === "week" ? (
+          <TaskWeekView />
         ) : (
           <DataViewContent columns={columns} rowHref={rowHref} store={tasksStore} view={view} />
         );

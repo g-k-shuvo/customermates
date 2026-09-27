@@ -16,6 +16,7 @@ export enum FilterFieldKey {
   status = "status",
   dealStatus = "dealStatus",
   leadStatus = "leadStatus",
+  submissionStatus = "submissionStatus",
   rotting = "rotting",
   overdue = "overdue",
   nextActivity = "nextActivity",

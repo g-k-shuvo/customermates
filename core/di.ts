@@ -49,6 +49,7 @@ import { SendReplyService } from "@/features/mailbox/outbound/send-reply.service
 import { PrismaServiceRepo } from "@/features/services/prisma-service.repository";
 import { PrismaLeadRepo } from "@/features/leads/prisma-lead.repository";
 import { PrismaWebFormRepo } from "@/features/webform/prisma-webform.repository";
+import { PrismaWebFormSubmissionRepo } from "@/features/webform/submissions/prisma-web-form-submission.repository";
 import { PrismaProcessWebFormSubmissionRepo } from "@/features/webform/process/prisma-process-web-form-submission.repository";
 import { PrismaTaskRepo } from "@/features/tasks/prisma-task.repository";
 import { PrismaUserRepo } from "@/features/user/prisma-user.repository";
@@ -192,6 +193,37 @@ import { DeleteManyDealsInteractor } from "@/features/deals/delete/delete-many-d
 import { MarkDealWonInteractor } from "@/features/deals/close/mark-deal-won.interactor";
 import { MarkDealLostInteractor } from "@/features/deals/close/mark-deal-lost.interactor";
 import { ReopenDealInteractor } from "@/features/deals/close/reopen-deal.interactor";
+import { GetDealStageDurationsInteractor } from "@/features/deals/get/get-deal-stage-durations.interactor";
+import { PrismaDealStageDurationsRepo } from "@/features/deals/get/prisma-deal-stage-durations.repository";
+import type { StorageProvider } from "@/core/storage/storage-provider";
+import type { SigningProvider } from "@/core/signing/signing-provider";
+import { createS3StorageProvider } from "@/core/storage/s3-storage.provider";
+import { nullStorageProvider } from "@/core/storage/null-storage.provider";
+import { createDocuSignSigningProvider } from "@/core/signing/docusign-signing.provider";
+import { nullSigningProvider } from "@/core/signing/null-signing.provider";
+import { PrismaRecordFileRepo } from "@/features/record-files/prisma-record-file.repository";
+import { CreateRecordFileUploadInteractor } from "@/features/record-files/upload/create-record-file-upload.interactor";
+import { CompleteRecordFileUploadInteractor } from "@/features/record-files/upload/complete-record-file-upload.interactor";
+import { GetRecordFilesInteractor } from "@/features/record-files/get/get-record-files.interactor";
+import { GetRecordFileDownloadInteractor } from "@/features/record-files/get/get-record-file-download.interactor";
+import { DeleteRecordFileInteractor } from "@/features/record-files/delete/delete-record-file.interactor";
+import { SweepRecordFilesInteractor } from "@/features/record-files/sweep/sweep-record-files.interactor";
+import { PrismaRecordDocumentRepo } from "@/features/record-documents/prisma-record-document.repository";
+import { GetRecordDocumentsInteractor } from "@/features/record-documents/get/get-record-documents.interactor";
+import { GetRecordDocumentDownloadInteractor } from "@/features/record-documents/get/get-record-document-download.interactor";
+import { CreateRecordDocumentInteractor } from "@/features/record-documents/upload/create-record-document.interactor";
+import { CreateSignedCopyUploadInteractor } from "@/features/record-documents/upload/create-signed-copy-upload.interactor";
+import { CompleteRecordDocumentFileInteractor } from "@/features/record-documents/upload/complete-record-document-file.interactor";
+import { UpdateRecordDocumentInteractor } from "@/features/record-documents/update/update-record-document.interactor";
+import { DeleteRecordDocumentInteractor } from "@/features/record-documents/delete/delete-record-document.interactor";
+import { SweepRecordDocumentsInteractor } from "@/features/record-documents/sweep/sweep-record-documents.interactor";
+import { DocumentSignedNotifier } from "@/features/record-documents/signing/document-signed.notifier";
+import { RecordDocumentSigningService } from "@/features/record-documents/signing/record-document-signing.service";
+import { SendForSignatureInteractor } from "@/features/record-documents/signing/send-for-signature.interactor";
+import { VoidSignatureInteractor } from "@/features/record-documents/signing/void-signature.interactor";
+import { RefreshSignatureInteractor } from "@/features/record-documents/signing/refresh-signature.interactor";
+import { GetSignatureSuggestionsInteractor } from "@/features/record-documents/signing/get-signature-suggestions.interactor";
+import { HandleSigningCallbackInteractor } from "@/features/record-documents/signing/handle-signing-callback.interactor";
 // Pipelines interactors
 import { GetPipelinesInteractor } from "@/features/pipelines/get/get-pipelines.interactor";
 import { GetPipelineByIdInteractor } from "@/features/pipelines/get/get-pipeline-by-id.interactor";
@@ -232,6 +264,9 @@ import { UpdateWebFormSourceInteractor } from "@/features/webform/upsert/update-
 import { DeleteWebFormSourceInteractor } from "@/features/webform/delete/delete-web-form-source.interactor";
 import { WebFormSourceWritePrecheckInteractor } from "@/features/webform/upsert/web-form-source-write-precheck.interactor";
 import { ValidateWebFormSourceIdsInteractor } from "@/core/validation/validators/validate-web-form-source-ids.interactor";
+import { ValidateWebFormSubmissionIdsInteractor } from "@/core/validation/validators/validate-web-form-submission-ids.interactor";
+import { GetWebFormSubmissionsInteractor } from "@/features/webform/submissions/get-web-form-submissions.interactor";
+import { RetryWebFormSubmissionInteractor } from "@/features/webform/submissions/retry-web-form-submission.interactor";
 
 import { LeadCreatedNotificationListener } from "@/features/leads/listener/lead-created-notification.listener";
 import { LeadCreatedFollowUpTaskListener } from "@/features/leads/listener/lead-created-follow-up-task.listener";
@@ -268,6 +303,7 @@ import { GetTasksConfigurationInteractor } from "@/features/tasks/get/get-tasks-
 import { GetTaskByIdInteractor } from "@/features/tasks/get/get-task-by-id.interactor";
 import { CountUserTasksInteractor } from "@/features/tasks/count-user-tasks.interactor";
 import { GetActivityCountsInteractor } from "@/features/tasks/get/get-activity-counts.interactor";
+import { GetActivityWindowInteractor } from "@/features/tasks/get/get-activity-window.interactor";
 import { CountSystemTasksInteractor } from "@/features/tasks/count-system-tasks.interactor";
 import { CreateTaskInteractor } from "@/features/tasks/upsert/create-task.interactor";
 import { CreateManyTasksInteractor } from "@/features/tasks/upsert/create-many-tasks.interactor";
@@ -506,6 +542,7 @@ export const getLostReasonRepo = () => new PrismaLostReasonRepo();
 export const getServiceRepo = () => new PrismaServiceRepo();
 export const getLeadRepo = () => new PrismaLeadRepo();
 export const getWebFormRepo = () => new PrismaWebFormRepo();
+export const getWebFormSubmissionRepo = () => new PrismaWebFormSubmissionRepo();
 export const getProcessWebFormSubmissionRepo = () => new PrismaProcessWebFormSubmissionRepo();
 export const getTaskRepo = () => new PrismaTaskRepo();
 export const getUserRepo = () => new PrismaUserRepo();
@@ -769,6 +806,9 @@ export const getLeadWritePrecheck = () =>
     getUserIdsValidator(),
     getCustomFieldValuesValidator(),
     getAssigneeGuardValidator(),
+    getWebFormSourceIdsValidator(),
+    getLeadRepo(),
+    getDealWritePrecheck(),
   );
 
 export const getServiceWritePrecheck = () =>
@@ -1077,14 +1117,15 @@ export const getProcessWebFormSubmissionInteractor = () =>
 export const getPublishLeadCreatedInteractor = () =>
   new PublishLeadCreatedInteractor(getProcessWebFormSubmissionRepo(), getEventService());
 
-export const getCreateWebFormSourceInteractor = () => new CreateWebFormSourceInteractor(getWebFormRepo());
+export const getCreateWebFormSourceInteractor = () =>
+  new CreateWebFormSourceInteractor(getWebFormRepo(), getWebFormSourceWritePrecheck());
 
 export const getRotateWebFormSecretInteractor = () => new RotateWebFormSecretInteractor(getWebFormRepo());
 
 export const getWebFormSourceIdsValidator = () => new ValidateWebFormSourceIdsInteractor(getWebFormRepo());
 
 export const getWebFormSourceWritePrecheck = () =>
-  new WebFormSourceWritePrecheckInteractor(getWebFormSourceIdsValidator(), getUserIdsValidator());
+  new WebFormSourceWritePrecheckInteractor(getWebFormSourceIdsValidator(), getUserIdsValidator(), getWebFormRepo());
 
 export const getGetWebFormSourcesInteractor = () =>
   new GetWebFormSourcesInteractor(getWebFormRepo(), getDataViewStateRepo(), "interactive", getQueryParamsPrecheck());
@@ -1093,6 +1134,24 @@ export const getGetWebFormSourcesApiInteractor = () =>
   new GetWebFormSourcesInteractor(getWebFormRepo(), getDataViewStateRepo(), "api", getQueryParamsPrecheck());
 
 export const getGetWebFormSourceByIdInteractor = () => new GetWebFormSourceByIdInteractor(getWebFormRepo());
+
+export const getWebFormSubmissionIdsValidator = () =>
+  new ValidateWebFormSubmissionIdsInteractor(getWebFormSubmissionRepo());
+
+export const getGetWebFormSubmissionsInteractor = () =>
+  new GetWebFormSubmissionsInteractor(
+    getWebFormSubmissionRepo(),
+    getDataViewStateRepo(),
+    "interactive",
+    getQueryParamsPrecheck(),
+  );
+
+export const getRetryWebFormSubmissionInteractor = () =>
+  new RetryWebFormSubmissionInteractor(
+    getWebFormSubmissionRepo(),
+    getBackgroundTaskService(),
+    getWebFormSubmissionIdsValidator(),
+  );
 
 export const getUpdateWebFormSourceInteractor = () =>
   new UpdateWebFormSourceInteractor(getWebFormRepo(), getWebFormSourceWritePrecheck());
@@ -1110,11 +1169,14 @@ export const getGetLeadsConfigurationInteractor = () => new GetLeadsConfiguratio
 
 export const getGetLeadByIdInteractor = () => new GetLeadByIdInteractor(getLeadRepo(), getCustomColumnRepo());
 
-export const getCreateLeadInteractor = () => new CreateLeadInteractor(getLeadRepo(), getEventService());
+export const getCreateLeadInteractor = () =>
+  new CreateLeadInteractor(getLeadRepo(), getEventService(), getLeadWritePrecheck());
 
-export const getUpdateLeadInteractor = () => new UpdateLeadInteractor(getLeadRepo(), getEventService());
+export const getUpdateLeadInteractor = () =>
+  new UpdateLeadInteractor(getLeadRepo(), getEventService(), getLeadWritePrecheck());
 
-export const getDeleteLeadInteractor = () => new DeleteLeadInteractor(getLeadRepo(), getEventService());
+export const getDeleteLeadInteractor = () =>
+  new DeleteLeadInteractor(getLeadRepo(), getEventService(), getLeadWritePrecheck());
 
 export const getConvertLeadToDealInteractor = () =>
   new ConvertLeadToDealInteractor(getLeadRepo(), getDealRepo(), getEventService(), getLeadWritePrecheck());
@@ -1921,6 +1983,7 @@ export const getManageDataViewsInteractor = () =>
       [SURFACE.routines]: getRoutineRepo(),
       [SURFACE.leads]: getLeadRepo(),
       [SURFACE.webFormSources]: getWebFormRepo(),
+      [SURFACE.webFormSubmissions]: getWebFormSubmissionRepo(),
     },
     getDataViewStateRepo(),
     getUpsertDataViewInteractor(),
@@ -2273,7 +2336,14 @@ export const getGetMailboxThreadInteractor = () => new GetMailboxThreadInteracto
 
 export const getGetMailboxFoldersInteractor = () => new GetMailboxFoldersInteractor(getMailboxRepo());
 
-export const getGetRecordThreadsInteractor = () => new GetRecordThreadsInteractor(getMailboxRepo());
+export const getGetRecordThreadsInteractor = () =>
+  new GetRecordThreadsInteractor(
+    getMailboxRepo(),
+    getContactIdsValidator(),
+    getOrganizationIdsValidator(),
+    getLeadIdsValidator(),
+    getDealIdsValidator(),
+  );
 
 export const getShareThreadInteractor = () => new ShareThreadInteractor(getMailboxRepo());
 
@@ -2299,3 +2369,111 @@ export const getListSyncFoldersInteractor = () => {
 
   return new ListSyncFoldersInteractor(getMailboxRepo(), secretKey ? getSyncMailboxService(secretKey) : null);
 };
+
+// --- Tasks: week calendar window (W1-13) ---
+
+export const getGetActivityWindowInteractor = () => new GetActivityWindowInteractor(getTaskRepo());
+
+// --- Deals: time in stage (W1-05) ---
+
+export const getDealStageDurationsRepo = () => new PrismaDealStageDurationsRepo();
+
+export const getGetDealStageDurationsInteractor = () =>
+  new GetDealStageDurationsInteractor(getDealStageDurationsRepo());
+
+// Storage (PRD 10 W2-02). One S3 client pair per process: an internal endpoint for
+// stat/get/put/delete and a public one used only to presign. Unconfigured is legal and
+// yields the null provider, so an install without files still boots.
+let storageProvider: StorageProvider | null = null;
+
+export const getStorageProvider = (): StorageProvider =>
+  (storageProvider ??= env.STORAGE ? createS3StorageProvider(env.STORAGE) : nullStorageProvider);
+
+// Record files (PRD 10 W2-03): the catalogue rows behind a record's Files tab. Each
+// operation gets the one repository and the process-wide storage provider.
+export const getRecordFileRepo = () => new PrismaRecordFileRepo();
+
+export const getCreateRecordFileUploadInteractor = () =>
+  new CreateRecordFileUploadInteractor(getRecordFileRepo(), getStorageProvider(), getUserService());
+
+export const getCompleteRecordFileUploadInteractor = () =>
+  new CompleteRecordFileUploadInteractor(getRecordFileRepo(), getStorageProvider(), getUserService());
+
+export const getGetRecordFilesInteractor = () =>
+  new GetRecordFilesInteractor(getRecordFileRepo(), getStorageProvider());
+
+export const getGetRecordFileDownloadInteractor = () =>
+  new GetRecordFileDownloadInteractor(getRecordFileRepo(), getStorageProvider());
+
+export const getDeleteRecordFileInteractor = () =>
+  new DeleteRecordFileInteractor(getRecordFileRepo(), getStorageProvider(), getUserService());
+
+export const getSweepRecordFilesInteractor = () =>
+  new SweepRecordFilesInteractor(getRecordFileRepo(), getStorageProvider());
+
+// Record documents (PRD 10 W2-04): contracts on a record, each a title and a tracked status
+// over the PDF as uploaded and, once executed, its signed copy.
+export const getRecordDocumentRepo = () => new PrismaRecordDocumentRepo();
+
+export const getGetRecordDocumentsInteractor = () =>
+  new GetRecordDocumentsInteractor(getRecordDocumentRepo(), getStorageProvider(), getSigningProvider());
+
+export const getGetRecordDocumentDownloadInteractor = () =>
+  new GetRecordDocumentDownloadInteractor(getRecordDocumentRepo(), getStorageProvider());
+
+export const getCreateRecordDocumentInteractor = () =>
+  new CreateRecordDocumentInteractor(getRecordDocumentRepo(), getStorageProvider(), getUserService());
+
+export const getCreateSignedCopyUploadInteractor = () =>
+  new CreateSignedCopyUploadInteractor(getRecordDocumentRepo(), getStorageProvider(), getUserService());
+
+export const getCompleteRecordDocumentFileInteractor = () =>
+  new CompleteRecordDocumentFileInteractor(getRecordDocumentRepo(), getStorageProvider(), getUserService());
+
+export const getUpdateRecordDocumentInteractor = () =>
+  new UpdateRecordDocumentInteractor(getRecordDocumentRepo(), getUserService());
+
+export const getDeleteRecordDocumentInteractor = () =>
+  new DeleteRecordDocumentInteractor(getRecordDocumentRepo(), getStorageProvider(), getUserService());
+
+export const getSweepRecordDocumentsInteractor = () =>
+  new SweepRecordDocumentsInteractor(getRecordDocumentRepo(), getStorageProvider());
+
+// E-signature (PRD 10 W2-05). One DocuSign client per process, so its access token and
+// account lookup are reused; without DOCUSIGN_* the null provider keeps signing switched off.
+let signingProvider: SigningProvider | null = null;
+export const getSigningProvider = (): SigningProvider =>
+  (signingProvider ??= env.SIGNING ? createDocuSignSigningProvider(env.SIGNING) : nullSigningProvider);
+
+export const getRecordDocumentSigningService = () =>
+  new RecordDocumentSigningService(
+    getRecordDocumentRepo(),
+    getSigningProvider(),
+    getStorageProvider(),
+    new DocumentSignedNotifier(getEmailService()),
+  );
+
+export const getSendForSignatureInteractor = () =>
+  new SendForSignatureInteractor(getRecordDocumentRepo(), getSigningProvider(), getStorageProvider(), getUserService());
+
+export const getVoidSignatureInteractor = () =>
+  new VoidSignatureInteractor(
+    getRecordDocumentRepo(),
+    getSigningProvider(),
+    getRecordDocumentSigningService(),
+    getUserService(),
+  );
+
+export const getRefreshSignatureInteractor = () =>
+  new RefreshSignatureInteractor(
+    getRecordDocumentRepo(),
+    getSigningProvider(),
+    getRecordDocumentSigningService(),
+    getUserService(),
+  );
+
+export const getGetSignatureSuggestionsInteractor = () =>
+  new GetSignatureSuggestionsInteractor(getRecordDocumentRepo());
+
+export const getHandleSigningCallbackInteractor = () =>
+  new HandleSigningCallbackInteractor(getRecordDocumentRepo(), getRecordDocumentSigningService());

@@ -99,6 +99,9 @@ function storedView(overrides: Record<string, unknown> = {}) {
     columnWidths: null,
     hiddenColumns: null,
     pageSize: null,
+    shared: false,
+    userId: mockUser.id,
+    user: { firstName: "Max", lastName: "Owner" },
     ...overrides,
   };
 }
@@ -124,7 +127,11 @@ function asTenant<T>(fn: () => Promise<T>) {
   return runWithTenant(mockUser, fn);
 }
 
-const ownerWhere = { companyId: mockUser.companyId, surfaceKey: SURFACE, userId: mockUser.id };
+const readableWhere = {
+  companyId: mockUser.companyId,
+  surfaceKey: SURFACE,
+  OR: [{ userId: mockUser.id }, { shared: true }],
+};
 
 describe("PrismaDataViewRepo scoping", () => {
   beforeEach(() => {
@@ -138,16 +145,16 @@ describe("PrismaDataViewRepo scoping", () => {
     dataViewCreate.mockResolvedValue(storedView());
   });
 
-  it("lists only the caller's own views of the surface", async () => {
+  it("lists the caller's own views of the surface and the ones colleagues shared there", async () => {
     await asTenant(() => new PrismaDataViewRepo().listDataViews(SURFACE));
 
-    expect(dataViewFindMany).toHaveBeenCalledWith(expect.objectContaining({ where: ownerWhere }));
+    expect(dataViewFindMany).toHaveBeenCalledWith(expect.objectContaining({ where: readableWhere }));
   });
 
-  it("loads the surface from the caller's own views and the caller's own personalization row", async () => {
+  it("loads the surface from the caller's readable views and the caller's own personalization row", async () => {
     await asTenant(() => new PrismaDataViewRepo().loadSurfaceState(SURFACE));
 
-    expect(dataViewFindMany).toHaveBeenCalledWith(expect.objectContaining({ where: ownerWhere }));
+    expect(dataViewFindMany).toHaveBeenCalledWith(expect.objectContaining({ where: readableWhere }));
     expect(p13nFindUnique).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
@@ -158,11 +165,55 @@ describe("PrismaDataViewRepo scoping", () => {
     );
   });
 
-  it("selects no owner join, because a view is only ever shown to the user who made it", async () => {
+  it("joins only the owner's name, so a shared view can say who shared it", async () => {
     await asTenant(() => new PrismaDataViewRepo().listDataViews(SURFACE));
 
-    expect(dataViewFindMany.mock.calls[0][0].select).not.toHaveProperty("user");
-    expect(dataViewFindMany.mock.calls[0][0].select).not.toHaveProperty("visibility");
+    expect(dataViewFindMany.mock.calls[0][0].select.user).toEqual({ select: { firstName: true, lastName: true } });
+  });
+
+  it("puts the caller's own views first and names the colleague behind each shared one", async () => {
+    dataViewFindMany.mockResolvedValue([
+      storedView({
+        id: A_SECOND_VIEW_ID,
+        name: "Team pipeline",
+        shared: true,
+        userId: "colleague-1",
+        user: { firstName: "Sofia", lastName: "Rossi" },
+      }),
+      storedView({ name: "Mine, shared", shared: true }),
+      storedView({ id: "3a7b2c11-5d4e-4f60-8a91-2b3c4d5e6f72", name: "Mine" }),
+    ]);
+
+    const views = await asTenant(() => new PrismaDataViewRepo().listDataViews(SURFACE));
+
+    expect(views.map((view) => [view.name, view.shared, view.sharedBy])).toEqual([
+      ["Mine, shared", true, undefined],
+      ["Mine", undefined, undefined],
+      ["Team pipeline", true, "Sofia Rossi"],
+    ]);
+  });
+
+  it("finds a view to select among the caller's own and the company's shared views only", async () => {
+    await asTenant(() => new PrismaDataViewRepo().findReadableOrNull(A_VIEW_ID));
+
+    expect(dataViewFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: A_VIEW_ID, companyId: mockUser.companyId, OR: [{ userId: mockUser.id }, { shared: true }] },
+      }),
+    );
+  });
+
+  it("creates views private unless asked, and lets only the owner's update change sharing", async () => {
+    await asTenant(() =>
+      new PrismaDataViewRepo().createView({ surfaceKey: SURFACE, name: "Mine", position: 0, state: {} }),
+    );
+    await asTenant(() => new PrismaDataViewRepo().updateOwned({ id: A_VIEW_ID, shared: true }));
+
+    expect(dataViewCreate.mock.calls[0][0].data.shared).toBe(false);
+    expect(dataViewUpdateMany).toHaveBeenCalledWith({
+      where: { id: A_VIEW_ID, companyId: mockUser.companyId, userId: mockUser.id },
+      data: { shared: true },
+    });
   });
 
   it("scopes the owner-only lookup, update and delete by both companyId and userId", async () => {

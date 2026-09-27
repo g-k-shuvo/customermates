@@ -12,7 +12,7 @@ vi.mock("@/app/actions", () => ({
 }));
 vi.mock("@/core/utils/toast-zod-error-tree", () => ({ toastZodErrorTree: vi.fn(() => true) }));
 
-import { duplicateView, updateViewMeta } from "../view-actions";
+import { duplicateView, moveView, setViewShared, updateViewMeta } from "../view-actions";
 
 type Item = { id: string };
 
@@ -94,5 +94,75 @@ describe("view actions send plain objects to the server", () => {
     const payload = sentPayload();
     expect(isObservable(payload.state)).toBe(false);
     expect(payload).toEqual({ name: "Ada copy", state: VIEW.state, surfaceKey: "deals-card-store" });
+  });
+});
+
+describe("view actions for shared views", () => {
+  beforeEach(() => {
+    harness.upsertDataViewAction.mockReset().mockResolvedValue({ data: { ...VIEW, shared: true }, ok: true });
+  });
+
+  it("sends only the sharing flag when the owner shares a view, then reloads the rail", async () => {
+    const refresh = vi.fn(() => Promise.resolve());
+    const store = observable({
+      p13nId: "deals-card-store",
+      refresh,
+      views: [VIEW],
+    }) as unknown as BaseDataViewStore<Item>;
+
+    await expect(setViewShared(store, VIEW, true)).resolves.toBe(true);
+
+    expect(harness.upsertDataViewAction).toHaveBeenCalledWith({
+      id: "v-a",
+      shared: true,
+      surfaceKey: "deals-card-store",
+    });
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("moves a view only among the caller's own views, never past a colleague's", async () => {
+    const theirs: DataViewChipDto = { id: "v-theirs", name: "Team", position: 1, sharedBy: "Sofia Rossi", state: {} };
+    const store = observable({
+      activeViewKey: "__all__",
+      p13nId: "deals-card-store",
+      refresh: () => Promise.resolve(),
+      views: [VIEW, theirs],
+    }) as unknown as BaseDataViewStore<Item>;
+
+    await expect(moveView(store, store.views[0], 1)).resolves.toBe(false);
+    expect(harness.upsertDataViewAction).not.toHaveBeenCalled();
+  });
+
+  it("copies what a colleague's shared view shows right now, so unsaved changes survive the duplicate", async () => {
+    const theirs: DataViewChipDto = {
+      id: "v-theirs",
+      name: "Team",
+      position: 0,
+      sharedBy: "Sofia Rossi",
+      shared: true,
+      state: { searchTerm: "saved by the owner" },
+    };
+    const store = observable({
+      activeViewKey: "v-theirs",
+      columnOrder: [],
+      columnWidths: {},
+      filters: [],
+      grouping: null,
+      hiddenColumns: [],
+      p13nId: "deals-card-store",
+      pagination: { page: 1, pageSize: 25, total: 0, totalPages: 0 },
+      refresh: () => Promise.resolve(),
+      searchTerm: "changed here",
+      sortDescriptor: undefined,
+      viewMode: "table",
+      views: [theirs],
+    }) as unknown as BaseDataViewStore<Item>;
+
+    await duplicateView(store, theirs, { name: "Mine" });
+
+    expect(harness.upsertDataViewAction.mock.calls[0][0]).toMatchObject({
+      name: "Mine",
+      state: { searchTerm: "changed here" },
+    });
   });
 });

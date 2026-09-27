@@ -67,6 +67,7 @@ const domTestFiles = [
   "components/marketing/__tests__/browser-frame.test.tsx",
   "components/forms/__tests__/form-context.test.ts",
   "components/forms/__tests__/selection-command.test.ts",
+  "components/forms/__tests__/form-number-input.test.ts",
   "components/editor/__tests__/email-markdown-editor.test.ts",
   "components/modal/__tests__/delete-confirmation-modal.test.ts",
   "components/acquisition/__tests__/public-ad-attribution-consent.test.ts",

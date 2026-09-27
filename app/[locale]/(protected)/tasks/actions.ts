@@ -8,6 +8,7 @@ import type { UpdateTaskData } from "@/features/tasks/upsert/update-task.interac
 import type { CompleteTaskData } from "@/features/tasks/complete/complete-task.interactor";
 import type { UncompleteTaskData } from "@/features/tasks/complete/uncomplete-task.interactor";
 import type { GetActivityCountsData } from "@/features/tasks/get/get-activity-counts.interactor";
+import type { GetActivityWindowData } from "@/features/tasks/get/get-activity-window.interactor";
 
 import {
   getGetTasksInteractor,
@@ -19,6 +20,7 @@ import {
   getCompleteTaskInteractor,
   getUncompleteTaskInteractor,
   getGetActivityCountsInteractor,
+  getGetActivityWindowInteractor,
 } from "@/core/di";
 import { serializeResult } from "@/core/utils/action-result";
 import { unwrapValidated } from "@/core/validation/validation.utils";
@@ -70,6 +72,10 @@ export async function getActivityCountsAction(data: GetActivityCountsData) {
   const result = await getGetActivityCountsInteractor().invoke(data);
 
   return result.ok ? result.data : { overdue: 0, dueToday: 0 };
+}
+
+export async function getActivityWindowAction(data: GetActivityWindowData) {
+  return serializeResult(getGetActivityWindowInteractor().invoke(data));
 }
 
 export async function getTaskByIdAction(data: GetTaskByIdData) {

@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import type { ComponentProps, ReactElement } from "react";
 import type { Root } from "react-dom/client";
 
 import { act, createElement } from "react";
@@ -90,6 +90,7 @@ import { FilterChipValue } from "@/components/data-view/filter-modal/filter-chip
 import { FilterField } from "@/components/data-view/filter-modal/filter-field";
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
+import { AppChip } from "@/components/chip/app-chip";
 import { FormAutocomplete } from "../form-autocomplete";
 import { FormAutocompleteAvatar } from "../form-autocomplete-avatar";
 import { FormAutocompleteCountry } from "../form-autocomplete-country";
@@ -643,5 +644,27 @@ describe("FilterInputSelect command behavior", () => {
     await press(requiredElement(input), "End");
     await press(requiredElement(input), "Enter");
     expect(testContext.onChange).toHaveBeenCalledWith("filters[0].value", ["beta"]);
+  });
+});
+
+describe("FormAutocomplete single selection", () => {
+  const chips = (items: Array<{ key: string; data?: { id: string; name: string } }>) =>
+    items.map(({ key, data }) => createElement(AppChip, { key } as ComponentProps<typeof AppChip>, data?.name));
+
+  it("lets an optional single selection be cleared from its chip", async () => {
+    testContext.formValue = "a1";
+    const container = mount(autocomplete({ items: [option("a1", "Ada")], renderValue: chips }));
+
+    await click(requiredElement(container.querySelector('[aria-label="Remove"]')));
+
+    expect(testContext.onChange).toHaveBeenCalledWith("people", undefined);
+  });
+
+  it("offers no clear control on a required single selection", () => {
+    testContext.formValue = "a1";
+    const container = mount(autocomplete({ items: [option("a1", "Ada")], renderValue: chips, required: true }));
+
+    expect(container.textContent).toContain("Ada");
+    expect(container.querySelector('[aria-label="Remove"]')).toBeNull();
   });
 });

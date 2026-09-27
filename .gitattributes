@@ -1,2 +1,4 @@
 *.mdx linguist-documentation=true
 content/api/** linguist-generated=true
+.husky/* text eol=lf
+*.sh text eol=lf

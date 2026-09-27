@@ -31,6 +31,10 @@ export function ViewMenuItems({ commands, items, view }: Props) {
         return t("DataView.views.moveLeft");
       case "moveRight":
         return t("DataView.views.moveRight");
+      case "share":
+        return t("DataView.views.share");
+      case "unshare":
+        return t("DataView.views.unshare");
     }
   }
 
@@ -48,6 +52,10 @@ export function ViewMenuItems({ commands, items, view }: Props) {
         return commands.move(view, -1);
       case "moveRight":
         return commands.move(view, 1);
+      case "share":
+        return commands.share(view, true);
+      case "unshare":
+        return commands.share(view, false);
     }
   }
 

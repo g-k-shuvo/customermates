@@ -2,6 +2,8 @@
 
 import type { KeyboardEventHandler, MouseEventHandler, ReactNode } from "react";
 
+import { UsersIcon } from "lucide-react";
+
 import { buttonVariants } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/core/utils/cn";
@@ -21,12 +23,13 @@ type Props = {
   isActive: boolean;
   label: string;
   preview: ReactNode;
+  sharedLabel?: string;
   tabIndex: 0 | -1;
   onKeyDown?: KeyboardEventHandler<HTMLAnchorElement>;
   onSelect?: MouseEventHandler<HTMLAnchorElement>;
 };
 
-export function ViewChip({ href, id, isActive, label, preview, tabIndex, onKeyDown, onSelect }: Props) {
+export function ViewChip({ href, id, isActive, label, preview, sharedLabel, tabIndex, onKeyDown, onSelect }: Props) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -44,7 +47,11 @@ export function ViewChip({ href, id, isActive, label, preview, tabIndex, onKeyDo
           onClick={onSelect}
           onKeyDown={onKeyDown}
         >
+          {sharedLabel && <UsersIcon aria-hidden className="size-3 shrink-0" data-view-shared="" />}
+
           <span className="truncate">{label}</span>
+
+          {sharedLabel && <span className="sr-only"> {sharedLabel}</span>}
         </a>
       </TooltipTrigger>
 

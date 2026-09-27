@@ -4,6 +4,7 @@ import type { EntityType } from "@/generated/prisma";
 import {
   getGetContactsApiInteractor,
   getGetDealsApiInteractor,
+  getGetLeadsApiInteractor,
   getGetOrganizationsApiInteractor,
   getGetServicesApiInteractor,
   getGetTasksApiInteractor,
@@ -17,6 +18,7 @@ export const entityListExecutors: Partial<
   deal: async (params) => getGetDealsApiInteractor().invoke(params),
   service: async (params) => getGetServicesApiInteractor().invoke(params),
   task: async (params) => getGetTasksApiInteractor().invoke(params),
+  lead: async (params) => getGetLeadsApiInteractor().invoke(params),
 };
 
 export const entityNameExtractors: Partial<Record<EntityType, (item: any) => string>> = {
@@ -28,6 +30,7 @@ export const entityNameExtractors: Partial<Record<EntityType, (item: any) => str
     const name = String(item.name ?? "").trim();
     return name || String(item.type ?? "");
   },
+  lead: (item) => String(item.title ?? ""),
 };
 
 export const LISTABLE_ENTITY_TYPES = Object.keys(entityListExecutors) as EntityType[];

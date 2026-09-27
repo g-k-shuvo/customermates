@@ -55,8 +55,11 @@ export const DealServicesSelection = observer(
       serviceAmountById,
       totalQuantity,
       totalValue,
+      servicesValue,
       weightedValueBreakdown,
     } = dealDetailStore;
+    const baseValue = form.baseValue ?? 0;
+    const hasValue = (form.services || []).length > 0 || baseValue > 0;
     const entityHref = useEntityHref();
     const locale = useLocale();
     const t = useTranslations();
@@ -236,13 +239,13 @@ export const DealServicesSelection = observer(
                     </output>
 
                     <output
-                      aria-label={`${columnLabel("totalValue")}: ${intlStore.formatCurrency(totalValue)}`}
+                      aria-label={`${t("DealModal.valueLabel")}: ${intlStore.formatCurrency(servicesValue)}`}
                       className="flex min-w-0 items-center justify-end gap-1 text-base font-mono font-normal tabular-nums text-foreground/80 md:text-sm"
                       data-deal-service-total="value"
                     >
                       <Sigma aria-hidden="true" className="size-3 shrink-0 text-muted-foreground" />
 
-                      <span className="truncate">{intlStore.formatCurrency(totalValue)}</span>
+                      <span className="truncate">{intlStore.formatCurrency(servicesValue)}</span>
                     </output>
                   </>
                 ) : (
@@ -267,7 +270,28 @@ export const DealServicesSelection = observer(
           </div>
         </EntityDetailField>
 
-        {showTotals && showWeightedValue && weightedValueBreakdown && (form.services || []).length > 0 && (
+        {showTotals && showWeightedValue && baseValue > 0 && (
+          <div className="mt-3 w-full pr-12">
+            <EntityDetailField fieldId={DEAL_DETAIL_FIELD.totalValue}>
+              <InfoRow
+                label={columnLabel("totalValue")}
+                labelEndAddon={
+                  <FormFieldHelp
+                    label={t("Common.ariaLabels.explainField", {
+                      field: columnLabel("totalValue"),
+                    })}
+                  >
+                    {computedFieldHelp.dealValue}
+                  </FormFieldHelp>
+                }
+              >
+                <span className="text-x-md font-mono tabular-nums">{intlStore.formatCurrency(totalValue)}</span>
+              </InfoRow>
+            </EntityDetailField>
+          </div>
+        )}
+
+        {showTotals && showWeightedValue && weightedValueBreakdown && hasValue && (
           <div className="mt-3 w-full pr-12">
             <EntityDetailField fieldId={DEAL_DETAIL_FIELD.weightedValue}>
               <InfoRow

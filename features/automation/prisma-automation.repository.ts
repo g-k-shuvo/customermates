@@ -344,6 +344,35 @@ export class PrismaAutomationRepo
   }
 
   @BypassTenantGuard
+  async claimRunStepUnscoped(args: RepoArgs<ExecuteAutomationRunRepo, "claimRunStepUnscoped">): Promise<boolean> {
+    const { count } = await this.prisma.automationRunStep.updateMany({
+      where: { id: args.runStepId, status: AutomationRunStatus.queued },
+      data: { status: AutomationRunStatus.running, startedAt: args.startedAt },
+    });
+
+    return count === 1;
+  }
+
+  @BypassTenantGuard
+  async failRunningRunStepUnscoped(
+    args: RepoArgs<ExecuteAutomationRunRepo, "failRunningRunStepUnscoped">,
+  ): Promise<boolean> {
+    const { count } = await this.prisma.automationRunStep.updateMany({
+      where: { id: args.runStepId, status: AutomationRunStatus.running },
+      data: { status: AutomationRunStatus.failed, error: args.error, finishedAt: args.finishedAt },
+    });
+
+    return count === 1;
+  }
+
+  @BypassTenantGuard
+  async findRunStepStatusUnscoped(runStepId: string): Promise<AutomationRunStatus | null> {
+    const step = await this.prisma.automationRunStep.findUnique({ where: { id: runStepId }, select: { status: true } });
+
+    return step?.status ?? null;
+  }
+
+  @BypassTenantGuard
   async markRunStepUnscoped(args: RepoArgs<ExecuteAutomationRunRepo, "markRunStepUnscoped">): Promise<void> {
     const { runStepId, output, ...rest } = args;
 

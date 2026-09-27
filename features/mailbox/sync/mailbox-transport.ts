@@ -68,5 +68,5 @@ export type MailboxTransport = {
   verify(connection: MailboxConnection): Promise<void>;
   listFolders(connection: MailboxConnection): Promise<readonly MailboxFolder[]>;
   fetchSince(connection: MailboxConnection, request: MailboxFetchRequest): Promise<MailboxFetchPage>;
-  appendToSent(connection: MailboxConnection, source: Buffer, path: string | null): Promise<void>;
+  appendToSent(connection: MailboxConnection, source: Buffer, path: string | null, messageId?: string): Promise<void>;
 };

@@ -21,7 +21,7 @@ import { FilterSchema, SortDescriptorSchema } from "@/core/base/base-get.schema"
 import { FilterOperatorKey } from "@/core/base/base-query-builder";
 import { filterFieldsHint } from "@/core/types/filter-field-value-kind";
 import { FilterFieldKey } from "@/core/types/filter-field-key";
-import { WebhookEventSchema } from "@/features/webhook/webhook.schema";
+import { SubscribableWebhookEventSchema } from "@/features/webhook/webhook.schema";
 import { CustomErrorCode } from "@/core/validation/validation.types";
 import { zx } from "@/core/validation/validation.utils";
 import {
@@ -48,9 +48,9 @@ const CreateWebhookSchema = z.object({
   url: zx.secureUrl().describe("Endpoint that will receive event POST requests (https recommended)"),
   description: z.string().optional().describe("Human-readable note about what this webhook does"),
   events: z
-    .array(WebhookEventSchema)
+    .array(SubscribableWebhookEventSchema)
     .min(1)
-    .describe(`Event types to subscribe to. Each value ${enumHint(WebhookEventSchema.options)}`),
+    .describe(`Event types to subscribe to. Each value ${enumHint(SubscribableWebhookEventSchema.options)}`),
   secret: z.string().optional().describe("Shared secret used to sign outgoing requests"),
   headers: z
     .record(z.string(), z.string())
@@ -74,10 +74,10 @@ const UpdateWebhookSchema = z.object({
   url: zx.secureUrl().optional(),
   description: z.string().optional(),
   events: z
-    .array(WebhookEventSchema)
+    .array(SubscribableWebhookEventSchema)
     .min(1)
     .optional()
-    .describe(`REPLACES the subscribed events. Each value ${enumHint(WebhookEventSchema.options)}`),
+    .describe(`REPLACES the subscribed events. Each value ${enumHint(SubscribableWebhookEventSchema.options)}`),
   secret: z
     .string()
     .nullable()
@@ -142,11 +142,11 @@ const ManageWebhooksSchema = z.object({
     .describe("Endpoint that will receive event POST requests (https recommended). Required for create."),
   description: z.string().optional().describe("create and update. Human-readable note about what this webhook does."),
   events: z
-    .array(WebhookEventSchema)
+    .array(SubscribableWebhookEventSchema)
     .min(1)
     .optional()
     .describe(
-      `Required for create; on update REPLACES the subscribed events. Each value ${enumHint(WebhookEventSchema.options)}`,
+      `Required for create; on update REPLACES the subscribed events. Each value ${enumHint(SubscribableWebhookEventSchema.options)}`,
     ),
   secret: z
     .string()

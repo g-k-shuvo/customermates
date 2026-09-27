@@ -17,6 +17,7 @@ import { DataViewToolbar } from "@/components/data-view/data-view-toolbar";
 import { useDataViewSync } from "@/components/data-view/use-data-view-sync";
 import { PageState } from "@/components/page-state/page-state";
 import { Button } from "@/components/ui/button";
+import { AppLink } from "@/components/shared/app-link";
 import { useRootStore } from "@/core/stores/root-store.provider";
 
 import { useWebFormSourceColumns } from "./use-web-form-source-columns";
@@ -43,12 +44,18 @@ export const WebFormSourcesPageView = observer(function WebFormSourcesPageView({
   const handleAdd = useCallback(() => webFormSourceModalStore.openForCreate(), [webFormSourceModalStore]);
   const topBarNode = useMemo(
     () => (
-      <DataViewToolbar
-        addLabel={pageState === "true-empty" ? t("Common.actions.add") : undefined}
-        anchorScope="company-web-forms"
-        store={webFormSourcesStore}
-        onAdd={handleAdd}
-      />
+      <div className="flex items-center gap-2">
+        <Button asChild size="sm" variant="secondary">
+          <AppLink href="/company/web-forms/submissions">{t("WebFormSubmissions.title")}</AppLink>
+        </Button>
+
+        <DataViewToolbar
+          addLabel={pageState === "true-empty" ? t("Common.actions.add") : undefined}
+          anchorScope="company-web-forms"
+          store={webFormSourcesStore}
+          onAdd={handleAdd}
+        />
+      </div>
     ),
     [handleAdd, pageState, t, webFormSourcesStore],
   );

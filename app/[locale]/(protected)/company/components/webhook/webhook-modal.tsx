@@ -15,12 +15,12 @@ import { FormCheckbox } from "@/components/forms/form-checkbox";
 import { FormAutocomplete } from "@/components/forms/form-autocomplete";
 import { FormActions } from "@/components/card/form-actions";
 import { useRootStore } from "@/core/stores/root-store.provider";
-import { WebhookEventSchema } from "@/features/webhook/webhook.schema";
+import { SubscribableWebhookEventSchema } from "@/features/webhook/webhook.schema";
 import { AppChip } from "@/components/chip/app-chip";
 import { useDeleteConfirmation } from "@/components/modal/hooks/use-delete-confirmation";
 import { AppCardHeader } from "@/components/card/app-card-header";
 
-const WEBHOOK_EVENTS = WebhookEventSchema.options.map((event) => ({
+const WEBHOOK_EVENTS = SubscribableWebhookEventSchema.options.map((event) => ({
   key: event,
 }));
 

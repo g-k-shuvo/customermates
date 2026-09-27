@@ -80,6 +80,7 @@ export const GlobalSearchModal = observer(() => {
     const buckets: Record<GlobalSearchResultItem["type"], SelectableItem[]> = {
       contact: [],
       organization: [],
+      lead: [],
       deal: [],
       service: [],
       task: [],
@@ -136,6 +137,7 @@ export const GlobalSearchModal = observer(() => {
                   {t("GlobalSearch.emptyDescription", {
                     contacts: plural(EntityType.contact),
                     deals: plural(EntityType.deal),
+                    leads: plural(EntityType.lead),
                     organizations: plural(EntityType.organization),
                     services: plural(EntityType.service),
                     tasks: plural(EntityType.task),

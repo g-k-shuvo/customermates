@@ -3,7 +3,9 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 import type { z } from "zod";
 
 import { DomainEvent, type DomainEventMap } from "@/features/event/domain-events";
-import { WebhookEventSchema } from "../webhook.schema";
+import { SubscribableWebhookEventSchema, WebhookEventSchema } from "../webhook.schema";
+import { LEAD_WEBHOOK_EVENTS } from "../webhook-event-registry";
+import { RoutineTriggerEventSchema } from "@/ee/routines/routine-trigger-events";
 import { generateOpenApiSpec } from "@/core/openapi/openapi-spec";
 import type { WebhookMessagingMessageReceivedSchema } from "@/ee/messaging/webhooks/message/message-received.openapi";
 import type { WebhookMessagingMessageUpdatedSchema } from "@/ee/messaging/webhooks/message/message-updated.openapi";
@@ -53,7 +55,7 @@ describe("webhook OpenAPI coverage", () => {
   it.each([DomainEvent.LEGAL_NOTICE_SENT, DomainEvent.LEGAL_DOCUMENTS_ACCEPTED])(
     "does not expose the internal %s audit event as a customer webhook",
     (event) => {
-      expect(WebhookEventSchema.safeParse(event).success).toBe(false);
+      expect(SubscribableWebhookEventSchema.safeParse(event).success).toBe(false);
     },
   );
 
@@ -63,7 +65,15 @@ describe("webhook OpenAPI coverage", () => {
       return event?.const ?? event?.enum?.[0] ?? `<missing event literal for ${key}>`;
     });
 
-    expect(documented.sort()).toEqual([...WebhookEventSchema.options].sort());
+    expect(documented.sort()).toEqual([...SubscribableWebhookEventSchema.options].sort());
+  });
+
+  it("offers lead events to webhooks without making them routine triggers", () => {
+    for (const event of LEAD_WEBHOOK_EVENTS) {
+      expect(SubscribableWebhookEventSchema.safeParse(event).success, event).toBe(true);
+      expect(WebhookEventSchema.safeParse(event).success, event).toBe(false);
+      expect(RoutineTriggerEventSchema.safeParse(event).success, event).toBe(false);
+    }
   });
 
   it("documents the delivery envelope for every event", () => {

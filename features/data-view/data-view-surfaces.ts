@@ -105,4 +105,10 @@ export const DATA_VIEW_SURFACES: Record<DataViewSurfaceKey, SurfaceDescriptor> =
     path: DATA_VIEW_PATHS[SURFACE.webFormSources],
     resource: Resource.leads,
   },
+  [SURFACE.webFormSubmissions]: {
+    label: "Web form submissions",
+    path: DATA_VIEW_PATHS[SURFACE.webFormSubmissions],
+    resource: Resource.leads,
+    readAllOnly: true,
+  },
 };

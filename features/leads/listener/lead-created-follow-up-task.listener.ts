@@ -4,6 +4,8 @@ import type { LeadNotificationRepo } from "./lead-notification.repo";
 
 import { addBusinessDays, setHours, setMilliseconds, setMinutes, setSeconds } from "date-fns";
 
+import { LeadStatus } from "@/generated/prisma";
+
 import { DomainEvent } from "@/features/event/domain-events";
 import { DomainEventListener } from "@/features/event/domain-event.listener";
 import { getTranslator } from "@/i18n/get-translator";
@@ -20,6 +22,8 @@ export function leadFollowUpDueAt(createdAt: Date): Date {
   return setMilliseconds(setSeconds(setMinutes(setHours(due, LEAD_FOLLOW_UP_HOUR), 0), 0), 0);
 }
 
+const OPEN_LEAD_STATUSES: ReadonlySet<LeadStatus> = new Set([LeadStatus.new, LeadStatus.working, LeadStatus.qualified]);
+
 export class LeadCreatedFollowUpTaskListener extends DomainEventListener {
   readonly handlers: DomainEventHandlers;
 
@@ -31,6 +35,8 @@ export class LeadCreatedFollowUpTaskListener extends DomainEventListener {
 
     this.handlers = {
       [DomainEvent.LEAD_CREATED]: async ({ entityId, payload }) => {
+        if (!OPEN_LEAD_STATUSES.has(payload.status)) return;
+
         const owner = await this.leadRepo.findLeadOwnerCompanyWide(entityId);
         const locale = owner ? resolveUserLocale(owner) : DEFAULT_LOCALE;
         const t = await getTranslator(locale, "LeadFollowUpTask");

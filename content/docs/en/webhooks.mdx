@@ -237,7 +237,7 @@ Delete events carry the full record as it was before deletion, under `payload`, 
 
 ## Which events exist?
 
-[[derived.webhooks.events.total]] events are available to subscribe to: [[derived.webhooks.events.records]] record events across the five entity types, and [[derived.webhooks.events.messaging]] messaging events. All use the envelope above. Routines can be triggered by the same events except the two message-deleted events; see [Routines](/docs/app-routines#how-do-event-triggers-work).
+[[derived.webhooks.events.total]] events are available to subscribe to: [[derived.webhooks.events.records]] record events across the six entity types, and [[derived.webhooks.events.messaging]] messaging events. All use the envelope above. Routines can be triggered by the same events except the three lead events and the two message-deleted events; see [Routines](/docs/app-routines#how-do-event-triggers-work).
 
 ### Record events
 
@@ -258,6 +258,9 @@ Delete events carry the full record as it was before deletion, under `payload`, 
 | `task.created` | A task is created | full task |
 | `task.updated` | Any task field changes | `task`, `changes` |
 | `task.deleted` | A task is deleted | full task |
+| `lead.created` | A lead is created, including by a web form | full lead |
+| `lead.updated` | Any lead field changes | `lead`, `changes` |
+| `lead.deleted` | A lead is deleted | full lead |
 
 ### Messaging events
 

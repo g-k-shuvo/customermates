@@ -38,7 +38,7 @@ The scheduler checks for due routines every five minutes, so a run may start a f
 
 ## How do event triggers work?
 
-An event trigger names one or more in-app events: every record event and every messaging event that a [webhook](/docs/webhooks#which-events-exist) can subscribe to, except the two message-deleted events. Two optional controls narrow it further, so the routine spends credits only on the cases you care about.
+An event trigger names one or more in-app events: every record event and every messaging event that a [webhook](/docs/webhooks#which-events-exist) can subscribe to, except the three lead events and the two message-deleted events. Two optional controls narrow it further, so the routine spends credits only on the cases you care about.
 
 **Changed fields** applies to update events only. Name the fields you want to watch, for example a deal's value or one of your custom columns, and the routine runs only when one of them actually changed. The control is hidden when no update event is selected, because creations and deletions do not report field-level changes.
 

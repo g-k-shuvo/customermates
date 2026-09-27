@@ -98,6 +98,27 @@ export type PipedriveDeal = PipedriveRecord & {
   creator_user_id?: PipedriveReference;
 };
 
+/** A Pipedrive lead. Unlike every other record, its id is a UUID string. */
+export type PipedriveLead = PipedriveRecord & {
+  id: string;
+  title?: string | null;
+  owner_id?: PipedriveReference;
+  person_id?: PipedriveReference;
+  organization_id?: PipedriveReference;
+  label_ids?: string[] | null;
+  value?: { amount?: number | string | null; currency?: string | null } | null;
+  expected_close_date?: string | null;
+  is_archived?: boolean | null;
+  source_name?: string | null;
+  add_time?: string | null;
+};
+
+export type PipedriveLeadLabel = PipedriveRecord & {
+  id: string;
+  name?: string | null;
+  color?: string | null;
+};
+
 export type PipedriveActivity = PipedriveRecord & {
   id: number;
   subject?: string | null;
@@ -111,6 +132,7 @@ export type PipedriveActivity = PipedriveRecord & {
   deal_id?: PipedriveReference;
   person_id?: PipedriveReference;
   org_id?: PipedriveReference;
+  lead_id?: string | null;
   user_id?: PipedriveReference;
   add_time?: string | null;
 };
@@ -119,6 +141,7 @@ export type PipedriveNote = PipedriveRecord & {
   id: number;
   content?: string | null;
   deal_id?: PipedriveReference;
+  lead_id?: string | null;
   person_id?: PipedriveReference;
   org_id?: PipedriveReference;
   user_id?: PipedriveReference;

@@ -54,12 +54,20 @@ type Props<Form extends FormEntityDto, Dto extends EntityDto> = {
   canDelete?: boolean;
   historyPanel: ReactNode;
   summary?: ReactNode;
-  emailsPanel?: ReactNode;
+  extraPanels?: readonly EntityDetailExtraPanel[];
   showNotesPanel?: boolean;
   serverSnapshotApplied?: boolean;
 };
 
-type DetailPanel = "details" | "notes" | "activities" | "emails";
+export type EntityDetailExtraPanel = {
+  id: string;
+  label: string;
+  content: ReactNode;
+};
+
+type DetailPanel = string;
+
+const NO_EXTRA_PANELS: readonly EntityDetailExtraPanel[] = [];
 
 export const EntityDetailLayout = observer(function EntityDetailLayout<
   Form extends FormEntityDto,
@@ -74,7 +82,7 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
   canDelete = true,
   historyPanel,
   summary,
-  emailsPanel,
+  extraPanels = NO_EXTRA_PANELS,
   showNotesPanel = true,
   serverSnapshotApplied = true,
 }: Props<Form, Dto>) {
@@ -86,6 +94,7 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
   const { enabled: canPersonalize, starredFieldIds } = useEntityDetailPersonalization();
   const [hasMounted, setHasMounted] = useState(false);
   const [activePanel, setActivePanel] = useState<DetailPanel>("details");
+  const [lastMiddlePanel, setLastMiddlePanel] = useState<DetailPanel | null>(null);
   const formId = useId();
   const drawerWasOpenRef = useRef(entityDrawerStack.length > 0);
   useEffect(() => {
@@ -109,13 +118,21 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
   });
   const hasId = form && typeof form === "object" && "id" in form && Boolean(form.id);
   const canSeeHistory = userStore.can(Resource.auditLog, Action.readAll);
-  const showEmailsPanel = Boolean(emailsPanel);
+  const middlePanelIds = [...(showNotesPanel ? ["notes"] : []), ...extraPanels.map((panel) => panel.id)];
+  const hasMiddleColumn = middlePanelIds.length > 0;
   const selectedPanel =
-    (activePanel === "notes" && !showNotesPanel) ||
-    (activePanel === "activities" && !canSeeHistory) ||
-    (activePanel === "emails" && !showEmailsPanel)
-      ? "details"
-      : activePanel;
+    activePanel === "details" || (activePanel === "activities" && canSeeHistory) || middlePanelIds.includes(activePanel)
+      ? activePanel
+      : "details";
+  const selectedMiddlePanel = middlePanelIds.includes(selectedPanel)
+    ? selectedPanel
+    : lastMiddlePanel && middlePanelIds.includes(lastMiddlePanel)
+      ? lastMiddlePanel
+      : middlePanelIds[0];
+  const selectPanel = (panel: DetailPanel) => {
+    setActivePanel(panel);
+    if (middlePanelIds.includes(panel)) setLastMiddlePanel(panel);
+  };
   const showDeleteAction = canManage && hasId && canDelete && !isEditingCustomField;
   const saveDisabled = isLoading || !store.hasUnsavedChanges || store.isDisabled;
   const hasCurrentEntity = serverSnapshotApplied && store.fetchedEntity?.id === entityId;
@@ -364,12 +381,12 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
         <div className="animate-page-result-in flex min-h-0 w-full flex-1 flex-col overflow-y-auto motion-reduce:animate-none @6xl/detail:overflow-y-visible">
           {hasSummary ? summary : null}
 
-          {(showNotesPanel || canSeeHistory) && (
+          {(hasMiddleColumn || canSeeHistory) && (
             <div
               data-detail-panel-switcher
               className="sticky top-0 z-10 border-b border-border bg-background @6xl/detail:hidden"
             >
-              <Tabs value={selectedPanel} onValueChange={(value) => setActivePanel(value as DetailPanel)}>
+              <Tabs value={selectedPanel} onValueChange={selectPanel}>
                 <TabsList
                   aria-label={t("EntityDetail.overview")}
                   className="h-13 w-full justify-stretch gap-0 rounded-none p-0 group-data-[orientation=horizontal]/tabs:h-13"
@@ -395,16 +412,17 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
                     </TabsTrigger>
                   )}
 
-                  {showEmailsPanel && (
+                  {extraPanels.map((panel) => (
                     <TabsTrigger
-                      aria-controls={`${formId}-emails-panel`}
-                      className="h-full rounded-none px-4 after:-bottom-px after:z-10"
-                      id={`${formId}-emails-tab`}
-                      value="emails"
+                      key={panel.id}
+                      aria-controls={`${formId}-${panel.id}-panel`}
+                      className="h-full rounded-none px-4 after:z-10 group-data-[orientation=horizontal]/tabs:after:-bottom-px"
+                      id={`${formId}-${panel.id}-tab`}
+                      value={panel.id}
                     >
-                      {t("Mailbox.title")}
+                      {panel.label}
                     </TabsTrigger>
-                  )}
+                  ))}
 
                   {canSeeHistory && (
                     <TabsTrigger
@@ -426,9 +444,9 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
             className={cn(
               "grid grid-cols-1 gap-px bg-border contain-[layout]",
               "@6xl/detail:flex-1 @6xl/detail:min-h-0",
-              showNotesPanel && canSeeHistory && "@6xl/detail:grid-cols-[minmax(0,3fr)_minmax(0,2fr)_360px]",
-              showNotesPanel && !canSeeHistory && "@6xl/detail:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]",
-              !showNotesPanel && canSeeHistory && "@6xl/detail:grid-cols-[minmax(0,1fr)_360px]",
+              hasMiddleColumn && canSeeHistory && "@6xl/detail:grid-cols-[minmax(0,3fr)_minmax(0,2fr)_360px]",
+              hasMiddleColumn && !canSeeHistory && "@6xl/detail:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]",
+              !hasMiddleColumn && canSeeHistory && "@6xl/detail:grid-cols-[minmax(0,1fr)_360px]",
             )}
           >
             <div
@@ -445,31 +463,83 @@ export const EntityDetailLayout = observer(function EntityDetailLayout<
               <div className="p-4 @6xl/detail:flex-1 @6xl/detail:min-h-0">{masterData}</div>
             </div>
 
-            {showNotesPanel && (
+            {hasMiddleColumn && (
               <div
-                aria-labelledby={`${formId}-notes-tab`}
+                data-detail-middle-column
                 className={cn(
-                  "min-h-[28rem] flex-col bg-background",
-                  selectedPanel === "notes" ? "flex" : "hidden",
+                  "flex-col bg-background",
+                  middlePanelIds.includes(selectedPanel) ? "flex" : "hidden",
                   "@6xl/detail:flex @6xl/detail:min-h-0 @6xl/detail:overflow-hidden",
                 )}
-                data-detail-panel="notes"
-                id={`${formId}-notes-panel`}
-                role="tabpanel"
               >
-                <EntityNotesPanel key={entityId} store={store} />
-              </div>
-            )}
+                {middlePanelIds.length > 1 && (
+                  <div data-detail-middle-switcher className="hidden border-b border-border @6xl/detail:block">
+                    <Tabs value={selectedMiddlePanel} onValueChange={selectPanel}>
+                      <TabsList
+                        aria-label={t("EntityDetail.sections.label")}
+                        className="h-11 w-full justify-start gap-0 rounded-none p-0 group-data-[orientation=horizontal]/tabs:h-11"
+                        variant="line"
+                      >
+                        {showNotesPanel && (
+                          <TabsTrigger
+                            aria-controls={`${formId}-notes-panel`}
+                            className="h-full flex-none rounded-none px-4 after:z-10 group-data-[orientation=horizontal]/tabs:after:-bottom-px"
+                            id={`${formId}-notes-wide-tab`}
+                            value="notes"
+                          >
+                            {t("EntityDetail.sections.notes")}
+                          </TabsTrigger>
+                        )}
 
-            {hasMounted && showEmailsPanel && (
-              <div
-                aria-labelledby={`${formId}-emails-tab`}
-                className={cn("min-h-[28rem] flex-col bg-background", selectedPanel === "emails" ? "flex" : "hidden")}
-                data-detail-panel="emails"
-                id={`${formId}-emails-panel`}
-                role="tabpanel"
-              >
-                {emailsPanel}
+                        {extraPanels.map((panel) => (
+                          <TabsTrigger
+                            key={panel.id}
+                            aria-controls={`${formId}-${panel.id}-panel`}
+                            className="h-full flex-none rounded-none px-4 after:z-10 group-data-[orientation=horizontal]/tabs:after:-bottom-px"
+                            id={`${formId}-${panel.id}-wide-tab`}
+                            value={panel.id}
+                          >
+                            {panel.label}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                    </Tabs>
+                  </div>
+                )}
+
+                {showNotesPanel && (
+                  <div
+                    aria-labelledby={`${formId}-notes-tab`}
+                    className={cn(
+                      "min-h-[28rem] flex-1 flex-col",
+                      selectedMiddlePanel === "notes" ? "flex" : "hidden",
+                      "@6xl/detail:min-h-0 @6xl/detail:overflow-hidden",
+                    )}
+                    data-detail-panel="notes"
+                    id={`${formId}-notes-panel`}
+                    role="tabpanel"
+                  >
+                    <EntityNotesPanel key={entityId} store={store} />
+                  </div>
+                )}
+
+                {hasMounted &&
+                  extraPanels.map((panel) => (
+                    <div
+                      key={panel.id}
+                      aria-labelledby={`${formId}-${panel.id}-tab`}
+                      className={cn(
+                        "min-h-[28rem] flex-1 flex-col",
+                        selectedMiddlePanel === panel.id ? "flex" : "hidden",
+                        "@6xl/detail:min-h-0 @6xl/detail:overflow-y-auto",
+                      )}
+                      data-detail-panel={panel.id}
+                      id={`${formId}-${panel.id}-panel`}
+                      role="tabpanel"
+                    >
+                      {panel.content}
+                    </div>
+                  ))}
               </div>
             )}
 

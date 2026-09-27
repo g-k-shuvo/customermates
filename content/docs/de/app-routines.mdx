@@ -38,7 +38,7 @@ Der Planer prüft alle fünf Minuten auf fällige Routinen, ein Lauf kann also e
 
 ## Wie funktionieren Ereignis-Auslöser? [#how-do-event-triggers-work]
 
-Ein Ereignis-Auslöser benennt ein oder mehrere Ereignisse in der App: jedes Datensatz-Ereignis und jedes Messaging-Ereignis, das ein [Webhook](/docs/webhooks#which-events-exist) abonnieren kann, mit Ausnahme der beiden Ereignisse für gelöschte Nachrichten. Zwei optionale Controls grenzen ihn weiter ein, damit die Routine nur für die Fälle Credits ausgibt, die Sie interessieren.
+Ein Ereignis-Auslöser benennt ein oder mehrere Ereignisse in der App: jedes Datensatz-Ereignis und jedes Messaging-Ereignis, das ein [Webhook](/docs/webhooks#which-events-exist) abonnieren kann, mit Ausnahme der drei Lead-Ereignisse und der beiden Ereignisse für gelöschte Nachrichten. Zwei optionale Controls grenzen ihn weiter ein, damit die Routine nur für die Fälle Credits ausgibt, die Sie interessieren.
 
 **Geänderte Felder** gilt nur für Aktualisierungs-Ereignisse. Benennen Sie die Felder, die Sie beobachten möchten, etwa den Wert eines Deals oder eine Ihrer Custom Columns, und die Routine läuft nur, wenn sich eines davon tatsächlich geändert hat. Das Control ist ausgeblendet, solange kein Aktualisierungs-Ereignis gewählt ist, denn Erstellungen und Löschungen melden keine Änderungen auf Feldebene.
 

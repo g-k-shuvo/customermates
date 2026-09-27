@@ -14,6 +14,7 @@ import AutomationNotice from "../automation-notice";
 import AccountsRemovedNotice from "../accounts-removed-notice";
 import CompanyInvite from "../company-invite";
 import LeadCreatedNotice from "../lead-created-notice";
+import DocumentSignedNotice from "../document-signed-notice";
 import ContactInquiry from "../contact-inquiry";
 import Feedback from "../feedback";
 import LegalDocumentNoticeContract from "../legal-document-notice-contract";
@@ -234,6 +235,29 @@ const EMAIL_PREVIEW_CASES = [
         intro: copy.intro.replace("{leadTitle}", leadTitle).replace("{sourceName}", sourceName),
         person: copy.person.replace("{personName}", "Ada Lovelace"),
         organization: copy.organization.replace("{organizationName}", leadTitle),
+        cta: copy.cta,
+        fallback: copy.fallback,
+      });
+    },
+  },
+  {
+    key: "document-signed-notice",
+    sendSite: "document-signed-notice",
+    audience: "recipient-localized",
+    sourcePath: "features/record-documents/signing/document-signed.notifier.ts",
+    templatePath: "components/emails/document-signed-notice.tsx",
+    template: DocumentSignedNotice,
+    expectedText: (locale) => catalog(locale).DocumentSignedNotice.cta,
+    render: (locale) => {
+      const copy = catalog(locale).DocumentSignedNotice;
+      const title = "Mutual NDA";
+      return createElement(DocumentSignedNotice, {
+        ...previewLayoutProps(locale),
+        recordLink: `${PREVIEW_BASE_URL}/deals/synthetic-preview-deal`,
+        subject: copy.subject.replace("{title}", title),
+        preview: copy.preview.replace("{title}", title),
+        intro: copy.intro.replace("{title}", title),
+        signers: copy.signers.replace("{names}", "Ada Lovelace"),
         cta: copy.cta,
         fallback: copy.fallback,
       });
@@ -489,11 +513,11 @@ function localesFor(definition: PreviewDefinition): readonly AppLocale[] {
 }
 
 describe("transactional email preview inventory", () => {
-  it("maps all 16 production send sites onto 17 production templates", () => {
-    expect(EMAIL_PREVIEW_CASES).toHaveLength(17);
-    expect(new Set(EMAIL_PREVIEW_CASES.map(({ key }) => key)).size).toBe(17);
-    expect(new Set(EMAIL_PREVIEW_CASES.map(({ sendSite }) => sendSite)).size).toBe(16);
-    expect(new Set(EMAIL_PREVIEW_CASES.map(({ templatePath }) => templatePath)).size).toBe(17);
+  it("maps all 17 production send sites onto 18 production templates", () => {
+    expect(EMAIL_PREVIEW_CASES).toHaveLength(18);
+    expect(new Set(EMAIL_PREVIEW_CASES.map(({ key }) => key)).size).toBe(18);
+    expect(new Set(EMAIL_PREVIEW_CASES.map(({ sendSite }) => sendSite)).size).toBe(17);
+    expect(new Set(EMAIL_PREVIEW_CASES.map(({ templatePath }) => templatePath)).size).toBe(18);
     expect(EMAIL_PREVIEW_CASES.map(({ templatePath }) => templatePath).sort()).toEqual(topLevelTemplates());
   });
 
@@ -522,11 +546,11 @@ describe("transactional email preview inventory", () => {
   });
 
   it("keeps recipient localization and internal English explicit", () => {
-    expect(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "recipient-localized")).toHaveLength(13);
+    expect(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "recipient-localized")).toHaveLength(14);
     expect(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "operator-english")).toHaveLength(4);
   });
 
-  it("discovers all 17 top-level production templates", () => {
+  it("discovers all 18 top-level production templates", () => {
     expect(discoveredPreviewEntries()).toEqual(
       EMAIL_PREVIEW_CASES.map(({ templatePath }) => templatePath.replace("components/emails/", "")).sort(),
     );
@@ -584,7 +608,7 @@ describe("transactional email preview rendering", () => {
       }
     }
 
-    expect(renderCount).toBe(69);
+    expect(renderCount).toBe(74);
   }, 30_000);
 
   it.each(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "operator-english"))(

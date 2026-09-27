@@ -16,6 +16,14 @@
     {
       "path": "/api/cron/routines",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/sweep-record-files",
+      "schedule": "20 * * * *"
+    },
+    {
+      "path": "/api/cron/sweep-record-documents",
+      "schedule": "25 * * * *"
     }
   ],
   "git": {

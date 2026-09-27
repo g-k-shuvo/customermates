@@ -35,12 +35,12 @@ The transfer menu (`#{type}-transfer`, for example `#contacts-transfer`) on ever
 
 ## How do saved views work?
 
-The saved-view tabs sit directly under the header on every list surface, and they carry the same ids everywhere, so these ids have no record-type prefix. A view is personal to the user who created it and remembers the whole list: filters, search, sort, page size, layout, grouping, column order, column widths and hidden columns. Every change is saved into the active view as you make it; on the All tab it is saved as your personal state for that list. There is nothing to reset or save by hand. Views are personal: to share one, copy its link from the menu and send it, or ask a teammate to duplicate it.
+The saved-view tabs sit directly under the header on every list surface, and they carry the same ids everywhere, so these ids have no record-type prefix. A view belongs to the user who created it and remembers the whole list: filters, search, sort, page size, layout, grouping, column order, column widths and hidden columns. Every change is saved into the active view as you make it; on the All tab it is saved as your personal state for that list. There is nothing to reset or save by hand. A new view is private. Its owner can choose **Share with team** in the menu so that everyone in the workspace sees it on the same list, marked with a team icon, after their own views; **Stop sharing** makes it private again. Only the owner can edit, move, share or delete a view. A teammate who opens a shared view can change its filters on screen, but those changes are not saved to it (a notice says so); **Duplicate as new view** keeps them in a private copy of their own. When a shared view disappears, anyone who had it open lands on All.
 
 - `#global-data-views` is the tab bar itself, a navigation landmark.
 - `#global-data-views-all` is the built-in All tab, which clears the active view.
 - `#global-data-views-new` opens the create-view overlay.
-- `#global-data-views-menu` opens the action menu for the active tab: edit, duplicate, move, copy link and delete on a saved view, and duplicate plus copy link on the All tab.
+- `#global-data-views-menu` opens the action menu for the active tab: edit, duplicate, move, share or stop sharing, copy link and delete on a view of your own; duplicate plus copy link on a view a teammate shared, under a note naming who shared it; and duplicate plus copy link on the All tab.
 - `#global-data-views-ai` is **Ask AI** inside the right-hand view-actions menu. Clicking a view selects it and opens this same menu. Ask AI opens chat with the exact view attached as a removable context chip and editable starter text; it does not send a message.
 - **Ask AI** is also available while editing a view and at the top right of the Filters and Appearance headers, including nested filter pages. Pending filter changes are applied before chat opens. Asking from the edit dialog does not save an unfinished rename. The selected view id, surface, and requested create or update action stay attached independently of the translated starter text.
 - `#view-editor-ai` offers **Create with AI** inside **New view** and carries its optional name in the canonical create context, chip label, and starter text. Opening chat creates no view and sends no message.
@@ -48,7 +48,7 @@ The saved-view tabs sit directly under the header on every list surface, and the
 
 A view is addressed by the `view` query parameter, for example `/deals?view=<id>`; without it, the page uses your remembered selection. Use `view=__all__` to open All explicitly. The tabs themselves carry no ids, so switch views by URL rather than by clicking a tab you located by id.
 
-Describe the records you want to see, for example “Create a view of my open deals, sorted by value.” The assistant uses `manage_data_views` to discover the page’s supported settings, then saves filters, search, sorting, grouping, page size and layout. It preserves settings you did not ask to change. New views are selected automatically; changes appear after the chat turn finishes. Views remain personal, and deleting one requires confirmation in the built-in chat. Column visibility, widths and order stay available in Appearance. External AI clients connected through MCP can use the same tool with the connected user’s permissions.
+Describe the records you want to see, for example “Create a view of my open deals, sorted by value.” The assistant uses `manage_data_views` to discover the page’s supported settings, then saves filters, search, sorting, grouping, page size and layout. It preserves settings you did not ask to change. New views are selected automatically; changes appear after the chat turn finishes. The assistant cannot share a view or change a teammate's shared one, and deleting a view requires confirmation in the built-in chat. Column visibility, widths and order stay available in Appearance. External AI clients connected through MCP can use the same tool with the connected user’s permissions.
 
 ## Which ids do the drawer and the detail page have?
 
@@ -89,6 +89,24 @@ A `singleSelect` custom column can drive a board (kanban) view. `#{type}-display
 The demo workspace ships example columns to illustrate the pattern, for instance a "Stage" column on deals and "Status" and "Priority" columns on tasks. These are seeded examples, not fixed behavior. Rename them, change their options, add more, or remove them per workspace.
 
 Records link to other records through labeled relation fields inside the form. Pick the records, then save. Over MCP, `manage_record_links` adds or removes single links.
+
+## How do files work?
+
+Contacts, organizations and deals have a **Files** tab on their detail page. Choose **Upload files** or drop files onto the tab; each file goes straight from the browser to the workspace's file storage, then appears in the list with its size, who uploaded it and when. Clicking a name opens a PDF or an image in a new tab and downloads anything else. Removing a file deletes the stored copy too.
+
+Only common business formats are accepted: PDF, images, text and CSV, Word, Excel, PowerPoint and OpenDocument files, ZIP archives, calendar and contact cards, email messages, and audio and video. The extension has to match the file's type. HTML, SVG, XML, scripts and executables are always refused. The size limit is shown on the tab (25 MB unless the installation changes it).
+
+Anyone who can open the record sees its files; adding and removing them needs edit permission on that record type. The tab only offers uploads when the installation has file storage configured (see [self-hosting](/docs/self-hosting#file-storage)). An upload that never finishes is discarded after a day, and the files of a deleted record are removed with it. Over the API, the same flow is `POST /v1/files/uploads`, then a `PUT` of the bytes to the returned URL, then `POST /v1/files/{id}/complete`.
+
+## How do documents work?
+
+Contacts, organizations and deals also have a **Documents** tab for contracts and other papers that go out for signature. Choose **Add document** and pick one or more PDFs; each becomes a document titled after its file name, with the status **Draft**. Only PDF files are accepted, up to the same size limit as files.
+
+Each document shows who added it and when, and a status you set from its row: **Draft**, **Sent**, **Signed**, **Declined** or **Voided**. When the executed copy comes back, choose **Attach signed copy** in the row's menu: the document keeps the PDF as you uploaded it, adds the signed copy and moves to **Signed**. Attaching another signed copy replaces the earlier one. Clicking a title opens the signed copy when there is one, otherwise the PDF as uploaded; the menu opens either one, renames the document or deletes it together with its PDFs.
+
+Documents follow the same rules as files: anyone who can open the record sees them, and adding, changing or deleting them needs edit permission on that record type. Over the API, `POST /v1/documents` registers a document and returns an upload URL for its PDF, and `POST /v1/documents/{id}/files/{fileId}/complete` lists it once the bytes are stored. `POST /v1/documents/{id}/signed-copy` does the same for the executed copy, and `PUT /v1/documents/{id}` changes the title or the status.
+
+When the installation has DocuSign configured (see [self-hosting](/docs/self-hosting#e-signature-docusign)), a draft, declined or voided document offers **Send for signature** in its menu. Choose the signers (the record's people with an email address are suggested), adjust the email subject and message, and send: DocuSign emails each signer, and the document shows **Sent** with how many have signed. While the request is out, its status cannot be changed by hand; **Cancel signature request** voids it instead. Once everyone has signed, the executed PDF from DocuSign becomes the document's signed copy, the status moves to **Signed**, and whoever added the document gets an email. A declined or voided request sets that status, and the document can be sent again. Over the API this is `POST /v1/documents/{id}/signature`, with `/signature/void` and `/signature/refresh` beside it.
 
 ## Tips for agents
 

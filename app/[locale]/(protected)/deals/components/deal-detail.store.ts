@@ -51,6 +51,7 @@ export class DealDetailStore extends BaseCustomColumnEntityModalStore<CreateDeal
       selectedServices: computed,
       totalQuantity: computed,
       totalValue: computed,
+      servicesValue: computed,
       weightedValueBreakdown: computed,
     });
   }
@@ -87,6 +88,7 @@ export class DealDetailStore extends BaseCustomColumnEntityModalStore<CreateDeal
       ...baseData,
       name: "",
       notes: null,
+      baseValue: 0,
       organizationIds: [],
       userIds: [],
       contactIds: [],
@@ -202,15 +204,21 @@ export class DealDetailStore extends BaseCustomColumnEntityModalStore<CreateDeal
   }
 
   get totalValue(): number {
-    if (this.fetchedEntity && !this.rootStore.userStore.can(Resource.services, Action.readAll))
-      return this.fetchedEntity.totalValue;
+    const baseValue = this.form.baseValue ?? 0;
 
-    let total = 0;
+    if (this.fetchedEntity && !this.rootStore.userStore.can(Resource.services, Action.readAll))
+      return this.fetchedEntity.totalValue - this.fetchedEntity.baseValue + baseValue;
+
+    let total = baseValue;
     for (const entry of this.form.services ?? []) {
       const amount = entry.serviceId ? (this.serviceAmountById.get(entry.serviceId) ?? 0) : 0;
       total += amount * (entry.quantity ?? 0);
     }
     return total;
+  }
+
+  get servicesValue(): number {
+    return this.totalValue - (this.form.baseValue ?? 0);
   }
 
   get weightedValueBreakdown(): { value: number; percent: number; stage: string; weightedValue: number } | null {

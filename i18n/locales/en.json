@@ -74,7 +74,26 @@
     },
     "tabs": {
       "agenda": "Agenda",
-      "list": "List view"
+      "list": "List view",
+      "week": "Week"
+    },
+    "week": {
+      "allDay": "All day",
+      "draggableActivity": "Draggable activity",
+      "emptyDay": "No activities on this day.",
+      "gridLabel": "Week calendar",
+      "loadError": "The week could not be loaded.",
+      "moveHint": "Drag an activity to reschedule it, or focus it and press Alt with an arrow key.",
+      "nextWeek": "Next week",
+      "noUnscheduled": "Every open activity has a date.",
+      "onlyMine": "Only mine",
+      "pickDay": "Pick a day",
+      "previousWeek": "Previous week",
+      "retry": "Try again",
+      "today": "Today",
+      "truncated": "Only the first activities of this week are shown. Narrow the filters to see all of them.",
+      "unscheduled": "Unscheduled activities",
+      "unscheduledCount": "{count, plural, =0 {No unscheduled activities} one {# unscheduled activity} other {# unscheduled activities}}"
     }
   },
   "AgentChat": {
@@ -1078,6 +1097,20 @@
     "runStepSummary": "Step {position}: {action} — {status}",
     "runsTitle": "Run history",
     "stepCount": "{count, plural, =1 {1 action} other {# actions}}",
+    "stepErrors": {
+      "assigneeUnavailable": "The user to assign is not an active member of this workspace",
+      "fieldNotWritable": "An automation cannot change this field",
+      "fieldValueInvalid": "The value does not fit this field",
+      "fieldValueMissing": "The step does not say what value to write",
+      "interrupted": "The action was interrupted and may not have completed",
+      "notesTooLong": "The note would make the notes longer than they are allowed to be",
+      "notesUnreadable": "The existing notes could not be read, so they were left unchanged",
+      "ownerInactive": "The user the automation runs as is no longer active",
+      "ownerNotPermitted": "The user the automation runs as is not allowed to do this",
+      "recordMissing": "A record the action needs no longer exists",
+      "recordUnsupported": "This action cannot be used on this kind of record",
+      "unexpectedError": "The action stopped because of an unexpected error"
+    },
     "title": "Automations",
     "toggleLabel": "Turn the {name} automation on or off",
     "triggerKinds": {
@@ -1325,6 +1358,8 @@
       "dealNotClosed": "This deal is already open, so there is nothing to reopen.",
       "dealNotFound": "Deal ID not found or not accessible.",
       "demoMode": "This action is not available in demo mode. Sign in to access all features.",
+      "documentNotPdf": "Documents must be PDF files.",
+      "documentNotSendable": "Only a draft, declined or voided document can be sent for signature.",
       "draftMessageNotFound": "That draft could not be found. It may have already been sent or discarded.",
       "draftThreadNotSent": "This draft has no conversation yet. Send it from the inbox.",
       "duplicateChannel": "This channel is listed more than once. Add each email address, phone number, or handle only once.",
@@ -1339,6 +1374,14 @@
       "emailMismatch": "Email addresses must match.",
       "emailNotVerified": "Email not verified.",
       "enterpriseCheckoutUnavailable": "Enterprise workspaces are billed manually and cannot start self-service checkout.",
+      "fileEmpty": "The file is empty.",
+      "fileExtensionMissing": "The file name needs an extension, such as .pdf.",
+      "fileStorageNotConfigured": "File storage is not set up on this installation.",
+      "fileStorageUnavailable": "File storage could not be reached. Try again in a moment.",
+      "fileTooLarge": "The file is larger than the upload limit.",
+      "fileTypeMismatch": "The file's extension does not match its content.",
+      "fileTypeNotAllowed": "This type of file cannot be uploaded.",
+      "fileUploadIncomplete": "The upload did not finish. Try again.",
       "filterBetweenInvalidArrayLength": "The 'between' operator requires an array with exactly 2 elements.",
       "generic": "An error occurred.",
       "importKeyUnsupported": "That column cannot be used to match existing records.",
@@ -1400,6 +1443,8 @@
       "pipelineStageMismatch": "The selected stage does not belong to the selected pipeline.",
       "pipelineStageNotFound": "Pipeline stage ID not found or not accessible.",
       "privacyAcknowledgementRequired": "Please confirm that you have read the Privacy Policy.",
+      "recordDocumentNotFound": "Document not found or not accessible.",
+      "recordFileNotFound": "File not found or not accessible.",
       "relationNotAllowed": "Relation '{relation}' is not allowed on {entity}. Allowed relations: {allowed}.",
       "roleAssignedCannotDelete": "A role assigned to users cannot be deleted.",
       "roleNotFound": "Role ID not found or not accessible.",
@@ -1424,6 +1469,13 @@
       "salesNavigatorRequiresLinkedin": "Sales Navigator requires a connected LinkedIn account, but this account is {provider}.",
       "sendEmailTargetRequired": "Select a thread or an account to send from.",
       "serviceNotFound": "Service ID not found or not accessible.",
+      "signatureInProgress": "This document is out for signature. Cancel the signature request first.",
+      "signatureNotInProgress": "This document is not out for signature.",
+      "signatureRecipientDuplicate": "Each signer needs a different email address.",
+      "signingConsentRequired": "DocuSign has not been authorised for this installation yet. An administrator needs to grant consent first.",
+      "signingNotConfigured": "E-signature is not set up on this installation.",
+      "signingRejected": "DocuSign refused the request. Check the signers' names and email addresses and try again.",
+      "signingUnavailable": "DocuSign could not be reached. Try again in a moment.",
       "socialActionRequiresSocialAccount": "This action requires a LinkedIn or Instagram connected account, but this account is {provider}.",
       "socialPostsRequireSocialAccount": "Social posts require a LinkedIn or Instagram connected account, but this account is {provider}.",
       "subjectRequired": "Add a subject.",
@@ -1451,6 +1503,8 @@
       "userSelfAdminUpdateForbidden": "You cannot update your own account through team administration.",
       "webFormSourceNotFound": "Web form source ID not found or not accessible.",
       "webFormSourceSlugTaken": "A web form source with this address already exists. Choose a different one.",
+      "webFormSubmissionNotFound": "Web form submission ID not found or not accessible.",
+      "webFormSubmissionNotRetryable": "Only a failed submission that has not created a lead can be retried.",
       "webhookBodyTemplateInvalid": "The body template must produce a valid JSON object.",
       "webhookDeliveryNotFound": "Webhook delivery ID not found or not accessible.",
       "webhookEventsRequired": "Select at least one event.",
@@ -1483,6 +1537,11 @@
       "widgetWeightedValueNotAllowedForService": "Weighted value aggregation is not allowed for Service element type."
     },
     "events": {
+      "automation": {
+        "created": "Automation Created",
+        "deleted": "Automation Deleted",
+        "updated": "Automation Updated"
+      },
       "company": {
         "updated": "Company Updated"
       },
@@ -1612,6 +1671,7 @@
         "startsAt": "Starts at",
         "state": "State",
         "status": "Status",
+        "submissionStatus": "Submission status",
         "subscriptionStatus": "Subscription",
         "timelineKind": "Type",
         "timelineThreadId": "Conversation",
@@ -1820,6 +1880,7 @@
         "allowance": "Allowance",
         "amount": "Amount",
         "avatarUrl": "Avatar",
+        "baseValue": "Base value",
         "channels": "Channels",
         "completedAt": "Completed",
         "contact": "Contact",
@@ -1839,6 +1900,7 @@
         "entity": "Element",
         "entityId": "Element ID",
         "entityType": "Record type",
+        "error": "Error",
         "event": "Event",
         "events": "Events",
         "expiresAt": "Expires at",
@@ -1851,6 +1913,7 @@
         "lastName": "Last Name",
         "lastRequest": "Last used",
         "lastRunAt": "Last run",
+        "lead": "Lead",
         "lostReason": "Lost reason",
         "members": "Members",
         "name": "Name",
@@ -1866,6 +1929,7 @@
         "plan": "Plan",
         "provider": "Provider",
         "reason": "Reason",
+        "receivedAt": "Received",
         "role": "Role",
         "rottingAt": "Rotting",
         "secret": "Secret",
@@ -1873,6 +1937,7 @@
         "source": "Source",
         "status": "Status",
         "statusCode": "Status Code",
+        "submitter": "Submitter",
         "subscription": "Subscription",
         "tags": "Tags",
         "target": "Target",
@@ -2415,7 +2480,14 @@
       "name": "Name",
       "namePlaceholder": "View name",
       "railLabel": "Saved views",
-      "recordCount": "{count, plural, one {# record} other {# records}}"
+      "recordCount": "{count, plural, one {# record} other {# records}}",
+      "share": "Share with team",
+      "sharedBy": "Shared by {name}",
+      "sharedChangesNotSaved": "Changes to a view a colleague shared are not saved. Duplicate it to keep them.",
+      "sharedWithTeam": "Shared with your team",
+      "shareSuccess": "Your team can now use this view",
+      "unshare": "Stop sharing",
+      "unshareSuccess": "Only you can see this view now"
     }
   },
   "DealModal": {
@@ -2446,6 +2518,16 @@
       "switcherLabel": "Pipeline"
     },
     "quantityLabel": "Quantity",
+    "stageBar": {
+      "currentStage": "{name}, current stage: {duration}",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "hours": "{count, plural, one {# hour} other {# hours}}",
+      "label": "Time in stage",
+      "lessThanMinute": "Less than a minute",
+      "minutes": "{count, plural, one {# minute} other {# minutes}}",
+      "notEntered": "Not entered",
+      "stage": "{name}: {duration}"
+    },
     "title": "Deal",
     "valueLabel": "Value"
   },
@@ -2510,6 +2592,14 @@
     "quickstart": "Quickstart",
     "selfHosting": "Self-Hosting",
     "webhooks": "Webhooks"
+  },
+  "DocumentSignedNotice": {
+    "cta": "Open the record",
+    "fallback": "If the button does not work, copy and paste this link into your browser: ",
+    "intro": "Everyone has signed {title}. The signed copy is stored on the record.",
+    "preview": "{title} is signed",
+    "signers": "Signed by {names}",
+    "subject": "Signed: {title}"
   },
   "Editor": {
     "blockQuote": "Block Quote",
@@ -2579,7 +2669,7 @@
   },
   "EntityDetail": {
     "computedFieldHelp": {
-      "dealValue": "Sum of unit price × quantity for every linked record in {services}. Change linked records or quantities there to update it.",
+      "dealValue": "Base value plus the sum of unit price × quantity for every linked record in {services}. Change the base value, or the linked records and quantities there, to update it.",
       "serviceLineValue": "{service} price × quantity. Change the record or quantity here; edit the linked record to change its price.",
       "serviceQuantity": "Sum of quantities across all linked records in {services}. Change the quantities there to update it.",
       "weightedValue": "{dealValue} × the {percent}% win probability for the current stage ({stage}). Change {services}, quantities, or the stage; manage stage probabilities in {company}.",
@@ -2595,6 +2685,7 @@
     "personalize": "Customize",
     "pinField": "Pin {field} to the overview",
     "sections": {
+      "label": "Record sections",
       "notes": "Notes"
     },
     "showField": "Show {field} in details",
@@ -2816,7 +2907,7 @@
   },
   "GlobalSearch": {
     "clearRecent": "Clear",
-    "emptyDescription": "Search {contacts}, {organizations}, {deals}, {services}, and {tasks} from one place.",
+    "emptyDescription": "Search {contacts}, {organizations}, {leads}, {deals}, {services}, and {tasks} from one place.",
     "emptyTitle": "Find anything in your workspace",
     "groupRecent": "Recently opened",
     "hintNavigate": "Navigate",
@@ -3040,7 +3131,9 @@
   },
   "LeadDetail": {
     "convert": "Convert to deal",
+    "convertDescription": "“{title}” is converted with its contact, organization, owner and notes. The lead stays on record, marked converted.",
     "owner": "Owner",
+    "probabilityPlaceholder": "Stage default: {percent}%",
     "source": "Source",
     "title": "Lead"
   },
@@ -3174,6 +3267,7 @@
     "sendForward": "Send forward",
     "sendingOff": "Receive only",
     "sendReply": "Send",
+    "sentCopyNotSaved": "Sent. A copy could not be saved to your Sent folder.",
     "shareDescriptionOff": "Only you can read this conversation. Sharing puts it on the records it matches, where everyone who can open those records can read it.",
     "shareDescriptionOn": "Everyone who can open the matching records can read this conversation. Turn this off to keep it to yourself.",
     "shareDisabled": "Conversation is private again",
@@ -3731,6 +3825,92 @@
   "ProfileSections": {
     "apiKeysDescription": "Long-lived API keys for programmatic access."
   },
+  "RecordDocuments": {
+    "actions": "Actions for {title}",
+    "add": "Add document",
+    "added": "{name} added",
+    "addFailed": "{name} could not be uploaded.",
+    "addHint": "PDF files up to {size} each.",
+    "adding": "Adding {name}...",
+    "delete": "Delete",
+    "deleted": "{title} deleted",
+    "emptyDescription": "Add a contract or another PDF to keep track of its signature.",
+    "emptyReadOnly": "Documents on this record appear here.",
+    "emptyTitle": "No documents yet",
+    "loadErrorDescription": "Try again in a moment.",
+    "loadErrorTitle": "Documents could not be loaded",
+    "loading": "Loading documents...",
+    "metaAdded": "Added by {name}, {date}",
+    "metaAddedWithoutName": "Added {date}",
+    "notConfigured": "File storage is not set up on this installation, so documents cannot be added or opened.",
+    "open": "Open {title}",
+    "openOriginal": "Open original PDF",
+    "openSigned": "Open signed copy",
+    "rename": "Rename",
+    "renamed": "Document renamed",
+    "renameLabel": "Title of {title}",
+    "signature": {
+      "addSigner": "Add signer",
+      "cancel": "Cancel signature request",
+      "cancelConfirm": "Cancel request",
+      "cancelMessage": "{title} will be voided in DocuSign and its signers can no longer sign it.",
+      "cancelTitle": "Cancel the signature request?",
+      "defaultSubject": "Please sign: {title}",
+      "description": "{title} is sent through DocuSign. Each signer gets an email with a link to sign it, and the signed copy is stored here once everyone has signed.",
+      "emailPlaceholder": "Email address",
+      "message": "Message (optional)",
+      "namePlaceholder": "Name",
+      "progress": "{signed} of {total} signed",
+      "refresh": "Refresh signature status",
+      "refreshed": "Signature status of {title} refreshed",
+      "removeSigner": "Remove signer {number}",
+      "send": "Send",
+      "sendAction": "Send for signature",
+      "sent": "{title} was sent for signature",
+      "signerEmail": "Email of signer {number}",
+      "signerName": "Name of signer {number}",
+      "signers": "Signers",
+      "subject": "Email subject",
+      "title": "Send for signature",
+      "waiting": "Out for signature"
+    },
+    "signedAttached": "Signed copy of {title} attached",
+    "signedCopy": "Signed copy attached",
+    "status": {
+      "completed": "Signed",
+      "declined": "Declined",
+      "draft": "Draft",
+      "sent": "Sent",
+      "voided": "Voided"
+    },
+    "statusChanged": "{title} is now {status}",
+    "statusLabel": "Status of {title}",
+    "title": "Documents",
+    "uploadSigned": "Attach signed copy"
+  },
+  "RecordFiles": {
+    "delete": "Delete {name}",
+    "deleted": "{name} deleted",
+    "download": "Download {name}",
+    "dropHint": "Drop files here, up to {size} each.",
+    "emptyDescription": "Drop files here or choose Upload files.",
+    "emptyReadOnly": "Files attached to this record appear here.",
+    "emptyTitle": "No files yet",
+    "loadErrorDescription": "Try again in a moment.",
+    "loadErrorTitle": "Files could not be loaded",
+    "loading": "Loading files...",
+    "meta": "{size} · {name} · {date}",
+    "metaWithoutUploader": "{size} · {date}",
+    "notConfigured": "File storage is not set up on this installation, so files cannot be uploaded or opened.",
+    "sizeBytes": "{size} B",
+    "sizeKilobytes": "{size} KB",
+    "sizeMegabytes": "{size} MB",
+    "title": "Files",
+    "upload": "Upload files",
+    "uploaded": "{name} uploaded",
+    "uploadFailed": "{name} could not be uploaded.",
+    "uploading": "Uploading {name}..."
+  },
   "ResetPassword": {
     "cta": "Reset password",
     "fallback": "If the button above does not work, copy and paste this link into your browser: ",
@@ -4132,12 +4312,20 @@
   },
   "WebFormSourceModal": {
     "active": "Accepting submissions",
+    "addCustomField": "Add field",
+    "customFieldColumn": "CRM field {number}",
+    "customFieldColumnOption": "{entity} · {column}",
+    "customFieldColumnPlaceholder": "Choose a field",
+    "customFieldIncomplete": "Each extra field needs both a form field and a CRM field.",
+    "customFieldPath": "Form field {number}",
+    "customFieldsDescription": "Map any other form field to a lead or contact field: UTM parameters, consent, a phone number (into a phone field), or answers only this form asks for. A value that does not fit its field, such as a phone number without a country code, is skipped.",
+    "customFieldsTitle": "More fields",
     "defaultLabels": "Default labels",
     "inactive": "Paused",
     "mappingDescription": "Dot paths into the submitted payload, for example fields.email or data.contact.first_name. Leave a field blank to ignore it.",
     "mappingTitle": "Field mapping",
     "message": "Message",
-    "phone": "Phone",
+    "removeCustomField": "Remove field {number}",
     "rotateSecret": "Rotate signing secret",
     "secretRevealedDescription": "Copy it now. It is shown once and cannot be retrieved again.",
     "secretRevealedTitle": "Signing secret",
@@ -4146,13 +4334,30 @@
     "slugImmutable": "The slug cannot change, because a live form already posts to this endpoint.",
     "title": "Web form source",
     "titleTemplate": "Lead title template",
-    "titleTemplateDescription": "Placeholders are replaced from the mapped fields, for example '{organizationName}' — '{form_title}'."
+    "titleTemplateDescription": "Placeholders are replaced from the mapped fields, for example '{organizationName}' — '{form_title}'.",
+    "value": "Lead value"
   },
   "WebFormSourcesCard": {
     "emptyBody": "Create a source to get an endpoint and a signing secret for your website form.",
     "emptyTitle": "No web forms yet",
     "endpoint": "Endpoint",
     "title": "Web forms"
+  },
+  "WebFormSubmissions": {
+    "detailTitle": "Form submission",
+    "emptyBody": "Every submission to your web forms appears here, including any that could not become a lead.",
+    "emptyTitle": "No form submissions yet",
+    "externalId": "External ID",
+    "openLead": "Open lead",
+    "payload": "Submitted data",
+    "processedAt": "Processed at",
+    "retry": "Retry",
+    "statuses": {
+      "failed": "Failed",
+      "processed": "Lead created",
+      "received": "Queued"
+    },
+    "title": "Form submissions"
   },
   "WebhookDeliveriesCard": {
     "emptyBody": "Delivery attempts appear here once a webhook fires.",

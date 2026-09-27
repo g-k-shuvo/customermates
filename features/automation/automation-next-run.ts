@@ -1,9 +1,11 @@
 import { parseAutomationSchedule } from "./automation-schedule";
 
+import { DEFAULT_LOCALE, formattingTagFor } from "@/i18n/locale-registry";
+
 const LOOKAHEAD_DAYS = 366;
 
 function zoneOffsetMinutes(instant: Date, timeZone: string): number {
-  const parts = new Intl.DateTimeFormat("en-US", {
+  const parts = new Intl.DateTimeFormat(formattingTagFor(DEFAULT_LOCALE), {
     timeZone,
     hour12: false,
     year: "numeric",
@@ -85,7 +87,7 @@ export function nextAutomationRunAt(expression: string, timeZone: string | null,
 
 export function isValidTimeZone(timeZone: string): boolean {
   try {
-    new Intl.DateTimeFormat("en-US", { timeZone });
+    new Intl.DateTimeFormat(formattingTagFor(DEFAULT_LOCALE), { timeZone });
 
     return true;
   } catch {

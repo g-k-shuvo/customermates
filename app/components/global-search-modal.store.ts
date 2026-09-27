@@ -16,7 +16,7 @@ type GlobalSearchFormData = {
 };
 
 const RecentSearchItemSchema = z.object({
-  type: z.enum(EntityType).exclude(["lead"]),
+  type: z.enum(EntityType),
   id: z.uuid(),
   name: z.string(),
   pictureUrl: z.string().nullable(),

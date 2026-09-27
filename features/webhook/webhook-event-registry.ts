@@ -1,4 +1,4 @@
-export const WEBHOOK_EVENTS = [
+export const RECORD_WEBHOOK_EVENTS = [
   "contact.created",
   "contact.updated",
   "contact.deleted",
@@ -14,6 +14,9 @@ export const WEBHOOK_EVENTS = [
   "task.created",
   "task.updated",
   "task.deleted",
+] as const;
+
+export const MESSAGING_WEBHOOK_EVENTS = [
   "messaging.message.received",
   "messaging.message.updated",
   "messaging.message.deleted",
@@ -27,6 +30,16 @@ export const WEBHOOK_EVENTS = [
   "messaging.relation.created",
 ] as const;
 
-export const WEBHOOK_EVENT_COUNT = WEBHOOK_EVENTS.length;
-export const WEBHOOK_MESSAGING_EVENT_COUNT = WEBHOOK_EVENTS.filter((event) => event.startsWith("messaging.")).length;
+export const LEAD_WEBHOOK_EVENTS = ["lead.created", "lead.updated", "lead.deleted"] as const;
+
+export const WEBHOOK_EVENTS = [...RECORD_WEBHOOK_EVENTS, ...MESSAGING_WEBHOOK_EVENTS] as const;
+
+export const SUBSCRIBABLE_WEBHOOK_EVENTS = [
+  ...RECORD_WEBHOOK_EVENTS,
+  ...LEAD_WEBHOOK_EVENTS,
+  ...MESSAGING_WEBHOOK_EVENTS,
+] as const;
+
+export const WEBHOOK_EVENT_COUNT = SUBSCRIBABLE_WEBHOOK_EVENTS.length;
+export const WEBHOOK_MESSAGING_EVENT_COUNT = MESSAGING_WEBHOOK_EVENTS.length;
 export const WEBHOOK_RECORD_EVENT_COUNT = WEBHOOK_EVENT_COUNT - WEBHOOK_MESSAGING_EVENT_COUNT;

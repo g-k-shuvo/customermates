@@ -21,6 +21,7 @@ const LOCATIONS: Record<
   [SURFACE.routines]: { labelKey: "NavigationBar.routines" },
   [SURFACE.leads]: { entity: "lead" },
   [SURFACE.webFormSources]: { labelKey: "WebFormSourcesCard.title" },
+  [SURFACE.webFormSubmissions]: { labelKey: "WebFormSubmissions.title" },
 };
 
 export function viewAiTypeLabel(

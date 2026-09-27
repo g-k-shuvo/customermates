@@ -4,7 +4,15 @@ import { ALL_VIEW_KEY } from "@/core/data-view/data-view-keys";
 
 export type RailChip = { kind: "all"; isActive: boolean } | { kind: "view"; view: DataViewChipDto; isActive: boolean };
 
-export type ViewMenuItemId = "copyLink" | "delete" | "duplicate" | "edit" | "moveLeft" | "moveRight";
+export type ViewMenuItemId =
+  | "copyLink"
+  | "delete"
+  | "duplicate"
+  | "edit"
+  | "moveLeft"
+  | "moveRight"
+  | "share"
+  | "unshare";
 
 export type ViewMenuItem = {
   id: ViewMenuItemId;
@@ -15,6 +23,7 @@ export type ViewMenuItem = {
 export type ViewMenuContext = {
   index: number;
   total: number;
+  shared?: boolean;
 };
 
 function byPosition(left: DataViewChipDto, right: DataViewChipDto): number {
@@ -32,8 +41,16 @@ export function sortViewsByPosition(views: readonly DataViewChipDto[]): DataView
   return [...views].sort(byPosition);
 }
 
+export function isOwnView(view: DataViewChipDto): boolean {
+  return view.sharedBy === undefined;
+}
+
+export function ownViewsByPosition(views: readonly DataViewChipDto[]): DataViewChipDto[] {
+  return sortViewsByPosition(views.filter(isOwnView));
+}
+
 export function orderChips(views: readonly DataViewChipDto[], activeViewKey: string): RailChip[] {
-  const sorted = sortViewsByPosition(views);
+  const sorted = [...ownViewsByPosition(views), ...sortViewsByPosition(views.filter((view) => !isOwnView(view)))];
   const activeKey = sorted.some((view) => view.id === activeViewKey) ? activeViewKey : ALL_VIEW_KEY;
 
   return [
@@ -48,9 +65,14 @@ export function viewMenuItems(ctx: ViewMenuContext): ViewMenuItem[] {
     actionItem("duplicate"),
     actionItem("moveLeft", { isDisabled: ctx.index <= 0 }),
     actionItem("moveRight", { isDisabled: ctx.index >= ctx.total - 1 }),
+    actionItem(ctx.shared ? "unshare" : "share"),
     actionItem("copyLink"),
     actionItem("delete", { isDestructive: true }),
   ];
+}
+
+export function colleagueViewMenuItems(): ViewMenuItem[] {
+  return [actionItem("duplicate"), actionItem("copyLink")];
 }
 
 export function allViewMenuItems(): ViewMenuItem[] {

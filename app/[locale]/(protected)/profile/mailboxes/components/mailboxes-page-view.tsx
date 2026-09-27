@@ -15,7 +15,12 @@ import { useDeleteConfirmation } from "@/components/modal/hooks/use-delete-confi
 import { MAILBOX_DEFAULT_SYNC_BATCH_SIZE } from "@/features/mailbox/mailbox.schema";
 
 import { MailboxesPageSkeleton } from "../../components/profile-resource-page-skeleton";
-import { disconnectMailboxAction, getMailboxAccountsAction, syncMailboxAction } from "../actions";
+import {
+  disconnectMailboxAction,
+  getMailboxAccountsAction,
+  listSyncFoldersAction,
+  syncMailboxAction,
+} from "../actions";
 import { MailboxConnectForm } from "./mailbox-connect-form";
 import { MailboxList } from "./mailbox-list";
 
@@ -60,17 +65,29 @@ export function MailboxesPageView({ mailboxes }: Props) {
 
     runUserAction(async () => {
       try {
-        const result = await syncMailboxAction({
-          connectedAccountId: mailbox.connectedAccountId,
-          batchSize: MAILBOX_DEFAULT_SYNC_BATCH_SIZE,
-        });
-
-        if (!result.ok) {
-          toastZodErrorTree(result.error);
+        const folders = await listSyncFoldersAction({ connectedAccountId: mailbox.connectedAccountId });
+        if (!folders.ok) {
+          toastZodErrorTree(folders.error);
           return;
         }
 
-        toast.success(t("Mailbox.syncSuccess", { count: result.data.messagesStored }));
+        let messagesStored = 0;
+        for (const folderPath of folders.data) {
+          const result = await syncMailboxAction({
+            connectedAccountId: mailbox.connectedAccountId,
+            batchSize: MAILBOX_DEFAULT_SYNC_BATCH_SIZE,
+            folderPath,
+          });
+
+          if (!result.ok) {
+            toastZodErrorTree(result.error);
+            return;
+          }
+
+          messagesStored += result.data.messagesStored;
+        }
+
+        toast.success(t("Mailbox.syncSuccess", { count: messagesStored }));
         await refresh();
       } finally {
         setBusyMailboxId(null);

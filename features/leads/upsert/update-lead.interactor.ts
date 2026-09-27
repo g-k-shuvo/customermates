@@ -1,13 +1,13 @@
 import type { UpdateLeadRepo } from "./update-lead.repo";
 import type { EventService } from "@/features/event/event.service";
 import type { Data, Validated } from "@/core/validation/validation.utils";
+import type { LeadWritePrecheckInteractor } from "./lead-write-precheck.interactor";
 
-import { z } from "zod";
 import { Resource, Action } from "@/generated/prisma";
 
 import { type LeadDto, LeadDtoSchema } from "../lead.schema";
 
-import { BaseCreateLeadSchema } from "./create-lead-base.schema";
+import { BaseUpdateLeadSchema } from "./update-lead-base.schema";
 
 import { DomainEvent } from "@/features/event/domain-events";
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
@@ -16,11 +16,9 @@ import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
 import { validateNotes } from "@/core/validation/validate-notes";
 import { calculateChanges } from "@/core/utils/calculate-changes";
 
-export const UpdateLeadSchema = BaseCreateLeadSchema.partial()
-  .extend({ id: z.uuid() })
-  .superRefine((data, ctx) => {
-    data.notes = validateNotes(data.notes, ctx, ["notes"]);
-  });
+export const UpdateLeadSchema = BaseUpdateLeadSchema.superRefine((data, ctx) => {
+  data.notes = validateNotes(data.notes, ctx, ["notes"]);
+});
 export type UpdateLeadData = Data<typeof UpdateLeadSchema>;
 
 @TenantInteractor({
@@ -31,6 +29,7 @@ export class UpdateLeadInteractor extends AuthenticatedInteractor<UpdateLeadData
   constructor(
     private repo: UpdateLeadRepo,
     private eventService: EventService,
+    private precheck: LeadWritePrecheckInteractor,
   ) {
     super();
   }
@@ -38,6 +37,7 @@ export class UpdateLeadInteractor extends AuthenticatedInteractor<UpdateLeadData
   @Write({
     input: UpdateLeadSchema,
     output: LeadDtoSchema,
+    precheck: (self, data, ctx) => self.precheck.update(data, ctx),
   })
   async invoke(data: UpdateLeadData): Validated<LeadDto> {
     const previousLead = await this.repo.getOrThrowCompanyWide(data.id);

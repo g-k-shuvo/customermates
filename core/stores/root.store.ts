@@ -21,6 +21,8 @@ import { ContactDetailStore } from "@/app/[locale]/(protected)/contacts/componen
 import { LeadConvertStore } from "@/app/[locale]/(protected)/leads/components/lead-convert.store";
 import { WebFormSourceModalStore } from "@/app/[locale]/(protected)/company/components/webform/web-form-source-modal.store";
 import { WebFormSourcesStore } from "@/app/[locale]/(protected)/company/components/webform/web-form-sources.store";
+import { WebFormSubmissionsStore } from "@/app/[locale]/(protected)/company/components/webform/web-form-submissions.store";
+import { WebFormSubmissionModalStore } from "@/app/[locale]/(protected)/company/components/webform/web-form-submission-modal.store";
 import { LeadDetailStore } from "@/app/[locale]/(protected)/leads/components/lead-detail.store";
 import { LeadsStore } from "@/app/[locale]/(protected)/leads/components/leads.store";
 import { OrganizationDetailStore } from "@/app/[locale]/(protected)/organizations/components/organization-detail.store";
@@ -45,6 +47,7 @@ import { ThreadParticipantsStore } from "@/app/[locale]/(protected)/inbox/compon
 import { AddChannelStore } from "@/app/[locale]/(protected)/contacts/components/add-channel.store";
 import { UserStore } from "@/app/[locale]/(protected)/profile/components/user.store";
 import { TasksStore } from "@/app/[locale]/(protected)/tasks/components/tasks.store";
+import { TaskWeekStore } from "@/app/[locale]/(protected)/tasks/components/task-week.store";
 import { TaskDetailStore } from "@/app/[locale]/(protected)/tasks/components/task-detail.store";
 import { ActivityCompletionStore } from "@/app/[locale]/(protected)/tasks/components/activity-completion.store";
 import { LayoutStore } from "@/components/layout/layout.store";
@@ -114,6 +117,7 @@ export class RootStore {
   private _rolesStore?: RolesStore;
   private _servicesStore?: ServicesStore;
   private _tasksStore?: TasksStore;
+  private _taskWeekStore?: TaskWeekStore;
   private _userStore?: UserStore;
   private _usersStore?: UsersStore;
   private _webhookDeliveriesStore?: WebhookDeliveriesStore;
@@ -155,6 +159,8 @@ export class RootStore {
   private _globalSearchModalStore?: GlobalSearchModalStore;
   private _leadConvertStore?: LeadConvertStore;
   private _webFormSourcesStore?: WebFormSourcesStore;
+  private _webFormSubmissionsStore?: WebFormSubmissionsStore;
+  private _webFormSubmissionModalStore?: WebFormSubmissionModalStore;
   private _webFormSourceModalStore?: WebFormSourceModalStore;
   private _leadDetailStore?: LeadDetailStore;
   private _organizationDetailStore?: OrganizationDetailStore;
@@ -225,6 +231,10 @@ export class RootStore {
 
   get tasksStore() {
     return (this._tasksStore ??= new TasksStore(this));
+  }
+
+  get taskWeekStore() {
+    return (this._taskWeekStore ??= new TaskWeekStore(this));
   }
 
   get contactsStore() {
@@ -397,6 +407,14 @@ export class RootStore {
 
   get webFormSourcesStore() {
     return (this._webFormSourcesStore ??= new WebFormSourcesStore(this));
+  }
+
+  get webFormSubmissionsStore() {
+    return (this._webFormSubmissionsStore ??= new WebFormSubmissionsStore(this));
+  }
+
+  get webFormSubmissionModalStore() {
+    return (this._webFormSubmissionModalStore ??= new WebFormSubmissionModalStore(this));
   }
 
   get webFormSourceModalStore() {

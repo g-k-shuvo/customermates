@@ -25,9 +25,18 @@ vi.mock("next-intl/server", () => ({
 import type { ThreadSummaryRow } from "../mailbox-thread-mapper";
 
 import { GetRecordThreadsInteractor } from "../get-record-threads.interactor";
+import { ValidateContactIdsInteractor } from "@/core/validation/validators/validate-contact-ids.interactor";
+import { ValidateDealIdsInteractor } from "@/core/validation/validators/validate-deal-ids.interactor";
+import { ValidateLeadIdsInteractor } from "@/core/validation/validators/validate-lead-ids.interactor";
+import { ValidateOrganizationIdsInteractor } from "@/core/validation/validators/validate-organization-ids.interactor";
+import { CustomErrorCode } from "@/core/validation/validation.types";
+import { interactorFailureKind, serializeInteractorFailure } from "@/core/validation/validation.utils";
 
 const CONTACT_ID = "00000000-0000-4000-8000-0000000000c1";
 const DEAL_ID = "00000000-0000-4000-8000-0000000000d1";
+const ORGANIZATION_ID = "00000000-0000-4000-8000-0000000000a1";
+const LEAD_ID = "00000000-0000-4000-8000-0000000000b1";
+const COLLEAGUE_THREAD_ID = "00000000-0000-4000-8000-0000000000e3";
 const MATCHED_THREAD_ID = "00000000-0000-4000-8000-0000000000e1";
 const LINKED_THREAD_ID = "00000000-0000-4000-8000-0000000000e2";
 
@@ -46,20 +55,69 @@ function threadRow(id: string, lastMessageAt: Date | null): ThreadSummaryRow {
 
 const MATCHED = threadRow(MATCHED_THREAD_ID, new Date("2026-09-01T10:00:00Z"));
 const LINKED = threadRow(LINKED_THREAD_ID, new Date("2026-09-08T10:00:00Z"));
+const COLLEAGUE = threadRow(COLLEAGUE_THREAD_ID, new Date("2026-09-05T10:00:00Z"));
 
-function interactorFor(options: { matched?: ThreadSummaryRow[]; linked?: ThreadSummaryRow[] } = {}) {
-  const findContactIdsOnDeal = vi.fn().mockResolvedValue([CONTACT_ID]);
-  const findEmailIdentifiersOfContacts = vi.fn().mockResolvedValue(["anna@buyer.example"]);
-  const findSharedThreadsForIdentifiersCompanyWide = vi.fn().mockResolvedValue(options.matched ?? [MATCHED]);
-  const findThreadsLinkedToDealCompanyWide = vi.fn().mockResolvedValue(options.linked ?? []);
+function readable(ids: readonly string[]) {
+  const allowed = new Set(ids);
 
   return {
-    interactor: new GetRecordThreadsInteractor({
-      findContactIdsOnDeal,
-      findEmailIdentifiersOfContacts,
-      findSharedThreadsForIdentifiersCompanyWide,
-      findThreadsLinkedToDealCompanyWide,
-    }),
+    findIds: vi.fn((requested: Set<string>) =>
+      Promise.resolve(new Set([...requested].filter((id) => allowed.has(id)))),
+    ),
+  } as never;
+}
+
+function interactorFor(
+  options: {
+    matched?: ThreadSummaryRow[];
+    linked?: ThreadSummaryRow[];
+    sameDomain?: ThreadSummaryRow[];
+    identifiers?: string[];
+    readableContactIds?: readonly string[];
+    readableOrganizationIds?: readonly string[];
+    readableLeadIds?: readonly string[];
+    readableDealIds?: readonly string[];
+  } = {},
+) {
+  const findContactIdsOnDeal = vi.fn().mockResolvedValue([CONTACT_ID]);
+  const findEmailIdentifiersOfContacts = vi.fn().mockResolvedValue(options.identifiers ?? ["anna@buyer.example"]);
+  const findContactIdsOfOrganization = vi.fn().mockResolvedValue([CONTACT_ID]);
+  const findDealIdsOfOrganization = vi.fn().mockResolvedValue([DEAL_ID]);
+  const findContactIdOfLead = vi.fn().mockResolvedValue(CONTACT_ID);
+  const findSharedThreadsForDomainsCompanyWide = vi.fn().mockResolvedValue(options.sameDomain ?? []);
+  const findThreadsLinkedToDealsCompanyWide = vi.fn().mockResolvedValue(options.linked ?? []);
+  const findSharedThreadsForIdentifiersCompanyWide = vi.fn().mockResolvedValue(options.matched ?? [MATCHED]);
+  const findThreadsLinkedToDealCompanyWide = vi.fn().mockResolvedValue(options.linked ?? []);
+  const readableContactIds = new Set(options.readableContactIds ?? [CONTACT_ID]);
+  const findContactIds = vi
+    .fn()
+    .mockImplementation((ids: Set<string>) =>
+      Promise.resolve(new Set([...ids].filter((id) => readableContactIds.has(id)))),
+    );
+
+  return {
+    interactor: new GetRecordThreadsInteractor(
+      {
+        findContactIdsOnDeal,
+        findContactIdsOfOrganization,
+        findDealIdsOfOrganization,
+        findContactIdOfLead,
+        findEmailIdentifiersOfContacts,
+        findSharedThreadsForIdentifiersCompanyWide,
+        findSharedThreadsForDomainsCompanyWide,
+        findThreadsLinkedToDealCompanyWide,
+        findThreadsLinkedToDealsCompanyWide,
+      },
+      new ValidateContactIdsInteractor({ findIds: findContactIds } as never),
+      new ValidateOrganizationIdsInteractor(readable(options.readableOrganizationIds ?? [ORGANIZATION_ID])),
+      new ValidateLeadIdsInteractor(readable(options.readableLeadIds ?? [LEAD_ID])),
+      new ValidateDealIdsInteractor(readable(options.readableDealIds ?? [DEAL_ID])),
+    ),
+    findContactIdsOfOrganization,
+    findDealIdsOfOrganization,
+    findContactIdOfLead,
+    findSharedThreadsForDomainsCompanyWide,
+    findThreadsLinkedToDealsCompanyWide,
     findContactIdsOnDeal,
     findEmailIdentifiersOfContacts,
     findSharedThreadsForIdentifiersCompanyWide,
@@ -105,6 +163,23 @@ describe("GetRecordThreadsInteractor", () => {
     expect(result.ok && result.data.map((thread) => thread.id)).toEqual([LINKED_THREAD_ID]);
   });
 
+  it("refuses a contact the caller cannot read before looking up its shared conversations", async () => {
+    const { interactor, findEmailIdentifiersOfContacts, findSharedThreadsForIdentifiersCompanyWide } = interactorFor({
+      readableContactIds: [],
+    });
+
+    const result = await interactor.invoke({ contactId: CONTACT_ID });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(interactorFailureKind(result.error)).toBe("not_found");
+    expect(serializeInteractorFailure(result.error).issues).toEqual([
+      expect.objectContaining({ path: ["contactId"], customCode: CustomErrorCode.contactNotFound }),
+    ]);
+    expect(findEmailIdentifiersOfContacts).not.toHaveBeenCalled();
+    expect(findSharedThreadsForIdentifiersCompanyWide).not.toHaveBeenCalled();
+  });
+
   it("answers with nothing when neither a contact nor a deal was asked for", async () => {
     const { interactor, findSharedThreadsForIdentifiersCompanyWide } = interactorFor();
 
@@ -112,5 +187,72 @@ describe("GetRecordThreadsInteractor", () => {
 
     expect(findSharedThreadsForIdentifiersCompanyWide).not.toHaveBeenCalled();
     expect(result.ok && result.data).toEqual([]);
+  });
+
+  it("gathers an organization's conversations from its people, its deals, and colleagues on its own domain", async () => {
+    const {
+      interactor,
+      findSharedThreadsForIdentifiersCompanyWide,
+      findSharedThreadsForDomainsCompanyWide,
+      findThreadsLinkedToDealsCompanyWide,
+    } = interactorFor({
+      linked: [LINKED],
+      sameDomain: [COLLEAGUE],
+      identifiers: ["anna@buyer.example", "anna.private@gmail.com"],
+    });
+
+    const result = await interactor.invoke({ organizationId: ORGANIZATION_ID });
+
+    expect(findThreadsLinkedToDealsCompanyWide).toHaveBeenCalledWith([DEAL_ID]);
+    expect(findSharedThreadsForIdentifiersCompanyWide).toHaveBeenCalledWith([
+      "anna@buyer.example",
+      "anna.private@gmail.com",
+    ]);
+    expect(findSharedThreadsForDomainsCompanyWide).toHaveBeenCalledWith(["buyer.example"]);
+    expect(result.ok && result.data.map((thread) => thread.id)).toEqual([
+      LINKED_THREAD_ID,
+      COLLEAGUE_THREAD_ID,
+      MATCHED_THREAD_ID,
+    ]);
+  });
+
+  it("never widens an organization to a free-mail domain", async () => {
+    const { interactor, findSharedThreadsForDomainsCompanyWide } = interactorFor({
+      identifiers: ["someone@gmail.com", "other@outlook.com"],
+    });
+
+    await interactor.invoke({ organizationId: ORGANIZATION_ID });
+
+    expect(findSharedThreadsForDomainsCompanyWide).not.toHaveBeenCalled();
+  });
+
+  it("shows a lead the conversations of its contact, and nothing when it has none", async () => {
+    const { interactor, findContactIdOfLead, findSharedThreadsForDomainsCompanyWide } = interactorFor();
+
+    const result = await interactor.invoke({ leadId: LEAD_ID });
+    expect(result.ok && result.data.map((thread) => thread.id)).toEqual([MATCHED_THREAD_ID]);
+    expect(findSharedThreadsForDomainsCompanyWide).not.toHaveBeenCalled();
+
+    findContactIdOfLead.mockResolvedValue(null);
+    const empty = await interactor.invoke({ leadId: LEAD_ID });
+    expect(empty.ok && empty.data).toEqual([]);
+  });
+
+  it.each([
+    ["organizationId", ORGANIZATION_ID, CustomErrorCode.organizationNotFound, { readableOrganizationIds: [] }],
+    ["leadId", LEAD_ID, CustomErrorCode.leadNotFound, { readableLeadIds: [] }],
+    ["dealId", DEAL_ID, CustomErrorCode.dealNotFound, { readableDealIds: [] }],
+  ] as const)("refuses a %s the caller cannot read as not found", async (field, id, customCode, access) => {
+    const { interactor, findSharedThreadsForIdentifiersCompanyWide } = interactorFor(access);
+
+    const result = await interactor.invoke({ [field]: id });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(interactorFailureKind(result.error)).toBe("not_found");
+    expect(serializeInteractorFailure(result.error).issues).toEqual([
+      expect.objectContaining({ path: [field], customCode }),
+    ]);
+    expect(findSharedThreadsForIdentifiersCompanyWide).not.toHaveBeenCalled();
   });
 });
