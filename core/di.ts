@@ -56,6 +56,49 @@ import { PrismaUserRepo } from "@/features/user/prisma-user.repository";
 import { PrismaCompanyRepo } from "@/features/company/prisma-company.repository";
 import { PrismaRoleRepo } from "@/features/role/prisma-role.repository";
 import { PrismaCustomColumnRepo } from "@/features/custom-column/prisma-custom-column.repository";
+import { PrismaRelationTargetRepo } from "@/features/custom-column/prisma-relation-target.repository";
+import { PrismaDuplicateRepo } from "@/features/duplicates/prisma-duplicate.repository";
+import { PrismaContactMergeRepo } from "@/features/duplicates/merge/prisma-contact-merge.repository";
+import { PrismaOrganizationMergeRepo } from "@/features/duplicates/merge/prisma-organization-merge.repository";
+import { OpenImportReviewGroupsInteractor } from "@/features/duplicates/review/open-import-review-groups.interactor";
+import { PrismaInvoiceRepo } from "@/features/invoices/prisma-invoice.repository";
+import { GetInvoiceInteractor, GetInvoicesInteractor } from "@/features/invoices/get/get-invoices.interactor";
+import {
+  CreateInvoiceInteractor,
+  DeleteInvoiceInteractor,
+  UpdateInvoiceInteractor,
+} from "@/features/invoices/upsert/upsert-invoice.interactor";
+import {
+  IssueInvoiceInteractor,
+  RecordInvoicePaymentInteractor,
+  VoidInvoiceInteractor,
+} from "@/features/invoices/lifecycle/invoice-lifecycle.interactor";
+import {
+  GetBillingProfileInteractor,
+  GetInvoiceSettingsInteractor,
+  UpdateInvoiceSettingsInteractor,
+  UpsertBillingProfileInteractor,
+} from "@/features/invoices/settings/invoice-settings.interactor";
+import { GetInvoiceDocumentInteractor } from "@/features/invoices/document/get-invoice-document.interactor";
+import {
+  GetOrganizationMergesInteractor,
+  MergeOrganizationsInteractor,
+  UndoOrganizationMergeInteractor,
+} from "@/features/duplicates/merge/merge-organizations.interactor";
+import {
+  GetContactMergesInteractor,
+  MergeContactsInteractor,
+  UndoContactMergeInteractor,
+} from "@/features/duplicates/merge/merge-contacts.interactor";
+import { StartDuplicateScanInteractor } from "@/features/duplicates/scan/start-duplicate-scan.interactor";
+import {
+  FailDuplicateScanInteractor,
+  FinishDuplicateScanInteractor,
+  RebuildDuplicateMatchKeysInteractor,
+} from "@/features/duplicates/scan/run-duplicate-scan.interactor";
+import { GetDuplicateGroupsInteractor } from "@/features/duplicates/get/get-duplicate-groups.interactor";
+import { DismissDuplicateGroupInteractor } from "@/features/duplicates/dismiss/dismiss-duplicate-group.interactor";
+import { GetRelationTargetLabelsInteractor } from "@/features/custom-column/get-relation-target-labels.interactor";
 import { PrismaP13nRepo } from "@/features/p13n/prisma-p13n.repository";
 import { PrismaDataViewRepo } from "@/features/data-view/prisma-data-view.repository";
 import { PrismaWidgetRepo } from "@/features/widget/prisma-widget.repository";
@@ -202,6 +245,11 @@ import { nullStorageProvider } from "@/core/storage/null-storage.provider";
 import { createDocuSignSigningProvider } from "@/core/signing/docusign-signing.provider";
 import { nullSigningProvider } from "@/core/signing/null-signing.provider";
 import { PrismaRecordFileRepo } from "@/features/record-files/prisma-record-file.repository";
+import { PrismaMailAttachmentRepo } from "@/features/mail-attachments/prisma-mail-attachment.repository";
+import { StoreMailAttachmentsService } from "@/features/mail-attachments/store/store-mail-attachments.service";
+import { GetMailAttachmentInteractor } from "@/features/mail-attachments/get/get-mail-attachment.interactor";
+import { SweepMailAttachmentsInteractor } from "@/features/mail-attachments/sweep/sweep-mail-attachments.interactor";
+import { ForwardMailAttachmentsService } from "@/features/mail-attachments/forward/forward-mail-attachments.service";
 import { CreateRecordFileUploadInteractor } from "@/features/record-files/upload/create-record-file-upload.interactor";
 import { CompleteRecordFileUploadInteractor } from "@/features/record-files/upload/complete-record-file-upload.interactor";
 import { GetRecordFilesInteractor } from "@/features/record-files/get/get-record-files.interactor";
@@ -713,7 +761,8 @@ export const getPipelineIdsValidator = () => new ValidatePipelineIdsInteractor(g
 export const getPipelineStageIdsValidator = () => new ValidatePipelineStageIdsInteractor(getPipelineStageIdsRepo());
 export const getLostReasonIdsValidator = () => new ValidateLostReasonIdsInteractor(getLostReasonRepo());
 export const getTaskIdsValidator = () => new ValidateTaskIdsInteractor(getTaskRepo());
-export const getCustomFieldValuesValidator = () => new ValidateCustomFieldValuesInteractor(getCustomColumnRepo());
+export const getCustomFieldValuesValidator = () =>
+  new ValidateCustomFieldValuesInteractor(getCustomColumnRepo(), getRelationTargetRepo());
 export const getAssigneeGuardValidator = () => new ValidateAssigneeGuardInteractor(getUserService());
 export const getIdentifierConflictsValidator = () => new ValidateIdentifierConflictsInteractor(getContactRepo());
 export const getServiceIdsValidator = () => new ValidateServiceIdsInteractor(getServiceRepo());
@@ -2310,7 +2359,13 @@ export const getMailboxTransport = () =>
   createImapflowTransport(undefined, undefined, { allowPrivateHosts: env.MAILBOX_ALLOW_PRIVATE_HOSTS });
 
 export const getSyncMailboxService = (secretKey: SecretBoxKey) =>
-  new SyncMailboxService(getMailboxRepo(), getMailboxTransport(), secretKey, () => new Date());
+  new SyncMailboxService(
+    getMailboxRepo(),
+    getMailboxTransport(),
+    secretKey,
+    () => new Date(),
+    getStoreMailAttachmentsService(),
+  );
 
 export const getConnectMailboxInteractor = () =>
   new ConnectMailboxInteractor(
@@ -2356,7 +2411,13 @@ export const getSendReplyInteractor = () =>
   new SendReplyInteractor(getMailboxRepo(), getSendReplyService(), getMailboxSecretKey(), () => new Date());
 
 export const getForwardThreadInteractor = () =>
-  new ForwardThreadInteractor(getMailboxRepo(), getSendReplyService(), getMailboxSecretKey(), () => new Date());
+  new ForwardThreadInteractor(
+    getMailboxRepo(),
+    getSendReplyService(),
+    getMailboxSecretKey(),
+    () => new Date(),
+    getForwardMailAttachmentsService(),
+  );
 
 export const getSyncMailboxInteractor = () => {
   const secretKey = getMailboxSecretKey();
@@ -2392,6 +2453,20 @@ export const getStorageProvider = (): StorageProvider =>
 // Record files (PRD 10 W2-03): the catalogue rows behind a record's Files tab. Each
 // operation gets the one repository and the process-wide storage provider.
 export const getRecordFileRepo = () => new PrismaRecordFileRepo();
+
+export const getMailAttachmentRepo = () => new PrismaMailAttachmentRepo();
+
+export const getStoreMailAttachmentsService = () =>
+  new StoreMailAttachmentsService(getMailAttachmentRepo(), getStorageProvider());
+
+export const getGetMailAttachmentInteractor = () =>
+  new GetMailAttachmentInteractor(getMailAttachmentRepo(), getStorageProvider());
+
+export const getForwardMailAttachmentsService = () =>
+  new ForwardMailAttachmentsService(getMailAttachmentRepo(), getStorageProvider());
+
+export const getSweepMailAttachmentsInteractor = () =>
+  new SweepMailAttachmentsInteractor(getMailAttachmentRepo(), getStorageProvider());
 
 export const getCreateRecordFileUploadInteractor = () =>
   new CreateRecordFileUploadInteractor(getRecordFileRepo(), getStorageProvider(), getUserService());
@@ -2477,3 +2552,86 @@ export const getGetSignatureSuggestionsInteractor = () =>
 
 export const getHandleSigningCallbackInteractor = () =>
   new HandleSigningCallbackInteractor(getRecordDocumentRepo(), getRecordDocumentSigningService());
+
+// Relation custom fields (PRD 10 W2-06): a custom column that links a record to a contact,
+// organization or deal. One repository resolves targets under the caller's access scope, for
+// both the write validation and the labels the UI shows.
+export const getRelationTargetRepo = () => new PrismaRelationTargetRepo();
+
+export const getGetRelationTargetLabelsInteractor = () =>
+  new GetRelationTargetLabelsInteractor(getRelationTargetRepo());
+
+// Duplicate scan (PRD 10 W2-08). The scan runs as a workflow that rebuilds match keys a page
+// at a time and then clusters them, each page and the clustering in its own transaction.
+export const getDuplicateRepo = () => new PrismaDuplicateRepo();
+
+export const getStartDuplicateScanInteractor = () =>
+  new StartDuplicateScanInteractor(getDuplicateRepo(), getBackgroundTaskService(), getUserService());
+
+export const getRebuildDuplicateMatchKeysInteractor = () =>
+  new RebuildDuplicateMatchKeysInteractor(getDuplicateRepo(), getUserService());
+
+export const getFinishDuplicateScanInteractor = () =>
+  new FinishDuplicateScanInteractor(getDuplicateRepo(), getUserService());
+
+export const getFailDuplicateScanInteractor = () => new FailDuplicateScanInteractor(getDuplicateRepo());
+
+export const getGetDuplicateGroupsInteractor = () =>
+  new GetDuplicateGroupsInteractor(getDuplicateRepo(), getUserService());
+
+export const getDismissDuplicateGroupInteractor = () =>
+  new DismissDuplicateGroupInteractor(getDuplicateRepo(), getUserService());
+
+// Contact merge (PRD 10 W2-09): one transaction per merge, the JSON snapshot written before any
+// row is moved or deleted, and undo restoring from that snapshot within the retention window.
+export const getContactMergeRepo = () => new PrismaContactMergeRepo(getCustomColumnRepo());
+
+export const getMergeContactsInteractor = () =>
+  new MergeContactsInteractor(getContactMergeRepo(), getContactRepo(), getEventService());
+
+export const getUndoContactMergeInteractor = () =>
+  new UndoContactMergeInteractor(getContactMergeRepo(), getContactRepo(), getEventService());
+
+export const getGetContactMergesInteractor = () => new GetContactMergesInteractor(getContactMergeRepo());
+
+export const getOrganizationMergeRepo = () => new PrismaOrganizationMergeRepo(getCustomColumnRepo());
+
+export const getMergeOrganizationsInteractor = () =>
+  new MergeOrganizationsInteractor(getOrganizationMergeRepo(), getOrganizationRepo(), getEventService());
+
+export const getUndoOrganizationMergeInteractor = () =>
+  new UndoOrganizationMergeInteractor(getOrganizationMergeRepo(), getOrganizationRepo(), getEventService());
+
+export const getGetOrganizationMergesInteractor = () => new GetOrganizationMergesInteractor(getOrganizationMergeRepo());
+
+export const getOpenImportReviewGroupsInteractor = () => new OpenImportReviewGroupsInteractor(getDuplicateRepo());
+
+// Invoices (PRD 10 W2-11): drafts from a deal or by hand, issue with an atomically allocated
+// number and a snapshot of the seller, payments, void; invoice settings and billing profiles.
+export const getInvoiceRepo = () => new PrismaInvoiceRepo();
+
+export const getGetInvoicesInteractor = () => new GetInvoicesInteractor(getInvoiceRepo());
+
+export const getGetInvoiceInteractor = () => new GetInvoiceInteractor(getInvoiceRepo());
+
+export const getCreateInvoiceInteractor = () => new CreateInvoiceInteractor(getInvoiceRepo());
+
+export const getUpdateInvoiceInteractor = () => new UpdateInvoiceInteractor(getInvoiceRepo());
+
+export const getDeleteInvoiceInteractor = () => new DeleteInvoiceInteractor(getInvoiceRepo());
+
+export const getIssueInvoiceInteractor = () => new IssueInvoiceInteractor(getInvoiceRepo());
+
+export const getRecordInvoicePaymentInteractor = () => new RecordInvoicePaymentInteractor(getInvoiceRepo());
+
+export const getVoidInvoiceInteractor = () => new VoidInvoiceInteractor(getInvoiceRepo());
+
+export const getGetInvoiceSettingsInteractor = () => new GetInvoiceSettingsInteractor(getInvoiceRepo());
+
+export const getUpdateInvoiceSettingsInteractor = () => new UpdateInvoiceSettingsInteractor(getInvoiceRepo());
+
+export const getGetBillingProfileInteractor = () => new GetBillingProfileInteractor(getInvoiceRepo());
+
+export const getUpsertBillingProfileInteractor = () => new UpsertBillingProfileInteractor(getInvoiceRepo());
+
+export const getGetInvoiceDocumentInteractor = () => new GetInvoiceDocumentInteractor(getInvoiceRepo());

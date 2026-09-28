@@ -24,6 +24,7 @@ import { PageState } from "@/components/page-state/page-state";
 import { Button } from "@/components/ui/button";
 import { useRootStore } from "@/core/stores/root-store.provider";
 
+import { FindDuplicatesMenuItem } from "@/app/[locale]/(protected)/contacts/components/duplicates/find-duplicates-menu-item";
 import { OrganizationsPageSkeleton } from "./organizations-page-skeleton";
 import { useOrganizationColumns } from "./use-organization-columns";
 
@@ -71,6 +72,7 @@ export const OrganizationsPageView = observer(function OrganizationsPageView({ o
         addLabel={pageState === "true-empty" ? emptyActionLabel : undefined}
         anchorScope="organizations"
         store={organizationsStore}
+        transferMenuItems={<FindDuplicatesMenuItem entityType={EntityType.organization} />}
         onAdd={handleAdd}
         onExport={handleExport}
         onImport={handleImport}

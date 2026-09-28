@@ -182,6 +182,7 @@ export const SORT_SYNTAX = {
     phone: "locale-aware string",
     link: "locale-aware string",
     singleSelect: "by stored option uuid (ordering between options is not user-meaningful)",
+    relation: "by linked record id",
   },
   nullHandling: "rows missing the value sort last regardless of direction",
   examples: [

@@ -240,6 +240,7 @@ export class QueryParamsPrecheckInteractor {
         }
 
         case CustomColumnType.plain:
+        case CustomColumnType.relation:
           break;
       }
     }

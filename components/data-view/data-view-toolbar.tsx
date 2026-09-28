@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { BaseDataViewStore, HasId } from "@/core/base/base-data-view.store";
 
 import { ArrowDownToLine, ArrowUpFromLine, Plus } from "lucide-react";
@@ -24,6 +25,7 @@ type Props<E extends HasId> = {
   onAdd?: () => void;
   onExport?: () => Promise<void> | void;
   onImport?: () => void;
+  transferMenuItems?: ReactNode;
   isSearchable?: boolean;
   searchPlaceholder?: string;
   showDisplayOptions?: boolean;
@@ -36,6 +38,7 @@ export const DataViewToolbar = observer(function DataViewToolbar<E extends HasId
   onAdd,
   onExport,
   onImport,
+  transferMenuItems,
   isSearchable = true,
   searchPlaceholder,
   showDisplayOptions = true,
@@ -68,7 +71,7 @@ export const DataViewToolbar = observer(function DataViewToolbar<E extends HasId
           />
         )}
 
-        {(onExport || onImport) && store.canExport && (
+        {(onExport || onImport || transferMenuItems) && store.canExport && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -99,6 +102,8 @@ export const DataViewToolbar = observer(function DataViewToolbar<E extends HasId
                   {t("DataTransfer.import.action")}
                 </DropdownMenuItem>
               )}
+
+              {transferMenuItems}
             </DropdownMenuContent>
           </DropdownMenu>
         )}

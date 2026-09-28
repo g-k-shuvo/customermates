@@ -12,6 +12,7 @@ export type PendingSubmission = {
   fieldMapping: WebFormFieldMapping;
   defaultOwnerId: string | null;
   defaultLabels: string[];
+  dedupeLeads: boolean;
 };
 
 export type ResolveContactArgs = {
@@ -42,6 +43,10 @@ export type CreateLeadFromSubmissionArgs = {
 export abstract class ProcessWebFormSubmissionRepo {
   abstract findPendingSubmissionUnscoped(submissionId: string): Promise<PendingSubmission | null>;
   abstract resolveContactUnscoped(args: ResolveContactArgs): Promise<string | null>;
+  abstract findContactIdByEmailUnscoped(companyId: string, email: string): Promise<string | null>;
+  abstract findOpenLeadForContactUnscoped(companyId: string, contactId: string): Promise<string | null>;
+  abstract appendMessageToLeadUnscoped(companyId: string, leadId: string, message: string | null): Promise<void>;
+  abstract openContactReviewUnscoped(companyId: string, contactId: string): Promise<void>;
   abstract resolveOrganizationUnscoped(args: ResolveOrganizationArgs): Promise<string | null>;
   abstract createLeadFromSubmissionUnscoped(args: CreateLeadFromSubmissionArgs): Promise<string>;
   abstract findMappableCustomColumnsUnscoped(

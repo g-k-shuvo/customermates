@@ -46,6 +46,7 @@ export const CUSTOM_COLUMN_DEFAULT_OPERATORS: Record<CustomColumnType, FilterOpe
   [CustomColumnType.phone]: customStringOperators,
   [CustomColumnType.plain]: customStringOperators,
   [CustomColumnType.link]: customStringOperators,
+  [CustomColumnType.relation]: [...scalarSelectOperators, ...nullableOperators],
 };
 
 const draftOperators = [FilterOperatorKey.hasSome, FilterOperatorKey.hasNone];

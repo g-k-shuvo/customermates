@@ -46,6 +46,8 @@ import { CHIP_COLORS, type ChipColor } from "@/constants/chip-colors";
 import { DATE_DISPLAY_FORMATS } from "@/constants/date-format";
 import { useDeleteConfirmation } from "@/components/modal/hooks/use-delete-confirmation";
 import { cn } from "@/core/utils/cn";
+import { useEntityTerminology } from "@/components/entity-terminology/use-entity-terminology";
+import { RELATION_TARGET_ENTITY_TYPES } from "@/features/custom-column/relation-target";
 import { CUSTOM_COLUMN_TYPE_ITEMS } from "./custom-column-type-icon";
 
 const COLOR_DOT_CLASSES: Record<ChipColor, string> = {
@@ -234,6 +236,7 @@ export const CustomColumnModal = observer(() => {
   const { customColumnModalStore: store } = useRootStore();
   const intlStore = useHydratedIntlStore();
   const { showDeleteConfirmation } = useDeleteConfirmation();
+  const { singular } = useEntityTerminology();
   const { form, onChange, addOption, deleteOption, toggleDefaultOption, reorderOptions } = store;
 
   const sensors = useSensors(
@@ -371,6 +374,19 @@ export const CustomColumnModal = observer(() => {
                   return { value: key, label };
                 })}
                 label={t("Common.inputs.options.displayFormat")}
+              />
+            )}
+
+            {form.type === CustomColumnType.relation && (
+              <FormSelect
+                required
+                id="options.targetEntityType"
+                items={RELATION_TARGET_ENTITY_TYPES.map((entityType) => ({
+                  value: entityType,
+                  label: singular(entityType),
+                }))}
+                label={t("Common.inputs.options.relationTarget")}
+                readOnly={Boolean(form.id)}
               />
             )}
 

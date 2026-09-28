@@ -3,10 +3,12 @@ import type { ExportableRecord } from "@/features/data-transfer/export/export-ro
 import type { ExportRecordsPageData } from "@/features/data-transfer/data-transfer.schema";
 import type { NextRequest } from "next/server";
 import type { Validated } from "@/core/validation/validation.utils";
+import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
+import type { RelationTargetEntityType } from "@/features/custom-column/relation-target";
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { EntityType } from "@/generated/prisma";
+import { CustomColumnType, EntityType } from "@/generated/prisma";
 
 import {
   getExportContactsPageInteractor,
@@ -15,6 +17,7 @@ import {
   getExportServicesPageInteractor,
   getExportLeadsPageInteractor,
   getExportTasksPageInteractor,
+  getGetRelationTargetLabelsInteractor,
 } from "@/core/di";
 import {
   ENTITY_SHEET_NAME,
@@ -56,6 +59,29 @@ function invokerFor(entityType: EntityType): PageInvoker {
   }
 }
 
+async function resolveRelationLabels(rows: ExportableRecord[], customColumns: CustomColumnDto[]) {
+  const labels = new Map<string, string>();
+  const idsByTarget = new Map<RelationTargetEntityType, Set<string>>();
+
+  for (const column of customColumns) {
+    if (column.type !== CustomColumnType.relation) continue;
+    const ids = idsByTarget.get(column.options.targetEntityType) ?? new Set<string>();
+    for (const row of rows) {
+      const value = row.customFieldValues.find((entry) => entry.columnId === column.id)?.value;
+      if (value) ids.add(value);
+    }
+    idsByTarget.set(column.options.targetEntityType, ids);
+  }
+
+  for (const [targetEntityType, ids] of idsByTarget) {
+    if (ids.size === 0) continue;
+    const result = await getGetRelationTargetLabelsInteractor().invoke({ targetEntityType, ids: [...ids] });
+    if (result.ok) for (const { id, label } of result.data) labels.set(id, label);
+  }
+
+  return labels;
+}
+
 function fileName(entityType: EntityType, isoDate: string): string {
   return `${ENTITY_SHEET_NAME[entityType].toLowerCase()}-${isoDate}.xlsx`;
 }
@@ -81,13 +107,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     let failure: NextResponse | null = null;
 
-    const toPage = (data: ExportPageResult<ExportableRecord>, skip: number) => ({
-      total: data.total,
-      rows: data.rows.map((record) => toWorkbookRow(record, columns)),
-      relations: mergeRelationSheets(
-        data.rows.flatMap((record, index) => toRelationSheets(record, skip + index + HEADER_OFFSET)),
-      ),
-    });
+    const toPage = async (data: ExportPageResult<ExportableRecord>, skip: number) => {
+      const relationLabels = await resolveRelationLabels(data.rows, data.customColumns);
+      return {
+        total: data.total,
+        rows: data.rows.map((record) => toWorkbookRow(record, columns, relationLabels)),
+        relations: mergeRelationSheets(
+          data.rows.flatMap((record, index) => toRelationSheets(record, skip + index + HEADER_OFFSET)),
+        ),
+      };
+    };
 
     const result = await buildWorkbook({
       sheetName: ENTITY_SHEET_NAME[entityType],

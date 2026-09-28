@@ -19,7 +19,7 @@ import type { FindWebFormMappableColumnsRepo } from "./upsert/find-web-form-mapp
 
 import { randomBytes } from "node:crypto";
 
-import { EntityType } from "@/generated/prisma";
+import { CustomColumnType, EntityType } from "@/generated/prisma";
 
 import { type WebFormSourceDto, type WebFormSourceWithSecret } from "./webform-source.schema";
 import { WebFormFieldMappingSchema } from "./ingest/field-mapping";
@@ -66,6 +66,7 @@ export class PrismaWebFormRepo
       active: true,
       defaultOwnerId: true,
       defaultLabels: true,
+      dedupeLeads: true,
       fieldMapping: true,
       createdAt: true,
       updatedAt: true,
@@ -79,6 +80,7 @@ export class PrismaWebFormRepo
     active: boolean;
     defaultOwnerId: string | null;
     defaultLabels: string[];
+    dedupeLeads: boolean;
     fieldMapping: unknown;
     createdAt: Date;
     updatedAt: Date;
@@ -105,6 +107,7 @@ export class PrismaWebFormRepo
         companyId: this.companyId,
         id: { in: [...ids] },
         entityType: { in: [EntityType.lead, EntityType.contact] },
+        type: { not: CustomColumnType.relation },
       },
       select: { id: true },
     });
@@ -179,6 +182,7 @@ export class PrismaWebFormRepo
         ...(rest.active === undefined ? {} : { active: rest.active }),
         ...(rest.defaultOwnerId === undefined ? {} : { defaultOwnerId: rest.defaultOwnerId }),
         ...(rest.defaultLabels === undefined ? {} : { defaultLabels: rest.defaultLabels }),
+        ...(rest.dedupeLeads === undefined ? {} : { dedupeLeads: rest.dedupeLeads }),
         ...(rest.fieldMapping === undefined ? {} : { fieldMapping: rest.fieldMapping }),
       },
     });
@@ -216,6 +220,7 @@ export class PrismaWebFormRepo
         active: args.active,
         defaultOwnerId: args.defaultOwnerId ?? null,
         defaultLabels: args.defaultLabels,
+        dedupeLeads: args.dedupeLeads,
         fieldMapping: args.fieldMapping,
         signingSecret,
       },

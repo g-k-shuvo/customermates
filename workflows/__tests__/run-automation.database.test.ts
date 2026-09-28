@@ -21,7 +21,7 @@ vi.mock("@/env", () => ({
     BASE_URL: "http://localhost:4000",
     BETTER_AUTH_SECRET: "vitest-secret",
     RESEND_OPERATOR_EMAIL: "operator@example.invalid",
-    EMAIL_TRANSPORT: "smtp",
+    EMAIL_TRANSPORT: "console",
   },
 }));
 

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { MailAttachmentDtoSchema } from "@/features/mail-attachments/mail-attachment.schema";
+
 export const MAILBOX_DEFAULT_IMAP_PORT = 993;
 export const MAILBOX_MAX_BACKFILL_DAYS = 3650;
 export const MAILBOX_DEFAULT_BACKFILL_DAYS = 90;
@@ -102,6 +104,7 @@ export const MailboxMessageDtoSchema = z.object({
   isDraft: z.boolean(),
   sentAt: z.date(),
   senderIdentifier: z.string().nullable(),
+  attachments: z.array(MailAttachmentDtoSchema),
 });
 
 export type MailboxMessageDto = z.infer<typeof MailboxMessageDtoSchema>;

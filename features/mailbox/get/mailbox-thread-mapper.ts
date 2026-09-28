@@ -1,6 +1,10 @@
 import type { MailboxMessageDto, MailboxThreadSummaryDto } from "../mailbox.schema";
 
+import type { MailAttachmentRow } from "@/features/mail-attachments/mail-attachment.schema";
+
 import { sanitizeEmailHtml } from "../render/sanitize-email-html";
+
+import { mailAttachmentPath, toMailAttachmentDto } from "@/features/mail-attachments/mail-attachment.schema";
 
 export type ThreadParticipantRow = {
   identifier: string | null;
@@ -28,6 +32,7 @@ export type ThreadMessageRow = {
   isDraft: boolean;
   sentAt: Date;
   senderIdentifier: string | null;
+  attachments: MailAttachmentRow[];
 };
 
 export function toThreadSummaryDto(row: ThreadSummaryRow): MailboxThreadSummaryDto {
@@ -49,7 +54,13 @@ export function toThreadSummaryDto(row: ThreadSummaryRow): MailboxThreadSummaryD
 }
 
 export function toMessageDto(row: ThreadMessageRow, allowRemoteImages: boolean): MailboxMessageDto {
-  const sanitised = sanitizeEmailHtml(row.bodyHtml, { allowRemoteImages });
+  const inlineImageSources = Object.fromEntries(
+    row.attachments
+      .filter((attachment) => attachment.contentId !== null && attachment.storageKey !== null)
+      .map((attachment) => [attachment.contentId, mailAttachmentPath(attachment.id)]),
+  );
+  const sanitised = sanitizeEmailHtml(row.bodyHtml, { allowRemoteImages, inlineImageSources });
+  const shown = new Set(sanitised.inlineImagesShown);
 
   return {
     id: row.id,
@@ -61,5 +72,8 @@ export function toMessageDto(row: ThreadMessageRow, allowRemoteImages: boolean):
     isDraft: row.isDraft,
     sentAt: row.sentAt,
     senderIdentifier: row.senderIdentifier,
+    attachments: row.attachments
+      .filter((attachment) => !attachment.contentId || !shown.has(attachment.contentId))
+      .map(toMailAttachmentDto),
   };
 }

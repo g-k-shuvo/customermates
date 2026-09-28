@@ -58,6 +58,19 @@ function withoutBlanks(payload: Record<string, unknown>): Record<string, unknown
   return Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== ""));
 }
 
+function withoutMatchedChannel(
+  payload: Record<string, unknown>,
+  column: DuplicateKeyColumn,
+  value: string,
+): Record<string, unknown> {
+  if (column.key.kind !== "identifier") return payload;
+
+  const identifiers = (payload.identifiers as Array<{ value: string }> | undefined) ?? [];
+  const kept = identifiers.filter((identifier) => identifier.value.trim().toLowerCase() !== value.toLowerCase());
+
+  return { ...payload, identifiers: kept };
+}
+
 export function applyDuplicateStrategy(args: {
   plan: ImportPlan;
   strategy: DuplicateStrategy;
@@ -92,6 +105,12 @@ export function applyDuplicateStrategy(args: {
 
     if (value === undefined || ids.length === 0) {
       create.push(row);
+      continue;
+    }
+
+    if (strategy === "review") {
+      note(row, "duplicateQueuedForReview", value, false);
+      create.push({ ...row, payload: withoutMatchedChannel(row.payload, column, value), reviewWith: ids });
       continue;
     }
 

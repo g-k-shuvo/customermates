@@ -22,11 +22,13 @@ export type PlanRow = {
   sheetRow: number;
   recordId: string | null;
   payload: Record<string, unknown>;
+  reviewWith?: string[];
 };
 
 export const IMPORT_ISSUE_CODES = [
   "channelsNotUpdated",
   "duplicateKeyAmbiguous",
+  "duplicateQueuedForReview",
   "duplicateLookupFailed",
   "duplicateRecordId",
   "duplicateSkipped",
@@ -274,6 +276,21 @@ export function buildPlan(args: {
 
         const column = customById.get(target.columnId);
         if (!column) return;
+
+        if (column.type === CustomColumnType.relation) {
+          if (UUID_PATTERN.test(text)) {
+            customFieldValues.push({ columnId: column.id, value: text });
+            return;
+          }
+
+          const index_ = relationIndex[column.options.targetEntityType] ?? new Map<string, string[]>();
+          const byName = index_.get(text.toLocaleLowerCase()) ?? index_.get(normalizeHeader(text));
+
+          if (!byName || byName.length === 0) fail(index, "relationNotFound", { value: text });
+          else if (byName.length > 1) fail(index, "relationAmbiguous", { value: text });
+          else customFieldValues.push({ columnId: column.id, value: byName[0] });
+          return;
+        }
 
         const resolved = resolveOptionValue(column, text);
         if (resolved === null) {

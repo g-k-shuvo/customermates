@@ -44,7 +44,7 @@ Anschließend `.env` mit echten Werten editieren:
 - `BETTER_AUTH_SECRET`: langer Zufallsstring (`openssl rand -hex 32`).
 - `POSTGRES_PASSWORD`: default ändern.
 - `BASE_URL`: Ihre Public-URL (z.B. `https://crm.example.com`). Lokal default `http://localhost:4000`.
-- `RESEND_API_KEY` und `RESEND_OPERATOR_EMAIL`: ein konfiguriertes [Resend](https://resend.com)-Projekt. Nötig für Signup-Verifizierung, Passwort-Reset und Einladungs-Mails.
+- `RESEND_API_KEY` und `RESEND_OPERATOR_EMAIL`: ein konfiguriertes [Resend](https://resend.com)-Projekt. Nötig für Signup-Verifizierung, Passwort-Reset und Einladungs-Mails. `EMAIL_TRANSPORT` legt fest, wie Mail hinausgeht: `resend` (Standard in Produktion), `smtp` mit den `EMAIL_SMTP_*`-Einstellungen oder `console`, das jede E-Mail ins Server-Log schreibt statt sie zu senden und außerhalb der Produktion Standard ist. Ein ausdrücklich gesetzter Transport sendet in jeder Umgebung; ein Staging-Server mit `EMAIL_TRANSPORT=resend` verschickt also echte Mail.
 </Step>
 <Step title="Starten">
 

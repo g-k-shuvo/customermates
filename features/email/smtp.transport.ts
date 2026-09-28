@@ -4,10 +4,10 @@ import { createTransport } from "nodemailer";
 import { env } from "@/env";
 import { reportApplicationError } from "@/core/errors/report-application-error";
 
-import type { EmailMessage, EmailTransport } from "./email-transport";
+import type { EmailMessage, EmailReceipt, EmailTransport } from "./email-transport";
 
 export class SmtpTransport implements EmailTransport {
-  async send(message: EmailMessage): Promise<boolean> {
+  async deliver(message: EmailMessage): Promise<EmailReceipt> {
     if (!env.EMAIL_SMTP_HOST) throw new Error("EMAIL_SMTP_HOST is not configured");
 
     const auth = env.EMAIL_SMTP_USER ? { user: env.EMAIL_SMTP_USER, pass: env.EMAIL_SMTP_PASSWORD ?? "" } : undefined;
@@ -26,6 +26,8 @@ export class SmtpTransport implements EmailTransport {
       to: message.to,
       subject: message.subject,
       html,
+      ...(message.replyTo ? { replyTo: message.replyTo } : {}),
+      ...(message.headers ? { headers: message.headers } : {}),
     });
 
     if (receipt.accepted.length === 0) {
@@ -33,9 +35,9 @@ export class SmtpTransport implements EmailTransport {
         new Error(`SMTP accepted no recipient for a message to ${message.to} from ${message.from}`),
       );
 
-      return false;
+      return { accepted: false, transport: "smtp", providerMessageId: null };
     }
 
-    return true;
+    return { accepted: true, transport: "smtp", providerMessageId: receipt.messageId ?? null };
   }
 }

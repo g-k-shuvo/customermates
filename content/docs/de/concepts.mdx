@@ -36,7 +36,7 @@ Aufgaben verknüpfen sich mit Nutzern, Kontakten, Organisationen, Deals und Serv
 
 Das Standard-Schema deckt die Basics ab. Für alles andere fügen Sie eine Custom Column hinzu.
 
-Zehn Typen:
+Elf Typen:
 
 | Typ | Wofür |
 |---|---|
@@ -50,8 +50,11 @@ Zehn Typen:
 | **Link** (`link`) | Eine oder mehrere URLs |
 | **E-Mail** (`email`) | Eine oder mehrere E-Mail-Adressen |
 | **Telefon** (`phone`) | Eine oder mehrere Telefonnummern |
+| **Verknüpfter Datensatz** (`relation`) | Ein Kontakt, eine Organisation oder ein Deal, etwa der Empfehlungskontakt eines Deals |
 
 Einzelauswahl-Columns sind das Mittel, um eigene Workflows abzubilden. Eine Deal-"Phase" oder eine Aufgaben-"Priorität" ist eine Einzelauswahl-Column, die Sie selbst definieren, mit den Optionen Ihrer Wahl, pro Workspace. Eine Board-Ansicht kann Datensätze dann nach jeder beliebigen Einzelauswahl-Column gruppieren, und der Wert ist das, womit Filter und Tools vergleichen.
+
+Eine Column vom Typ Verknüpfter Datensatz verknüpft einen Datensatz mit einem Kontakt, einer Organisation oder einem Deal; welche Art, legen Sie beim Anlegen fest, und weder diese Art noch der Typ lassen sich danach ändern. Der Wert ist die Id des verknüpften Datensatzes, angezeigt als dessen Name und per Klick geöffnet. Wird der verknüpfte Datensatz gelöscht, wird der Wert geleert, und wer den verknüpften Datensatz nicht sehen darf, sieht statt des Namens "Kein Zugriff". Ein Board kann nach einer solchen Column gruppieren, mit einer Gruppe je verknüpftem Datensatz, den Sie sehen dürfen. Ein Import ordnet eine Zelle über den Namen des Datensatzes (ohne Groß- und Kleinschreibung) oder seine Id zu und weist einen Namen ab, der keinen oder mehrere Datensätze trifft. Aus einem Webformular lassen sich solche Columns nicht zuordnen.
 
 Custom Columns sind First-Class in Filtern, Widgets und der MCP-Oberfläche: `manage_custom_columns` legt sie an und ändert sie, und jedes Datensatz-Tool liest und schreibt ihre Werte über `customFieldValues` mit der Column-Id aus `get_record_schema`.
 

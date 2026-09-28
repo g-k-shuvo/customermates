@@ -3,10 +3,20 @@ import { simpleParser } from "mailparser";
 import type { ParsedMailboxMessage } from "./normalize-message";
 import type { ThreadingHeaders } from "./thread-key";
 
+export type ParsedAttachment = {
+  fileName: string;
+  contentType: string;
+  byteSize: number;
+  contentId: string | null;
+  inline: boolean;
+  content: Buffer;
+};
+
 export type ParsedSourceMessage = {
   uid: number;
   message: ParsedMailboxMessage;
   threading: ThreadingHeaders;
+  attachments: ParsedAttachment[];
 };
 
 export type SourceEnvelope = {
@@ -19,6 +29,8 @@ export type SourceEnvelope = {
 
 const DRAFT_FLAG = "\\draft";
 const MAX_PARSED_BYTES = 25 * 1024 * 1024;
+const MAX_ATTACHMENTS = 50;
+const UNNAMED_ATTACHMENT = "attachment";
 
 function addressField(value: unknown) {
   return (value ?? null) as ParsedMailboxMessage["from"];
@@ -64,7 +76,36 @@ export async function parseSourceMessage(envelope: SourceEnvelope): Promise<Pars
     participants: participantsOf(parsed),
   };
 
-  return { uid: envelope.uid, message, threading };
+  return { uid: envelope.uid, message, threading, attachments: truncated ? [] : attachmentsOf(parsed.attachments) };
+}
+
+type MailparserAttachment = {
+  filename?: string;
+  contentType?: string;
+  size?: number;
+  content?: unknown;
+  cid?: string;
+  contentDisposition?: string;
+  related?: boolean;
+};
+
+function attachmentsOf(list: readonly MailparserAttachment[] | undefined): ParsedAttachment[] {
+  return (list ?? [])
+    .filter((attachment) => Buffer.isBuffer(attachment.content) && attachment.content.byteLength > 0)
+    .slice(0, MAX_ATTACHMENTS)
+    .map((attachment) => {
+      const content = attachment.content as Buffer;
+      const contentId = attachment.cid?.trim() || null;
+
+      return {
+        fileName: attachment.filename?.trim() || UNNAMED_ATTACHMENT,
+        contentType: attachment.contentType?.trim() || "application/octet-stream",
+        byteSize: content.byteLength,
+        contentId,
+        inline: contentId !== null && (attachment.related === true || attachment.contentDisposition === "inline"),
+        content,
+      };
+    });
 }
 
 function participantsOf(parsed: { from?: unknown; to?: unknown; cc?: unknown }): string[] {

@@ -147,12 +147,16 @@ function standardCell(record: ExportableRecord, key: string): WorkbookCellValue 
   }
 }
 
-export function toWorkbookRow(record: ExportableRecord, columns: ExportColumn[]): WorkbookRow {
+export function toWorkbookRow(
+  record: ExportableRecord,
+  columns: ExportColumn[],
+  relationLabels?: ReadonlyMap<string, string>,
+): WorkbookRow {
   const row: WorkbookRow = {};
 
   for (const column of columns) {
     row[column.key] = column.customColumn
-      ? resolveCustomFieldCell(column.customColumn, record.customFieldValues)
+      ? resolveCustomFieldCell(column.customColumn, record.customFieldValues, relationLabels)
       : standardCell(record, column.key);
   }
 

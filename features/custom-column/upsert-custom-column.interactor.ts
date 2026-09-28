@@ -15,8 +15,10 @@ import { BULK_WRITE_TRANSACTION } from "@/core/decorators/transaction.decorator"
 import { type Validated, zx } from "@/core/validation/validation.utils";
 import { CHIP_COLORS } from "@/constants/chip-colors";
 import { DATE_DISPLAY_FORMATS } from "@/constants/date-format";
+import { RELATION_TARGET_ENTITY_TYPES } from "@/features/custom-column/relation-target";
 import { calculateChanges } from "@/core/utils/calculate-changes";
 import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
+import { CustomErrorCode } from "@/core/validation/validation.types";
 
 export const OptionSchema = z.object({
   value: z
@@ -122,6 +124,13 @@ const PhoneSchema = BaseSchema.extend({
   }),
 });
 
+const RelationSchema = BaseSchema.extend({
+  type: z.literal(CustomColumnType.relation),
+  options: z.object({
+    targetEntityType: z.enum(RELATION_TARGET_ENTITY_TYPES),
+  }),
+});
+
 export const UpsertCustomColumnSchema = z.discriminatedUnion("type", [
   PlainSchema.meta({ title: "Plain" }),
   DateSchema.meta({ title: "Date" }),
@@ -133,10 +142,24 @@ export const UpsertCustomColumnSchema = z.discriminatedUnion("type", [
   SingleSelectSchema.meta({ title: "SingleSelect" }),
   EmailSchema.meta({ title: "Email" }),
   PhoneSchema.meta({ title: "Phone" }),
+  RelationSchema.meta({ title: "Relation" }),
 ]);
 export type UpsertCustomColumnData = Data<typeof UpsertCustomColumnSchema>;
 
+function relationTarget(column: { type: CustomColumnType; options?: unknown }) {
+  return column.type === CustomColumnType.relation
+    ? (column.options as { targetEntityType: string }).targetEntityType
+    : undefined;
+}
+
+function relationShapeChanged(existing: CustomColumnDto, next: UpsertCustomColumnData) {
+  if (existing.type !== CustomColumnType.relation && next.type !== CustomColumnType.relation) return false;
+
+  return existing.type !== next.type || relationTarget(existing) !== relationTarget(next);
+}
+
 export abstract class UpsertCustomColumnRepo {
+  abstract findById(id: string): Promise<CustomColumnDto | null>;
   abstract findByIdOrThrow(id: string): Promise<CustomColumnDto>;
   abstract upsertCustomColumnOrThrow(args: UpsertCustomColumnData): Promise<CustomColumnDto>;
 }
@@ -196,6 +219,17 @@ export class UpsertCustomColumnInteractor extends AuthenticatedInteractor<Upsert
   }
 
   private async precheck(data: UpsertCustomColumnData, ctx: z.RefinementCtx) {
-    if (data.id) await this.validator.invoke([{ ids: data.id, path: ["id"] }], ctx);
+    if (!data.id) return;
+
+    await this.validator.invoke([{ ids: data.id, path: ["id"] }], ctx);
+
+    const existing = await this.repo.findById(data.id);
+    if (existing && relationShapeChanged(existing, data)) {
+      ctx.addIssue({
+        code: "custom",
+        params: { error: CustomErrorCode.customColumnRelationImmutable },
+        path: ["type"],
+      });
+    }
   }
 }

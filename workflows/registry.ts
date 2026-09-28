@@ -4,6 +4,7 @@ import { deliverWebhook } from "./deliver-webhook";
 import { reconcileRoutineRuns } from "./reconcile-routine-runs";
 import { runAutomation } from "./run-automation";
 import { runRoutine } from "./run-routine";
+import { scanDuplicates } from "./scan-duplicates";
 import { processWebFormSubmission } from "./process-web-form-submission";
 import { syncMailboxes } from "./sync-mailboxes";
 import { triggerTestError } from "./trigger-test-error";
@@ -15,6 +16,7 @@ export const WORKFLOW_REGISTRY = {
   "reconcile-routine-runs": reconcileRoutineRuns,
   "run-automation": runAutomation,
   "run-routine": runRoutine,
+  "scan-duplicates": scanDuplicates,
   "process-web-form-submission": processWebFormSubmission,
   "sync-mailboxes": syncMailboxes,
   "trigger-test-error": triggerTestError,

@@ -8,6 +8,7 @@ import {
 } from "@/core/config/environment";
 import { resolveStorageConfig } from "@/core/storage/storage-config";
 import { resolveSigningConfig } from "@/core/signing/signing-config";
+import { resolveEmailTransport } from "@/features/email/email-transport";
 
 const BASE_URL = resolveBaseUrl(process.env);
 const oauthProxyUrl = process.env.OAUTH_PROXY_URL?.trim();
@@ -55,7 +56,7 @@ export const env = {
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   RESEND_OPERATOR_EMAIL: process.env.RESEND_OPERATOR_EMAIL as string,
 
-  EMAIL_TRANSPORT: (process.env.EMAIL_TRANSPORT as "resend" | "smtp" | undefined) ?? "resend",
+  EMAIL_TRANSPORT: resolveEmailTransport(process.env.EMAIL_TRANSPORT, process.env.NODE_ENV),
   EMAIL_SMTP_HOST: process.env.EMAIL_SMTP_HOST,
   EMAIL_SMTP_PORT: Number(process.env.EMAIL_SMTP_PORT ?? 587),
   EMAIL_SMTP_USER: process.env.EMAIL_SMTP_USER,

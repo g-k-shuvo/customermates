@@ -17,6 +17,7 @@ export type ProcessWebFormSubmissionData = Data<typeof ProcessWebFormSubmissionS
 export const ProcessWebFormSubmissionOutcomeSchema = z.object({
   leadId: z.string().nullable(),
   skipped: z.boolean(),
+  appended: z.boolean(),
   companyId: z.string().nullable(),
   publisherUserId: z.string().nullable(),
 });
@@ -30,12 +31,41 @@ export class ProcessWebFormSubmissionInteractor {
   @ValidateOutput(ProcessWebFormSubmissionOutcomeSchema)
   async invoke(data: ProcessWebFormSubmissionData): Validated<ProcessWebFormSubmissionOutcome> {
     const submission = await this.repo.findPendingSubmissionUnscoped(data.submissionId);
-    if (!submission)
-      return { ok: true as const, data: { leadId: null, skipped: true, companyId: null, publisherUserId: null } };
+    if (!submission) {
+      return {
+        ok: true as const,
+        data: { leadId: null, skipped: true, appended: false, companyId: null, publisherUserId: null },
+      };
+    }
 
     try {
       const fields = mapWebFormFields(submission.rawPayload, submission.fieldMapping);
       const publisherUserId = await this.publisherFor(submission);
+
+      const knownContactId = fields.email
+        ? await this.repo.findContactIdByEmailUnscoped(submission.companyId, fields.email)
+        : null;
+
+      const openLeadId =
+        submission.dedupeLeads && knownContactId
+          ? await this.repo.findOpenLeadForContactUnscoped(submission.companyId, knownContactId)
+          : null;
+
+      if (openLeadId) {
+        await this.repo.appendMessageToLeadUnscoped(submission.companyId, openLeadId, fields.message);
+        await this.repo.markSubmissionProcessedUnscoped(submission.id, openLeadId);
+
+        return {
+          ok: true as const,
+          data: {
+            leadId: openLeadId,
+            skipped: false,
+            appended: true,
+            companyId: submission.companyId,
+            publisherUserId,
+          },
+        };
+      }
 
       const contactId = await this.repo.resolveContactUnscoped({
         companyId: submission.companyId,
@@ -76,11 +106,13 @@ export class ProcessWebFormSubmissionInteractor {
       if (contactId)
         await this.repo.fillEmptyContactCustomFieldsUnscoped(submission.companyId, contactId, customFields.contact);
 
+      if (contactId && !knownContactId) await this.repo.openContactReviewUnscoped(submission.companyId, contactId);
+
       await this.repo.markSubmissionProcessedUnscoped(submission.id, leadId);
 
       return {
         ok: true as const,
-        data: { leadId, skipped: false, companyId: submission.companyId, publisherUserId },
+        data: { leadId, skipped: false, appended: false, companyId: submission.companyId, publisherUserId },
       };
     } catch (error) {
       await this.repo.markSubmissionFailedUnscoped(

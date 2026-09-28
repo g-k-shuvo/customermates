@@ -180,9 +180,9 @@ describe("sanitizeEmailHtml", () => {
   });
 
   it("returns an empty string for absent bodies", () => {
-    expect(sanitizeEmailHtml(null)).toEqual({ html: "", blockedImageCount: 0 });
-    expect(sanitizeEmailHtml(undefined)).toEqual({ html: "", blockedImageCount: 0 });
-    expect(sanitizeEmailHtml("")).toEqual({ html: "", blockedImageCount: 0 });
+    expect(sanitizeEmailHtml(null)).toEqual({ html: "", blockedImageCount: 0, inlineImagesShown: [] });
+    expect(sanitizeEmailHtml(undefined)).toEqual({ html: "", blockedImageCount: 0, inlineImagesShown: [] });
+    expect(sanitizeEmailHtml("")).toEqual({ html: "", blockedImageCount: 0, inlineImagesShown: [] });
   });
 
   it("removes a protocol-relative url rather than trusting the page scheme", () => {
@@ -212,5 +212,16 @@ describe("sanitizeEmailHtml", () => {
     expect(html).toContain("<table");
     expect(html).toContain("<td");
     expect(html).toContain("cell");
+  });
+
+  it("shows an inline image from its stored attachment and reports which ones it used", () => {
+    const result = sanitizeEmailHtml('<p><img src="cid:logo@buyer" alt="Logo"><img src="cid:missing@buyer"></p>', {
+      inlineImageSources: { "logo@buyer": "/api/mail-attachments/abc" },
+    });
+
+    expect(result.html).toContain('src="/api/mail-attachments/abc"');
+    expect(result.html).not.toContain("cid:");
+    expect(result.inlineImagesShown).toEqual(["logo@buyer"]);
+    expect(result.blockedImageCount).toBe(0);
   });
 });

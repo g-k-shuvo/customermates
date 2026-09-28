@@ -34,10 +34,14 @@ describe("ResendTransport", () => {
     mockEnv.RESEND_API_KEY = "test-key";
   });
 
-  it("returns true when the provider accepts the email", async () => {
+  it("returns the provider's message id when it accepts the email", async () => {
     resendSend.mockResolvedValue({ data: { id: "message-123" }, error: null });
 
-    await expect(new ResendTransport().send(message)).resolves.toBe(true);
+    await expect(new ResendTransport().deliver(message)).resolves.toEqual({
+      accepted: true,
+      transport: "resend",
+      providerMessageId: "message-123",
+    });
     expect(resendConstructor).toHaveBeenCalledWith("test-key");
     expect(resendSend).toHaveBeenCalledWith({
       from: message.from,
@@ -50,13 +54,29 @@ describe("ResendTransport", () => {
   it("returns false when the provider rejects the email", async () => {
     resendSend.mockResolvedValue({ data: null, error: { message: "provider rejected request" } });
 
-    await expect(new ResendTransport().send(message)).resolves.toBe(false);
+    await expect(new ResendTransport().deliver(message)).resolves.toEqual({
+      accepted: false,
+      transport: "resend",
+      providerMessageId: null,
+    });
+  });
+
+  it("forwards reply-to and headers such as List-Unsubscribe verbatim", async () => {
+    resendSend.mockResolvedValue({ data: { id: "message-124" }, error: null });
+    const headers = {
+      "List-Unsubscribe": "<https://crm.example/u/abc>",
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    };
+
+    await new ResendTransport().deliver({ ...message, replyTo: "sales@example.com", headers });
+
+    expect(resendSend).toHaveBeenCalledWith(expect.objectContaining({ replyTo: "sales@example.com", headers }));
   });
 
   it("fails closed when the api key is absent", async () => {
     mockEnv.RESEND_API_KEY = undefined;
 
-    await expect(new ResendTransport().send(message)).rejects.toThrow("RESEND_API_KEY is not configured");
+    await expect(new ResendTransport().deliver(message)).rejects.toThrow("RESEND_API_KEY is not configured");
     expect(resendSend).not.toHaveBeenCalled();
   });
 
@@ -64,6 +84,6 @@ describe("ResendTransport", () => {
     const failure = new TypeError("email rendering failed");
     resendSend.mockRejectedValue(failure);
 
-    await expect(new ResendTransport().send(message)).rejects.toBe(failure);
+    await expect(new ResendTransport().deliver(message)).rejects.toBe(failure);
   });
 });

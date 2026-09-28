@@ -39,6 +39,12 @@ export function groupScopeFragment(scope: GroupScope, targetWhere: GroupTargetWh
     case "relation": {
       const target = { [spec.targetRelation]: targetWhere(spec.targetModel) };
 
+      if (spec.via === "customField") {
+        return isNoValue
+          ? { customFieldValues: { none: { columnId: spec.columnId, ...target } } }
+          : { customFieldValues: { some: { columnId: spec.columnId, [spec.keyColumn]: key, ...target } } };
+      }
+
       if (spec.via === "column") {
         return isNoValue
           ? { NOT: { [spec.targetRelation]: targetWhere(spec.targetModel) } }

@@ -6,6 +6,7 @@ const mockEnv = vi.hoisted(() => ({
   NODE_ENV: "production" as "production" | "test",
   RESEND_API_KEY: "test-key" as string | undefined,
   RESEND_OPERATOR_EMAIL: "mail@customermates.com",
+  EMAIL_TRANSPORT: "resend" as const,
   BRAND_NAME: "AcmeCRM" as string | undefined,
   BRAND_SUPPORT_EMAIL: undefined as string | undefined,
   AUTH_SOCIAL_LOGIN_DISABLED: false,
@@ -69,15 +70,6 @@ describe("EmailService", () => {
     resendSend.mockResolvedValue({ data: {}, error: null });
 
     await expect(new EmailService().send(email)).resolves.toBe(true);
-  });
-
-  it("returns simulated acceptance locally without calling Resend", async () => {
-    mockEnv.NODE_ENV = "test";
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-
-    await expect(new EmailService().send(email)).resolves.toBe(true);
-    expect(resendSend).not.toHaveBeenCalled();
-    consoleSpy.mockRestore();
   });
 
   it("fails closed in production when the Resend API key is absent", async () => {

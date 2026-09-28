@@ -26,6 +26,7 @@ import { useRootStore } from "@/core/stores/root-store.provider";
 
 import { ContactsPageSkeleton } from "./contacts-page-skeleton";
 import { useContactColumns } from "./use-contact-columns";
+import { FindDuplicatesMenuItem } from "./duplicates/find-duplicates-menu-item";
 
 type Props = {
   contacts: GetResult<ContactDto>;
@@ -67,6 +68,7 @@ export const ContactsPageView = observer(function ContactsPageView({ contacts }:
         addLabel={pageState === "true-empty" ? emptyActionLabel : undefined}
         anchorScope="contacts"
         store={contactsStore}
+        transferMenuItems={<FindDuplicatesMenuItem entityType={EntityType.contact} />}
         onAdd={handleAdd}
         onExport={handleExport}
         onImport={handleImport}

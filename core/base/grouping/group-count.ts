@@ -134,6 +134,30 @@ export async function countGroupRows(runtime: GroupCountRuntime, request: GroupC
     }
 
     case "relation": {
+      if (spec.via === "customField") {
+        const [rows, noValue] = await Promise.all([
+          runtime.delegate("customFieldValue").groupBy({
+            by: [spec.keyColumn],
+            where: {
+              companyId: runtime.companyId,
+              columnId: spec.columnId,
+              entityType: spec.entityType,
+              [ENTITY_CUSTOM_FIELD_RELATION[spec.entityType]]: where,
+              [spec.targetRelation]: runtime.targetWhere(spec.targetModel),
+            },
+            _count: { _all: true },
+            orderBy: { _count: { [spec.keyColumn]: "desc" } },
+            take: MAX_AXIS_GROUPS + 1,
+          }),
+          runtime.delegate(spec.model).count({ where: withFragment(where, noValueScope()) }),
+        ]);
+
+        return [
+          ...rows.map((row) => ({ key: String(row[spec.keyColumn]), count: rowCount(row) })),
+          ...(noValue > 0 ? [{ key: NO_VALUE_GROUP_KEY, count: noValue }] : []),
+        ];
+      }
+
       const column = spec.via === "column" ? spec.column : spec.keyColumn;
       const [rows, noValue] = await Promise.all([
         spec.via === "column"

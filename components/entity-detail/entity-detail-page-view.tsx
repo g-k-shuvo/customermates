@@ -16,6 +16,7 @@ import { EntityTimelinePanel } from "@/features/messaging/activities/activities-
 import { EntityEmailsPanel } from "@/components/entity-detail/entity-emails-panel";
 import { EntityFilesPanel } from "@/components/entity-detail/entity-files-panel";
 import { EntityDocumentsPanel } from "@/components/entity-detail/entity-documents-panel";
+import { EntityInvoicesPanel } from "@/components/entity-detail/entity-invoices-panel";
 import { useRootStore } from "@/core/stores/root-store.provider";
 import { useEntityTerminology } from "@/components/entity-terminology/use-entity-terminology";
 import { EntityDetailPersonalizationProvider } from "@/components/entity-detail/entity-detail-personalization";
@@ -34,6 +35,14 @@ function emailsPanelFor(entityType: EntityType, id: string) {
   if (entityType === "deal") return <EntityEmailsPanel dealId={id} />;
   if (entityType === "organization") return <EntityEmailsPanel organizationId={id} />;
   if (entityType === "lead") return <EntityEmailsPanel leadId={id} />;
+
+  return undefined;
+}
+
+function invoicesPanelFor(entityType: EntityType, id: string, canCreate: boolean, canEditBilling: boolean) {
+  if (entityType === "deal") return <EntityInvoicesPanel canCreate={canCreate} dealId={id} />;
+  if (entityType === "organization")
+    return <EntityInvoicesPanel canCreate={canCreate} canEditBilling={canEditBilling} organizationId={id} />;
 
   return undefined;
 }
@@ -68,6 +77,14 @@ export const EntityDetailPageView = observer(
     const fileResource = FILE_RESOURCE[entityType];
     const canOpenFiles = fileResource !== undefined && root.userStore.canAccess(fileResource);
     const canEditFiles = fileResource !== undefined && root.userStore.can(fileResource, Action.update);
+    const invoicesPanel = root.userStore.canAccess(Resource.invoices)
+      ? invoicesPanelFor(
+          entityType,
+          id,
+          root.userStore.can(Resource.invoices, Action.create),
+          root.userStore.can(Resource.organizations, Action.update),
+        )
+      : undefined;
     const panels = [
       ...(emailsPanel ? [{ id: "emails", label: t("Mailbox.title"), content: emailsPanel }] : []),
       ...(canOpenFiles
@@ -96,6 +113,7 @@ export const EntityDetailPageView = observer(
             },
           ]
         : []),
+      ...(invoicesPanel ? [{ id: "invoices", label: t("Invoices.title"), content: invoicesPanel }] : []),
     ];
     const extraPanels = panels.length > 0 ? panels : undefined;
 

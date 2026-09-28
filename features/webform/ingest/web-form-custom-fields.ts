@@ -58,6 +58,7 @@ function coerce(column: CustomColumnDto, raw: string): string | null {
     }
     case CustomColumnType.dateRange:
     case CustomColumnType.dateTimeRange:
+    case CustomColumnType.relation:
       return null;
     default:
       return text;

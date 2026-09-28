@@ -11,7 +11,7 @@ import type {
 import type { WebFormCustomFieldValue } from "../ingest/web-form-custom-fields";
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
 
-import { CustomColumnType, EntityType, MessagingProvider } from "@/generated/prisma";
+import { CustomColumnType, DuplicateGroupStatus, EntityType, LeadStatus, MessagingProvider } from "@/generated/prisma";
 
 import { BaseRepository } from "@/core/base/base-repository";
 import { plainTextToNotesDocument } from "@/components/editor/notes-document";
@@ -19,6 +19,49 @@ import { BypassTenantGuard } from "@/core/decorators/bypass-tenant.decorator";
 import { channelClass } from "@/ee/messaging/provider";
 import { WebFormFieldMappingSchema } from "../ingest/field-mapping";
 import { toCustomColumnDto } from "@/features/custom-column/custom-column.dto";
+import { contactMatchKeys } from "@/features/duplicates/match-keys";
+import { reviewClusterFor } from "@/features/duplicates/duplicate-clusters";
+import { concatNotes } from "@/features/duplicates/merge/merge-plan";
+import { emailDomain, isFreeMailDomain } from "../ingest/free-mail-domains";
+
+const OPEN_LEAD_STATUSES = [LeadStatus.new, LeadStatus.working, LeadStatus.qualified];
+const REVIEW_CANDIDATE_LIMIT = 200;
+const EMAIL_CLASS = "email";
+const PHONE_CLASS = "phone";
+
+const REVIEW_SELECT = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  identifiers: { select: { channelClass: true, value: true } },
+  organizations: { select: { organizationId: true } },
+  customFieldValues: { where: { type: CustomColumnType.phone }, select: { value: true } },
+} as const;
+
+type ReviewRow = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  identifiers: Array<{ channelClass: string; value: string }>;
+  organizations: Array<{ organizationId: string }>;
+  customFieldValues: Array<{ value: string | null }>;
+};
+
+function reviewKeys(row: ReviewRow) {
+  return {
+    id: row.id,
+    keys: contactMatchKeys({
+      firstName: row.firstName,
+      lastName: row.lastName,
+      emails: row.identifiers.filter((entry) => entry.channelClass === EMAIL_CLASS).map((entry) => entry.value),
+      phones: [
+        ...row.identifiers.filter((entry) => entry.channelClass === PHONE_CLASS).map((entry) => entry.value),
+        ...row.customFieldValues.flatMap((entry) => (entry.value ?? "").split(",").map((phone) => phone.trim())),
+      ].filter(Boolean),
+      organizationIds: row.organizations.map((entry) => entry.organizationId),
+    }),
+  };
+}
 
 function customFieldRows(
   companyId: string,
@@ -54,7 +97,9 @@ export class PrismaProcessWebFormSubmissionRepo extends BaseRepository implement
         companyId: true,
         sourceId: true,
         rawPayload: true,
-        source: { select: { name: true, fieldMapping: true, defaultOwnerId: true, defaultLabels: true } },
+        source: {
+          select: { name: true, fieldMapping: true, defaultOwnerId: true, defaultLabels: true, dedupeLeads: true },
+        },
       },
     });
 
@@ -71,6 +116,7 @@ export class PrismaProcessWebFormSubmissionRepo extends BaseRepository implement
       fieldMapping: mapping.success ? mapping.data : {},
       defaultOwnerId: submission.source.defaultOwnerId,
       defaultLabels: submission.source.defaultLabels,
+      dedupeLeads: submission.source.dedupeLeads,
     };
   }
 
@@ -125,7 +171,7 @@ export class PrismaProcessWebFormSubmissionRepo extends BaseRepository implement
     if (!name) return null;
 
     const existing = await this.prisma.organization.findFirst({
-      where: { companyId: args.companyId, name },
+      where: { companyId: args.companyId, name: { equals: name, mode: "insensitive" } },
       select: { id: true },
     });
 
@@ -293,5 +339,95 @@ export class PrismaProcessWebFormSubmissionRepo extends BaseRepository implement
     });
 
     return user?.id ?? null;
+  }
+
+  @BypassTenantGuard
+  async findContactIdByEmailUnscoped(companyId: string, email: string): Promise<string | null> {
+    const existing = await this.prisma.contactIdentifier.findFirst({
+      where: { companyId, channelClass: EMAIL_CLASS, value: email.trim().toLowerCase() },
+      select: { contactId: true },
+    });
+
+    return existing?.contactId ?? null;
+  }
+
+  @BypassTenantGuard
+  async findOpenLeadForContactUnscoped(companyId: string, contactId: string): Promise<string | null> {
+    const lead = await this.prisma.lead.findFirst({
+      where: { companyId, contactId, status: { in: OPEN_LEAD_STATUSES } },
+      select: { id: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return lead?.id ?? null;
+  }
+
+  @BypassTenantGuard
+  async appendMessageToLeadUnscoped(companyId: string, leadId: string, message: string | null): Promise<void> {
+    if (!message) return;
+
+    const lead = await this.prisma.lead.findFirst({ where: { id: leadId, companyId }, select: { notes: true } });
+    if (!lead) return;
+
+    const notes = concatNotes([lead.notes, plainTextToNotesDocument(message)]);
+    await this.prisma.lead.updateMany({
+      where: { id: leadId, companyId },
+      data: { notes: notes as Prisma.InputJsonValue },
+    });
+  }
+
+  @BypassTenantGuard
+  async openContactReviewUnscoped(companyId: string, contactId: string): Promise<void> {
+    const captured = (await this.prisma.contact.findFirst({
+      where: { id: contactId, companyId },
+      select: REVIEW_SELECT,
+    })) as ReviewRow | null;
+    if (!captured) return;
+
+    const domains = captured.identifiers
+      .filter((entry) => entry.channelClass === EMAIL_CLASS)
+      .flatMap((entry) => {
+        const domain = emailDomain(entry.value);
+        return domain && !isFreeMailDomain(domain) ? [domain] : [];
+      });
+    const lastName = captured.lastName.trim();
+    const candidateWhere = [
+      ...(lastName ? [{ lastName: { equals: lastName, mode: "insensitive" as const } }] : []),
+      ...domains.map((domain) => ({
+        identifiers: { some: { channelClass: EMAIL_CLASS, value: { endsWith: `@${domain}` } } },
+      })),
+    ];
+    if (candidateWhere.length === 0) return;
+
+    const candidates = (await this.prisma.contact.findMany({
+      where: { companyId, id: { not: contactId }, OR: candidateWhere },
+      select: REVIEW_SELECT,
+      take: REVIEW_CANDIDATE_LIMIT,
+    })) as ReviewRow[];
+
+    const cluster = reviewClusterFor(contactId, [captured, ...candidates].map(reviewKeys));
+    if (!cluster) return;
+
+    const alreadyOpen = await this.prisma.duplicateGroup.findFirst({
+      where: {
+        companyId,
+        entityType: EntityType.contact,
+        status: DuplicateGroupStatus.open,
+        members: { some: { contactId } },
+      },
+      select: { id: true },
+    });
+    if (alreadyOpen) return;
+
+    await this.prisma.duplicateGroup.create({
+      data: {
+        companyId,
+        entityType: EntityType.contact,
+        fingerprint: cluster.fingerprint,
+        score: cluster.score,
+        signals: cluster.signals,
+        members: { create: cluster.recordIds.map((recordId) => ({ companyId, contactId: recordId })) },
+      },
+    });
   }
 }

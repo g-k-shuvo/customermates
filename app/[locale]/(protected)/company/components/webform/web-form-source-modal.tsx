@@ -80,6 +80,12 @@ export const WebFormSourceModal = observer(() => {
 
             <FormInputChips arrayMode id="defaultLabels" label={t("WebFormSourceModal.defaultLabels")} />
 
+            <div className="flex flex-col gap-1">
+              <FormCheckbox id="dedupeLeads" label={t("WebFormSourceModal.dedupeLeads")} />
+
+              <p className="text-xs text-muted-foreground">{t("WebFormSourceModal.dedupeLeadsHelp")}</p>
+            </div>
+
             <FormCheckbox id="active" label={t("WebFormSourceModal.active")} />
 
             <AppCardHeader>

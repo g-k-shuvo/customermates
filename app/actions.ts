@@ -3,6 +3,7 @@
 import type { CustomFieldValueDto } from "@/core/base/base-entity.schema";
 import type { UpsertCustomColumnData } from "@/features/custom-column/upsert-custom-column.interactor";
 import type { GetCustomColumnsByEntityTypeData } from "@/features/custom-column/get-custom-columns-by-entity-type.interactor";
+import type { GetRelationTargetLabelsData } from "@/features/custom-column/get-relation-target-labels.interactor";
 import type { GetP13nData } from "@/features/p13n/get-p13n.interactor";
 import type { UpsertP13nData } from "@/features/p13n/upsert-p13n.interactor";
 import type {
@@ -42,6 +43,7 @@ import {
   getSaveDataViewStateInteractor,
   getSelectDataViewInteractor,
   getGetCompanySettingsInteractor,
+  getGetRelationTargetLabelsInteractor,
 } from "@/core/di";
 import { serializeResult } from "@/core/utils/action-result";
 
@@ -55,6 +57,11 @@ export async function getCompanySettingsAction() {
 
 export async function upsertCustomColumnAction(data: UpsertCustomColumnData) {
   return serializeResult(getUpsertCustomColumnInteractor().invoke(data));
+}
+
+export async function getRelationTargetLabelsAction(data: GetRelationTargetLabelsData) {
+  const result = await getGetRelationTargetLabelsInteractor().invoke(data);
+  return result.ok ? result.data : [];
 }
 
 export async function getCustomColumnsByEntityTypeAction(data: GetCustomColumnsByEntityTypeData) {

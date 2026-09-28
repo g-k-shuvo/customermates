@@ -1,4 +1,5 @@
 import type { CatalogIndex, ImportPlan, PlanRow, RelationIndex } from "@/features/data-transfer/import/import-plan";
+import type { RelationTargetEntityType } from "@/features/custom-column/relation-target";
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
 import type { DuplicateKeyColumn } from "@/features/data-transfer/import/duplicate-plan";
 import type { DuplicateStrategy } from "@/features/data-transfer/data-transfer.schema";
@@ -8,13 +9,15 @@ import type { ParsedWorkbook } from "@/features/data-transfer/import/read-workbo
 import type { RootStore } from "@/core/stores/root.store";
 
 import { makeObservable, observable, action, computed, runInAction } from "mobx";
-import { EntityType } from "@/generated/prisma";
+import { CustomColumnType, EntityType, Resource } from "@/generated/prisma";
+import { isDuplicateEntityType } from "@/features/duplicates/duplicate.schema";
 
 import { reportApplicationError } from "@/core/errors/report-application-error";
 
 import { getCustomColumnsByEntityTypeAction } from "@/app/actions";
 import {
   commitImportChunkAction,
+  openImportReviewGroupsAction,
   dryRunImportChunkAction,
   getImportRelationIndexAction,
   matchImportKeysAction,
@@ -72,6 +75,12 @@ const RELATION_TARGETS: Record<string, EntityType> = {
   organization: EntityType.organization,
   service: EntityType.service,
   task: EntityType.task,
+};
+
+const RELATION_TARGET_RESOURCE: Record<RelationTargetEntityType, Resource> = {
+  [EntityType.contact]: Resource.contacts,
+  [EntityType.organization]: Resource.organizations,
+  [EntityType.deal]: Resource.deals,
 };
 
 function duplicateLookupFailure(column: DuplicateKeyColumn): ImportRowIssue {
@@ -244,9 +253,15 @@ export class ImportWizardStore extends BaseModalStore {
       const parsed = await readImportFile(file);
       const customColumns = await getCustomColumnsByEntityTypeAction({ entityType: this.entityType });
 
-      const targets = new Set(
-        this.descriptor.fields.flatMap((field) => (field.relationTarget ? [field.relationTarget] : [])),
-      );
+      const targets = new Set<string>([
+        ...this.descriptor.fields.flatMap((field) => (field.relationTarget ? [field.relationTarget] : [])),
+        ...customColumns.flatMap((column) =>
+          column.type === CustomColumnType.relation &&
+          this.rootStore.userStore.canAccess(RELATION_TARGET_RESOURCE[column.options.targetEntityType])
+            ? [column.options.targetEntityType]
+            : [],
+        ),
+      ]);
       const relationTypes = [...targets].flatMap((target) => (target === "user" ? [] : [RELATION_TARGETS[target]]));
 
       const relations = await getImportRelationIndexAction({
@@ -388,6 +403,7 @@ export class ImportWizardStore extends BaseModalStore {
 
     let created = 0;
     let updated = 0;
+    const reviews: Array<{ recordId: string; matchIds: string[] }> = [];
     let stoppedAtSheetRow: number | null = null;
     const failures: ImportRowIssue[] = [];
 
@@ -419,12 +435,20 @@ export class ImportWizardStore extends BaseModalStore {
             break;
           }
 
-          if (mode === "create") created += result.ids.length;
-          else updated += chunk.length;
+          if (mode === "create") {
+            created += result.ids.length;
+            chunk.forEach((row, index) => {
+              const recordId = result.ids[index];
+              if (row.reviewWith && recordId) reviews.push({ recordId, matchIds: row.reviewWith });
+            });
+          } else updated += chunk.length;
 
           this.setProgress(this.progressDone + 1, this.progressTotal);
         }
       }
+
+      if (reviews.length > 0 && isDuplicateEntityType(this.entityType))
+        await openImportReviewGroupsAction({ entityType: this.entityType, reviews });
 
       const carried = this.skipInvalid ? this.issues : this.issues.filter((issue) => !issue.blocking);
 

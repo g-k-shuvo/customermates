@@ -112,6 +112,7 @@ function thread(sharedToCrm: boolean, dealLink: MailboxThreadDealLinkDto = NO_DE
         isDraft: false,
         sentAt: new Date("2026-09-08T10:00:00Z"),
         senderIdentifier: "alice@vendor.example",
+        attachments: [],
       },
     ],
   };

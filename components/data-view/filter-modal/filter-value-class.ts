@@ -82,6 +82,7 @@ export function resolveFilterValueClass(
 
     switch (customColumn.type) {
       case "singleSelect":
+      case "relation":
         return "stringArray";
       case "currency":
         return "numericString";

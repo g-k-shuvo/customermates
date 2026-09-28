@@ -153,4 +153,61 @@ describe("parseSourceMessage", () => {
 
     expect(parsed.message.subject).toBe("Big");
   }, 60_000);
+
+  it("keeps attachments with their name, type, size and inline content id", async () => {
+    const pdf = Buffer.from("%PDF-1.4 quote", "utf8").toString("base64");
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47]).toString("base64");
+    const source = [
+      "From: anna@buyer.example",
+      "To: max@vendor.example",
+      "Subject: Quote",
+      "MIME-Version: 1.0",
+      'Content-Type: multipart/mixed; boundary="outer"',
+      "",
+      "--outer",
+      'Content-Type: multipart/related; boundary="inner"',
+      "",
+      "--inner",
+      "Content-Type: text/html; charset=utf-8",
+      "",
+      '<p>Logo <img src="cid:logo@buyer"></p>',
+      "--inner",
+      "Content-Type: image/png",
+      "Content-Transfer-Encoding: base64",
+      "Content-ID: <logo@buyer>",
+      "Content-Disposition: inline",
+      "",
+      png,
+      "--inner--",
+      "--outer",
+      'Content-Type: application/pdf; name="Angebot Müller.pdf"',
+      "Content-Transfer-Encoding: base64",
+      'Content-Disposition: attachment; filename="Angebot Müller.pdf"',
+      "",
+      pdf,
+      "--outer--",
+      "",
+    ].join("\r\n");
+
+    const parsed = await parseSourceMessage(envelope(source));
+
+    expect(parsed.attachments.map(({ content, ...rest }) => ({ ...rest, bytes: content.byteLength }))).toEqual([
+      {
+        fileName: "attachment",
+        contentType: "image/png",
+        byteSize: 4,
+        contentId: "logo@buyer",
+        inline: true,
+        bytes: 4,
+      },
+      {
+        fileName: "Angebot Müller.pdf",
+        contentType: "application/pdf",
+        byteSize: 14,
+        contentId: null,
+        inline: false,
+        bytes: 14,
+      },
+    ]);
+  });
 });

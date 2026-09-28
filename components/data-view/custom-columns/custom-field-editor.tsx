@@ -20,6 +20,8 @@ import { runUserAction } from "@/core/errors/report-application-error";
 import { openableLinkTarget } from "@/core/validation/openable-link-target";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 
+import { RelationFieldEditor } from "./relation-field-editor";
+
 type Props = {
   column: CustomColumnDto;
   value: string | undefined;
@@ -200,6 +202,16 @@ export const CustomFieldEditor = observer(
             value={value}
             onChipClick={(val) => runUserAction(() => copy(val))}
             onValueChange={onChange}
+          />
+        );
+
+      case CustomColumnType.relation:
+        return (
+          <RelationFieldEditor
+            id={id ?? inputId}
+            label={formLabel}
+            targetEntityType={column.options.targetEntityType}
+            value={value}
           />
         );
     }

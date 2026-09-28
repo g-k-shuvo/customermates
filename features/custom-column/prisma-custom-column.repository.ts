@@ -24,6 +24,7 @@ import { clearGroupingForDeletedColumn } from "@/core/base/grouping/clear-groupi
 import { getDealRepo } from "@/core/di";
 import { Transaction } from "@/core/decorators/transaction.decorator";
 import { CUSTOM_COLUMN_DEFAULT_OPERATORS } from "@/core/types/filter-field-operators";
+import { RELATION_TARGET_ID_FIELD, type RelationTargetEntityType } from "./relation-target";
 
 const DATE_LIKE_CUSTOM_COLUMN_TYPES: ReadonlySet<CustomColumnType> = new Set([
   CustomColumnType.date,
@@ -302,10 +303,17 @@ export class PrismaCustomColumnRepo
     if (nonEmptyValues.length > 0) {
       const columns = await this.prisma.customColumn.findMany({
         where: { id: { in: nonEmptyValues.map((v) => v.columnId) }, companyId },
-        select: { id: true, type: true },
+        select: { id: true, type: true, options: true },
       });
 
       const typeByColumnId = new Map(columns.map((c) => [c.id, c.type]));
+      const relationFieldByColumnId = new Map(
+        columns.flatMap((c) => {
+          if (c.type !== CustomColumnType.relation) return [];
+          const { targetEntityType } = c.options as { targetEntityType: RelationTargetEntityType };
+          return [[c.id, RELATION_TARGET_ID_FIELD[targetEntityType]]];
+        }),
+      );
 
       const data = nonEmptyValues.reduce<Array<Prisma.CustomFieldValueCreateManyInput>>((acc, v) => {
         const { columnId } = v;
@@ -320,6 +328,8 @@ export class PrismaCustomColumnRepo
             ? Number(value)
             : null;
 
+        const relationField = relationFieldByColumnId.get(columnId);
+
         acc.push({
           entityType,
           columnId,
@@ -328,6 +338,7 @@ export class PrismaCustomColumnRepo
           type,
           companyId,
           ...relationWhere,
+          ...(relationField ? { [relationField]: value } : {}),
         });
 
         return acc;

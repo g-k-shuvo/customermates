@@ -1,6 +1,7 @@
 import type { Validated } from "@/core/validation/validation.utils";
 import type { SecretBoxKey } from "../credentials/secret-box";
 import type { SendReplyService, DeliveredReply } from "./send-reply.service";
+import type { OutgoingAttachment } from "./build-reply";
 
 import { Resource, Action } from "@/generated/prisma";
 
@@ -48,6 +49,10 @@ export type ForwardContext = {
   };
 };
 
+export type ForwardAttachmentSource = {
+  load(messagingThreadId: string): Promise<OutgoingAttachment[]>;
+};
+
 export abstract class ForwardThreadRepo {
   abstract findReplyContext(messagingThreadId: string): Promise<ForwardContext | null>;
   abstract storeOutboundReply(args: {
@@ -86,6 +91,7 @@ export class ForwardThreadInteractor extends AuthenticatedInteractor<ForwardThre
     private service: SendReplyService,
     private secretKey: SecretBoxKey | null,
     private now: () => Date,
+    private attachments?: ForwardAttachmentSource,
   ) {
     super();
   }
@@ -126,6 +132,9 @@ export class ForwardThreadInteractor extends AuthenticatedInteractor<ForwardThre
     });
 
     if (forward.to.length === 0) return await fail(CustomErrorCode.mailboxNoReplyRecipient, ["to"]);
+
+    const attachments = (await this.attachments?.load(thread.id)) ?? [];
+    if (attachments.length > 0) forward.attachments = attachments;
 
     const secret = openSecret(secretKey, credential.sealedSecret);
     const imap = {

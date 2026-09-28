@@ -9,6 +9,7 @@ import { CustomColumnType, EntityType, Currency, Resource, Action } from "@/gene
 
 import { type ChipColor } from "@/constants/chip-colors";
 import { type DateDisplayFormat } from "@/constants/date-format";
+import { type RelationTargetEntityType } from "@/features/custom-column/relation-target";
 import { deleteCustomColumnAction, upsertCustomColumnAction } from "@/app/actions";
 import { BaseModalStore } from "@/core/base/base-modal.store";
 import { toastZodErrorTree } from "@/core/utils/toast-zod-error-tree";
@@ -150,6 +151,7 @@ export class CustomColumnModalStore extends BaseModalStore<UpsertCustomColumnDat
         dateRangeOptions: column.type === CustomColumnType.dateRange ? (column.options ?? undefined) : undefined,
         dateTimeRangeOptions:
           column.type === CustomColumnType.dateTimeRange ? (column.options ?? undefined) : undefined,
+        relationOptions: column.type === CustomColumnType.relation ? column.options : undefined,
       }),
     );
   };
@@ -329,6 +331,7 @@ export class CustomColumnModalStore extends BaseModalStore<UpsertCustomColumnDat
     dateTimeRangeOptions?: {
       displayFormat?: DateDisplayFormat;
     };
+    relationOptions?: { targetEntityType: RelationTargetEntityType };
   }): UpsertCustomColumnData {
     const base = {
       id: params.id,
@@ -427,6 +430,14 @@ export class CustomColumnModalStore extends BaseModalStore<UpsertCustomColumnDat
           type: CustomColumnType.dateTimeRange,
           options: {
             displayFormat: params.dateTimeRangeOptions?.displayFormat ?? "descriptiveLong",
+          },
+        };
+      case CustomColumnType.relation:
+        return {
+          ...base,
+          type: CustomColumnType.relation,
+          options: {
+            targetEntityType: params.relationOptions?.targetEntityType ?? EntityType.contact,
           },
         };
     }

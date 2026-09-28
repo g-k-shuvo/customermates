@@ -19,6 +19,7 @@ export const UpdateWebFormSourceSchema = z.object({
   active: z.boolean().optional(),
   defaultOwnerId: z.uuid().nullish(),
   defaultLabels: z.array(zx.nonBlankText(64)).optional(),
+  dedupeLeads: z.boolean().optional(),
   fieldMapping: WebFormFieldMappingSchema.optional(),
 });
 export type UpdateWebFormSourceData = Data<typeof UpdateWebFormSourceSchema>;

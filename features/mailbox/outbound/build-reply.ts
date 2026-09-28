@@ -15,6 +15,8 @@ export type ReplyRequest = {
   replyAll: boolean;
 };
 
+export type OutgoingAttachment = { filename: string; contentType: string; content: Buffer };
+
 export type BuiltReply = {
   from: string;
   to: string[];
@@ -23,6 +25,7 @@ export type BuiltReply = {
   inReplyTo: string | null;
   references: string[];
   text: string;
+  attachments?: OutgoingAttachment[];
 };
 
 const REPLY_PREFIX = /^\s*(re|aw|antw|sv|vs|r|rif)\s*(\[\d+\])?\s*:\s*/i;

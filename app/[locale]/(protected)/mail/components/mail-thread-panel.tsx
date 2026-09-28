@@ -19,6 +19,7 @@ import { useEntityTerminology } from "@/components/entity-terminology/use-entity
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 
 import { linkThreadDealAction, shareThreadAction } from "../actions";
+import { MailMessageAttachments } from "./mail-message-attachments";
 import { MailPageSkeleton } from "./mail-page-skeleton";
 import { MailReplyBox } from "./mail-reply-box";
 
@@ -267,6 +268,8 @@ export function MailThreadPanel({ state, onShowRemoteImages, onReplySent, onShar
             </div>
 
             <MessageBody message={message} />
+
+            <MailMessageAttachments attachments={message.attachments} />
           </article>
         ))}
       </div>

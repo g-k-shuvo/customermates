@@ -8,6 +8,7 @@ import type {
   RelationIndexResult,
 } from "@/features/data-transfer/data-transfer.schema";
 import type { RowActionResult } from "@/core/utils/action-result";
+import type { OpenImportReviewGroupsData } from "@/features/duplicates/review/open-import-review-groups.interactor";
 
 import { serializeResult, serializeRowResult } from "@/core/utils/action-result";
 import {
@@ -15,6 +16,7 @@ import {
   getDryRunImportChunkInteractor,
   getGetImportRelationIndexInteractor,
   getMatchImportKeysInteractor,
+  getOpenImportReviewGroupsInteractor,
 } from "@/core/di";
 
 export async function dryRunImportChunkAction(data: ImportChunkData): Promise<RowActionResult> {
@@ -31,4 +33,8 @@ export async function getImportRelationIndexAction(data: GetImportRelationIndexD
 
 export async function matchImportKeysAction(data: MatchImportKeysData) {
   return await serializeResult<MatchImportKeysResult>(getMatchImportKeysInteractor().invoke(data));
+}
+
+export async function openImportReviewGroupsAction(data: OpenImportReviewGroupsData) {
+  return await serializeResult(getOpenImportReviewGroupsInteractor().invoke(data));
 }

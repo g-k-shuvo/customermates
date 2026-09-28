@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 
-import { Calendar, CalendarRange, Clock, DollarSign, FileText, Globe, List, Mail, Phone } from "lucide-react";
+import { Calendar, CalendarRange, Clock, DollarSign, FileText, Globe, Link2, List, Mail, Phone } from "lucide-react";
 import { CustomColumnType } from "@/generated/prisma";
 
 export const CUSTOM_COLUMN_TYPE_ICON: Record<CustomColumnType, LucideIcon> = {
@@ -14,6 +14,7 @@ export const CUSTOM_COLUMN_TYPE_ICON: Record<CustomColumnType, LucideIcon> = {
   [CustomColumnType.email]: Mail,
   [CustomColumnType.phone]: Phone,
   [CustomColumnType.singleSelect]: List,
+  [CustomColumnType.relation]: Link2,
 };
 
 export const CUSTOM_COLUMN_TYPE_ITEMS = [
@@ -27,4 +28,5 @@ export const CUSTOM_COLUMN_TYPE_ITEMS = [
   CustomColumnType.email,
   CustomColumnType.phone,
   CustomColumnType.singleSelect,
+  CustomColumnType.relation,
 ].map((value) => ({ value, icon: CUSTOM_COLUMN_TYPE_ICON[value] }));

@@ -29,6 +29,7 @@ const CUSTOM_COLUMN_IDS: Record<CustomColumnType, string> = {
   [CustomColumnType.phone]: "88888888-8888-4888-8888-888888888888",
   [CustomColumnType.plain]: "99999999-9999-4999-8999-999999999999",
   [CustomColumnType.singleSelect]: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+  [CustomColumnType.relation]: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
 };
 
 const STANDARD_FIELDS: FilterableField[] = Object.entries(FILTER_FIELD_DEFAULT_OPERATORS).map(([field, operators]) => ({
@@ -115,6 +116,7 @@ const EXPECTED_CUSTOM: Record<CustomColumnType, Expected> = {
   [CustomColumnType.phone]: TEXT,
   [CustomColumnType.plain]: TEXT,
   [CustomColumnType.singleSelect]: SELECT,
+  [CustomColumnType.relation]: SELECT,
 };
 
 const planFor = (field: string) => palettePlan(field, FILTERABLE_FIELDS, CUSTOM_COLUMNS);

@@ -26,6 +26,8 @@ import { Icon } from "@/components/shared/icon";
 import { useCopyToClipboard } from "@/core/utils/use-copy-to-clipboard";
 import { runUserAction } from "@/core/errors/report-application-error";
 
+import { RelationFieldValue } from "./relation-field-value";
+
 type Props<E extends HasId & { customFieldValues: CustomFieldValueDto[] }> = {
   column: CustomColumnDto;
   item: E;
@@ -258,6 +260,9 @@ export const CustomFieldValue = observer(
           ) : (
             <span />
           );
+
+        case CustomColumnType.relation:
+          return <RelationFieldValue targetEntityType={column.options.targetEntityType} value={value} />;
       }
     }, [column, item, value, isDropdownOpen, handleSelectOption, copy, showOverflowTooltip]);
 

@@ -5,7 +5,7 @@ import type { ReactElement } from "react";
 const mockEnv = vi.hoisted(() => ({
   NODE_ENV: "production" as "production" | "test",
   RESEND_OPERATOR_EMAIL: "mail@customermates.com",
-  EMAIL_TRANSPORT: "resend" as "resend" | "smtp" | undefined,
+  EMAIL_TRANSPORT: "resend" as "resend" | "smtp" | "console" | undefined,
 }));
 const resendSend = vi.hoisted(() => vi.fn());
 const smtpSend = vi.hoisted(() => vi.fn());
@@ -13,12 +13,12 @@ const smtpSend = vi.hoisted(() => vi.fn());
 vi.mock("@/env", () => ({ env: mockEnv }));
 vi.mock("../resend.transport", () => ({
   ResendTransport: class {
-    send = resendSend;
+    deliver = resendSend;
   },
 }));
 vi.mock("../smtp.transport", () => ({
   SmtpTransport: class {
-    send = smtpSend;
+    deliver = smtpSend;
   },
 }));
 
@@ -35,8 +35,8 @@ describe("EmailService transport selection", () => {
     vi.clearAllMocks();
     mockEnv.NODE_ENV = "production";
     mockEnv.EMAIL_TRANSPORT = "resend";
-    resendSend.mockResolvedValue(true);
-    smtpSend.mockResolvedValue(true);
+    resendSend.mockResolvedValue({ accepted: true, transport: "resend", providerMessageId: "r-1" });
+    smtpSend.mockResolvedValue({ accepted: true, transport: "smtp", providerMessageId: null });
   });
 
   it("routes through Resend when the transport is resend", async () => {
@@ -75,19 +75,39 @@ describe("EmailService transport selection", () => {
   });
 
   it("propagates a transport rejection as a false result", async () => {
-    smtpSend.mockResolvedValue(false);
+    smtpSend.mockResolvedValue({ accepted: false, transport: "smtp", providerMessageId: null });
     mockEnv.EMAIL_TRANSPORT = "smtp";
 
     await expect(new EmailService().send(email)).resolves.toBe(false);
   });
 
-  it("does not reach any transport outside production", async () => {
+  it("hands the provider's message id back from deliver", async () => {
+    await expect(new EmailService().deliver(email)).resolves.toEqual({
+      accepted: true,
+      transport: "resend",
+      providerMessageId: "r-1",
+    });
+  });
+
+  it("sends through the configured transport outside production too", async () => {
     mockEnv.NODE_ENV = "test";
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
     await expect(new EmailService().send(email)).resolves.toBe(true);
+    expect(resendSend).toHaveBeenCalledTimes(1);
+  });
+
+  it("writes to the console transport when it is the configured one, without reaching a provider", async () => {
+    mockEnv.EMAIL_TRANSPORT = "console";
+    const write = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+
+    await expect(new EmailService().deliver(email)).resolves.toEqual({
+      accepted: true,
+      transport: "console",
+      providerMessageId: null,
+    });
+    expect(String(write.mock.calls[0]?.[0])).toContain('"subject":"Legal update"');
     expect(resendSend).not.toHaveBeenCalled();
     expect(smtpSend).not.toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    write.mockRestore();
   });
 });

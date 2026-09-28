@@ -10,7 +10,7 @@ import type { AutomationDto, AutomationRunDto } from "./automation.schema";
 import type { Filter } from "@/core/base/base-get.schema";
 
 import type { EntityType, Prisma } from "@/generated/prisma";
-import { AutomationRunStatus, AutomationTriggerKind, Status } from "@/generated/prisma";
+import { AutomationActionKind, AutomationRunStatus, AutomationTriggerKind, Status } from "@/generated/prisma";
 
 import { BaseRepository } from "@/core/base/base-repository";
 import { Transaction } from "@/core/decorators/transaction.decorator";
@@ -36,6 +36,36 @@ const automationSelect = {
 } satisfies Prisma.AutomationSelect;
 
 type AutomationRow = Prisma.AutomationGetPayload<{ select: typeof automationSelect }>;
+
+const STEP_SNAPSHOT_SELECT = {
+  id: true,
+  position: true,
+  kind: true,
+  config: true,
+} satisfies Prisma.AutomationStepSelect;
+
+type SnapshotSource = Prisma.AutomationStepGetPayload<{ select: typeof STEP_SNAPSHOT_SELECT }>;
+
+type StepSnapshot = { kind: AutomationActionKind; config: Prisma.JsonValue };
+
+function runStepFor(companyId: string, step: SnapshotSource) {
+  return {
+    companyId,
+    stepId: step.id,
+    position: step.position,
+    status: AutomationRunStatus.queued,
+    snapshot: { kind: step.kind, config: step.config } as Prisma.InputJsonValue,
+  };
+}
+
+function snapshotOf(value: Prisma.JsonValue | null): StepSnapshot | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+
+  const kind = value.kind;
+  if (typeof kind !== "string" || !Object.values<string>(AutomationActionKind).includes(kind)) return null;
+
+  return { kind: kind as AutomationActionKind, config: value.config ?? null };
+}
 
 function toConditions(value: Prisma.JsonValue | null): Filter[] | null {
   return Array.isArray(value) ? (value as unknown as Filter[]) : null;
@@ -129,6 +159,7 @@ export class PrismaAutomationRepo
             error: true,
             startedAt: true,
             finishedAt: true,
+            snapshot: true,
             step: { select: { kind: true } },
           },
           orderBy: { position: "asc" },
@@ -153,7 +184,7 @@ export class PrismaAutomationRepo
       steps: row.steps.map((step) => ({
         id: step.id,
         position: step.position,
-        kind: step.step?.kind ?? null,
+        kind: snapshotOf(step.snapshot)?.kind ?? step.step?.kind ?? null,
         status: step.status,
         output: step.output,
         error: step.error,
@@ -256,7 +287,7 @@ export class PrismaAutomationRepo
     for (const automationId of args.automationIds) {
       const steps = await this.prisma.automationStep.findMany({
         where: { automationId, companyId: args.companyId },
-        select: { id: true, position: true },
+        select: STEP_SNAPSHOT_SELECT,
         orderBy: { position: "asc" },
       });
       if (steps.length === 0) continue;
@@ -271,12 +302,7 @@ export class PrismaAutomationRepo
           triggerEvent: args.triggerEvent,
           triggerPayload: args.triggerPayload as Prisma.InputJsonValue,
           steps: {
-            create: steps.map((step) => ({
-              companyId: args.companyId,
-              stepId: step.id,
-              position: step.position,
-              status: AutomationRunStatus.queued,
-            })),
+            create: steps.map((step) => runStepFor(args.companyId, step)),
           },
         },
         select: { id: true },
@@ -301,7 +327,13 @@ export class PrismaAutomationRepo
         triggerEvent: true,
         automation: { select: { name: true, conditions: true } },
         steps: {
-          select: { id: true, position: true, stepId: true, step: { select: { kind: true, config: true } } },
+          select: {
+            id: true,
+            position: true,
+            stepId: true,
+            snapshot: true,
+            step: { select: { kind: true, config: true } },
+          },
           orderBy: { position: "asc" },
         },
       },
@@ -317,19 +349,11 @@ export class PrismaAutomationRepo
       entityId: run.entityId,
       triggerEvent: run.triggerEvent,
       conditions: toConditions(run.automation.conditions),
-      steps: run.steps.flatMap((step) =>
-        step.step && step.stepId
-          ? [
-              {
-                id: step.id,
-                stepId: step.stepId,
-                position: step.position,
-                kind: step.step.kind,
-                config: step.step.config,
-              },
-            ]
-          : [],
-      ),
+      steps: run.steps.flatMap((step) => {
+        const planned = snapshotOf(step.snapshot) ?? step.step;
+
+        return planned ? [{ id: step.id, position: step.position, kind: planned.kind, config: planned.config }] : [];
+      }),
     };
   }
 
@@ -434,7 +458,7 @@ export class PrismaAutomationRepo
 
     const steps = await this.prisma.automationStep.findMany({
       where: { automationId: args.automationId, companyId: args.companyId },
-      select: { id: true, position: true },
+      select: STEP_SNAPSHOT_SELECT,
       orderBy: { position: "asc" },
     });
     if (steps.length === 0) return null;
@@ -446,12 +470,7 @@ export class PrismaAutomationRepo
         status: AutomationRunStatus.queued,
         triggerEvent: "schedule",
         steps: {
-          create: steps.map((step) => ({
-            companyId: args.companyId,
-            stepId: step.id,
-            position: step.position,
-            status: AutomationRunStatus.queued,
-          })),
+          create: steps.map((step) => runStepFor(args.companyId, step)),
         },
       },
       select: { id: true },

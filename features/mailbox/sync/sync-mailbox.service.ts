@@ -2,6 +2,7 @@ import type { MailboxAccount, PrismaMailboxRepo } from "../persistence/prisma-ma
 import type { MailboxFolderCursorDto, MailboxSyncOutcome } from "../mailbox.schema";
 import type { MailboxTransport } from "./mailbox-transport";
 import type { SecretBoxKey } from "../credentials/secret-box";
+import type { ParsedAttachment } from "./parse-source";
 
 import { openSecret } from "../credentials/secret-box";
 import { normalizeMessage, type NormalizedMessage } from "./normalize-message";
@@ -11,12 +12,20 @@ import { selectSyncFolders } from "./select-sync-folders";
 
 export type MailboxClock = () => Date;
 
+export type MailboxAttachmentStore = {
+  store(
+    owner: { companyId: string; connectedAccountId: string; unipileMessageId: string },
+    attachments: readonly ParsedAttachment[],
+  ): Promise<number>;
+};
+
 export class SyncMailboxService {
   constructor(
     private repo: PrismaMailboxRepo,
     private transport: MailboxTransport,
     private secretKey: SecretBoxKey,
     private now: MailboxClock,
+    private attachments?: MailboxAttachmentStore,
   ) {}
 
   async listSyncFolders(account: MailboxAccount): Promise<string[]> {
@@ -75,6 +84,14 @@ export class SyncMailboxService {
         if (created) {
           messagesStored += 1;
           storedHere += 1;
+          await this.attachments?.store(
+            {
+              companyId: this.repo.companyId,
+              connectedAccountId: account.connectedAccountId,
+              unipileMessageId: normalized.message.unipileMessageId,
+            },
+            planned.parsed.attachments,
+          );
         }
 
         await this.repo.storeParticipants(normalized);

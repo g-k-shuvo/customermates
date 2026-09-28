@@ -2,6 +2,8 @@ import type { BaseModalStore } from "../base/base-modal.store";
 import type { AppMode } from "@/core/config/environment";
 import type { Branding } from "@/core/config/branding";
 
+import { EntityType } from "@/generated/prisma";
+
 import { SignInStore } from "@/app/[locale]/(public)/auth/signin/sign-in.store";
 import { SignUpStore } from "@/app/[locale]/(public)/auth/signup/sign-up.store";
 import { CompanySettingsStore } from "@/app/[locale]/(protected)/company/components/company-settings/company-settings.store";
@@ -64,6 +66,8 @@ import { PipelinesStore } from "@/app/[locale]/(protected)/company/components/pi
 import { DeleteStageModalStore } from "@/app/[locale]/(protected)/company/components/pipelines/delete-stage-modal.store";
 import { LostReasonsStore } from "@/app/[locale]/(protected)/company/components/lost-reasons/lost-reasons.store";
 import { CustomColumnModalStore } from "@/components/data-view/custom-columns/custom-column-modal.store";
+import { RelationLabelStore } from "@/components/data-view/custom-columns/relation-label.store";
+import { DuplicatesStore } from "@/app/[locale]/(protected)/contacts/components/duplicates/duplicates.store";
 import { FilterPaletteStore } from "@/components/data-view/filter-palette/filter-palette.store";
 import { DeleteConfirmationModalStore } from "@/components/modal/delete-confirmation-modal.store";
 import { DealCloseStore } from "@/app/[locale]/(protected)/deals/components/deal-close.store";
@@ -101,6 +105,9 @@ export class RootStore {
   private _connectUpsellModalStore?: ConnectUpsellModalStore;
   private _companyStore?: CompanyStore;
   private _terminologyStore?: TerminologyStore;
+  private _relationLabelStore?: RelationLabelStore;
+  private _contactDuplicatesStore?: DuplicatesStore;
+  private _organizationDuplicatesStore?: DuplicatesStore;
   private _contactsStore?: ContactsStore;
   private _messagingThreadsStore?: MessagingThreadsStore;
   private _messagingThreadDetailStore?: MessagingThreadDetailStore;
@@ -219,6 +226,18 @@ export class RootStore {
 
   get terminologyStore() {
     return (this._terminologyStore ??= new TerminologyStore(this));
+  }
+
+  get relationLabelStore() {
+    return (this._relationLabelStore ??= new RelationLabelStore());
+  }
+
+  get contactDuplicatesStore() {
+    return (this._contactDuplicatesStore ??= new DuplicatesStore(EntityType.contact));
+  }
+
+  get organizationDuplicatesStore() {
+    return (this._organizationDuplicatesStore ??= new DuplicatesStore(EntityType.organization));
   }
 
   get usersStore() {

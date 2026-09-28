@@ -57,6 +57,7 @@ async function composeRaw(reply: BuiltReply, messageId: string): Promise<Buffer>
     messageId,
     inReplyTo: reply.inReplyTo ?? undefined,
     references: reply.references.length > 0 ? reply.references : undefined,
+    attachments: reply.attachments?.map(({ filename, contentType, content }) => ({ filename, contentType, content })),
   });
 
   return await composer.compile().build();

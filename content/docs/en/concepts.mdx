@@ -36,7 +36,7 @@ Tasks link to users, contacts, organizations, deals, and services. Over MCP, lin
 
 The default schema covers the basics. For anything else, add a custom column.
 
-Ten types:
+Eleven types:
 
 | Type | Use for |
 |---|---|
@@ -50,8 +50,11 @@ Ten types:
 | **Link** (`link`) | One or more URLs |
 | **Email** (`email`) | One or more email addresses |
 | **Phone** (`phone`) | One or more phone numbers |
+| **Linked Record** (`relation`) | One contact, organization or deal, such as a deal's referral contact |
 
 Single Select columns are how you model your own workflows. A deal "Stage" or a task "Priority" is a Single Select column you define, with the options you choose, per workspace. A board view can then group records by any Single Select column, and the value is what filters and tools compare against.
+
+A Linked Record column links a record to one contact, organization or deal, chosen when the column is created; the linked kind and the type cannot change afterwards. The value is the linked record's id, shown as its name and opened with a click. Deleting the linked record clears the value, and anyone who cannot see the linked record sees "No access" instead of its name. A board can group by a Linked Record column, with one group per linked record you can see. An import matches a Linked Record cell by the record's name (ignoring case) or its id, and refuses a name that matches no record or several. Linked Record columns cannot be mapped from a web form.
 
 Custom columns are first-class in filters, widgets, and the MCP surface: `manage_custom_columns` creates and updates them, and every record tool reads and writes their values through `customFieldValues` with the column id from `get_record_schema`.
 

@@ -13,6 +13,7 @@ export const WebFormSourceDtoSchema = z.object({
   active: z.boolean(),
   defaultOwnerId: z.uuid().nullable(),
   defaultLabels: z.array(z.string()),
+  dedupeLeads: z.boolean(),
   fieldMapping: WebFormFieldMappingSchema,
   endpointPath: z.string(),
   createdAt: z.date(),

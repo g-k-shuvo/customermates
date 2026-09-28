@@ -23,6 +23,7 @@ import {
   Mail,
   Package,
   Plus,
+  ReceiptText,
   LayoutGrid,
   Repeat,
   Workflow,
@@ -258,6 +259,13 @@ const FullAppSidebar = observer(
               href: "/services",
               icon: Package,
               visible: canAccess(Resource.services),
+            },
+            {
+              key: "invoices",
+              title: t("Invoices.title"),
+              href: "/invoices",
+              icon: ReceiptText,
+              visible: canAccess(Resource.invoices),
             },
             {
               key: "tasks",

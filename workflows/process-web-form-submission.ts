@@ -14,6 +14,7 @@ export type ProcessWebFormSubmissionPayload = {
 
 type ProcessedSubmission = {
   failed: boolean;
+  appended: boolean;
   leadId: string | null;
   companyId: string | null;
   publisherUserId: string | null;
@@ -24,7 +25,8 @@ async function processSubmission(submissionId: string): Promise<ProcessedSubmiss
 
   const outcome = await getProcessWebFormSubmissionInteractor().invoke({ submissionId });
 
-  if (isInteractorFailure(outcome)) return { failed: true, leadId: null, companyId: null, publisherUserId: null };
+  if (isInteractorFailure(outcome))
+    return { failed: true, appended: false, leadId: null, companyId: null, publisherUserId: null };
 
   return { failed: false, ...outcome.data };
 }
@@ -86,7 +88,7 @@ export async function processWebFormSubmission(payload: ProcessWebFormSubmission
       return;
     }
 
-    await publishLeadCreated(result.leadId, result.companyId, result.publisherUserId);
+    if (!result.appended) await publishLeadCreated(result.leadId, result.companyId, result.publisherUserId);
   } catch (err) {
     await reportFailure(WORKFLOW_NAME, toWorkflowFailure(err));
   }

@@ -1,4 +1,4 @@
-import { getSweepRecordFilesInteractor } from "@/core/di";
+import { getSweepMailAttachmentsInteractor, getSweepRecordFilesInteractor } from "@/core/di";
 import { env } from "@/env";
 
 export const runtime = "nodejs";
@@ -12,6 +12,9 @@ export async function GET(req: Request) {
   if (env.APP_MODE === "demo") return Response.json({ skipped: "demo-mode" });
 
   const result = await getSweepRecordFilesInteractor().invoke();
+  const mail = await getSweepMailAttachmentsInteractor().invoke();
 
-  return Response.json(result.ok ? result.data : { ok: false });
+  if (!result.ok) return Response.json({ ok: false });
+
+  return Response.json({ ...result.data, mailAttachmentsRemoved: mail.ok ? mail.data.removed : 0 });
 }

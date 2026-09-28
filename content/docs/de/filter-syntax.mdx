@@ -34,8 +34,8 @@ Regeln sind UND-verknüpft. Für ODER-Logik lassen Sie zwei Abfragen laufen und 
 | `gte` | einen Wert | Zahlen, Daten | `100` |
 | `lt` | einen Wert | Zahlen, Daten | `"2024-12-31"` |
 | `lte` | einen Wert | Zahlen, Daten | `"2024-12-31"` |
-| `in` | Array | Relationship-Arrays, ID-, Enum- und Auswahlfelder sowie singleSelect-Custom-Columns | `["id1", "id2"]` |
-| `notIn` | Array | Relationship-Arrays, ID-, Enum- und Auswahlfelder sowie singleSelect-Custom-Columns | `["id1"]` |
+| `in` | Array | Relationship-Arrays, ID-, Enum- und Auswahlfelder sowie singleSelect- und relation-Custom-Columns | `["id1", "id2"]` |
+| `notIn` | Array | Relationship-Arrays, ID-, Enum- und Auswahlfelder sowie singleSelect- und relation-Custom-Columns | `["id1"]` |
 | `between` | Array aus 2 | Zahlen, Daten | `["2024-01-01", "2024-12-31"]` |
 | `inLastDays` | einen Wert (positive Ganzzahl) | Daten | `30` |
 | `isNull` | keinen Wert | nur Custom Columns | (keiner) |
@@ -63,7 +63,7 @@ Der Wert von `field` ist, was `get_record_schema` unter `filterableFields` für 
 
 - Standard-Skalarfelder (zum Beispiel `createdAt`, `updatedAt` und bei Kontakten `firstName` und `lastName`).
 - Relationship-Arrays (`organizationIds`, `dealIds`, `userIds`, `contactIds`). Kombinieren Sie sie mit `in`, `notIn`, `hasNone`, `hasSome`. Manche Relationsfelder brauchen Leseberechtigung auf den verknüpften Datensatztyp.
-- Custom-Column-IDs. Nutzen Sie die UUID der Spalte als Feld; eine singleSelect-Spalte akzeptiert nur `in`, `notIn`, `isNull` und `isNotNull` und filtert auf ihre Optionswerte.
+- Custom-Column-IDs. Nutzen Sie die UUID der Spalte als Feld; eine singleSelect-Spalte akzeptiert nur `in`, `notIn`, `isNull` und `isNotNull` und filtert auf ihre Optionswerte. Eine relation-Spalte akzeptiert dieselben vier Operatoren und filtert auf die Id des verknüpften Datensatzes.
 
 Rufen Sie immer zuerst `get_record_schema` auf, wenn Sie unsicher sind, was filterbar ist. Die Fehlermeldung bei einem unbekannten Feld listet jedes verfügbare Feld mit seinen erlaubten Operatoren.
 

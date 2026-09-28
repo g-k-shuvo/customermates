@@ -53,6 +53,7 @@ function threadRow(linkedDealId: string | null): ThreadWithMessagesRow {
         isDraft: false,
         sentAt: new Date("2026-09-08T10:00:00Z"),
         senderIdentifier: "anna@buyer.example",
+        attachments: [],
       },
     ],
   };

@@ -196,6 +196,10 @@ model User {
   uploadedRecordFiles             RecordFile[]
   createdRecordDocuments          RecordDocument[]
   uploadedRecordDocumentFiles     RecordDocumentFile[]
+  startedDuplicateScans           DuplicateScan[]
+  duplicateDismissals             DuplicateDismissal[]
+  contactMerges                   ContactMergeRecord[]    @relation("ContactMergeRecordMergedBy")
+  undoneContactMerges             ContactMergeRecord[]    @relation("ContactMergeRecordUndoneBy")
   connectedAccounts               ConnectedAccount[]
   agentConversations              AgentConversation[]
   agentRunLeases                  AgentRunLease[]
@@ -254,7 +258,20 @@ model Company {
   p13n                        P13n[]
   dataViews                   DataView[]
   recordFiles                 RecordFile[]
+  mailAttachments             MailAttachment[]
   recordDocuments             RecordDocument[]
+  duplicateScans              DuplicateScan[]
+  duplicateGroups             DuplicateGroup[]
+  duplicateMembers            DuplicateMember[]
+  duplicateDismissals         DuplicateDismissal[]
+  contactMatchKeys            ContactMatchKey[]
+  contactMergeRecords         ContactMergeRecord[]
+  organizationMergeRecords    OrganizationMergeRecord[]
+  invoices                    Invoice[]
+  invoiceLines                InvoiceLine[]
+  invoicePayments             InvoicePayment[]
+  invoiceSettings             InvoiceSettings?
+  billingProfiles             BillingProfile[]
   recordDocumentFiles         RecordDocumentFile[]
   webhooks                    Webhook[]
   webhookDeliveries           WebhookDelivery[]
@@ -441,11 +458,15 @@ model Contact {
   users             ContactUser[]
   deals             DealContact[]
   tasks             TaskContact[]
-  customFieldValues CustomFieldValue[]
+  customFieldValues CustomFieldValue[]    @relation("ContactToCustomFieldValue")
+  customFieldRefs   CustomFieldValue[]    @relation("CustomFieldValueTargetContact")
   identifiers       ContactIdentifier[]
   leads             Lead[]
   files             RecordFile[]
   documents         RecordDocument[]
+  duplicateMembers  DuplicateMember[]
+  matchKeys         ContactMatchKey[]
+  mergeRecords      ContactMergeRecord[]
 
   @@index([companyId])
   @@index([firstName])
@@ -466,10 +487,15 @@ model Organization {
   deals             DealOrganization[]
   users             OrganizationUser[]
   tasks             TaskOrganization[]
-  customFieldValues CustomFieldValue[]
+  customFieldValues CustomFieldValue[]    @relation("CustomFieldValueToOrganization")
+  customFieldRefs   CustomFieldValue[]    @relation("CustomFieldValueTargetOrganization")
   leads             Lead[]
   files             RecordFile[]
   documents         RecordDocument[]
+  duplicateMembers  DuplicateMember[]
+  invoices          Invoice[]
+  billingProfile    BillingProfile?
+  matchKeys         ContactMatchKey[]
 
   @@index([companyId])
   @@index([name])
@@ -509,17 +535,24 @@ model CustomFieldValue {
   companyId      String
   company        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
   contactId      String?
-  contact        Contact?         @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contact        Contact?         @relation("ContactToCustomFieldValue", fields: [contactId], references: [id], onDelete: Cascade)
   organizationId String?
-  organization   Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization?    @relation("CustomFieldValueToOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
   dealId         String?
-  deal           Deal?            @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  deal           Deal?            @relation("CustomFieldValueToDeal", fields: [dealId], references: [id], onDelete: Cascade)
   serviceId      String?
   service        Service?         @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   taskId         String?
   task           Task?            @relation(fields: [taskId], references: [id], onDelete: Cascade)
   leadId         String?
   lead           Lead?            @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  targetContactId      String?
+  targetContact        Contact?      @relation("CustomFieldValueTargetContact", fields: [targetContactId], references: [id], onDelete: Cascade)
+  targetOrganizationId String?
+  targetOrganization   Organization? @relation("CustomFieldValueTargetOrganization", fields: [targetOrganizationId], references: [id], onDelete: Cascade)
+  targetDealId         String?
+  targetDeal           Deal?         @relation("CustomFieldValueTargetDeal", fields: [targetDealId], references: [id], onDelete: Cascade)
 
   @@index([entityType, columnId])
   @@index([columnId])
@@ -538,6 +571,9 @@ model CustomFieldValue {
   @@index([organizationId, columnId])
   @@index([serviceId, columnId])
   @@index([taskId, columnId])
+  @@index([targetContactId])
+  @@index([targetOrganizationId])
+  @@index([targetDealId])
   @@index([leadId])
 }
 
@@ -570,7 +606,8 @@ model Deal {
   contacts          DealContact[]
   services          ServiceDeal[]
   tasks             TaskDeal[]
-  customFieldValues CustomFieldValue[]
+  customFieldValues CustomFieldValue[] @relation("CustomFieldValueToDeal")
+  customFieldRefs   CustomFieldValue[] @relation("CustomFieldValueTargetDeal")
   pipeline          Pipeline?          @relation(fields: [pipelineId], references: [id], onDelete: SetNull)
   stage             PipelineStage?     @relation(fields: [stageId], references: [id], onDelete: SetNull)
   lostReason        LostReason?        @relation(fields: [lostReasonId], references: [id], onDelete: SetNull)
@@ -578,6 +615,7 @@ model Deal {
   files             RecordFile[]
   documents         RecordDocument[]
   mailThreads       MessagingThread[]
+  invoices          Invoice[]
 
   @@index([companyId])
   @@index([name])
@@ -1034,6 +1072,7 @@ enum Resource {
   inboxMessages
   routines
   automations
+  invoices
 }
 
 enum MessagingThreadState {
@@ -1300,6 +1339,7 @@ enum CustomColumnType {
   link
   phone
   singleSelect
+  relation
 }
 
 enum EntityType {
@@ -1395,6 +1435,7 @@ model WebFormSource {
   active         Boolean             @default(true)
   defaultOwnerId String?
   defaultLabels  String[]            @default([])
+  dedupeLeads    Boolean             @default(false)
   fieldMapping   Json
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
@@ -1772,6 +1813,7 @@ model MessagingMessage {
   bodyText           String?
   bodyHtml           String?
   attachmentsMeta    Json                      @default("[]")
+  attachments        MailAttachment[]
   folderIds          String[]                  @default([])
   isEvent            Boolean                   @default(false)
   isDeleted          Boolean                   @default(false)
@@ -1787,6 +1829,24 @@ model MessagingMessage {
   @@index([messagingThreadId, sentAt])
   @@index([companyId, provider, senderIdentifier])
   @@index([folderIds], type: Gin)
+}
+
+model MailAttachment {
+  id          String            @id @default(uuid())
+  companyId   String
+  company     Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  messageId   String?
+  message     MessagingMessage? @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  storageKey  String?           @unique
+  fileName    String
+  contentType String
+  byteSize    Int
+  contentId   String?
+  inline      Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+
+  @@index([companyId])
+  @@index([messageId])
 }
 
 model AccountActivity {
@@ -2507,6 +2567,7 @@ model AutomationRunStep {
   position   Int
   status     AutomationRunStatus @default(queued)
   output     Json?
+  snapshot   Json?
   error      String?
   startedAt  DateTime?
   finishedAt DateTime?
@@ -2632,4 +2693,268 @@ model RecordDocumentFile {
   @@index([companyId])
   @@index([documentId, kind, status])
   @@index([companyId, status, createdAt])
+}
+
+enum DuplicateScanStatus {
+  running
+  completed
+  failed
+}
+
+enum DuplicateGroupStatus {
+  open
+  dismissed
+  merged
+}
+
+enum DuplicateMatchKeyKind {
+  emailLocalPart
+  emailDomainSurname
+  phoneLast7
+  nameKey
+  nameSoundKey
+  organizationSurname
+  organizationNameKey
+  organizationSoundKey
+  organizationDomain
+}
+
+model DuplicateScan {
+  id              String              @id @default(uuid())
+  companyId       String
+  entityType      EntityType
+  status          DuplicateScanStatus @default(running)
+  startedByUserId String?
+  recordCount     Int                 @default(0)
+  groupCount      Int                 @default(0)
+  skippedBuckets  Json?
+  startedAt       DateTime            @default(now())
+  finishedAt      DateTime?
+  company         Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  startedBy       User?               @relation(fields: [startedByUserId], references: [id], onDelete: SetNull)
+  groups          DuplicateGroup[]
+
+  @@index([companyId, entityType, startedAt])
+}
+
+model DuplicateGroup {
+  id          String                  @id @default(uuid())
+  companyId   String
+  scanId      String?
+  entityType  EntityType
+  fingerprint String
+  status      DuplicateGroupStatus    @default(open)
+  score       Float
+  signals     DuplicateMatchKeyKind[]
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  company     Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  scan        DuplicateScan?          @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  members     DuplicateMember[]
+
+  @@unique([scanId, fingerprint])
+  @@index([companyId, entityType, status])
+}
+
+model DuplicateMember {
+  id             String         @id @default(uuid())
+  companyId      String
+  groupId        String
+  contactId      String?
+  organizationId String?
+  company        Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  group          DuplicateGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  contact        Contact?       @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  organization   Organization?  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, contactId])
+  @@unique([groupId, organizationId])
+  @@index([companyId])
+  @@index([contactId])
+  @@index([organizationId])
+}
+
+model DuplicateDismissal {
+  id                String     @id @default(uuid())
+  companyId         String
+  entityType        EntityType
+  leftId            String
+  rightId           String
+  dismissedByUserId String?
+  createdAt         DateTime   @default(now())
+  company           Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  dismissedBy       User?      @relation(fields: [dismissedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([companyId, entityType, leftId, rightId])
+}
+
+model ContactMatchKey {
+  id             String                @id @default(uuid())
+  companyId      String
+  entityType     EntityType
+  contactId      String?
+  organizationId String?
+  kind           DuplicateMatchKeyKind
+  value          String
+  company        Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact        Contact?              @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  organization   Organization?         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, entityType, kind, value])
+  @@index([contactId])
+  @@index([organizationId])
+}
+
+model ContactMergeRecord {
+  id             String    @id @default(uuid())
+  companyId      String
+  winnerId       String?
+  loserIds       String[]
+  groupId        String?
+  snapshot       Json
+  mergedByUserId String?
+  undoneByUserId String?
+  createdAt      DateTime  @default(now())
+  undoneAt       DateTime?
+  company        Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  winner         Contact?  @relation(fields: [winnerId], references: [id], onDelete: SetNull)
+  mergedBy       User?     @relation("ContactMergeRecordMergedBy", fields: [mergedByUserId], references: [id], onDelete: SetNull)
+  undoneBy       User?     @relation("ContactMergeRecordUndoneBy", fields: [undoneByUserId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, createdAt])
+  @@index([winnerId])
+}
+
+model OrganizationMergeRecord {
+  id             String    @id @default(uuid())
+  companyId      String
+  winnerId       String?
+  loserIds       String[]
+  groupId        String?
+  snapshot       Json
+  mergedByUserId String?
+  undoneByUserId String?
+  createdAt      DateTime  @default(now())
+  undoneAt       DateTime?
+  company        Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, createdAt])
+  @@index([winnerId])
+}
+
+enum InvoiceStatus {
+  draft
+  issued
+  paid
+  void
+}
+
+model InvoiceSettings {
+  id               String   @id @default(uuid())
+  companyId        String   @unique
+  sellerName       String   @default("")
+  sellerAddress    String   @default("")
+  sellerVatId      String?
+  sellerEmail      String?
+  sellerPhone      String?
+  bankDetails      String?
+  footer           String?
+  numberPrefix     String   @default("INV-")
+  nextNumber       Int      @default(1)
+  paymentTermsDays Int      @default(14)
+  defaultTaxRate   Decimal  @default(19) @db.Decimal(5, 2)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  company          Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model BillingProfile {
+  id             String       @id @default(uuid())
+  companyId      String
+  organizationId String       @unique
+  legalName      String       @default("")
+  address        String       @default("")
+  vatId          String?
+  email          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  company        Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+model Invoice {
+  id              String           @id @default(uuid())
+  companyId       String
+  number          String?
+  status          InvoiceStatus    @default(draft)
+  dealId          String?
+  organizationId  String?
+  currency        Currency
+  issueDate       DateTime?
+  dueDate         DateTime?
+  buyerName       String           @default("")
+  buyerAddress    String           @default("")
+  buyerVatId      String?
+  buyerEmail      String?
+  sellerSnapshot  Json?
+  notes           String?
+  netTotal        Decimal          @default(0) @db.Decimal(14, 2)
+  taxTotal        Decimal          @default(0) @db.Decimal(14, 2)
+  grossTotal      Decimal          @default(0) @db.Decimal(14, 2)
+  paidAmount      Decimal          @default(0) @db.Decimal(14, 2)
+  paidAt          DateTime?
+  issuedAt        DateTime?
+  voidedAt        DateTime?
+  createdByUserId String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  deal            Deal?            @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  organization    Organization?    @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  lines           InvoiceLine[]
+  payments        InvoicePayment[]
+
+  @@unique([companyId, number])
+  @@index([companyId, status])
+  @@index([companyId, createdAt])
+  @@index([dealId])
+  @@index([organizationId])
+}
+
+model InvoiceLine {
+  id              String  @id @default(uuid())
+  companyId       String
+  invoiceId       String
+  position        Int
+  description     String
+  quantity        Decimal @db.Decimal(14, 4)
+  unitPrice       Decimal @db.Decimal(14, 2)
+  discountPercent Decimal @default(0) @db.Decimal(5, 2)
+  taxRate         Decimal @db.Decimal(5, 2)
+  netAmount       Decimal @db.Decimal(14, 2)
+  taxAmount       Decimal @db.Decimal(14, 2)
+  serviceId       String?
+  company         Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invoice         Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([invoiceId, position])
+}
+
+model InvoicePayment {
+  id              String   @id @default(uuid())
+  companyId       String
+  invoiceId       String
+  amount          Decimal  @db.Decimal(14, 2)
+  paidAt          DateTime
+  note            String?
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invoice         Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([invoiceId])
 }

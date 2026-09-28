@@ -36,6 +36,10 @@ function buildRepo(defaultOwnerId: string | null, fallbackUserId: string | null,
       defaultLabels: [],
     }),
     resolveContactUnscoped: vi.fn().mockResolvedValue(null),
+    findContactIdByEmailUnscoped: vi.fn().mockResolvedValue(null),
+    findOpenLeadForContactUnscoped: vi.fn().mockResolvedValue(null),
+    appendMessageToLeadUnscoped: vi.fn().mockResolvedValue(undefined),
+    openContactReviewUnscoped: vi.fn().mockResolvedValue(undefined),
     resolveOrganizationUnscoped: vi.fn().mockResolvedValue(null),
     createLeadFromSubmissionUnscoped: vi.fn().mockResolvedValue(LEAD_ID),
     findMappableCustomColumnsUnscoped: vi.fn().mockResolvedValue([]),
@@ -68,7 +72,13 @@ describe("naming the user a web form lead is published as", () => {
 
     expect(repo.findActiveCompanyUserIdUnscoped).toHaveBeenCalledWith(COMPANY_ID, OWNER_ID);
     expect(repo.findTaskCapableUserIdUnscoped).not.toHaveBeenCalled();
-    expect(outcome).toEqual({ leadId: LEAD_ID, skipped: false, companyId: COMPANY_ID, publisherUserId: OWNER_ID });
+    expect(outcome).toEqual({
+      leadId: LEAD_ID,
+      skipped: false,
+      appended: false,
+      companyId: COMPANY_ID,
+      publisherUserId: OWNER_ID,
+    });
     expect(ownerWrittenOntoTheLead(repo)).toBe(OWNER_ID);
   });
 

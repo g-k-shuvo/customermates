@@ -34,8 +34,8 @@ Rules are AND-combined. For OR logic, run two queries and merge client-side, or 
 | `gte` | single | numbers, dates | `100` |
 | `lt` | single | numbers, dates | `"2024-12-31"` |
 | `lte` | single | numbers, dates | `"2024-12-31"` |
-| `in` | array | relationship arrays, id, enum and select fields, and singleSelect custom columns | `["id1", "id2"]` |
-| `notIn` | array | relationship arrays, id, enum and select fields, and singleSelect custom columns | `["id1"]` |
+| `in` | array | relationship arrays, id, enum and select fields, and singleSelect and relation custom columns | `["id1", "id2"]` |
+| `notIn` | array | relationship arrays, id, enum and select fields, and singleSelect and relation custom columns | `["id1"]` |
 | `between` | array of 2 | numbers, dates | `["2024-01-01", "2024-12-31"]` |
 | `inLastDays` | single (positive integer) | dates | `30` |
 | `isNull` | no value | custom columns only | (none) |
@@ -63,7 +63,7 @@ The `field` value is whatever `get_record_schema` returns under `filterableField
 
 - Default scalar fields (for example `createdAt`, `updatedAt`, and on contacts `firstName` and `lastName`).
 - Relationship arrays (`organizationIds`, `dealIds`, `userIds`, `contactIds`). Pair these with `in`, `notIn`, `hasNone`, `hasSome`. Some relation fields need read permission on the related record type.
-- Custom column ids. Use the column's UUID as the field; a singleSelect column accepts only `in`, `notIn`, `isNull` and `isNotNull` and filters on its option values.
+- Custom column ids. Use the column's UUID as the field; a singleSelect column accepts only `in`, `notIn`, `isNull` and `isNotNull` and filters on its option values. A relation column takes the same four operators and filters on the linked record's id.
 
 Always call `get_record_schema` first if you are not sure what is filterable. The error for an unknown field lists every available field with its allowed operators.
 

@@ -34,10 +34,14 @@ describe("SmtpTransport", () => {
     mockEnv.EMAIL_SMTP_SECURE = false;
   });
 
-  it("returns true when the server accepts the recipient", async () => {
-    sendMail.mockResolvedValue({ accepted: ["recipient@example.com"], rejected: [] });
+  it("returns the message id when the server accepts the recipient", async () => {
+    sendMail.mockResolvedValue({ accepted: ["recipient@example.com"], rejected: [], messageId: "<m-1@example.com>" });
 
-    await expect(new SmtpTransport().send(message)).resolves.toBe(true);
+    await expect(new SmtpTransport().deliver(message)).resolves.toEqual({
+      accepted: true,
+      transport: "smtp",
+      providerMessageId: "<m-1@example.com>",
+    });
     expect(createTransport).toHaveBeenCalledWith({
       host: "smtp.example.com",
       port: 587,
@@ -49,7 +53,7 @@ describe("SmtpTransport", () => {
   it("renders the react body to html before sending", async () => {
     sendMail.mockResolvedValue({ accepted: ["recipient@example.com"], rejected: [] });
 
-    await new SmtpTransport().send(message);
+    await new SmtpTransport().deliver(message);
 
     expect(sendMail).toHaveBeenCalledWith({
       from: message.from,
@@ -62,14 +66,26 @@ describe("SmtpTransport", () => {
   it("returns false when the server accepts no recipient", async () => {
     sendMail.mockResolvedValue({ accepted: [], rejected: ["recipient@example.com"] });
 
-    await expect(new SmtpTransport().send(message)).resolves.toBe(false);
+    await expect(new SmtpTransport().deliver(message)).resolves.toMatchObject({ accepted: false });
+  });
+
+  it("forwards reply-to and headers such as List-Unsubscribe verbatim", async () => {
+    sendMail.mockResolvedValue({ accepted: ["recipient@example.com"], rejected: [] });
+    const headers = {
+      "List-Unsubscribe": "<https://crm.example/u/abc>",
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    };
+
+    await new SmtpTransport().deliver({ ...message, replyTo: "sales@example.com", headers });
+
+    expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ replyTo: "sales@example.com", headers }));
   });
 
   it("omits auth when no user is configured", async () => {
     mockEnv.EMAIL_SMTP_USER = undefined;
     sendMail.mockResolvedValue({ accepted: ["recipient@example.com"], rejected: [] });
 
-    await new SmtpTransport().send(message);
+    await new SmtpTransport().deliver(message);
 
     expect(createTransport).toHaveBeenCalledWith(expect.objectContaining({ auth: undefined }));
   });
@@ -77,7 +93,7 @@ describe("SmtpTransport", () => {
   it("fails closed when the host is absent", async () => {
     mockEnv.EMAIL_SMTP_HOST = undefined;
 
-    await expect(new SmtpTransport().send(message)).rejects.toThrow("EMAIL_SMTP_HOST is not configured");
+    await expect(new SmtpTransport().deliver(message)).rejects.toThrow("EMAIL_SMTP_HOST is not configured");
     expect(sendMail).not.toHaveBeenCalled();
   });
 
@@ -85,6 +101,6 @@ describe("SmtpTransport", () => {
     const failure = new TypeError("socket closed");
     sendMail.mockRejectedValue(failure);
 
-    await expect(new SmtpTransport().send(message)).rejects.toBe(failure);
+    await expect(new SmtpTransport().deliver(message)).rejects.toBe(failure);
   });
 });

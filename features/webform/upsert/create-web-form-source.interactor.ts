@@ -24,6 +24,13 @@ export const CreateWebFormSourceSchema = z.object({
   active: z.boolean().optional().default(true),
   defaultOwnerId: z.uuid().optional(),
   defaultLabels: z.array(zx.nonBlankText(64)).optional().default([]),
+  dedupeLeads: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe(
+      "When true, a submission from a known email address whose contact has an open lead is added to that lead's notes instead of creating another lead.",
+    ),
   fieldMapping: WebFormFieldMappingSchema.optional().default({}),
 });
 export type CreateWebFormSourceData = Data<typeof CreateWebFormSourceSchema>;

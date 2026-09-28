@@ -23,6 +23,7 @@ function parsed(overrides: Overrides): ParsedSourceMessage {
       folderIds: ["INBOX"],
       providerMessageId: String(overrides.uid),
     },
+    attachments: [],
     threading: {
       messageId: overrides.messageId ?? null,
       inReplyTo: overrides.inReplyTo ?? null,

@@ -641,6 +641,18 @@ export class PrismaMailboxRepo extends BaseRepository {
             isDraft: true,
             sentAt: true,
             senderIdentifier: true,
+            attachments: {
+              select: {
+                id: true,
+                fileName: true,
+                contentType: true,
+                byteSize: true,
+                contentId: true,
+                inline: true,
+                storageKey: true,
+              },
+              orderBy: { createdAt: "asc" },
+            },
           },
           orderBy: [{ sentAt: "asc" }, { id: "asc" }],
           take: 500,

@@ -95,11 +95,18 @@ function formatStoredRange(raw: string): string | null {
   return `${start.toISOString()}${RANGE_SEPARATOR}${end.toISOString()}`;
 }
 
-export function resolveCustomFieldCell(column: CustomColumnDto, values: CustomFieldValueDto[]): WorkbookCellValue {
+export function resolveCustomFieldCell(
+  column: CustomColumnDto,
+  values: CustomFieldValueDto[],
+  relationLabels?: ReadonlyMap<string, string>,
+): WorkbookCellValue {
   const stored = values.find((value) => value.columnId === column.id)?.value;
   if (stored === undefined || stored === null || stored === "") return null;
 
   switch (column.type) {
+    case CustomColumnType.relation:
+      return relationLabels?.get(stored) ?? stored;
+
     case CustomColumnType.singleSelect: {
       const option = column.options.options.find((candidate) => candidate.value === stored);
       return option ? option.label : null;

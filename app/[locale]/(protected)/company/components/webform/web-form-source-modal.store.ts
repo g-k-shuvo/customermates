@@ -25,6 +25,7 @@ export type WebFormSourceFormData = {
   slug: string;
   active: boolean;
   defaultLabels: string[];
+  dedupeLeads: boolean;
   fieldMapping: WebFormFieldMapping;
 };
 
@@ -49,6 +50,7 @@ export const EMPTY_WEB_FORM_SOURCE: WebFormSourceFormData = {
   slug: "",
   active: true,
   defaultLabels: [],
+  dedupeLeads: false,
   fieldMapping: {},
 };
 
@@ -106,7 +108,9 @@ export class WebFormSourceModalStore extends BaseModalStore<WebFormSourceFormDat
       getCustomColumnsByEntityTypeAction({ entityType: EntityType.lead }),
       getCustomColumnsByEntityTypeAction({ entityType: EntityType.contact }),
     ]);
-    this.setMappableColumns([...leadColumns, ...contactColumns]);
+    this.setMappableColumns(
+      [...leadColumns, ...contactColumns].filter((column) => column.type !== CustomColumnType.relation),
+    );
 
     if (this.form.fieldMapping.phone?.trim()) {
       this.onInitOrRefresh({
@@ -137,6 +141,7 @@ export class WebFormSourceModalStore extends BaseModalStore<WebFormSourceFormDat
       slug: source.slug,
       active: source.active,
       defaultLabels: [...source.defaultLabels],
+      dedupeLeads: source.dedupeLeads,
       fieldMapping: withEveryMappingKey(source.fieldMapping),
     });
     void this.loadMappableColumns().catch(reportApplicationError);
@@ -214,6 +219,7 @@ export class WebFormSourceModalStore extends BaseModalStore<WebFormSourceFormDat
           name: form.name,
           active: form.active,
           defaultLabels: form.defaultLabels,
+          dedupeLeads: form.dedupeLeads,
           fieldMapping: form.fieldMapping,
         });
 
@@ -232,6 +238,7 @@ export class WebFormSourceModalStore extends BaseModalStore<WebFormSourceFormDat
         slug: form.slug,
         active: form.active,
         defaultLabels: form.defaultLabels,
+        dedupeLeads: form.dedupeLeads,
         fieldMapping: form.fieldMapping,
       });
 

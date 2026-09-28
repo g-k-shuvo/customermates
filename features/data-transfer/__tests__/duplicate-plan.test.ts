@@ -208,3 +208,50 @@ describe("applyDuplicateStrategy", () => {
     expect(result.update).toEqual([existing]);
   });
 });
+
+describe("the review strategy", () => {
+  it("adds a matching row as a new record and remembers every match for review, even an ambiguous one", () => {
+    const result = applyDuplicateStrategy({
+      plan: plan([planRow(2), planRow(3), planRow(4)]),
+      strategy: "review",
+      column: COLUMN,
+      keysBySheetRow: new Map([
+        [2, "ada"],
+        [3, "grace"],
+      ]),
+      matches: new Map([
+        ["ada", ["c1"]],
+        ["grace", ["c2", "c3"]],
+      ]),
+    });
+
+    expect(result.create.map((row) => row.reviewWith)).toEqual([["c1"], ["c2", "c3"], undefined]);
+    expect(result.update).toEqual([]);
+    expect(result.issues.map(({ code, blocking }) => ({ code, blocking }))).toEqual([
+      { code: "duplicateQueuedForReview", blocking: false },
+      { code: "duplicateQueuedForReview", blocking: false },
+    ]);
+  });
+});
+
+describe("the review strategy on a channel key", () => {
+  it("adds the row without the channel it matched on, because a channel belongs to one contact", () => {
+    const result = applyDuplicateStrategy({
+      plan: plan([
+        planRow(2, {
+          identifiers: [
+            { provider: "mail", value: "Grace@Navy.example" },
+            { provider: "mail", value: "g.hopper@home.example" },
+          ],
+        }),
+      ]),
+      strategy: "review",
+      column: { index: 2, letter: "C", header: "Email", key: { kind: "identifier", provider: "mail" } },
+      keysBySheetRow: new Map([[2, "grace@navy.example"]]),
+      matches: new Map([["grace@navy.example", ["c1"]]]),
+    });
+
+    expect(result.create[0].payload.identifiers).toEqual([{ provider: "mail", value: "g.hopper@home.example" }]);
+    expect(result.create[0].reviewWith).toEqual(["c1"]);
+  });
+});

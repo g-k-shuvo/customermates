@@ -1,6 +1,7 @@
 import type { GetResult } from "@/core/base/base-get.interactor";
 import type { GetQueryParams, Filter } from "@/core/base/base-get.schema";
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
+import type { RelationTargetEntityType } from "@/features/custom-column/relation-target";
 import type { ActivityThreadOptionsData } from "@/ee/messaging/activities/get-activity-thread-options.interactor";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -119,6 +120,12 @@ const booleanItems = (whenTrue: string, whenFalse: string) => [
   { key: "true", value: "true", textValue: whenTrue },
   { key: "false", value: "false", textValue: whenFalse },
 ];
+
+const RELATION_FILTER_SOURCE: Record<RelationTargetEntityType, FilterFieldKey> = {
+  [EntityType.contact]: FilterFieldKey.contactIds,
+  [EntityType.organization]: FilterFieldKey.organizationIds,
+  [EntityType.deal]: FilterFieldKey.dealIds,
+};
 
 const SELF_IDENTIFYING_FILTER_FIELDS = new Set<FilterFieldKey>([FilterFieldKey.workspaceId]);
 
@@ -466,13 +473,21 @@ export function useFilterSelectItems(
   const scopeKey = fieldKey === FilterFieldKey.timelineThreadId ? timelineScopeKey : String(field);
 
   const source = useMemo<FilterOptionSource>(() => {
-    if (isCustom) return NO_FILTER_OPTIONS;
+    if (isCustom) {
+      const column = customColumns?.find((col) => col.id === field);
+      if (column?.type !== CustomColumnType.relation) return NO_FILTER_OPTIONS;
+
+      return (
+        filterOptionSources(t, activityQueryRef)[RELATION_FILTER_SOURCE[column.options.targetEntityType]] ??
+        NO_FILTER_OPTIONS
+      );
+    }
 
     const enumValue = filterFieldKeyOf(field);
     if (!enumValue) return NO_FILTER_OPTIONS;
 
     return filterOptionSources(t, activityQueryRef)[enumValue] ?? NO_FILTER_OPTIONS;
-  }, [field, isCustom, t, timelineScopeKey]);
+  }, [field, isCustom, t, timelineScopeKey, customColumns]);
 
   const getItems = source && "getItems" in source ? source.getItems : undefined;
 
@@ -588,7 +603,7 @@ export function useFilterSelectItems(
         }));
       }
 
-      return [];
+      if (customColumn?.type !== CustomColumnType.relation) return [];
     }
 
     if (!source) return [];

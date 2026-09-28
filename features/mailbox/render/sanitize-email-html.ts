@@ -4,12 +4,16 @@ export const BLOCKED_IMAGE_ATTRIBUTE = "data-mailbox-blocked-src";
 
 export type SanitizeEmailHtmlOptions = {
   allowRemoteImages?: boolean;
+  inlineImageSources?: Readonly<Record<string, string>>;
 };
 
 export type SanitizedEmailHtml = {
   html: string;
   blockedImageCount: number;
+  inlineImagesShown: string[];
 };
+
+const CONTENT_ID_SOURCE = /^cid:<?([^>]+)>?$/i;
 
 const ALLOWED_TAGS = [
   "a",
@@ -83,7 +87,11 @@ const SAFE_STYLE = {
   },
 };
 
-function baseOptions(allowRemoteImages: boolean, onImageBlocked: () => void): sanitizeHtml.IOptions {
+function baseOptions(
+  allowRemoteImages: boolean,
+  onImageBlocked: () => void,
+  inlineImage: (source: string) => string | null,
+): sanitizeHtml.IOptions {
   return {
     allowedTags: ALLOWED_TAGS,
     allowedAttributes: {
@@ -111,6 +119,8 @@ function baseOptions(allowRemoteImages: boolean, onImageBlocked: () => void): sa
         if (source.length === 0) return { tagName, attribs: incoming };
 
         const withoutSource = without(incoming, ["src"]);
+        const inline = inlineImage(source);
+        if (inline) return { tagName, attribs: { ...withoutSource, src: inline } };
         if (!REMOTE_IMAGE_SCHEME.test(source)) return { tagName, attribs: withoutSource };
         if (allowRemoteImages) return { tagName, attribs: incoming };
 
@@ -126,13 +136,23 @@ export function sanitizeEmailHtml(
   raw: string | null | undefined,
   options: SanitizeEmailHtmlOptions = {},
 ): SanitizedEmailHtml {
-  if (typeof raw !== "string" || raw.length === 0) return { html: "", blockedImageCount: 0 };
+  if (typeof raw !== "string" || raw.length === 0) return { html: "", blockedImageCount: 0, inlineImagesShown: [] };
 
   let blockedImageCount = 0;
+  const shown = new Set<string>();
+  const sources = options.inlineImageSources ?? {};
+  const inlineImage = (source: string) => {
+    const contentId = CONTENT_ID_SOURCE.exec(source)?.[1]?.trim();
+    const target = contentId ? sources[contentId] : undefined;
+    if (!contentId || !target) return null;
+
+    shown.add(contentId);
+    return target;
+  };
   const html = sanitizeHtml(
     raw,
-    baseOptions(options.allowRemoteImages === true, () => (blockedImageCount += 1)),
+    baseOptions(options.allowRemoteImages === true, () => (blockedImageCount += 1), inlineImage),
   );
 
-  return { html, blockedImageCount };
+  return { html, blockedImageCount, inlineImagesShown: [...shown] };
 }

@@ -32,6 +32,7 @@ import {
 import { WizardProgress } from "@/components/shared/wizard-progress";
 import { runUserAction } from "@/core/errors/report-application-error";
 import { DUPLICATE_STRATEGIES, type DuplicateStrategy } from "@/features/data-transfer/data-transfer.schema";
+import { isDuplicateEntityType } from "@/features/duplicates/duplicate.schema";
 import { identifierTargetFor, targetIdentity } from "@/features/data-transfer/import/import-mapping";
 import { IMPORT_FILE_ACCEPT } from "@/features/data-transfer/import/read-import-file";
 import {
@@ -181,6 +182,7 @@ export const ImportWizard = observer(function ImportWizard() {
     create: t("DataTransfer.import.duplicateStrategies.create"),
     update: t("DataTransfer.import.duplicateStrategies.update"),
     skip: t("DataTransfer.import.duplicateStrategies.skip"),
+    review: t("DataTransfer.import.duplicateStrategies.review"),
   };
 
   const downloadIssueReport = () => {
@@ -382,7 +384,9 @@ export const ImportWizard = observer(function ImportWizard() {
                     </SelectTrigger>
 
                     <SelectContent>
-                      {DUPLICATE_STRATEGIES.map((strategy) => (
+                      {DUPLICATE_STRATEGIES.filter(
+                        (strategy) => strategy !== "review" || isDuplicateEntityType(store.entityType),
+                      ).map((strategy) => (
                         <SelectItem key={strategy} value={strategy}>
                           {strategyLabels[strategy]}
                         </SelectItem>

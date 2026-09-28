@@ -83,6 +83,7 @@ export function validateCustomFieldValues(
       }
 
       case CustomColumnType.plain:
+      case CustomColumnType.relation:
         break;
     }
   }

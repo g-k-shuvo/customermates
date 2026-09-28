@@ -64,7 +64,7 @@ export const GetImportRelationIndexSchema = z.object({
 });
 export type GetImportRelationIndexData = Data<typeof GetImportRelationIndexSchema>;
 
-export const DUPLICATE_STRATEGIES = ["create", "update", "skip"] as const;
+export const DUPLICATE_STRATEGIES = ["create", "update", "skip", "review"] as const;
 
 export const DuplicateStrategySchema = z.enum(DUPLICATE_STRATEGIES);
 export type DuplicateStrategy = Data<typeof DuplicateStrategySchema>;

@@ -5,6 +5,7 @@ import { CustomColumnType, EntityType, Currency } from "@/generated/prisma";
 
 import { CHIP_COLORS } from "@/constants/chip-colors";
 import { DATE_DISPLAY_FORMATS } from "@/constants/date-format";
+import { RELATION_TARGET_ENTITY_TYPES } from "@/features/custom-column/relation-target";
 
 const OptionSchema = z.object({
   value: z.string(),
@@ -104,6 +105,13 @@ export const PhoneSchema = BaseSchema.extend({
   }),
 });
 
+export const RelationSchema = BaseSchema.extend({
+  type: z.literal(CustomColumnType.relation),
+  options: z.object({
+    targetEntityType: z.enum(RELATION_TARGET_ENTITY_TYPES),
+  }),
+});
+
 export const CustomColumnDtoSchema = z.discriminatedUnion("type", [
   PlainSchema.meta({ title: "Plain" }),
   DateSchema.meta({ title: "Date" }),
@@ -115,6 +123,7 @@ export const CustomColumnDtoSchema = z.discriminatedUnion("type", [
   SingleSelectSchema.meta({ title: "SingleSelect" }),
   EmailSchema.meta({ title: "Email" }),
   PhoneSchema.meta({ title: "Phone" }),
+  RelationSchema.meta({ title: "Relation" }),
 ]);
 
 export type CustomColumnDto = Data<typeof CustomColumnDtoSchema>;

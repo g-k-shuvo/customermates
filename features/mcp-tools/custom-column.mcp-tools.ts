@@ -24,6 +24,7 @@ import { CustomErrorCode } from "@/core/validation/validation.types";
 import { OptionSchema, type UpsertCustomColumnData } from "@/features/custom-column/upsert-custom-column.interactor";
 import { CHIP_COLORS } from "@/constants/chip-colors";
 import { DATE_DISPLAY_FORMATS } from "@/constants/date-format";
+import { RELATION_TARGET_ENTITY_TYPES } from "@/features/custom-column/relation-target";
 
 const entityTypeValues = Object.values(EntityType);
 const customColumnTypeValues = Object.values(CustomColumnType);
@@ -78,6 +79,7 @@ const UpsertCustomColumnToolSchema = z.object({
       currency: z.enum(Currency).optional().describe("currency only (ISO code)"),
       color: z.enum(CHIP_COLORS).optional().describe("link / email / phone only"),
       allowMultiple: z.boolean().optional().describe("link / email / phone only"),
+      targetEntityType: z.enum(RELATION_TARGET_ENTITY_TYPES).optional().describe("relation only"),
       options: z
         .array(ToolOptionSchema)
         .min(1)
@@ -89,7 +91,7 @@ const UpsertCustomColumnToolSchema = z.object({
     .nullable()
     .optional()
     .describe(
-      "Type-specific config, or omit it. plain: omit. date*: {displayFormat?}. currency: {currency}. link/email/phone: {color, allowMultiple}. An empty or null config is treated as omitted. Legacy singleSelect clients may use {options:[...]}; new calls should use top-level selectOptions.",
+      "Type-specific config, or omit it. plain: omit. date*: {displayFormat?}. currency: {currency}. link/email/phone: {color, allowMultiple}. relation: {targetEntityType}. An empty or null config is treated as omitted. Legacy singleSelect clients may use {options:[...]}; new calls should use top-level selectOptions.",
     ),
 });
 
@@ -104,6 +106,7 @@ const OPTION_KEYS_BY_TYPE: Record<string, readonly string[]> = {
   [CustomColumnType.phone]: ["color", "allowMultiple"],
   [CustomColumnType.singleSelect]: ["options"],
   [CustomColumnType.plain]: [],
+  [CustomColumnType.relation]: ["targetEntityType"],
 };
 
 function optionsForType<T extends Record<string, unknown>>(type: CustomColumnType, options: T | null | undefined) {

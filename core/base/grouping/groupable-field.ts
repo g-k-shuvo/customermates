@@ -1,6 +1,7 @@
 import type { Data } from "@/core/validation/validation.utils";
 import type { CustomColumnDto, CustomColumnOption } from "@/features/custom-column/custom-column.schema";
 import type { DateBucket } from "./grouping.schema";
+import type { RelationTargetEntityType } from "@/features/custom-column/relation-target";
 
 import { z } from "zod";
 
@@ -65,6 +66,15 @@ export type RelationJoinWiring = {
 export type RelationColumnWiring = {
   via: "column";
   column: string;
+  targetModel: GroupingTargetModel;
+  targetRelation: string;
+};
+
+export type RelationCustomFieldWiring = {
+  via: "customField";
+  columnId: string;
+  entityType: EntityType;
+  keyColumn: string;
   targetModel: GroupingTargetModel;
   targetRelation: string;
 };
@@ -365,6 +375,7 @@ export type GroupableFieldSpec =
       valueLabelKey: (value: string) => string;
     })
   | (SpecBase & { kind: "relation"; labelKey: string } & RelationWiring)
+  | (SpecBase & { kind: "relation"; label: string } & RelationCustomFieldWiring)
   | (SpecBase & {
       kind: "dateBucket";
       column: string;
@@ -390,6 +401,37 @@ export const GroupableFieldDtoSchema = z.object({
 export type GroupableFieldDto = Data<typeof GroupableFieldDtoSchema>;
 
 type SingleSelectColumn = Extract<CustomColumnDto, { type: typeof CustomColumnType.singleSelect }>;
+type RelationColumn = Extract<CustomColumnDto, { type: typeof CustomColumnType.relation }>;
+
+const RELATION_TARGET_WIRING = {
+  [EntityType.contact]: { targetModel: "contact", keyColumn: "targetContactId", targetRelation: "targetContact" },
+  [EntityType.organization]: {
+    targetModel: "organization",
+    keyColumn: "targetOrganizationId",
+    targetRelation: "targetOrganization",
+  },
+  [EntityType.deal]: { targetModel: "deal", keyColumn: "targetDealId", targetRelation: "targetDeal" },
+} as const satisfies Record<
+  RelationTargetEntityType,
+  { targetModel: GroupingTargetModel; keyColumn: string; targetRelation: string }
+>;
+
+function customRelationGroupable(args: {
+  column: RelationColumn;
+  model: GroupableModel;
+  entityType: EntityType;
+}): GroupableFieldSpec {
+  return {
+    kind: "relation",
+    via: "customField",
+    field: args.column.id,
+    model: args.model,
+    columnId: args.column.id,
+    entityType: args.entityType,
+    label: args.column.label,
+    ...RELATION_TARGET_WIRING[args.column.options.targetEntityType],
+  };
+}
 
 export function customSelectGroupable(args: {
   column: SingleSelectColumn;
@@ -414,12 +456,13 @@ export function customSelectGroupables(
   const model = GROUPABLE_MODEL_BY_ENTITY_TYPE[entityType];
   if (!model) return [];
 
-  return columns
-    .filter(
-      (column): column is SingleSelectColumn =>
-        column.type === CustomColumnType.singleSelect && column.entityType === entityType,
-    )
-    .map((column) => customSelectGroupable({ column, model, entityType }));
+  return columns.flatMap((column) => {
+    if (column.entityType !== entityType) return [];
+    if (column.type === CustomColumnType.singleSelect) return [customSelectGroupable({ column, model, entityType })];
+    if (column.type === CustomColumnType.relation) return [customRelationGroupable({ column, model, entityType })];
+
+    return [];
+  });
 }
 
 export function relationGroupable<M extends GroupableModel>(args: {
@@ -539,7 +582,7 @@ export function groupableFieldDtos(specs: readonly GroupableFieldSpec[]): Groupa
             id: spec.field,
             grouping: { field: spec.field },
             kind: spec.kind,
-            labelKey: spec.labelKey,
+            ...(spec.via === "customField" ? { label: spec.label } : { labelKey: spec.labelKey }),
             supportsDragWriteBack: false,
           },
         ];

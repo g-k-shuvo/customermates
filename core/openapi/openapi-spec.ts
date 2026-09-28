@@ -57,6 +57,40 @@ import { completeRecordFileUploadOperation } from "@/features/record-files/uploa
 import { getRecordFilesOperation } from "@/features/record-files/get/get-record-files.openapi";
 import { getRecordFileDownloadOperation } from "@/features/record-files/get/get-record-file-download.openapi";
 import { deleteRecordFileOperation } from "@/features/record-files/delete/delete-record-file.openapi";
+import { startDuplicateScanOperation } from "@/features/duplicates/scan/start-duplicate-scan.openapi";
+import { getDuplicateGroupsOperation } from "@/features/duplicates/get/get-duplicate-groups.openapi";
+import { dismissDuplicateGroupOperation } from "@/features/duplicates/dismiss/dismiss-duplicate-group.openapi";
+import {
+  getContactMergesOperation,
+  mergeContactsOperation,
+  undoContactMergeOperation,
+} from "@/features/duplicates/merge/merge-contacts.openapi";
+import {
+  getOrganizationMergesOperation,
+  mergeOrganizationsOperation,
+  undoOrganizationMergeOperation,
+} from "@/features/duplicates/merge/merge-organizations.openapi";
+import { getInvoiceOperation, getInvoicesOperation } from "@/features/invoices/get/get-invoices.openapi";
+import {
+  createInvoiceOperation,
+  deleteInvoiceOperation,
+  updateInvoiceOperation,
+} from "@/features/invoices/upsert/upsert-invoice.openapi";
+import {
+  issueInvoiceOperation,
+  recordInvoicePaymentOperation,
+  voidInvoiceOperation,
+} from "@/features/invoices/lifecycle/invoice-lifecycle.openapi";
+import {
+  getBillingProfileOperation,
+  getInvoiceSettingsOperation,
+  updateInvoiceSettingsOperation,
+  upsertBillingProfileOperation,
+} from "@/features/invoices/settings/invoice-settings.openapi";
+import {
+  getInvoicePdfOperation,
+  getInvoiceXRechnungOperation,
+} from "@/features/invoices/document/get-invoice-document.openapi";
 import { getRecordDocumentsOperation } from "@/features/record-documents/get/get-record-documents.openapi";
 import { getRecordDocumentDownloadOperation } from "@/features/record-documents/get/get-record-document-download.openapi";
 import { createRecordDocumentOperation } from "@/features/record-documents/upload/create-record-document.openapi";
@@ -390,6 +424,65 @@ export function generateOpenApiSpec() {
       },
       "/v1/files/{id}/download": {
         get: getRecordFileDownloadOperation,
+      },
+      "/v1/duplicates/scans": {
+        post: startDuplicateScanOperation,
+      },
+      "/v1/duplicates/groups": {
+        get: getDuplicateGroupsOperation,
+      },
+      "/v1/duplicates/groups/{id}/dismiss": {
+        post: dismissDuplicateGroupOperation,
+      },
+      "/v1/contacts/merge": {
+        post: mergeContactsOperation,
+      },
+      "/v1/contacts/merges": {
+        get: getContactMergesOperation,
+      },
+      "/v1/contacts/merges/{id}/undo": {
+        post: undoContactMergeOperation,
+      },
+      "/v1/organizations/merge": {
+        post: mergeOrganizationsOperation,
+      },
+      "/v1/organizations/merges": {
+        get: getOrganizationMergesOperation,
+      },
+      "/v1/organizations/merges/{id}/undo": {
+        post: undoOrganizationMergeOperation,
+      },
+      "/v1/invoices": {
+        get: getInvoicesOperation,
+        post: createInvoiceOperation,
+      },
+      "/v1/invoices/{id}": {
+        get: getInvoiceOperation,
+        put: updateInvoiceOperation,
+        delete: deleteInvoiceOperation,
+      },
+      "/v1/invoices/{id}/issue": {
+        post: issueInvoiceOperation,
+      },
+      "/v1/invoices/{id}/payments": {
+        post: recordInvoicePaymentOperation,
+      },
+      "/v1/invoices/{id}/void": {
+        post: voidInvoiceOperation,
+      },
+      "/v1/invoices/{id}/pdf": {
+        get: getInvoicePdfOperation,
+      },
+      "/v1/invoices/{id}/xrechnung": {
+        get: getInvoiceXRechnungOperation,
+      },
+      "/v1/invoice-settings": {
+        get: getInvoiceSettingsOperation,
+        put: updateInvoiceSettingsOperation,
+      },
+      "/v1/organizations/{id}/billing-profile": {
+        get: getBillingProfileOperation,
+        put: upsertBillingProfileOperation,
       },
       "/v1/documents": {
         get: getRecordDocumentsOperation,

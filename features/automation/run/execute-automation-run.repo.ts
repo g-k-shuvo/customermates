@@ -3,7 +3,6 @@ import type { Filter } from "@/core/base/base-get.schema";
 
 export type AutomationRunPlanStep = {
   id: string;
-  stepId: string;
   position: number;
   kind: AutomationActionKind;
   config: unknown;
