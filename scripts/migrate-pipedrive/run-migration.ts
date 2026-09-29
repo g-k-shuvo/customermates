@@ -10,6 +10,7 @@
  * reconciliation counts the target side.
  */
 
+import { migrateFiles, migrateLists } from "./extra-arms";
 import type { MigrationConfig } from "./config";
 import type { CrmCustomColumn, CrmReads, CrmRecord, CrmStage } from "./crm-client";
 import type { CrmWrites } from "./crm-writes";
@@ -667,14 +668,6 @@ export async function runMigration(args: {
         );
       }
 
-      if (mapped.completed) {
-        ledger.unmapped(
-          "activity.done",
-          "true",
-          "task completion has no write path through the public API; kept in the task notes",
-        );
-      }
-
       const existing = taskIndex.get(activity.id);
 
       try {
@@ -689,6 +682,13 @@ export async function runMigration(args: {
 
         if (!existing) taskIndex.set(activity.id, record);
         tally.targetCount += 1;
+        if (mapped.completed && !record.completedAt) {
+          try {
+            await writes.completeTask(record.id);
+          } catch (error) {
+            ledger.unmapped("activity.done", String(activity.id), `the task landed but could not be completed: ${describeError(error)}`);
+          }
+        }
       } catch (error) {
         ledger.skip({
           entity: "tasks",
@@ -719,6 +719,36 @@ export async function runMigration(args: {
         lead: leadNoteIdsColumn
           ? { records: leadIndex, entityPath: ENTITY_PATHS.lead, noteIdsColumnId: leadNoteIdsColumn.id }
           : null,
+      },
+    });
+  }
+
+  if (runs("lists")) {
+    log("Migrating list membership from person fields...");
+    await migrateLists({
+      fieldNames: config.listFields,
+      source,
+      client,
+      writes,
+      ledger,
+      contactIdByPipedriveId,
+      log,
+    });
+  }
+
+  if (runs("files")) {
+    log("Migrating files onto their records...");
+    await migrateFiles({
+      source,
+      client,
+      writes,
+      ledger,
+      limit: config.limit,
+      indexes: {
+        dealIdByPipedriveId,
+        leadIdByPipedriveId: new Map([...leadIndex].map(([pipedriveId, record]) => [pipedriveId, record.id])),
+        contactIdByPipedriveId,
+        organizationIdByPipedriveId,
       },
     });
   }

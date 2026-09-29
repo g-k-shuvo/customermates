@@ -1,3 +1,5 @@
+import type { MailboxOAuthProvider } from "@/generated/prisma";
+
 import { type MailboxCredentialDto } from "../mailbox.schema";
 
 export type CreateMailboxArgs = {
@@ -8,6 +10,7 @@ export type CreateMailboxArgs = {
   imapSecure: boolean;
   username: string;
   sealedSecret: string;
+  oauthProvider?: MailboxOAuthProvider | null;
   smtpHost: string | null;
   smtpPort: number | null;
   smtpSecure: boolean | null;

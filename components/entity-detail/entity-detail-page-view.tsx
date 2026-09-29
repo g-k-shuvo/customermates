@@ -1,20 +1,20 @@
 "use client";
 
-import type { EntityType } from "@/generated/prisma";
 import type { ActivitiesResult } from "@/ee/messaging/activities/activities.schema";
 import type { EntityDetailInitial } from "@/components/entity-detail/entity-detail-layout";
 import type { P13nEntry } from "@/features/p13n/prisma-p13n.repository";
-import type { RecordFileEntityType } from "@/features/record-files/record-file.schema";
+import type { RecordDocumentEntityType, RecordFileEntityType } from "@/features/record-files/record-file.schema";
 
 import { observer } from "mobx-react-lite";
 import { useTranslations } from "next-intl";
-import { Action, Resource } from "@/generated/prisma";
+import { Action, EntityType, Resource } from "@/generated/prisma";
 
 import { EntityDetailLayout } from "@/components/entity-detail/entity-detail-layout";
 import { ENTITY_DETAIL } from "@/components/entity-detail/entity-detail.registry";
 import { EntityTimelinePanel } from "@/features/messaging/activities/activities-panel";
 import { EntityEmailsPanel } from "@/components/entity-detail/entity-emails-panel";
 import { EntityFilesPanel } from "@/components/entity-detail/entity-files-panel";
+import { EntityMeetingsPanel } from "@/components/entity-detail/entity-meetings-panel";
 import { EntityDocumentsPanel } from "@/components/entity-detail/entity-documents-panel";
 import { EntityInvoicesPanel } from "@/components/entity-detail/entity-invoices-panel";
 import { useRootStore } from "@/core/stores/root-store.provider";
@@ -51,6 +51,7 @@ const FILE_RESOURCE: Partial<Record<EntityType, Resource>> = {
   contact: Resource.contacts,
   organization: Resource.organizations,
   deal: Resource.deals,
+  lead: Resource.leads,
 };
 
 export const EntityDetailPageView = observer(
@@ -87,6 +88,9 @@ export const EntityDetailPageView = observer(
       : undefined;
     const panels = [
       ...(emailsPanel ? [{ id: "emails", label: t("Mailbox.title"), content: emailsPanel }] : []),
+      ...(entityType === EntityType.contact && root.userStore.canAccess(Resource.inboxMessages)
+        ? [{ id: "meetings", label: t("MailboxCalendar.meetingsTab"), content: <EntityMeetingsPanel contactId={id} /> }]
+        : []),
       ...(canOpenFiles
         ? [
             {
@@ -100,17 +104,21 @@ export const EntityDetailPageView = observer(
                 />
               ),
             },
-            {
-              id: "documents",
-              label: t("RecordDocuments.title"),
-              content: (
-                <EntityDocumentsPanel
-                  canEdit={canEditFiles}
-                  entityType={entityType as RecordFileEntityType}
-                  recordId={id}
-                />
-              ),
-            },
+            ...(entityType === EntityType.lead
+              ? []
+              : [
+                  {
+                    id: "documents",
+                    label: t("RecordDocuments.title"),
+                    content: (
+                      <EntityDocumentsPanel
+                        canEdit={canEditFiles}
+                        entityType={entityType as RecordDocumentEntityType}
+                        recordId={id}
+                      />
+                    ),
+                  },
+                ]),
           ]
         : []),
       ...(invoicesPanel ? [{ id: "invoices", label: t("Invoices.title"), content: invoicesPanel }] : []),

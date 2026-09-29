@@ -1037,18 +1037,32 @@
   },
   "Automations": {
     "actionFields": {
+      "activityKind": "Tipo de actividad",
+      "address": "Dirección de correo",
+      "assigneeUserId": "Asignado a",
+      "bannerUrl": "Imagen de cabecera (enlace https, opcional)",
       "body": "Texto",
+      "choose": "Elegir…",
+      "defaultPipeline": "Embudo predeterminado",
+      "dueInDays": "Vence en días",
+      "duration": "Esperar",
+      "durationUnit": "Unidad",
       "field": "Campo",
+      "firstStage": "Primera etapa",
+      "includeRecord": "Enviar el tipo y el id del registro con la solicitud",
       "labels": "Etiquetas",
       "labelsPlaceholder": "Separe las etiquetas con comas",
+      "linkToTriggerRecord": "Vincular la tarea al registro que inició la automatización",
       "name": "Nombre",
-      "seconds": "Segundos de espera",
+      "nobody": "Nadie",
+      "ownerUserId": "Responsable",
+      "pipelineId": "Embudo",
+      "recipient": "Enviar a",
       "stageId": "Etapa",
       "subject": "Asunto",
       "title": "Título",
-      "to": "Destinatario",
       "url": "URL",
-      "userId": "ID de usuario del responsable",
+      "userId": "Responsable",
       "value": "Valor"
     },
     "actions": {
@@ -1065,10 +1079,17 @@
       "updateField": "Establecer un campo"
     },
     "addStep": "Añadir acción",
+    "changedFieldsHelp": "Déjalo vacío para ejecutar con cada cambio. Con un campo elegido, solo se ejecuta cuando una actualización lo modifica.",
+    "conditionsHelp": "Se comprueba al iniciar la automatización. Junto con un campo cambiado, una condición de etapa se activa justo cuando un trato entra en esa etapa.",
     "create": "Nueva automatización",
     "createTitle": "Nueva automatización",
     "deleteLabel": "Eliminar la automatización {name}",
     "disabled": "Desactivada",
+    "durationUnits": {
+      "days": "Días",
+      "hours": "Horas",
+      "minutes": "Minutos"
+    },
     "editLabel": "Editar la automatización {name}",
     "editTitle": "Editar automatización",
     "emptyBody": "Una automatización espera un cambio y después repite siempre los mismos pasos, sin que nadie abra el registro.",
@@ -1076,11 +1097,18 @@
     "enabled": "Activada",
     "fields": {
       "action": "Acción",
+      "changedFields": "Solo cuando cambien estos campos",
+      "conditions": "Solo si el registro coincide",
       "entityType": "Tipo de registro",
       "name": "Nombre",
       "schedule": "Programación",
       "steps": "Acciones",
       "trigger": "Disparador"
+    },
+    "recipientKinds": {
+      "address": "Una dirección fija",
+      "recordContact": "El contacto del registro",
+      "recordOwner": "El responsable del registro"
     },
     "removeStep": "Quitar acción",
     "rowSummary": "{trigger} · {steps}",
@@ -1099,16 +1127,20 @@
     "stepCount": "{count, plural, =1 {1 acción} other {# acciones}}",
     "stepErrors": {
       "assigneeUnavailable": "El usuario que se va a asignar no es un miembro activo de este espacio de trabajo",
+      "emailNotSent": "El correo no se aceptó para su entrega",
       "fieldNotWritable": "Una automatización no puede cambiar este campo",
       "fieldValueInvalid": "El valor no es válido para este campo",
       "fieldValueMissing": "El paso no indica qué valor escribir",
       "interrupted": "La acción se interrumpió y es posible que no se haya completado",
+      "mergeFieldUnresolved": "Un campo combinado del correo no se pudo rellenar con este registro",
       "notesTooLong": "La nota haría que las notas superaran la longitud permitida",
       "notesUnreadable": "No se pudieron leer las notas existentes, así que no se modificaron",
       "ownerInactive": "La cuenta con la que se ejecuta la automatización ya no está activa",
       "ownerNotPermitted": "La cuenta con la que se ejecuta la automatización no tiene permiso para hacer esto",
+      "recipientMissing": "El registro no tiene a nadie con una dirección de correo a quien enviar",
       "recordMissing": "Un registro que necesita la acción ya no existe",
       "recordUnsupported": "Esta acción no se puede usar con este tipo de registro",
+      "senderUnverified": "La dirección del remitente no está verificada, así que no se envió nada",
       "unexpectedError": "La acción se detuvo por un error inesperado"
     },
     "title": "Automatizaciones",
@@ -1130,6 +1162,94 @@
     "live": "en directo",
     "liveDemoTitle": "Demo en directo de {brand}",
     "open": "Abrir"
+  },
+  "CampaignMessage": {
+    "unsubscribe": "Darse de baja de estos correos"
+  },
+  "Campaigns": {
+    "audience": {
+      "add": "Añadir condición",
+      "addAnyGroup": "Añadir grupo «alguna»",
+      "addNoneGroup": "Añadir grupo «ninguna»",
+      "addToGroup": "Añadir a este grupo",
+      "count": "{count} destinatarios. {withoutEmail} más coinciden pero no tienen correo. Los primeros 25:",
+      "field": "Elige un campo",
+      "groupMode": "Tipo de grupo",
+      "groups": {
+        "anyOf": "Se cumple alguna",
+        "noneOf": "No se cumple ninguna"
+      },
+      "help": "Deben cumplirse todas las condiciones y grupos. En un grupo «alguna» basta una condición; un grupo «ninguna» excluye a los contactos que cumplan alguna de sus condiciones. Solo los contactos con correo reciben la campaña.",
+      "kind": "Condición",
+      "kinds": {
+        "contactField": "El campo del contacto es",
+        "notOnList": "No está en la lista",
+        "onList": "Está en la lista",
+        "organizationField": "El campo de la organización es"
+      },
+      "list": "Elige una lista",
+      "preview": "Previsualizar audiencia",
+      "remove": "Quitar la condición",
+      "removeGroup": "Quitar el grupo",
+      "title": "Audiencia",
+      "value": "Valor",
+      "valuesPlaceholder": "Uno o más valores, separados por comas"
+    },
+    "back": "Todas las campañas",
+    "cancel": "Detener el envío",
+    "columns": {
+      "created": "Creada",
+      "email": "Destinatario",
+      "failed": "Fallidos",
+      "name": "Campaña",
+      "sent": "Enviados",
+      "status": "Estado",
+      "suppressed": "Excluidos",
+      "updated": "Último cambio"
+    },
+    "compliance": {
+      "help": "No se puede enviar una campaña hasta registrar por qué se puede escribir a estos destinatarios, por ejemplo un consentimiento documentado. Registrarlo no hace legal el envío; compruébalo con el responsable de protección de datos.",
+      "lawfulBasis": "¿Por qué se puede escribir a estos destinatarios?",
+      "lawfulBasisPlaceholder": "Por ejemplo: aceptaron en la conferencia de 2026, consentimientos guardados en el CRM",
+      "title": "Base legal"
+    },
+    "confirmDelete": "Haz clic de nuevo para eliminar",
+    "confirmSend": "Haz clic de nuevo para enviar ya",
+    "create": "Nueva campaña",
+    "delete": "Eliminar borrador",
+    "emptyDescription": "Crea una campaña, elige su audiencia y registra por qué puedes escribirles.",
+    "emptyTitle": "Aún no hay campañas",
+    "fields": {
+      "body": "Mensaje (Markdown)",
+      "companySender": "El remitente de la empresa",
+      "name": "Nombre",
+      "sender": "Enviar como",
+      "subject": "Asunto"
+    },
+    "next": "Siguiente",
+    "page": "Página {page} de {pages}",
+    "previous": "Anterior",
+    "progress": "{sent} enviados · {suppressed} excluidos · {failed} fallidos · {pending} en espera",
+    "recipients": "Destinatarios ({count})",
+    "recipientStatus": {
+      "failed": "Fallido",
+      "pending": "En espera",
+      "sent": "Enviado",
+      "skipped": "Omitido",
+      "suppressed": "Excluido"
+    },
+    "redacted": "Dirección eliminada tras el periodo de conservación",
+    "send": "Enviar campaña",
+    "status": {
+      "cancelled": "Detenida",
+      "draft": "Borrador",
+      "failed": "Fallida",
+      "sending": "Enviando",
+      "sent": "Enviada"
+    },
+    "subtitle": "Envía correos a una audiencia de contactos elegida, con baja y lista de exclusión integradas.",
+    "title": "Campañas",
+    "untitled": "Campaña sin título"
   },
   "Common": {
     "actions": {
@@ -1324,6 +1444,7 @@
       "apiKeyMaxExpiration": "La caducidad de una clave de API no puede superar los 365 días.",
       "apiKeyMinExpiration": "La caducidad de una clave de API debe ser de al menos 1 día.",
       "assigneeRequired": "Debes asignarte este elemento. Ten en cuenta que solo podrás ver los elementos asignados a ti.",
+      "audienceFieldUnknown": "La audiencia menciona un campo personalizado que no existe para ese tipo de registro.",
       "automationActionNotAvailableForEntity": "Esa acción no está disponible para este tipo de registro.",
       "automationEntityTypeRequired": "Elija el tipo de registro que vigila la automatización.",
       "automationNameRequired": "Dé un nombre a la automatización.",
@@ -1334,9 +1455,18 @@
       "automationStepsRequired": "Añada al menos una acción.",
       "automationTriggerRequired": "Elija qué inicia la automatización.",
       "billingPortalUnavailable": "El portal de facturación no está disponible para este espacio de trabajo. Contacta con soporte para hacer cambios.",
+      "bulkJobNotFound": "No se encontró esa tarea en segundo plano.",
+      "bulkJobRunning": "Ya se está procesando en segundo plano. Espera a que termine.",
       "calendarEventNotFound": "ID de evento de calendario no encontrado o no accesible.",
+      "campaignIncomplete": "Añade un asunto, un mensaje y una audiencia antes de enviar.",
+      "campaignLawfulBasisMissing": "Registra la base legal para enviar correo a estos destinatarios antes de enviar.",
+      "campaignNotDraft": "Solo un borrador de campaña se puede cambiar, eliminar o enviar.",
+      "campaignNotFound": "No se encontró esa campaña.",
+      "campaignNotSending": "Esta campaña no se está enviando.",
       "channelAlreadyLinked": "Este canal ya está vinculado a otro contacto.",
       "connectedAccountNotFound": "ID de canal no encontrado o no accesible.",
+      "contactListNameTaken": "Otra lista de contactos ya tiene este nombre.",
+      "contactListNotFound": "No se encontró esa lista de contactos.",
       "contactMergeNotFound": "ID de fusión no encontrado.",
       "contactMergeNotUndoable": "Esta fusión ya no se puede deshacer: ya se deshizo, tiene más de 30 días o su contacto se eliminó o se volvió a crear.",
       "contactMergePickNotMember": "Cada campo solo puede tomarse de uno de los contactos que se fusionan.",
@@ -1384,6 +1514,7 @@
       "enterpriseCheckoutUnavailable": "Los espacios de trabajo Enterprise se facturan manualmente y no pueden iniciar el pago de autoservicio.",
       "fileEmpty": "El archivo está vacío.",
       "fileExtensionMissing": "El nombre del archivo necesita una extensión, como .pdf.",
+      "fileInfected": "El antivirus encontró malware en este archivo, así que no se guardó.",
       "fileStorageNotConfigured": "Esta instalación no tiene almacenamiento de archivos.",
       "fileStorageUnavailable": "No se pudo acceder al almacenamiento de archivos. Vuelve a intentarlo en un momento.",
       "fileTooLarge": "El archivo supera el límite de subida.",
@@ -1413,6 +1544,10 @@
       "invoiceSellerMissing": "Añade la razón social y la dirección de tu empresa en los ajustes de facturación antes de emitir una factura.",
       "invoiceXRechnungIncomplete": "XRechnung necesita el correo de facturación, el teléfono, el NIF-IVA y una dirección con código postal y ciudad de tu empresa, y el correo de facturación y la dirección del cliente.",
       "leadAlreadyConverted": "Este lead ya se ha convertido en una oportunidad.",
+      "leadAssignmentConditionInvalid": "Una condición no encaja con los campos del lead.",
+      "leadAssignmentOneUser": "Una regla para un usuario concreto necesita exactamente un usuario.",
+      "leadAssignmentRuleNotFound": "No se encontró esa regla de asignación.",
+      "leadAssignmentUserUnavailable": "Cada usuario de la regla debe ser un miembro activo de este espacio.",
       "leadNotFound": "ID de lead no encontrado o no accesible.",
       "legalNoticeNotDelivered": "La actualización legal actual aún no se ha entregado a este espacio de trabajo.",
       "linkedinInboxUnavailable": "Esta cuenta de LinkedIn no tiene bandeja de entrada {product}. Conecta la cuenta con {product} asociado para usarla.",
@@ -1424,18 +1559,34 @@
       "mailAttachmentNotStored": "Este adjunto no se guardó al sincronizar el mensaje.",
       "mailboxAlreadyConnected": "Este buzón ya está conectado.",
       "mailboxAuthenticationFailed": "El servidor de correo rechazó esas credenciales. Para Gmail o Microsoft 365 use una contraseña de aplicación.",
+      "mailboxCalendarAccessMissing": "Este buzón no ha permitido el acceso al calendario. Desconéctalo y vuelve a conectarlo con el inicio de sesión de Gmail o Microsoft 365, y permite el calendario.",
+      "mailboxCalendarNeedsSignIn": "La sincronización del calendario requiere un buzón conectado con el inicio de sesión de Gmail o Microsoft 365.",
+      "mailboxCalendarSyncFailed": "No se pudo leer el calendario en este momento. Inténtalo más tarde.",
       "mailboxDealNotOffered": "Ese no es el registro propuesto para esta conversación, así que no se vinculó nada.",
       "mailboxFolderMissing": "Esa carpeta de correo ya no existe en el servidor.",
       "mailboxHostRejected": "Esa dirección de servidor de correo no está permitida. Use el nombre de host público que le dio su proveedor.",
       "mailboxNoReplyRecipient": "No hay nadie a quien responder en esta conversación.",
       "mailboxNotFound": "Este buzón ya no está conectado.",
+      "mailboxOAuthFailed": "El inicio de sesión con el proveedor no se completó. Inténtalo de nuevo.",
+      "mailboxOAuthNotConfigured": "El inicio de sesión con este proveedor no está configurado en esta instancia.",
       "mailboxProtocolFailed": "El servidor de correo respondió de una forma que no pudimos interpretar.",
       "mailboxSecretKeyMissing": "La sincronización de buzones no está configurada en esta instancia.",
       "mailboxSendingNotConfigured": "Este buzón no tiene servidor de salida configurado, por lo que no se pueden enviar respuestas.",
       "mailboxThreadNotFound": "Esa conversación ya no está disponible.",
       "mailboxTlsFailed": "No se pudo verificar el certificado de seguridad del servidor de correo.",
       "mailboxUnreachable": "No se pudo conectar con ese servidor de correo. Compruebe el host y el puerto.",
+      "mailComposeEmpty": "Escribe un mensaje o añade un destinatario para reenviar antes de enviar.",
+      "mailLabelNameTaken": "Ya existe una etiqueta con este nombre.",
+      "mailLabelNotFound": "Esta etiqueta ya no existe.",
+      "mailOutboxNotEditable": "Este mensaje se está enviando o ya se envió, así que no se puede cambiar.",
+      "mailOutboxNotFound": "Este mensaje programado ya no existe.",
+      "mailSendAtInPast": "Elige una hora de envío en el futuro.",
+      "mergeFieldMalformed": "Un campo combinado está mal escrito cerca de {field}. Escribe el nombre entre dobles llaves.",
+      "mergeFieldUnknown": "{field} no es un campo combinado. Usa uno de los ofrecidos.",
+      "mergeValueMissing": "Este registro no tiene valor para {field} y la plantilla no da un valor por defecto.",
       "messageContentRequired": "Añade un mensaje o un archivo adjunto.",
+      "messageTemplateNameTaken": "Otra plantilla ya tiene este nombre.",
+      "messageTemplateNotFound": "Plantilla no encontrada o no accesible.",
       "mustNotBeBlank": "No debe estar vacío.",
       "mustNotContainNullChars": "No debe contener caracteres nulos.",
       "notAuthenticated": "Inicia sesión para usar esta acción.",
@@ -1485,6 +1636,8 @@
       "salesNavigatorNotAvailable": "Esta cuenta de LinkedIn no tiene Sales Navigator conectado.",
       "salesNavigatorRequiresLinkedin": "Sales Navigator requiere una cuenta de LinkedIn conectada, pero esta cuenta es {provider}.",
       "sendEmailTargetRequired": "Selecciona una conversación o una cuenta desde la que enviar.",
+      "senderDomainNotVerified": "El registro TXT {record} no se encontró o aún no coincide. Los cambios de DNS pueden tardar.",
+      "senderIdentityNotFound": "Primero define una dirección de remitente.",
       "serviceNotFound": "ID de servicio no encontrado o no accesible.",
       "signatureInProgress": "Este documento está pendiente de firma. Cancela primero la solicitud de firma.",
       "signatureNotInProgress": "Este documento no está pendiente de firma.",
@@ -1495,7 +1648,9 @@
       "signingUnavailable": "No se pudo contactar con DocuSign. Vuelve a intentarlo en un momento.",
       "socialActionRequiresSocialAccount": "Esta acción requiere una cuenta de LinkedIn o Instagram conectada, pero esta cuenta es {provider}.",
       "socialPostsRequireSocialAccount": "Las publicaciones sociales requieren una cuenta de LinkedIn o Instagram conectada, pero esta cuenta es {provider}.",
+      "storageQuotaExceeded": "Esta subida superaría la cuota de almacenamiento del espacio. Elimina archivos que ya no necesites o pide a un administrador que aumente la cuota.",
       "subjectRequired": "Añade un asunto.",
+      "suppressionNotFound": "Bloqueo no encontrado o no accesible.",
       "taskAlreadyCompleted": "Esta tarea ya está completada. Vuélvela a abrir antes de completarla de nuevo.",
       "taskNameCannotBeChangedForSystemTasks": "El nombre de las tareas del sistema no se puede cambiar.",
       "taskNotCompleted": "Esta tarea no está completada, así que no hay nada que reabrir.",
@@ -1518,6 +1673,7 @@
       "userNotFound": "ID de usuario no encontrado o no accesible.",
       "userPlatformOperatorStatusForbidden": "Esta cuenta pertenece a un operador de plataforma y no se puede desactivar aquí. Usa la consola de operador.",
       "userSelfAdminUpdateForbidden": "No puedes actualizar tu propia cuenta desde la administración del equipo.",
+      "virusScanUnavailable": "El antivirus no está disponible, así que el archivo no se puede aceptar ahora. Inténtalo de nuevo en breve.",
       "webFormSourceNotFound": "ID de origen de formulario web no encontrado o no accesible.",
       "webFormSourceSlugTaken": "Ya existe un origen de formulario web con esta dirección. Elige otra.",
       "webFormSubmissionNotFound": "ID de envío de formulario web no encontrado o no accesible.",
@@ -1570,6 +1726,7 @@
         "updated": "Visibilidad de la cuenta modificada"
       },
       "contact": {
+        "automated": "Automatización ejecutada",
         "created": "Contacto creado",
         "deleted": "Contacto eliminado",
         "updated": "Contacto actualizado"
@@ -1580,6 +1737,7 @@
         "updated": "Columna personalizada actualizada"
       },
       "deal": {
+        "automated": "Automatización ejecutada",
         "created": "Oportunidad creada",
         "deleted": "Oportunidad eliminada",
         "updated": "Oportunidad actualizada"
@@ -1619,6 +1777,7 @@
         }
       },
       "organization": {
+        "automated": "Automatización ejecutada",
         "created": "Organización creada",
         "deleted": "Organización eliminada",
         "updated": "Organización actualizada"
@@ -1637,11 +1796,13 @@
         "updated": "Rutina actualizada"
       },
       "service": {
+        "automated": "Automatización ejecutada",
         "created": "Servicio creado",
         "deleted": "Servicio eliminado",
         "updated": "Servicio actualizado"
       },
       "task": {
+        "automated": "Automatización ejecutada",
         "created": "Tarea creada",
         "deleted": "Tarea eliminada",
         "updated": "Tarea actualizada"
@@ -2192,6 +2353,41 @@
     "linkedinOpenProfile": "Abrir el perfil de LinkedIn",
     "noActivity": "Aún no hay actividad para este contacto."
   },
+  "ContactLists": {
+    "columns": {
+      "added": "Añadido",
+      "email": "Correo",
+      "name": "Contacto"
+    },
+    "confirmDelete": "Haz clic de nuevo para eliminar",
+    "create": "Crear lista",
+    "delete": "Eliminar lista",
+    "description": "Descripción",
+    "emptyDescription": "Crea una lista y añádele contactos con un filtro.",
+    "emptyTitle": "Aún no hay listas",
+    "fill": "Añadir contactos coincidentes",
+    "fillHelp": "Cada contacto que coincide se añade en segundo plano, también en grandes cantidades. Los que ya están en la lista se mantienen una sola vez.",
+    "fillTitle": "Añadir contactos con un filtro",
+    "filters": "Solo los contactos que coincidan",
+    "jobStatus": {
+      "cancelled": "Cancelado tras {processed} de {total}",
+      "completed": "Listo: {processed} de {total} revisados",
+      "failed": "Detenido tras {processed} de {total}. Inténtalo de nuevo.",
+      "running": "Añadiendo… {processed} de {total}"
+    },
+    "members": "Miembros ({count})",
+    "name": "Nombre",
+    "newListName": "Nueva lista",
+    "next": "Siguiente",
+    "noEmail": "Sin dirección de correo",
+    "noMembers": "Esta lista aún no tiene miembros.",
+    "page": "Página {page} de {pages}",
+    "previous": "Anterior",
+    "removeMember": "Quitar de la lista",
+    "searchTerm": "Buscar",
+    "subtitle": "Agrupa contactos en listas para enviarles campañas.",
+    "title": "Listas"
+  },
   "ContactModal": {
     "title": "Contacto"
   },
@@ -2715,6 +2911,11 @@
     "taskList": "Lista de tareas",
     "underline": "Subrayado",
     "urlPlaceholder": "Introduce una URL..."
+  },
+  "EmailContent": {
+    "bannerHint": "Opcional. Un enlace https a una imagen que se muestra en la parte superior del correo; lo ideal son 600 px de ancho. Para poner una imagen en el texto, escribe ![descripción](https://…).",
+    "bannerLabel": "Imagen de cabecera",
+    "bannerPlaceholder": "https://…"
   },
   "EmailLayout": {
     "tagline": "El CRM agéntico de código abierto"
@@ -3370,6 +3571,33 @@
     "subtitle": "Un administrador del espacio de trabajo debe invitar a {email}.",
     "title": "Unirte a un espacio de trabajo existente"
   },
+  "LeadAssignment": {
+    "add": "Añadir regla",
+    "back": "Todos los leads",
+    "conditionsHelp": "Déjalo vacío para que coincida cualquier lead. Un territorio es una regla cuyas condiciones indican la región, por ejemplo un campo de país.",
+    "delete": "Eliminar la regla",
+    "disabled": "Desactivada",
+    "edit": "Editar",
+    "emptyDescription": "Sin reglas, los leads nuevos conservan el responsable con el que se crearon.",
+    "emptyTitle": "Aún no hay reglas de asignación",
+    "fields": {
+      "conditions": "Solo los leads que coincidan",
+      "enabled": "La regla está activa",
+      "name": "Nombre de la regla",
+      "position": "Orden",
+      "strategy": "Asignar",
+      "users": "A"
+    },
+    "manage": "Gestionar reglas",
+    "settingsHint": "Asigna automáticamente responsable a los leads nuevos, por turnos o por territorio.",
+    "strategies": {
+      "roundRobin": "Por turnos",
+      "specificUser": "Una persona"
+    },
+    "subtitle": "Un lead nuevo sin responsable va a la primera regla activa que cumpla.",
+    "summary": "{strategy} · {users} · {conditions, plural, =0 {cada lead} one {# condición} other {# condiciones}}",
+    "title": "Asignación de leads"
+  },
   "LeadCreatedNotice": {
     "cta": "Abrir el prospecto",
     "fallback": "Si el botón no funciona, copia y pega este enlace en tu navegador: ",
@@ -3505,6 +3733,15 @@
     "noMatchesDescription": "Pruebe con otra búsqueda o con otra carpeta.",
     "noMatchesTitle": "Ninguna conversación coincide",
     "noSubject": "(sin asunto)",
+    "oauth": {
+      "connected": "Buzón conectado. Usa Sincronizar ahora para obtener tu correo.",
+      "description": "Los buzones de Gmail y Microsoft 365 se conectan con tu inicio de sesión habitual. No necesitas una contraseña de aplicación y puedes revocar el acceso en tu cuenta del proveedor en cualquier momento.",
+      "failed": "No se pudo conectar el buzón",
+      "google": "Conectar Gmail",
+      "imapRefused": "El inicio de sesión funcionó, pero el servidor de correo rechazó el acceso. Comprueba que IMAP esté activado para este buzón (en Microsoft 365, tu administrador debe permitir IMAP y SMTP autenticado).",
+      "microsoft": "Conectar Microsoft 365",
+      "title": "Inicia sesión con tu proveedor de correo"
+    },
     "recordEmptyDescription": "Las conversaciones que coinciden con las direcciones de correo de este registro aparecen aquí tras la sincronización. También puedes compartir una desde Correo.",
     "recordEmptyTitle": "Todavía no hay correos compartidos",
     "remoteImagesBlocked": "{count, plural, one {# imagen remota bloqueada} other {# imágenes remotas bloqueadas}}",
@@ -3544,7 +3781,76 @@
     "title": "Correo",
     "unknownSender": "Remitente desconocido",
     "usernameDescription": "Normalmente la dirección de correo completa.",
-    "usernameLabel": "Usuario"
+    "usernameLabel": "Usuario",
+    "workspace": {
+      "addLabel": "Añadir etiqueta",
+      "allLabels": "Todas las etiquetas",
+      "archive": "Archivar",
+      "archivedToast": "Conversación archivada",
+      "cancelScheduled": "Cancelar",
+      "colorAmber": "Ámbar",
+      "colorBlue": "Azul",
+      "colorGreen": "Verde",
+      "colorNeutral": "Neutro",
+      "colorPrimary": "Principal",
+      "colorRed": "Rojo",
+      "deleteLabel": "Eliminar {name}",
+      "draftSaved": "Borrador guardado",
+      "followUpCleared": "Seguimiento eliminado",
+      "followUpDue": "Seguimiento pendiente",
+      "followUpLabel": "Seguimiento",
+      "followUpNone": "Sin seguimiento",
+      "followUpOn": "Seguimiento el {date}",
+      "followUpSet": "Seguimiento programado para el {date}. Se quita cuando llega una respuesta.",
+      "followUpThreeDays": "Seguimiento en 3 días",
+      "followUpTomorrow": "Seguimiento mañana",
+      "followUpWeek": "Seguimiento en una semana",
+      "labelColor": "Color de {name}",
+      "labelCreated": "Etiqueta creada",
+      "labelFilterLabel": "Etiqueta",
+      "labelsDescription": "Las etiquetas son comunes a todo el espacio. Asígnalas a conversaciones en Correo y filtra por ellas allí.",
+      "labelsEmpty": "Todavía no hay etiquetas.",
+      "labelsLabel": "Etiquetas",
+      "labelsTitle": "Etiquetas de correo",
+      "newLabelPlaceholder": "Nueva etiqueta",
+      "outboxFailed": "No enviado tras {count, plural, one {# intento} other {# intentos}}",
+      "outboxRetrying": "{count, plural, one {# intento fallido} other {# intentos fallidos}}, se reintentará",
+      "outboxSending": "Enviando",
+      "retry": "Reintentar",
+      "scheduleCancelled": "Cancelado. El mensaje ha vuelto a tu borrador.",
+      "scheduledFor": "Programado para el {date}",
+      "sendingNow": "Se enviará en menos de un minuto",
+      "sendInHour": "En 1 hora",
+      "sendLater": "Enviar más tarde",
+      "sendMonday": "El lunes a las 8:00",
+      "sendNow": "Enviar ahora",
+      "sendTomorrow": "Mañana a las 8:00",
+      "unarchive": "Mover a la bandeja de entrada",
+      "unarchivedToast": "Movida a la bandeja de entrada",
+      "viewAll": "Todas las conversaciones",
+      "viewArchived": "Archivados",
+      "viewDrafts": "Borradores",
+      "viewFollowUp": "Seguimiento",
+      "viewInbox": "Bandeja de entrada",
+      "viewLabel": "Vista",
+      "viewOutbox": "Bandeja de salida"
+    }
+  },
+  "MailboxCalendar": {
+    "description": "Muestra el calendario de esta cuenta en Tareas → Semana y las reuniones en los contactos. Solo tú las ves.",
+    "disabled": "Sincronización del calendario desactivada; sus eventos se quitaron del CRM",
+    "emptyDescription": "Las reuniones de tu calendario sincronizado aparecen aquí cuando se invita a la dirección de correo de este contacto.",
+    "emptyTitle": "No hay reuniones con este contacto",
+    "enabled": "Sincronización del calendario activada",
+    "errorDescription": "Inténtalo de nuevo en un momento.",
+    "errorTitle": "No se pudieron cargar las reuniones",
+    "label": "Sincronizar calendario",
+    "loading": "Cargando reuniones…",
+    "meetingsTab": "Reuniones",
+    "needsSignIn": "Disponible para buzones conectados con el inicio de sesión de Gmail o Microsoft 365.",
+    "syncedAt": "Calendario sincronizado el {date}. Solo tú ves sus eventos.",
+    "untitled": "(Sin título)",
+    "weekRow": "Calendario"
   },
   "MassActions": {
     "apply": "Aplicar a la selección",
@@ -3573,6 +3879,36 @@
     },
     "subtitle": "{client} quiere conectarse a tu cuenta.",
     "title": "Autorizar el acceso"
+  },
+  "MessageTemplates": {
+    "create": "Nueva plantilla",
+    "description": "Asuntos y cuerpos en Markdown con campos combinados que se rellenan con el registro al enviar.",
+    "emptyDescription": "Escribe un mensaje una vez y reutilízalo en automatizaciones y campañas.",
+    "emptyTitle": "Aún no hay plantillas",
+    "fallbackHint": "Da un valor por defecto a los campos que pueden faltar, como contact.firstName | \"there\" entre llaves. Sin él, el envío a ese registro se rechaza.",
+    "fields": {
+      "body": "Mensaje (Markdown)",
+      "kind": "Tipo",
+      "name": "Nombre",
+      "subject": "Asunto"
+    },
+    "insertField": "Insertar un campo combinado",
+    "kind": {
+      "marketing": "Márketing",
+      "marketingHint": "Lleva enlace de baja y no se envía a quien se dio de baja, rebotó o se quejó.",
+      "transactional": "Transaccional",
+      "transactionalHint": "Para seguimientos personales. Sin enlace de baja; también se envía a quienes se dieron de baja del marketing."
+    },
+    "listLabel": "Plantillas",
+    "preview": {
+      "empty": "Escribe un asunto o un mensaje para ver cómo quedará.",
+      "record": "Registro",
+      "recordType": "Vista previa con",
+      "subject": "Asunto:",
+      "title": "Vista previa"
+    },
+    "saved": "Plantilla guardada",
+    "title": "Plantillas de correo"
   },
   "MessagingUpsell": {
     "cta": "Mejora tu plan",
@@ -4191,6 +4527,7 @@
       "api": "API y webhooks",
       "auditLog": "Registro de auditoría",
       "automations": "Automatizaciones",
+      "campaigns": "Campañas",
       "company": "Empresa",
       "contacts": "Contactos",
       "deals": "Oportunidades",
@@ -4375,6 +4712,26 @@
     "tuesday": "Martes",
     "wednesday": "Miércoles"
   },
+  "SenderIdentity": {
+    "allowUserSenders": "Enviar como el usuario que originó el mensaje cuando su dirección está en el dominio verificado",
+    "description": "El nombre y la dirección desde los que envían automatizaciones y campañas. Una dirección propia necesita su dominio verificado; hasta entonces esos correos no se envían, en lugar de salir desde otra dirección.",
+    "fromAddress": "Dirección del remitente",
+    "fromName": "Nombre del remitente",
+    "recordIntro": "Añade este registro DNS en tu proveedor para {domain} y luego comprueba el dominio:",
+    "recordName": "Nombre",
+    "recordType": "Tipo",
+    "recordValue": "Valor",
+    "refusedUntilVerified": "Hasta que el dominio esté verificado, los correos de este remitente se rechazan.",
+    "replyTo": "Responder a (opcional)",
+    "save": "Guardar remitente",
+    "saved": "Remitente guardado",
+    "title": "Remitente",
+    "unverified": "Sin verificar",
+    "verified": "Verificado",
+    "verifiedOn": "{domain} verificado el {date}.",
+    "verifiedToast": "Dominio verificado",
+    "verify": "Comprobar dominio"
+  },
   "ServiceModal": {
     "title": "Servicio"
   },
@@ -4489,6 +4846,24 @@
     "subject": "Tu cuenta está inactiva: podemos ayudarte a recuperar el acceso",
     "title": "Suscripción desactivada"
   },
+  "Suppressions": {
+    "add": "Bloquear",
+    "added": "Dirección bloqueada",
+    "addressLabel": "Dirección a bloquear",
+    "description": "Estas direcciones no reciben correo de marketing: quienes se dieron de baja, las que rebotaron o se quejaron y las que añadas. El correo personal y de cuenta les sigue llegando.",
+    "empty": "No hay direcciones bloqueadas.",
+    "loadError": "No se pudo cargar la lista de bloqueos.",
+    "more": "Se muestran {shown} de {total}. Busca para encontrar otras.",
+    "reason": {
+      "bounced": "Rebotado",
+      "complained": "Queja",
+      "manual": "Añadida a mano",
+      "unsubscribed": "Dado de baja"
+    },
+    "remove": "Quitar el bloqueo de {address}",
+    "search": "Buscar direcciones",
+    "title": "Direcciones bloqueadas"
+  },
   "TaskModal": {
     "title": "Tarea"
   },
@@ -4532,6 +4907,18 @@
     "signoff": "Un saludo,\nBen",
     "subject": "Te damos la bienvenida a {brand}",
     "title": "Te damos la bienvenida a tu prueba"
+  },
+  "Unsubscribe": {
+    "confirm": "Darme de baja",
+    "confirmBody": "{address} no recibirá más correos de marketing de este remitente.",
+    "confirmTitle": "¿Dejar de recibir estos correos?",
+    "doneBody": "{address} ya no recibirá correos de marketing de este remitente.",
+    "doneTitle": "Te has dado de baja",
+    "limitedBody": "Inténtalo de nuevo en un minuto.",
+    "limitedTitle": "Demasiadas solicitudes",
+    "title": "Darse de baja",
+    "unknownBody": "Puede estar incompleto. Responde al correo y pide al remitente que te elimine.",
+    "unknownTitle": "Este enlace no es válido"
   },
   "UserAvatar": {
     "company": "Mi empresa",

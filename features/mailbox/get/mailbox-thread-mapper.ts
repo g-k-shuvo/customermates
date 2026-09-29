@@ -1,4 +1,4 @@
-import type { MailboxMessageDto, MailboxThreadSummaryDto } from "../mailbox.schema";
+import type { MailboxMessageDto, MailboxThreadSummaryDto, MailThreadLabelDto } from "../mailbox.schema";
 
 import type { MailAttachmentRow } from "@/features/mail-attachments/mail-attachment.schema";
 
@@ -21,6 +21,9 @@ export type ThreadSummaryRow = {
   state: string;
   sharedToCrm: boolean;
   participants: ThreadParticipantRow[];
+  archivedAt?: Date | null;
+  followUpAt?: Date | null;
+  labels?: { label: { id: string; name: string; color: string } }[];
 };
 
 export type ThreadMessageRow = {
@@ -50,6 +53,9 @@ export function toThreadSummaryDto(row: ThreadSummaryRow): MailboxThreadSummaryD
         identifier: participant.identifier ?? "",
         displayName: participant.displayName,
       })),
+    archived: Boolean(row.archivedAt),
+    followUpAt: row.followUpAt ?? null,
+    labels: (row.labels ?? []).map(({ label }) => label as MailThreadLabelDto),
   };
 }
 

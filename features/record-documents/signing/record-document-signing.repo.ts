@@ -1,5 +1,5 @@
 import type { Locale, RecordDocumentEnvelopeStatus, RecordDocumentStatus } from "@/generated/prisma";
-import type { RecordFileEntityType } from "@/features/record-files/record-file.schema";
+import type { RecordDocumentEntityType } from "@/features/record-files/record-file.schema";
 import type { SigningRecipientState } from "@/core/signing/signing-provider";
 import type { RecordDocumentDto } from "../record-document.schema";
 import type { SupersededRecordDocumentFile } from "../upload/complete-record-document-file.repo";
@@ -7,7 +7,7 @@ import type { SupersededRecordDocumentFile } from "../upload/complete-record-doc
 export type EnvelopeRecordDocument = {
   id: string;
   companyId: string;
-  entityType: RecordFileEntityType;
+  entityType: RecordDocumentEntityType;
   recordId: string;
   title: string;
   status: RecordDocumentStatus;
@@ -19,7 +19,7 @@ export type EnvelopeRecordDocument = {
 
 export type SignableRecordDocument = {
   id: string;
-  entityType: RecordFileEntityType;
+  entityType: RecordDocumentEntityType;
   recordId: string;
   title: string;
   status: RecordDocumentStatus;
@@ -58,9 +58,9 @@ export interface SignRecordDocumentRepo {
 }
 
 export interface GetSignatureSuggestionsRepo {
-  isRecordAccessible(entityType: RecordFileEntityType, recordId: string): Promise<boolean>;
+  isRecordAccessible(entityType: RecordDocumentEntityType, recordId: string): Promise<boolean>;
   suggestSignatureRecipients(
-    entityType: RecordFileEntityType,
+    entityType: RecordDocumentEntityType,
     recordId: string,
     limit: number,
   ): Promise<{ name: string; email: string }[]>;

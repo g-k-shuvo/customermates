@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import type { MailView } from "@/features/mailbox/mailbox.schema";
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -12,6 +13,8 @@ export async function GET(request: NextRequest) {
     const result = await getGetMailboxThreadsInteractor().invoke({
       query: searchParams.get("query") ?? undefined,
       folder: searchParams.get("folder") ?? undefined,
+      view: (searchParams.get("view") ?? undefined) as MailView | undefined,
+      labelId: searchParams.get("labelId") ?? undefined,
     });
 
     if (!result.ok) return NextResponse.json(z.prettifyError(result.error), { status: 400 });

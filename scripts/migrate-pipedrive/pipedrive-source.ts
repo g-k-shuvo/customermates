@@ -18,6 +18,8 @@ import type {
   PipedriveRecord,
   PipedriveStage,
   PipedriveUser,
+  PipedriveFile,
+  PipedrivePersonField,
 } from "./pipedrive.types";
 
 import { readFile, readdir, stat } from "node:fs/promises";
@@ -36,6 +38,10 @@ export type PipedriveSource = {
   notes(): Promise<PipedriveNote[]>;
   leads(): Promise<PipedriveLead[]>;
   leadLabels(): Promise<PipedriveLeadLabel[]>;
+  personFields(): Promise<PipedrivePersonField[]>;
+  files(): Promise<PipedriveFile[]>;
+  /** The file's bytes, or null when the export does not carry them. */
+  fileContent(file: PipedriveFile): Promise<Uint8Array | null>;
 };
 
 /**
@@ -82,7 +88,12 @@ const DIRECTORY_FILES = {
   dealFlow: "deal-flow.json",
   leads: "leads.json",
   leadLabels: "leadLabels.json",
+  personFields: "personFields.json",
+  files: "files.json",
 } as const;
+
+/** Exported file bodies live beside the JSON as `files/<id>` or `files/<file_name>`. */
+const FILE_BODIES_DIRECTORY = "files";
 
 async function readOptional<T extends PipedriveRecord>(directory: string, file: string): Promise<T[]> {
   try {
@@ -155,6 +166,23 @@ function createDirectorySource(directory: string): PipedriveSource {
     notes: () => read<PipedriveNote>(DIRECTORY_FILES.notes),
     leads: () => read<PipedriveLead>(DIRECTORY_FILES.leads),
     leadLabels: () => read<PipedriveLeadLabel>(DIRECTORY_FILES.leadLabels),
+    personFields: () => read<PipedrivePersonField>(DIRECTORY_FILES.personFields),
+    files: () => read<PipedriveFile>(DIRECTORY_FILES.files),
+    fileContent: async (file) => {
+      const candidates = [String(file.id), file.file_name, file.name].filter(
+        (name): name is string => typeof name === "string" && name.trim() !== "",
+      );
+
+      for (const name of candidates) {
+        try {
+          return new Uint8Array(await readFile(join(directory, FILE_BODIES_DIRECTORY, name)));
+        } catch {
+          continue;
+        }
+      }
+
+      return null;
+    },
   };
 }
 
@@ -206,6 +234,16 @@ function createApiSource(domain: string, token: string): PipedriveSource {
     notes: () => request<PipedriveNote>("notes"),
     leads: () => request<PipedriveLead>("leads", { archived_status: "all" }),
     leadLabels: () => request<PipedriveLeadLabel>("leadLabels"),
+    personFields: () => request<PipedrivePersonField>("personFields"),
+    files: () => request<PipedriveFile>("files"),
+    fileContent: async (file) => {
+      const url = new URL(`${origin}/api/v1/files/${file.id}/download`);
+      url.searchParams.set("api_token", token);
+      const response = await fetch(url);
+      if (!response.ok) return null;
+
+      return new Uint8Array(await response.arrayBuffer());
+    },
   };
 }
 

@@ -1,6 +1,11 @@
 import type { AutomationStepError } from "../automation-step-errors";
+import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
 
-import { EntityType, LeadStatus } from "@/generated/prisma";
+import { z } from "zod";
+
+import { CustomColumnType, EntityType, LeadStatus } from "@/generated/prisma";
+
+import { validateCustomFieldValues } from "@/core/validation/validate-custom-field-values";
 
 type FieldKind = "text" | "number" | "date" | "leadStatus";
 
@@ -69,4 +74,35 @@ export function resolveFieldWrite(
   const next = coerced(rule.kind, value);
 
   return next === undefined ? { ok: false, error: "fieldValueInvalid" } : { ok: true, field, value: next };
+}
+
+export const CUSTOM_WRITABLE_TYPES: ReadonlySet<CustomColumnType> = new Set([
+  CustomColumnType.plain,
+  CustomColumnType.email,
+  CustomColumnType.phone,
+  CustomColumnType.link,
+  CustomColumnType.currency,
+  CustomColumnType.singleSelect,
+  CustomColumnType.date,
+  CustomColumnType.dateTime,
+]);
+
+export type ResolvedCustomFieldWrite = { ok: true; value: string | null } | { ok: false; error: AutomationStepError };
+
+export function isCustomFieldKey(field: string): boolean {
+  return z.uuid().safeParse(field).success;
+}
+
+export function resolveCustomFieldWrite(column: CustomColumnDto | undefined, value: unknown): ResolvedCustomFieldWrite {
+  if (!column || !CUSTOM_WRITABLE_TYPES.has(column.type)) return { ok: false, error: "fieldNotWritable" };
+  if (value === null || (typeof value === "string" && value.trim() === "")) return { ok: true, value: null };
+  if (typeof value !== "string" && typeof value !== "number") return { ok: false, error: "fieldValueInvalid" };
+
+  const text = String(value).trim();
+  const checked = z
+    .unknown()
+    .superRefine((_, ctx) => validateCustomFieldValues([{ columnId: column.id, value: text }], [column], ctx, []))
+    .safeParse(null);
+
+  return checked.success ? { ok: true, value: text } : { ok: false, error: "fieldValueInvalid" };
 }

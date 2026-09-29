@@ -18,6 +18,7 @@ describe("AUDIT_EVENT_ENTITY_TYPE", () => {
     expect(auditEntityTypeFor(DomainEvent.DEAL_CREATED)).toBe(EntityType.deal);
     expect(auditEntityTypeFor(DomainEvent.SERVICE_UPDATED)).toBe(EntityType.service);
     expect(auditEntityTypeFor(DomainEvent.TASK_DELETED)).toBe(EntityType.task);
+    expect(auditEntityTypeFor(DomainEvent.DEAL_AUTOMATED)).toBe(EntityType.deal);
   });
 
   it("refuses to guess a record for events whose subject is not a crm record", () => {
@@ -45,7 +46,7 @@ describe("AUDIT_EVENT_ENTITY_TYPE", () => {
 describe("auditEventsForEntityTypes", () => {
   it("returns only the events belonging to the requested types", () => {
     expect(auditEventsForEntityTypes([EntityType.deal]).sort()).toEqual(
-      [DomainEvent.DEAL_CREATED, DomainEvent.DEAL_UPDATED, DomainEvent.DEAL_DELETED].sort(),
+      [DomainEvent.DEAL_CREATED, DomainEvent.DEAL_UPDATED, DomainEvent.DEAL_DELETED, DomainEvent.DEAL_AUTOMATED].sort(),
     );
   });
 
@@ -55,7 +56,7 @@ describe("auditEventsForEntityTypes", () => {
     expect(events).toContain(DomainEvent.CONTACT_CREATED);
     expect(events).toContain(DomainEvent.TASK_DELETED);
     expect(events).not.toContain(DomainEvent.DEAL_CREATED);
-    expect(events).toHaveLength(6);
+    expect(events).toHaveLength(8);
   });
 
   it("returns nothing for no requested types, so the caller does not build an empty IN clause by accident", () => {
@@ -65,7 +66,7 @@ describe("auditEventsForEntityTypes", () => {
   it("covers every crm event exactly once across all five types", () => {
     const all = auditEventsForEntityTypes(Object.values(EntityType));
 
-    expect(all).toHaveLength(15);
-    expect(new Set(all).size).toBe(15);
+    expect(all).toHaveLength(20);
+    expect(new Set(all).size).toBe(20);
   });
 });

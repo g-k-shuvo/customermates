@@ -11,7 +11,7 @@ import {
 import {
   PresignedUploadDtoSchema,
   RECORD_FILE_NAME_MAX_LENGTH,
-  RecordFileEntityTypeSchema,
+  RecordDocumentEntityTypeSchema,
 } from "@/features/record-files/record-file.schema";
 
 export const RECORD_DOCUMENT_TITLE_MAX_LENGTH = 200;
@@ -46,7 +46,7 @@ export type RecordDocumentSignatureDto = Data<typeof RecordDocumentSignatureDtoS
 
 export const RecordDocumentDtoSchema = z.object({
   id: z.uuid(),
-  entityType: RecordFileEntityTypeSchema,
+  entityType: RecordDocumentEntityTypeSchema,
   recordId: z.uuid(),
   title: z.string(),
   status: RecordDocumentStatusSchema,

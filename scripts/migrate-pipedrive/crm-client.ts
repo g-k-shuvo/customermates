@@ -28,6 +28,7 @@ export type CrmRecord = {
   status?: string;
   stageId?: string | null;
   pipelineId?: string | null;
+  completedAt?: string | null;
   customFieldValues: CrmCustomFieldValue[];
 };
 
@@ -41,6 +42,18 @@ export type CrmLostReason = { id: string; name: string; position: number };
 
 export type CrmService = { id: string; name: string; amount: number };
 
+export type CrmContactList = { id: string; name: string; memberCount: number };
+
+export type CrmRecordFile = { id: string; fileName: string; byteSize: number };
+
+export type RecordFileUploadInput = {
+  entityType: "contact" | "organization" | "deal" | "lead";
+  recordId: string;
+  fileName: string;
+  contentType: string;
+  bytes: Uint8Array;
+};
+
 /** The read surface `runMigration` depends on; `CrmClient` is its live implementation. */
 export type CrmReads = {
   users(): Promise<CrmUser[]>;
@@ -49,6 +62,8 @@ export type CrmReads = {
   services(): Promise<CrmService[]>;
   customColumns(entityPath: string): Promise<CrmCustomColumn[]>;
   searchAll<T>(entityPath: string, filters?: unknown[]): Promise<T[]>;
+  contactLists(): Promise<CrmContactList[]>;
+  recordFiles(entityType: string, recordId: string): Promise<CrmRecordFile[]>;
 };
 
 export class CrmApiError extends Error {
@@ -160,6 +175,61 @@ export class CrmClient {
 
   async updateRecord(entityPath: string, id: string, payload: unknown): Promise<CrmRecord> {
     return await this.request<CrmRecord>("PUT", `/api/v1/${entityPath}/${id}`, payload);
+  }
+
+  async completeTask(id: string): Promise<void> {
+    await this.request<unknown>("POST", `/api/v1/tasks/${id}/complete`, {});
+  }
+
+  async contactLists(): Promise<CrmContactList[]> {
+    return await this.request<CrmContactList[]>("GET", "/api/v1/contact-lists");
+  }
+
+  async createContactList(name: string): Promise<CrmContactList> {
+    return await this.request<CrmContactList>("POST", "/api/v1/contact-lists", { name });
+  }
+
+  /** Adds contacts in chunks of 100, the endpoint's limit. Returns how many were new. */
+  async addContactListMembers(listId: string, contactIds: readonly string[]): Promise<number> {
+    let added = 0;
+    for (let index = 0; index < contactIds.length; index += 100) {
+      const result = await this.request<{ changed: number }>("POST", `/api/v1/contact-lists/${listId}/members`, {
+        contactIds: contactIds.slice(index, index + 100),
+      });
+      added += result.changed;
+    }
+
+    return added;
+  }
+
+  async recordFiles(entityType: string, recordId: string): Promise<CrmRecordFile[]> {
+    const query = new URLSearchParams({ entityType, recordId });
+    const list = await this.request<{ files: CrmRecordFile[] }>("GET", `/api/v1/files?${query.toString()}`);
+
+    return list.files;
+  }
+
+  /** Registers the file, PUTs the bytes to the presigned URL, then completes it. */
+  async uploadRecordFile(input: RecordFileUploadInput): Promise<CrmRecordFile> {
+    const created = await this.request<{
+      file: CrmRecordFile;
+      upload: { url: string; method: "PUT"; headers: Record<string, string> };
+    }>("POST", "/api/v1/files/uploads", {
+      entityType: input.entityType,
+      recordId: input.recordId,
+      fileName: input.fileName,
+      contentType: input.contentType,
+      byteSize: input.bytes.byteLength,
+    });
+
+    const put = await fetch(created.upload.url, {
+      method: "PUT",
+      headers: created.upload.headers,
+      body: input.bytes,
+    });
+    if (!put.ok) throw new CrmApiError("PUT", "presigned upload", put.status, (await put.text()).slice(0, 400));
+
+    return await this.request<CrmRecordFile>("POST", `/api/v1/files/${created.file.id}/complete`);
   }
 
   async markDealWon(id: string): Promise<CrmRecord> {

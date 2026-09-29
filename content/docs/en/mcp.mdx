@@ -96,7 +96,7 @@ Customermates exposes [[derived.mcp.tools.total]] MCP tools, all enabled by defa
 Every tool below carries its summary, its flag when it has one, and its arguments. Two flags matter: **Read-only** marks a tool that mutates nothing, which is what you allow without prompting in your client, and **IRREVERSIBLE** marks one that deletes data or cannot be undone. For merged tools the destructive flag applies to their delete-capable actions.
 
 {/* mcp-catalog:flags */}
-**Read-only:** `get_record_schema`, `list_records`, `search_records`, `get_records`, `get_workspace_context`, `list_users`, `get_messaging_threads`, `get_activities`, `get_calendars`, `get_social_posts`, `get_social_post_engagement`, `get_social_profile`, `linkedin_search_sales_leads`, `linkedin_search_sales_companies`, `linkedin_get_sales_search_parameters`, `search_docs`, `get_docs_page`, `search`, `fetch`
+**Read-only:** `get_record_schema`, `list_records`, `search_records`, `get_records`, `get_workspace_context`, `list_users`, `get_messaging_threads`, `get_activities`, `get_calendars`, `get_social_posts`, `get_social_post_engagement`, `get_social_profile`, `linkedin_search_sales_leads`, `linkedin_search_sales_companies`, `linkedin_get_sales_search_parameters`, `search_docs`, `get_docs_page`, `search`, `fetch`, `list_leads`
 
 **IRREVERSIBLE:** `delete_records`, `manage_data_views`, `discard_message_draft`, `manage_custom_columns`, `manage_widgets`, `manage_routines`, `manage_webhooks`
 {/* /mcp-catalog */}
@@ -486,6 +486,35 @@ Send a support request to the Customermates team (subject plus description). The
 Required: `subject`, `body`.
 {/* /mcp-catalog */}
 
+### Leads
+
+These tools are served on the MCP endpoint for external clients; the in-app assistant does not load them.
+
+{/* mcp-catalog:leads */}
+#### `list_leads`
+
+List leads 25 per page, by title search and status.
+
+**Read-only.** Optional: `search`, `status`, `page`.
+
+#### `create_leads`
+
+Create up to 100 leads; ownerless ones are assigned by the lead assignment rules.
+
+Required: `leads`.
+
+#### `update_leads`
+
+Partial update for up to 100 leads, including owner and status.
+
+Required: `leads`.
+
+#### `convert_lead_to_deal`
+
+Turn a lead into a deal in a chosen pipeline and stage.
+
+Required: `id`. Optional: `name`, `pipelineId`, `stageId`, `baseValue`.{/* /mcp-catalog */}
+
 ### Narrowing with ?toolsets=
 
 All [[derived.mcp.tools.total]] tools are on by default. To expose only part of the surface, append `?toolsets=` with comma-separated group keys to the endpoint URL:
@@ -494,7 +523,7 @@ All [[derived.mcp.tools.total]] tools are on by default. To expose only part of 
 https://customermates.com/api/v1/mcp?toolsets=records,messaging
 ```
 
-Keys: records, workspace, views, messaging, social, docs, custom-columns, widgets, routines, webhooks, admin, support. No parameter means everything; unknown keys are ignored, and a list with no recognised key serves the full surface. `search` and `fetch` are always on so deep-research connectors keep working on any narrowed surface.
+Keys: records, workspace, views, messaging, social, docs, custom-columns, widgets, routines, webhooks, admin, support, leads. No parameter means everything; unknown keys are ignored, and a list with no recognised key serves the full surface. `search` and `fetch` are always on so deep-research connectors keep working on any narrowed surface.
 
 ### When a call is refused
 

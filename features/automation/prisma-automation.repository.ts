@@ -1,6 +1,10 @@
 import type { RepoArgs } from "@/core/utils/types";
+
+import type { AutomationCausation } from "@/core/decorators/automation-context";
+import { randomUUID } from "node:crypto";
 import type { AdmittedAutomationRun, TriggerAutomationsRepo, TriggerableAutomation } from "./trigger-automations.repo";
 import type { AutomationRunPlan, ExecuteAutomationRunRepo } from "./run/execute-automation-run.repo";
+import type { ReconcileAutomationRunsRepo, UnsettledAutomationRun } from "./run/reconcile-automation-runs.interactor";
 import type { UpsertAutomationData, UpsertAutomationRepo } from "./upsert/upsert-automation.interactor";
 import type { DeleteAutomationRepo } from "./delete/delete-automation.interactor";
 import type { GetAutomationsRepo } from "./get/get-automations.interactor";
@@ -48,6 +52,24 @@ type SnapshotSource = Prisma.AutomationStepGetPayload<{ select: typeof STEP_SNAP
 
 type StepSnapshot = { kind: AutomationActionKind; config: Prisma.JsonValue };
 
+function sequenceDedupeKey(
+  steps: readonly SnapshotSource[],
+  entityType: EntityType,
+  entityId: string | null,
+): string | null {
+  const waits = steps.some((step) => step.kind === AutomationActionKind.delay);
+
+  return waits && entityId ? `sequence:${entityType}:${entityId}` : null;
+}
+
+function chainedDedupeKey(
+  causation: AutomationCausation | null,
+  entityType: EntityType,
+  entityId: string | null,
+): string | null {
+  return causation ? `chain:${causation.parentRunId}:${entityType}:${entityId ?? ""}` : null;
+}
+
 function runStepFor(companyId: string, step: SnapshotSource) {
   return {
     companyId,
@@ -80,7 +102,8 @@ export class PrismaAutomationRepo
     DeleteAutomationRepo,
     GetAutomationsRepo,
     GetAutomationRunsRepo,
-    SweepDueAutomationsRepo
+    SweepDueAutomationsRepo,
+    ReconcileAutomationRunsRepo
 {
   private toDto(row: AutomationRow): AutomationDto {
     return {
@@ -292,23 +315,35 @@ export class PrismaAutomationRepo
       });
       if (steps.length === 0) continue;
 
-      const run = await this.prisma.automationRun.create({
-        data: {
-          companyId: args.companyId,
-          automationId,
-          status: AutomationRunStatus.queued,
-          entityType: args.entityType,
-          entityId: args.entityId,
-          triggerEvent: args.triggerEvent,
-          triggerPayload: args.triggerPayload as Prisma.InputJsonValue,
-          steps: {
-            create: steps.map((step) => runStepFor(args.companyId, step)),
+      const id = randomUUID();
+      const dedupeKey =
+        sequenceDedupeKey(steps, args.entityType, args.entityId) ??
+        chainedDedupeKey(args.causation ?? null, args.entityType, args.entityId);
+      const { count } = await this.prisma.automationRun.createMany({
+        data: [
+          {
+            id,
+            companyId: args.companyId,
+            automationId,
+            status: AutomationRunStatus.queued,
+            entityType: args.entityType,
+            entityId: args.entityId,
+            triggerEvent: args.triggerEvent,
+            triggerPayload: args.triggerPayload as Prisma.InputJsonValue,
+            dedupeKey,
+            causationDepth: args.causation?.depth ?? 0,
+            causationChain: args.causation?.chain ?? [],
           },
-        },
-        select: { id: true },
+        ],
+        skipDuplicates: true,
+      });
+      if (count !== 1) continue;
+
+      await this.prisma.automationRunStep.createMany({
+        data: steps.map((step) => ({ ...runStepFor(args.companyId, step), runId: id })),
       });
 
-      runs.push({ id: run.id, automationId });
+      runs.push({ id, automationId });
     }
 
     return runs;
@@ -325,6 +360,8 @@ export class PrismaAutomationRepo
         entityType: true,
         entityId: true,
         triggerEvent: true,
+        causationDepth: true,
+        causationChain: true,
         automation: { select: { name: true, conditions: true } },
         steps: {
           select: {
@@ -348,6 +385,8 @@ export class PrismaAutomationRepo
       entityType: run.entityType,
       entityId: run.entityId,
       triggerEvent: run.triggerEvent,
+      causationDepth: run.causationDepth,
+      causationChain: run.causationChain,
       conditions: toConditions(run.automation.conditions),
       steps: run.steps.flatMap((step) => {
         const planned = snapshotOf(step.snapshot) ?? step.step;
@@ -358,13 +397,92 @@ export class PrismaAutomationRepo
   }
 
   @BypassTenantGuard
-  async claimRunUnscoped(runId: string): Promise<boolean> {
+  async claimRunUnscoped(runId: string, claimToken: string | null): Promise<boolean> {
     const { count } = await this.prisma.automationRun.updateMany({
-      where: { id: runId, status: AutomationRunStatus.queued },
-      data: { status: AutomationRunStatus.running, startedAt: new Date() },
+      where: {
+        id: runId,
+        OR: [
+          { status: AutomationRunStatus.queued },
+          ...(claimToken ? [{ status: AutomationRunStatus.running, claimToken }] : []),
+        ],
+      },
+      data: { status: AutomationRunStatus.running, claimToken },
     });
+    if (count === 1) {
+      await this.prisma.automationRun.updateMany({
+        where: { id: runId, startedAt: null },
+        data: { startedAt: new Date() },
+      });
+    }
 
     return count === 1;
+  }
+
+  @BypassTenantGuard
+  async findUnsettledRunsUnscoped(before: Date, limit: number): Promise<UnsettledAutomationRun[]> {
+    return await this.prisma.automationRun.findMany({
+      where: {
+        status: { in: [AutomationRunStatus.queued, AutomationRunStatus.running] },
+        updatedAt: { lt: before },
+      },
+      orderBy: { updatedAt: "asc" },
+      take: limit,
+      select: {
+        id: true,
+        companyId: true,
+        status: true,
+        claimToken: true,
+        createdAt: true,
+        steps: {
+          where: { status: AutomationRunStatus.running, snapshot: { path: ["kind"], equals: "delay" } },
+          select: { startedAt: true, snapshot: true },
+        },
+      },
+    });
+  }
+
+  @BypassTenantGuard
+  async interruptRunUnscoped(runId: string, error: string): Promise<boolean> {
+    return await this.endRunUnscoped(runId, AutomationRunStatus.failed, error);
+  }
+
+  @BypassTenantGuard
+  async cancelRunUnscoped(runId: string, error: string): Promise<boolean> {
+    return await this.endRunUnscoped(runId, AutomationRunStatus.cancelled, error);
+  }
+
+  @BypassTenantGuard
+  private async endRunUnscoped(runId: string, status: AutomationRunStatus, error: string): Promise<boolean> {
+    const run = await this.prisma.automationRun.findUnique({
+      where: { id: runId },
+      select: { companyId: true, automationId: true },
+    });
+    if (!run) return false;
+
+    const { count } = await this.prisma.automationRun.updateMany({
+      where: {
+        id: runId,
+        companyId: run.companyId,
+        status: { in: [AutomationRunStatus.queued, AutomationRunStatus.running] },
+      },
+      data: { status, error, finishedAt: new Date(), dedupeKey: null },
+    });
+    if (count !== 1) return false;
+
+    await this.prisma.automationRunStep.updateMany({
+      where: {
+        runId,
+        companyId: run.companyId,
+        status: { in: [AutomationRunStatus.queued, AutomationRunStatus.running] },
+      },
+      data: { status, error, finishedAt: new Date() },
+    });
+    await this.prisma.automation.updateMany({
+      where: { id: run.automationId, companyId: run.companyId },
+      data: { lastRunAt: new Date() },
+    });
+
+    return true;
   }
 
   @BypassTenantGuard
@@ -417,7 +535,7 @@ export class PrismaAutomationRepo
 
     await this.prisma.automationRun.updateMany({
       where: { id: args.runId, companyId: run.companyId },
-      data: { status: args.status, error: args.error, finishedAt: new Date() },
+      data: { status: args.status, error: args.error, finishedAt: new Date(), dedupeKey: null },
     });
 
     await this.prisma.automation.updateMany({
@@ -435,12 +553,27 @@ export class PrismaAutomationRepo
         schedule: { not: null },
         nextRunAt: { lte: now },
       },
-      select: { id: true, companyId: true, schedule: true, scheduleTimeZone: true },
+      select: { id: true, companyId: true, schedule: true, scheduleTimeZone: true, nextRunAt: true },
       orderBy: { nextRunAt: "asc" },
       take: limit,
     });
 
     return rows.flatMap((row) => (row.schedule ? [{ ...row, schedule: row.schedule }] : []));
+  }
+
+  @BypassTenantGuard
+  async restampScheduleUnscoped(args: {
+    automationId: string;
+    companyId: string;
+    from: Date;
+    nextRunAt: Date | null;
+  }): Promise<boolean> {
+    const { count } = await this.prisma.automation.updateMany({
+      where: { id: args.automationId, companyId: args.companyId, nextRunAt: args.from },
+      data: { nextRunAt: args.nextRunAt },
+    });
+
+    return count === 1;
   }
 
   @BypassTenantGuard

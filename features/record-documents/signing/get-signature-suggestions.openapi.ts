@@ -3,7 +3,7 @@ import type { ZodOpenApiOperationObject } from "zod-openapi";
 import { SignatureSuggestionsDtoSchema } from "./record-document-signing.schema";
 
 import { CommonApiResponses, ErrorResponseSchema } from "@/core/api/interactor-handler";
-import { RecordFileTargetSchema } from "@/features/record-files/record-file.schema";
+import { RecordDocumentTargetSchema } from "@/features/record-files/record-file.schema";
 
 export const getSignatureSuggestionsOperation: ZodOpenApiOperationObject = {
   operationId: "getRecordDocumentSignatureSuggestions",
@@ -12,7 +12,7 @@ export const getSignatureSuggestionsOperation: ZodOpenApiOperationObject = {
     "Lists people with an email address who belong to the record: the contact itself, the contacts of a deal, or the contacts of an organization. Up to 10 are returned.",
   tags: ["documents"],
   security: [{ apiKeyAuth: [] }],
-  requestParams: { query: RecordFileTargetSchema },
+  requestParams: { query: RecordDocumentTargetSchema },
   responses: {
     "200": {
       description: "The suggestions were retrieved.",

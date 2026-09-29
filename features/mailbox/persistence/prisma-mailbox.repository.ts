@@ -5,6 +5,8 @@ import type { PlannedThread } from "../sync/sync-plan";
 import type { MailboxAccountDto, MailboxCredentialDto, MailboxFolderCursorDto } from "../mailbox.schema";
 import type { CreateMailboxArgs } from "../connect/connect-mailbox.repo";
 import type { MailboxThreadFilter } from "../get/mailbox-thread-filter";
+import type { MailboxOAuthProvider } from "@/generated/prisma";
+import type { MailView } from "../mailbox.schema";
 
 import { MailboxFolderCursorListSchema } from "../mailbox.schema";
 
@@ -22,6 +24,7 @@ export type MailboxAccount = {
   imapSecure: boolean;
   username: string;
   sealedSecret: string;
+  oauthProvider?: MailboxOAuthProvider | null;
   syncCursors: MailboxFolderCursorDto[];
   backfillFrom: Date | null;
   sentFolderIds: string[];
@@ -38,6 +41,12 @@ const THREAD_SUMMARY_SELECT = {
   state: true,
   sharedToCrm: true,
   participants: { select: { identifier: true, displayName: true, isSelf: true } },
+  archivedAt: true,
+  followUpAt: true,
+  labels: {
+    select: { label: { select: { id: true, name: true, color: true } } },
+    orderBy: { label: { name: "asc" } },
+  },
 } as const;
 
 const MAILBOX_CREDENTIAL_SELECT = {
@@ -121,6 +130,25 @@ function folderWhere(companyId: string, folder: string | null) {
   return { messages: { some: { companyId, folderIds: { has: folder } } } };
 }
 
+const OPEN_OUTBOX_STATUSES = ["scheduled", "sending", "failed"] as const;
+
+function viewWhere(userId: string, view: MailView | undefined) {
+  switch (view) {
+    case "inbox":
+      return { archivedAt: null };
+    case "archived":
+      return { archivedAt: { not: null } };
+    case "drafts":
+      return { drafts: { some: { userId } } };
+    case "outbox":
+      return { outboxMessages: { some: { userId, status: { in: [...OPEN_OUTBOX_STATUSES] } } } };
+    case "followUp":
+      return { followUpAt: { not: null } };
+    default:
+      return {};
+  }
+}
+
 function searchWhere(companyId: string, search: string | null) {
   if (!search) return {};
 
@@ -164,6 +192,7 @@ export class PrismaMailboxRepo extends BaseRepository {
         imapSecure: true,
         username: true,
         sealedSecret: true,
+        oauthProvider: true,
         syncCursors: true,
         backfillFrom: true,
         connectedAccount: { select: { emailAddress: true, displayName: true, sentFolderIds: true } },
@@ -179,6 +208,7 @@ export class PrismaMailboxRepo extends BaseRepository {
       imapSecure: row.imapSecure,
       username: row.username,
       sealedSecret: row.sealedSecret,
+      oauthProvider: row.oauthProvider,
       syncCursors: MailboxFolderCursorListSchema.catch([]).parse(row.syncCursors),
       backfillFrom: row.backfillFrom,
       sentFolderIds: row.connectedAccount.sentFolderIds,
@@ -327,6 +357,7 @@ export class PrismaMailboxRepo extends BaseRepository {
         lastMessageAt: latest.message.sentAt,
         lastMessagePreview: previewOf(latest),
         lastMessageIsSender: latest.message.direction === "outbound",
+        ...(latest.message.direction === "outbound" ? {} : { followUpAt: null, archivedAt: null }),
       },
     });
   }
@@ -357,6 +388,7 @@ export class PrismaMailboxRepo extends BaseRepository {
         imapSecure: args.imapSecure,
         username: args.username,
         sealedSecret: args.sealedSecret,
+        oauthProvider: args.oauthProvider ?? null,
         smtpHost: args.smtpHost,
         smtpPort: args.smtpPort,
         smtpSecure: args.smtpSecure,
@@ -605,6 +637,8 @@ export class PrismaMailboxRepo extends BaseRepository {
         ...this.ownedByCaller,
         ...folderWhere(this.companyId, filter.folder),
         ...searchWhere(this.companyId, filter.search),
+        ...viewWhere(this.userId, filter.view),
+        ...(filter.labelId ? { labels: { some: { mailLabelId: filter.labelId } } } : {}),
       },
       select: THREAD_SUMMARY_SELECT,
       orderBy: [{ lastMessageAt: "desc" }, { id: "asc" }],
@@ -708,6 +742,7 @@ export class PrismaMailboxRepo extends BaseRepository {
         smtpSecure: true,
         username: true,
         sealedSecret: true,
+        oauthProvider: true,
         connectedAccount: { select: { emailAddress: true, displayName: true } },
       },
     });
@@ -773,6 +808,13 @@ export class PrismaMailboxRepo extends BaseRepository {
     await this.prisma.messagingThread.updateMany({
       where: { id: messagingThreadId, companyId, ...this.ownedByCaller },
       data: { sharedToCrm: shared },
+    });
+  }
+
+  async saveSealedSecret(connectedAccountId: string, sealedSecret: string): Promise<void> {
+    await this.prisma.mailboxCredential.updateMany({
+      where: { connectedAccountId, companyId: this.companyId, ...this.ownedByCaller },
+      data: { sealedSecret },
     });
   }
 

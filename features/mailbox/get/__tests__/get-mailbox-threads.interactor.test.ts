@@ -49,16 +49,31 @@ function interactorFor(rows: unknown[] = [STORED_THREAD]) {
 
 describe("toMailboxThreadFilter", () => {
   it("treats a missing query and folder as no filter at all", () => {
-    expect(toMailboxThreadFilter({})).toEqual({ search: null, folder: null });
+    expect(toMailboxThreadFilter({})).toEqual({ search: null, folder: null, view: "inbox", labelId: null });
   });
 
   it("trims the query and drops it when only whitespace was typed", () => {
-    expect(toMailboxThreadFilter({ query: "  alice  " })).toEqual({ search: "alice", folder: null });
-    expect(toMailboxThreadFilter({ query: "   " })).toEqual({ search: null, folder: null });
+    expect(toMailboxThreadFilter({ query: "  alice  " })).toEqual({
+      search: "alice",
+      folder: null,
+      view: "inbox",
+      labelId: null,
+    });
+    expect(toMailboxThreadFilter({ query: "   " })).toEqual({
+      search: null,
+      folder: null,
+      view: "inbox",
+      labelId: null,
+    });
   });
 
   it("keeps a folder path verbatim once trimmed", () => {
-    expect(toMailboxThreadFilter({ folder: " INBOX/Archive " })).toEqual({ search: null, folder: "INBOX/Archive" });
+    expect(toMailboxThreadFilter({ folder: " INBOX/Archive " })).toEqual({
+      search: null,
+      folder: "INBOX/Archive",
+      view: "inbox",
+      labelId: null,
+    });
   });
 });
 
@@ -68,7 +83,12 @@ describe("GetMailboxThreadsInteractor", () => {
 
     const result = await interactor.invoke({});
 
-    expect(listThreadsForMailboxes).toHaveBeenCalledWith(100, { search: null, folder: null });
+    expect(listThreadsForMailboxes).toHaveBeenCalledWith(100, {
+      search: null,
+      folder: null,
+      view: "inbox",
+      labelId: null,
+    });
     expect(result.ok && result.data).toHaveLength(1);
   });
 
@@ -78,7 +98,12 @@ describe("GetMailboxThreadsInteractor", () => {
     const result = await interactor.invoke({ query: "  Quarterly ", folder: "Archive" });
 
     expect(result.ok).toBe(true);
-    expect(listThreadsForMailboxes).toHaveBeenCalledWith(100, { search: "Quarterly", folder: "Archive" });
+    expect(listThreadsForMailboxes).toHaveBeenCalledWith(100, {
+      search: "Quarterly",
+      folder: "Archive",
+      view: "inbox",
+      labelId: null,
+    });
   });
 
   it("refuses a search term longer than the bound instead of running it", async () => {

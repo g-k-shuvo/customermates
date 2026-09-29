@@ -1,6 +1,6 @@
 "use server";
 
-import type { RecordFileTargetData } from "@/features/record-files/record-file.schema";
+import type { RecordDocumentTargetData } from "@/features/record-files/record-file.schema";
 import type {
   RecordDocumentFileIdData,
   RecordDocumentIdData,
@@ -29,7 +29,7 @@ import {
 } from "@/core/di";
 import { serializeResult } from "@/core/utils/action-result";
 
-export async function getRecordDocumentsAction(data: RecordFileTargetData) {
+export async function getRecordDocumentsAction(data: RecordDocumentTargetData) {
   return serializeResult(getGetRecordDocumentsInteractor().invoke(data));
 }
 
@@ -57,7 +57,7 @@ export async function deleteRecordDocumentAction(data: RecordDocumentIdData) {
   return serializeResult(getDeleteRecordDocumentInteractor().invoke(data));
 }
 
-export async function getSignatureSuggestionsAction(data: RecordFileTargetData) {
+export async function getSignatureSuggestionsAction(data: RecordDocumentTargetData) {
   return serializeResult(getGetSignatureSuggestionsInteractor().invoke(data));
 }
 

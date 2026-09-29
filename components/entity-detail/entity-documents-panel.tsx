@@ -1,6 +1,6 @@
 "use client";
 
-import type { RecordFileEntityType } from "@/features/record-files/record-file.schema";
+import type { RecordDocumentEntityType } from "@/features/record-files/record-file.schema";
 import type { RecordDocumentDto, RecordDocumentListDto } from "@/features/record-documents/record-document.schema";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -40,7 +40,7 @@ import { toastZodErrorTree } from "@/core/utils/toast-zod-error-tree";
 import { isEnvelopeActive } from "@/features/record-documents/signing/active-envelope";
 
 type Props = {
-  entityType: RecordFileEntityType;
+  entityType: RecordDocumentEntityType;
   recordId: string;
   canEdit: boolean;
 };

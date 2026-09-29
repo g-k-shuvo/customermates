@@ -16,13 +16,15 @@ export type AutomationRunPlan = {
   entityType: EntityType | null;
   entityId: string | null;
   triggerEvent: string | null;
+  causationDepth?: number;
+  causationChain?: string[];
   conditions: Filter[] | null;
   steps: AutomationRunPlanStep[];
 };
 
 export abstract class ExecuteAutomationRunRepo {
   abstract findRunPlanUnscoped(runId: string): Promise<AutomationRunPlan | null>;
-  abstract claimRunUnscoped(runId: string): Promise<boolean>;
+  abstract claimRunUnscoped(runId: string, claimToken: string | null): Promise<boolean>;
   abstract claimRunStepUnscoped(args: { runStepId: string; startedAt: Date }): Promise<boolean>;
   abstract findRunStepStatusUnscoped(runStepId: string): Promise<AutomationRunStatus | null>;
   abstract failRunningRunStepUnscoped(args: { runStepId: string; error: string; finishedAt: Date }): Promise<boolean>;
@@ -35,5 +37,6 @@ export abstract class ExecuteAutomationRunRepo {
     finishedAt?: Date;
   }): Promise<void>;
   abstract settleRunUnscoped(args: { runId: string; status: AutomationRunStatus; error: string | null }): Promise<void>;
+  abstract cancelRunUnscoped(runId: string, error: string): Promise<boolean>;
   abstract findAutomationOwnerUserIdUnscoped(companyId: string): Promise<string | null>;
 }

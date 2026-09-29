@@ -6,6 +6,8 @@ import type {
   MailboxAccountRefData,
   SyncMailboxData,
 } from "@/features/mailbox/mailbox.schema";
+import type { MailLabelIdData, UpsertMailLabelData } from "@/features/mail-workspace/mail-workspace.schema";
+import type { SetMailboxCalendarSyncData } from "@/features/mailbox-calendar/mailbox-calendar.schema";
 
 import {
   getAdminDisconnectMailboxInteractor,
@@ -14,6 +16,10 @@ import {
   getGetMailboxAccountsInteractor,
   getListSyncFoldersInteractor,
   getSyncMailboxInteractor,
+  getDeleteMailLabelInteractor,
+  getGetMailLabelsInteractor,
+  getUpsertMailLabelInteractor,
+  getSetMailboxCalendarSyncInteractor,
 } from "@/core/di";
 import { serializeResult } from "@/core/utils/action-result";
 
@@ -39,4 +45,20 @@ export async function listSyncFoldersAction(input: MailboxAccountRefData) {
 
 export async function syncMailboxAction(input: SyncMailboxData) {
   return serializeResult(getSyncMailboxInteractor().invoke(input));
+}
+
+export async function getMailLabelsAction() {
+  return serializeResult(getGetMailLabelsInteractor().invoke());
+}
+
+export async function upsertMailLabelAction(input: UpsertMailLabelData) {
+  return serializeResult(getUpsertMailLabelInteractor().invoke(input));
+}
+
+export async function deleteMailLabelAction(input: MailLabelIdData) {
+  return serializeResult(getDeleteMailLabelInteractor().invoke(input));
+}
+
+export async function setMailboxCalendarSyncAction(input: SetMailboxCalendarSyncData) {
+  return serializeResult(getSetMailboxCalendarSyncInteractor().invoke(input));
 }

@@ -16,6 +16,8 @@ export const MIGRATION_ENTITIES = [
   "leads",
   "tasks",
   "notes",
+  "lists",
+  "files",
 ] as const;
 
 export type MigrationEntity = (typeof MIGRATION_ENTITIES)[number];

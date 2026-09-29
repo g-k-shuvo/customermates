@@ -1,4 +1,4 @@
-import { sleep } from "workflow";
+import { getWorkflowMetadata, sleep } from "workflow";
 
 import { getExecuteAutomationStepInteractor, getPrepareAutomationRunInteractor } from "@/core/di";
 import { isInteractorFailure } from "@/core/validation/validation.utils";
@@ -18,11 +18,23 @@ type PreparedRun = {
   steps: Array<{ runStepId: string; kind: string; delaySeconds: number | null }>;
 };
 
+function currentWorkflowRunId(): string | null {
+  try {
+    return getWorkflowMetadata().workflowRunId;
+  } catch {
+    return null;
+  }
+}
+
 async function prepareRun(automationRunId: string, companyId: string): Promise<PreparedRun | null> {
   "use step";
 
   const prepare = getPrepareAutomationRunInteractor();
-  const outcome = await prepare.invoke({ automationRunId, companyId });
+  const outcome = await prepare.invoke({
+    automationRunId,
+    companyId,
+    claimToken: currentWorkflowRunId(),
+  });
   if (isInteractorFailure(outcome)) return null;
 
   const { ownerUserId, steps, conditionCheck } = outcome.data;
@@ -65,12 +77,31 @@ export async function executeStep(automationRunId: string, runStepId: string, ow
 }
 executeStep.maxRetries = 2;
 
-async function settleRun(automationRunId: string, companyId: string, failed: boolean): Promise<void> {
+async function settleRun(
+  automationRunId: string,
+  companyId: string,
+  failed: boolean,
+  ownerUserId: string,
+): Promise<void> {
   "use step";
 
-  await getPrepareAutomationRunInteractor().settle({ automationRunId, companyId, failed });
+  await getPrepareAutomationRunInteractor().settle({ automationRunId, companyId, failed, ownerUserId });
 }
 settleRun.maxRetries = 3;
+
+async function stillApplies(automationRunId: string, ownerUserId: string): Promise<boolean> {
+  "use step";
+
+  const prepare = getPrepareAutomationRunInteractor();
+  const check = await prepare.recheckFor({ automationRunId });
+  if (!check) return true;
+
+  const applies = await runAsBackgroundTenant(ownerUserId, () => prepare.stillApplies(check));
+  if (!applies) await prepare.cancel({ automationRunId });
+
+  return applies;
+}
+stillApplies.maxRetries = 3;
 
 async function beginWait(runStepId: string): Promise<void> {
   "use step";
@@ -100,6 +131,7 @@ export async function runAutomation(payload: RunAutomationPayload): Promise<void
         await beginWait(step.runStepId);
         await sleep(step.delaySeconds * 1000);
         await completeWait(step.runStepId);
+        if (!(await stillApplies(payload.automationRunId, prepared.ownerUserId))) return;
         continue;
       }
 
@@ -110,7 +142,7 @@ export async function runAutomation(payload: RunAutomationPayload): Promise<void
       }
     }
 
-    await settleRun(payload.automationRunId, payload.companyId, failed);
+    await settleRun(payload.automationRunId, payload.companyId, failed, prepared.ownerUserId);
   } catch (err) {
     await reportFailure(WORKFLOW_NAME, toWorkflowFailure(err));
   }

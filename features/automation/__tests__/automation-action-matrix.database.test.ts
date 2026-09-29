@@ -1,3 +1,4 @@
+import type { AutomationEmail } from "@/features/automation/run/automation-email-sender";
 import { afterAll, describe, expect, it, vi } from "vitest";
 
 import { getLocalDatabaseTestUrl } from "@/tests/helpers/database-test";
@@ -26,20 +27,20 @@ const di = await import("@/core/di");
 const describeDatabase = getLocalDatabaseTestUrl() ? describe : describe.skip;
 const companyIds: string[] = [];
 
-const sentEmails: Array<{ to: string; subject: string; body: string }> = [];
+const sentEmails: AutomationEmail[] = [];
 const webhookCalls: string[] = [];
 
 const emailSenderStub = {
-  send: (args: { to: string; subject: string; body: string }) => {
+  send: (args: AutomationEmail) => {
     sentEmails.push(args);
 
-    return Promise.resolve(true);
+    return Promise.resolve({ sent: true as const, to: "someone@example.invalid", duplicate: false });
   },
 };
 
 function executor() {
   return new CrmAutomationActionExecutor(
-    new PrismaAutomationRecordWriter(),
+    new PrismaAutomationRecordWriter(di.getCustomColumnRepo()),
     di.getCreateTaskInteractor(),
     di.getCreateDealInteractor(),
     di.getCreateLeadInteractor(),
@@ -103,6 +104,7 @@ async function runAction(
           conditions: null,
           steps: [],
         },
+        runStepId: "00000000-0000-4000-8000-000000000003",
         entityType: context.entityType,
         entityId: context.entityId,
       },
@@ -502,6 +504,73 @@ describeDatabase("every action an automation can run", () => {
     expect(after?.stageId).toBe(stageId);
   });
 
+  it("updateField writes a custom field, coercing a number and validating the column type", async () => {
+    const workspace = await makeWorkspace();
+    const { contact, budget, tier, period } = await runWithoutTenant(async () => ({
+      contact: await prisma.contact.create({
+        data: { companyId: workspace.companyId, firstName: "Custom", lastName: "Fields" },
+        select: { id: true },
+      }),
+      budget: await prisma.customColumn.create({
+        data: { companyId: workspace.companyId, label: "Budget", type: "currency", entityType: EntityType.contact },
+        select: { id: true },
+      }),
+      tier: await prisma.customColumn.create({
+        data: {
+          companyId: workspace.companyId,
+          label: "Tier",
+          type: "singleSelect",
+          entityType: EntityType.contact,
+          options: {
+            options: [
+              {
+                value: "5d4f3b8e-1c2a-4d6e-8f90-a1b2c3d4e5f6",
+                label: "Gold",
+                color: "default",
+                isDefault: false,
+                index: 0,
+              },
+            ],
+          },
+        },
+        select: { id: true },
+      }),
+      period: await prisma.customColumn.create({
+        data: { companyId: workspace.companyId, label: "Period", type: "dateRange", entityType: EntityType.contact },
+        select: { id: true },
+      }),
+    }));
+    const on = { entityType: EntityType.contact, entityId: contact.id };
+    const write = (field: string, value: unknown) =>
+      runAction(workspace, AutomationActionKind.updateField, { field, value }, on);
+
+    expect(await write(budget.id, 1500)).toEqual({ ok: true, output: { field: budget.id } });
+    expect(await write(tier.id, "5d4f3b8e-1c2a-4d6e-8f90-a1b2c3d4e5f6")).toEqual({
+      ok: true,
+      output: { field: tier.id },
+    });
+    expect(await write(tier.id, "Platinum")).toEqual({ ok: false, error: "fieldValueInvalid" });
+    expect(await write(budget.id, "a lot")).toEqual({ ok: false, error: "fieldValueInvalid" });
+    expect(await write(period.id, "2026-01-01")).toEqual({ ok: false, error: "fieldNotWritable" });
+    expect(await write("00000000-0000-4000-8000-0000000000aa", "x")).toEqual({ ok: false, error: "fieldNotWritable" });
+
+    const values = await runWithoutTenant(() =>
+      prisma.customFieldValue.findMany({
+        where: { contactId: contact.id },
+        select: { columnId: true, value: true, numericValue: true },
+      }),
+    );
+    expect(values.find((row) => row.columnId === budget.id)).toMatchObject({ value: "1500" });
+    expect(Number(values.find((row) => row.columnId === budget.id)?.numericValue)).toBe(1500);
+    expect(values.find((row) => row.columnId === tier.id)?.value).toBe("5d4f3b8e-1c2a-4d6e-8f90-a1b2c3d4e5f6");
+
+    expect(await write(budget.id, null)).toEqual({ ok: true, output: { field: budget.id } });
+    const cleared = await runWithoutTenant(() =>
+      prisma.customFieldValue.count({ where: { contactId: contact.id, columnId: budget.id } }),
+    );
+    expect(cleared).toBe(0);
+  });
+
   it("moveStage refuses a record that is not a deal", async () => {
     const workspace = await makeWorkspace();
     const lead = await runWithoutTenant(() =>
@@ -518,7 +587,7 @@ describeDatabase("every action an automation can run", () => {
     expect(outcome.ok).toBe(false);
   });
 
-  it("sendEmail hands the message to the sender", async () => {
+  it("sendEmail lifts a stored literal address and hands the message to the sender", async () => {
     const workspace = await makeWorkspace();
     sentEmails.length = 0;
 
@@ -530,7 +599,16 @@ describeDatabase("every action an automation can run", () => {
     );
 
     expect(outcome.ok).toBe(true);
-    expect(sentEmails).toEqual([{ to: "someone@example.invalid", subject: "Hello", body: "From an automation" }]);
+    expect(sentEmails).toEqual([
+      {
+        recipient: { kind: "address", address: "someone@example.invalid" },
+        subject: "Hello",
+        body: "From an automation",
+        bannerUrl: null,
+        runStepId: "00000000-0000-4000-8000-000000000003",
+        record: null,
+      },
+    ]);
   });
 
   it("callWebhook posts the run envelope and reports a refusal", async () => {

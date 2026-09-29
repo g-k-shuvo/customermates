@@ -93,6 +93,11 @@ const entityNameExtractors: {
   [DomainEvent.LEGAL_NOTICE_SENT]: (eventData) => eventData.entityId,
   [DomainEvent.LEGAL_DOCUMENTS_ACCEPTED]: (eventData) => eventData.entityId,
   [DomainEvent.RECORDS_EXPORTED]: (eventData) => eventData.payload.entityType,
+  [DomainEvent.CONTACT_AUTOMATED]: (eventData) => eventData.payload.name,
+  [DomainEvent.ORGANIZATION_AUTOMATED]: (eventData) => eventData.payload.name,
+  [DomainEvent.DEAL_AUTOMATED]: (eventData) => eventData.payload.name,
+  [DomainEvent.SERVICE_AUTOMATED]: (eventData) => eventData.payload.name,
+  [DomainEvent.TASK_AUTOMATED]: (eventData) => eventData.payload.name,
 };
 
 export function getEntityName<E extends DomainEvent>(

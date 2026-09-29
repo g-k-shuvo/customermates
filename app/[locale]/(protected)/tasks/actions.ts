@@ -9,6 +9,7 @@ import type { CompleteTaskData } from "@/features/tasks/complete/complete-task.i
 import type { UncompleteTaskData } from "@/features/tasks/complete/uncomplete-task.interactor";
 import type { GetActivityCountsData } from "@/features/tasks/get/get-activity-counts.interactor";
 import type { GetActivityWindowData } from "@/features/tasks/get/get-activity-window.interactor";
+import type { GetCalendarEventsData } from "@/features/mailbox-calendar/mailbox-calendar.schema";
 
 import {
   getGetTasksInteractor,
@@ -21,6 +22,7 @@ import {
   getUncompleteTaskInteractor,
   getGetActivityCountsInteractor,
   getGetActivityWindowInteractor,
+  getGetMailboxCalendarEventsInteractor,
 } from "@/core/di";
 import { serializeResult } from "@/core/utils/action-result";
 import { unwrapValidated } from "@/core/validation/validation.utils";
@@ -81,4 +83,8 @@ export async function getActivityWindowAction(data: GetActivityWindowData) {
 export async function getTaskByIdAction(data: GetTaskByIdData) {
   const result = await unwrapValidated(getGetTaskByIdInteractor().invoke(data));
   return { entity: result.task, customColumns: result.customColumns };
+}
+
+export async function getMailboxCalendarEventsAction(data: GetCalendarEventsData) {
+  return serializeResult(getGetMailboxCalendarEventsInteractor().invoke(data));
 }

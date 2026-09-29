@@ -1,6 +1,7 @@
 import type { Data } from "@/core/validation/validation.utils";
 
 import { z } from "zod";
+import { EmailImageUrlSchema } from "@/features/messaging-send/render/render-email-markdown";
 
 import { ActivityKind, AutomationActionKind, EntityType } from "@/generated/prisma";
 import { zx } from "@/core/validation/validation.utils";
@@ -51,11 +52,38 @@ export const MoveStageConfigSchema = z.object({
   stageId: z.uuid(),
 });
 
-export const SendEmailConfigSchema = z.object({
-  to: z.email().max(320),
-  subject: z.string().trim().min(1).max(200),
-  body: z.string().trim().min(1).max(5000),
-});
+export const SEND_EMAIL_RECIPIENT_KINDS = ["address", "recordContact", "recordOwner"] as const;
+
+export const SendEmailRecipientSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("address"), address: z.email().max(320) }),
+  z.object({ kind: z.literal("recordContact") }),
+  z.object({ kind: z.literal("recordOwner") }),
+]);
+
+export type SendEmailRecipient = z.infer<typeof SendEmailRecipientSchema>;
+
+function liftLegacyRecipient(value: unknown): unknown {
+  if (typeof value !== "object" || value === null || "recipient" in value || !("to" in value)) return value;
+
+  const { to, ...rest } = value as Record<string, unknown>;
+
+  return { ...rest, recipient: { kind: "address", address: to } };
+}
+
+export const SendEmailConfigSchema = z.preprocess(
+  liftLegacyRecipient,
+  z.object({
+    recipient: SendEmailRecipientSchema,
+    subject: z.string().trim().min(1).max(200),
+    body: z.string().trim().min(1).max(5000),
+    bannerUrl: z
+      .preprocess(
+        (value) => (typeof value === "string" && value.trim() === "" ? null : value),
+        EmailImageUrlSchema.nullable(),
+      )
+      .default(null),
+  }),
+);
 
 export const CallWebhookConfigSchema = z.object({
   url: zx.secureUrl(),

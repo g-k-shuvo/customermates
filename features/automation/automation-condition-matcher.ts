@@ -8,4 +8,6 @@ export abstract class AutomationConditionMatcher {
     entityId: string;
     conditions: Filter[];
   }): Promise<boolean>;
+
+  abstract existsInTenant(args: { companyId: string; entityType: EntityType; entityId: string }): Promise<boolean>;
 }

@@ -1,11 +1,12 @@
 import type { RootStore } from "@/core/stores/root.store";
 import type { TaskDto } from "@/features/tasks/task.schema";
 import type { ActivityWindow } from "@/features/tasks/get/get-activity-window.interactor";
+import type { MailboxCalendarEventDto } from "@/features/mailbox-calendar/mailbox-calendar.schema";
 
 import { computed, makeObservable, observable, reaction, runInAction, toJS } from "mobx";
 import { Action, Resource, TaskType } from "@/generated/prisma";
 
-import { getActivityWindowAction, updateTaskAction } from "../actions";
+import { getActivityWindowAction, getMailboxCalendarEventsAction, updateTaskAction } from "../actions";
 
 import { BaseStore } from "@/core/base/base.store";
 import { reportApplicationError } from "@/core/errors/report-application-error";
@@ -43,6 +44,7 @@ export class TaskWeekStore extends BaseStore {
   undatedTotal = 0;
   truncated = false;
   pendingMoves = observable.map<string, TaskDto>();
+  calendarEvents: MailboxCalendarEventDto[] = [];
 
   private generation = 0;
   private reloadQueued = false;
@@ -63,6 +65,7 @@ export class TaskWeekStore extends BaseStore {
       undated: observable.ref,
       undatedTotal: observable,
       truncated: observable,
+      calendarEvents: observable.ref,
       days: computed,
       weekEnd: computed,
       items: computed,
@@ -161,15 +164,22 @@ export class TaskWeekStore extends BaseStore {
     });
 
     try {
-      const result = await getActivityWindowAction({
-        from,
-        to,
-        onlyMine: this.onlyMine,
-        searchTerm: toJS(tasksStore.searchTerm),
-        filters: toJS(tasksStore.filters),
-      });
+      const [result, calendar] = await Promise.all([
+        getActivityWindowAction({
+          from,
+          to,
+          onlyMine: this.onlyMine,
+          searchTerm: toJS(tasksStore.searchTerm),
+          filters: toJS(tasksStore.filters),
+        }),
+        getMailboxCalendarEventsAction({ from: new Date(from), to: new Date(to) }).catch(() => null),
+      ]);
 
       if (generation !== this.generation) return;
+
+      runInAction(() => {
+        this.calendarEvents = calendar?.ok ? calendar.data : [];
+      });
 
       runInAction(() => {
         this.isRefreshing = false;

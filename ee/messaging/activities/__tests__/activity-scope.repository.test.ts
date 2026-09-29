@@ -202,7 +202,7 @@ describe("activity scope", () => {
     await run({ entityTypes: [EntityType.task] });
 
     expect(auditWhere()?.event.in.sort()).toEqual(
-      [DomainEvent.TASK_CREATED, DomainEvent.TASK_UPDATED, DomainEvent.TASK_DELETED].sort(),
+      [DomainEvent.TASK_CREATED, DomainEvent.TASK_UPDATED, DomainEvent.TASK_DELETED, DomainEvent.TASK_AUTOMATED].sort(),
     );
   });
 

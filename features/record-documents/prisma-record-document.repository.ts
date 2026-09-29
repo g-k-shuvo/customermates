@@ -1,5 +1,5 @@
 import type { Prisma } from "@/generated/prisma";
-import type { RecordFileEntityType } from "@/features/record-files/record-file.schema";
+import type { RecordDocumentEntityType } from "@/features/record-files/record-file.schema";
 import type { RecordDocumentDto, RecordDocumentFileDto } from "./record-document.schema";
 import type { GetRecordDocumentsRepo } from "./get/get-record-documents.repo";
 import type { GetRecordDocumentDownloadRepo, StoredDocumentPdfs } from "./get/get-record-document-download.repo";
@@ -76,7 +76,7 @@ const PARENT_KEY = {
   contact: "contactId",
   organization: "organizationId",
   deal: "dealId",
-} as const satisfies Record<RecordFileEntityType, keyof Prisma.RecordDocumentWhereInput>;
+} as const satisfies Record<RecordDocumentEntityType, keyof Prisma.RecordDocumentWhereInput>;
 
 const LISTED: Prisma.RecordDocumentWhereInput = {
   files: { some: { kind: RecordDocumentFileKind.original, status: RecordDocumentFileStatus.ready } },
@@ -126,7 +126,7 @@ function documentDto(row: DocumentRow): RecordDocumentDto {
 
   return {
     id: row.id,
-    entityType: row.entityType as RecordFileEntityType,
+    entityType: row.entityType as RecordDocumentEntityType,
     recordId: row.contactId ?? row.organizationId ?? row.dealId ?? "",
     title: row.title,
     status: row.status,
@@ -163,7 +163,7 @@ export class PrismaRecordDocumentRepo
     SignRecordDocumentRepo,
     GetSignatureSuggestionsRepo
 {
-  private parentWhere(entityType: RecordFileEntityType): Prisma.RecordDocumentWhereInput {
+  private parentWhere(entityType: RecordDocumentEntityType): Prisma.RecordDocumentWhereInput {
     if (entityType === "contact") return { entityType, contact: this.accessWhere("contact") };
     if (entityType === "organization") return { entityType, organization: this.accessWhere("organization") };
     return { entityType, deal: this.accessWhere("deal") };
@@ -185,7 +185,7 @@ export class PrismaRecordDocumentRepo
     return row ? documentDto(row) : null;
   }
 
-  async isRecordAccessible(entityType: RecordFileEntityType, recordId: string): Promise<boolean> {
+  async isRecordAccessible(entityType: RecordDocumentEntityType, recordId: string): Promise<boolean> {
     if (entityType === "contact")
       return (await this.prisma.contact.count({ where: { id: recordId, ...this.accessWhere("contact") } })) > 0;
     if (entityType === "organization") {
@@ -197,7 +197,7 @@ export class PrismaRecordDocumentRepo
     return (await this.prisma.deal.count({ where: { id: recordId, ...this.accessWhere("deal") } })) > 0;
   }
 
-  async listDocuments(entityType: RecordFileEntityType, recordId: string): Promise<RecordDocumentDto[]> {
+  async listDocuments(entityType: RecordDocumentEntityType, recordId: string): Promise<RecordDocumentDto[]> {
     const rows = await this.prisma.recordDocument.findMany({
       where: {
         companyId: this.companyId,
@@ -233,7 +233,7 @@ export class PrismaRecordDocumentRepo
   }
 
   async createDocumentWithPendingOriginal(args: {
-    entityType: RecordFileEntityType;
+    entityType: RecordDocumentEntityType;
     recordId: string;
     title: string;
     status: RecordDocumentStatus;
@@ -313,7 +313,7 @@ export class PrismaRecordDocumentRepo
     return {
       id: row.id,
       documentId: row.documentId,
-      entityType: row.document.entityType as RecordFileEntityType,
+      entityType: row.document.entityType as RecordDocumentEntityType,
       kind: row.kind,
       storageKey: row.storageKey,
       byteSize: row.byteSize,
@@ -412,7 +412,7 @@ export class PrismaRecordDocumentRepo
 
     return {
       id: row.id,
-      entityType: row.entityType as RecordFileEntityType,
+      entityType: row.entityType as RecordDocumentEntityType,
       title: row.title,
       storageKeys: row.files.map((entry) => entry.storageKey),
     };
@@ -486,7 +486,7 @@ export class PrismaRecordDocumentRepo
 
     return {
       id: row.id,
-      entityType: row.entityType as RecordFileEntityType,
+      entityType: row.entityType as RecordDocumentEntityType,
       recordId,
       title: row.title,
       status: row.status,
@@ -520,7 +520,7 @@ export class PrismaRecordDocumentRepo
   }
 
   async suggestSignatureRecipients(
-    entityType: RecordFileEntityType,
+    entityType: RecordDocumentEntityType,
     recordId: string,
     limit: number,
   ): Promise<{ name: string; email: string }[]> {
@@ -581,7 +581,7 @@ export class PrismaRecordDocumentRepo
     return {
       id: row.id,
       companyId: row.companyId,
-      entityType: row.entityType as RecordFileEntityType,
+      entityType: row.entityType as RecordDocumentEntityType,
       recordId,
       title: row.title,
       status: row.status,

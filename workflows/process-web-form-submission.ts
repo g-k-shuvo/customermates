@@ -1,4 +1,9 @@
-import { getProcessWebFormSubmissionInteractor, getPublishLeadCreatedInteractor } from "@/core/di";
+import {
+  getNewLeadAssignment,
+  getProcessWebFormSubmissionInteractor,
+  getProcessWebFormSubmissionRepo,
+  getPublishLeadCreatedInteractor,
+} from "@/core/di";
 import { isInteractorFailure } from "@/core/validation/validation.utils";
 import { runAsBackgroundTenant } from "@/core/decorators/background-tenant";
 import { AppErrorCode, appErrorDetailsInCauseChain } from "@/core/errors/app-errors";
@@ -32,12 +37,31 @@ async function processSubmission(submissionId: string): Promise<ProcessedSubmiss
 }
 processSubmission.maxRetries = 3;
 
+export async function assignWebFormLead(leadId: string, companyId: string): Promise<void> {
+  "use step";
+
+  const assignment = getNewLeadAssignment();
+  const actorId = await assignment.companyActor(companyId);
+  if (!actorId) return;
+
+  const lead = await getProcessWebFormSubmissionRepo().findLeadForEventOrThrowUnscoped(leadId);
+  await runAsBackgroundTenant(actorId, () => assignment.apply(companyId, lead));
+}
+
 export async function publishLeadCreated(
   leadId: string,
   companyId: string,
   publisherUserId: string | null,
 ): Promise<void> {
   "use step";
+
+  await assignWebFormLead(leadId, companyId).catch((error: unknown) =>
+    reportFailure(
+      WORKFLOW_NAME,
+      toWorkflowFailure(error),
+      publisherUserId ? { userId: publisherUserId, companyId } : undefined,
+    ),
+  );
 
   const publisher = getPublishLeadCreatedInteractor();
   const loaded = await publisher.invoke({ leadId, companyId });

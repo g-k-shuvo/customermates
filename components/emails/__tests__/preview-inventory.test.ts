@@ -10,8 +10,8 @@ import { createElement } from "react";
 import { describe, expect, it } from "vitest";
 
 import AccountAccessRevoked from "../account-access-revoked";
-import AutomationNotice from "../automation-notice";
 import AccountsRemovedNotice from "../accounts-removed-notice";
+import CampaignMessage from "../campaign-message";
 import CompanyInvite from "../company-invite";
 import LeadCreatedNotice from "../lead-created-notice";
 import DocumentSignedNotice from "../document-signed-notice";
@@ -42,9 +42,9 @@ import { walkFiles } from "@/tests/conventions/walk";
 const ROOT = process.cwd();
 const PREVIEW_BASE_URL = "https://preview.example.test";
 const PREVIEW_FIRST_NAME = "Sofia";
-const AUTOMATION_NOTICE_PREVIEW = {
-  subject: "Follow up on Analytical Engines",
-  body: "The deal moved to Under Contract.\nReview the next step when you have a moment.",
+const CAMPAIGN_MESSAGE_PREVIEW = {
+  subject: "Your proposal for Analytical Engines",
+  html: "<p>Hi Ada,</p><p>The proposal for <strong>Analytical Engines</strong> is ready for your review.</p>",
 };
 
 type PreviewTemplate = ElementType & {
@@ -201,18 +201,22 @@ const EMAIL_PREVIEW_CASES = [
       }),
   },
   {
-    key: "automation-notice",
-    sendSite: "automation-notice",
-    audience: "operator-english",
-    sourcePath: "features/automation/run/crm-automation-email-sender.ts",
-    templatePath: "components/emails/automation-notice.tsx",
-    template: AutomationNotice,
-    expectedText: () => AUTOMATION_NOTICE_PREVIEW.subject,
+    key: "campaign-message",
+    sendSite: "campaign-message",
+    audience: "recipient-localized",
+    sourcePath: "features/messaging-send/markdown-message-sender.ts",
+    templatePath: "components/emails/campaign-message.tsx",
+    template: CampaignMessage,
+    expectedText: (locale) => catalog(locale).CampaignMessage.unsubscribe,
     render: (locale) =>
-      createElement(AutomationNotice, {
+      createElement(CampaignMessage, {
         ...previewLayoutProps(locale),
-        subject: AUTOMATION_NOTICE_PREVIEW.subject,
-        body: AUTOMATION_NOTICE_PREVIEW.body,
+        subject: CAMPAIGN_MESSAGE_PREVIEW.subject,
+        html: CAMPAIGN_MESSAGE_PREVIEW.html,
+        unsubscribe: {
+          label: catalog(locale).CampaignMessage.unsubscribe,
+          href: `${PREVIEW_BASE_URL}/api/unsubscribe/synthetic-preview-token`,
+        },
       }),
   },
   {
@@ -476,7 +480,9 @@ function productionEmailSends(): string[] {
       ),
     )
     .flatMap((path) =>
-      [...readFileSync(path, "utf8").matchAll(/\bemailService\.send\s*\(/g)].map(() => relative(ROOT, path)),
+      [...readFileSync(path, "utf8").matchAll(/\b(?:emailService|guardedSender)\.send\s*\(/g)].map(() =>
+        relative(ROOT, path),
+      ),
     )
     .sort();
 }
@@ -546,8 +552,8 @@ describe("transactional email preview inventory", () => {
   });
 
   it("keeps recipient localization and internal English explicit", () => {
-    expect(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "recipient-localized")).toHaveLength(14);
-    expect(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "operator-english")).toHaveLength(4);
+    expect(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "recipient-localized")).toHaveLength(15);
+    expect(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "operator-english")).toHaveLength(3);
   });
 
   it("discovers all 18 top-level production templates", () => {
@@ -608,7 +614,7 @@ describe("transactional email preview rendering", () => {
       }
     }
 
-    expect(renderCount).toBe(74);
+    expect(renderCount).toBe(78);
   }, 30_000);
 
   it.each(EMAIL_PREVIEW_CASES.filter(({ audience }) => audience === "operator-english"))(

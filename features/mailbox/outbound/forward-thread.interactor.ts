@@ -3,13 +3,13 @@ import type { SecretBoxKey } from "../credentials/secret-box";
 import type { SendReplyService, DeliveredReply } from "./send-reply.service";
 import type { OutgoingAttachment } from "./build-reply";
 
-import { Resource, Action } from "@/generated/prisma";
+import { Resource, Action, type MailboxOAuthProvider } from "@/generated/prisma";
 
 import { ForwardThreadSchema, SendReplyOutcomeSchema } from "../mailbox.schema";
 import { type ForwardThreadData, type SendReplyOutcome } from "../mailbox.schema";
 import { MailboxTransportError, MailboxTransportFailure } from "../sync/mailbox-transport";
 import { buildForward } from "./build-forward";
-import { openSecret } from "../credentials/secret-box";
+import { resolveMailboxAuth, type MailboxAuth, type MailboxCredentialAuth } from "../oauth/mailbox-credential-auth";
 import { STORED_MESSAGE_ID_PREFIX } from "./recover-message-id";
 
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
@@ -45,6 +45,7 @@ export type ForwardContext = {
     smtpSecure: boolean | null;
     username: string;
     sealedSecret: string;
+    oauthProvider?: MailboxOAuthProvider | null;
     connectedAccount: { emailAddress: string | null; displayName: string | null };
   };
 };
@@ -92,6 +93,7 @@ export class ForwardThreadInteractor extends AuthenticatedInteractor<ForwardThre
     private secretKey: SecretBoxKey | null,
     private now: () => Date,
     private attachments?: ForwardAttachmentSource,
+    private auth?: MailboxCredentialAuth,
   ) {
     super();
   }
@@ -136,13 +138,25 @@ export class ForwardThreadInteractor extends AuthenticatedInteractor<ForwardThre
     const attachments = (await this.attachments?.load(thread.id)) ?? [];
     if (attachments.length > 0) forward.attachments = attachments;
 
-    const secret = openSecret(secretKey, credential.sealedSecret);
+    let auth: MailboxAuth;
+    try {
+      auth = await resolveMailboxAuth(this.auth, secretKey, {
+        connectedAccountId: thread.connectedAccountId,
+        oauthProvider: credential.oauthProvider,
+        sealedSecret: credential.sealedSecret,
+      });
+    } catch (error) {
+      if (error instanceof MailboxTransportError)
+        return await fail(CustomErrorCode.mailboxAuthenticationFailed, ["threadId"]);
+
+      throw error;
+    }
     const imap = {
       host: credential.imapHost,
       port: credential.imapPort,
       secure: credential.imapSecure,
       username: credential.username,
-      secret,
+      ...auth,
     };
 
     let sent: DeliveredReply;
@@ -153,7 +167,7 @@ export class ForwardThreadInteractor extends AuthenticatedInteractor<ForwardThre
           port: credential.smtpPort,
           secure: credential.smtpSecure ?? true,
           username: credential.username,
-          secret,
+          ...auth,
         },
         forward,
         imap,

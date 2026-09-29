@@ -17,6 +17,7 @@ import type {
   CrmService,
   CrmStage,
   CrmUser,
+  RecordFileUploadInput,
 } from "../crm-client";
 import type { CrmWrites, CustomColumnInput } from "../crm-writes";
 import type { PipedriveSource } from "../pipedrive-source";
@@ -33,6 +34,8 @@ import type {
   PipedrivePipeline,
   PipedriveStage,
   PipedriveUser,
+  PipedriveFile,
+  PipedrivePersonField,
 } from "../pipedrive.types";
 import type { EntityLine, MigrationEntity, ReconciliationReport } from "../reconciliation";
 
@@ -53,6 +56,7 @@ import {
 import { runMigration } from "../run-migration";
 
 type WriteCall =
+  | { kind: "completeTask"; id: string }
   | {
       kind: "createRecord";
       entityPath: string;
@@ -90,6 +94,9 @@ type SourceData = {
   notes?: PipedriveNote[];
   leads?: PipedriveLead[];
   leadLabels?: PipedriveLeadLabel[];
+  personFields?: PipedrivePersonField[];
+  files?: PipedriveFile[];
+  fileBodies?: Record<number, string>;
 };
 
 const ENTITY_PATHS = ["organizations", "contacts", "deals", "tasks", "leads"] as const;
@@ -118,6 +125,9 @@ const ENTITY_TYPES: Record<(typeof ENTITY_PATHS)[number], EntityType> = {
 
 class FakeWorkspace {
   readonly calls: WriteCall[] = [];
+  readonly lists: Array<{ id: string; name: string; members: Set<string> }> = [];
+  readonly uploads: Array<RecordFileUploadInput & { id: string }> = [];
+  readonly completedTasks: string[] = [];
   readonly users: CrmUser[] = [
     {
       id: "user-ada",
@@ -205,6 +215,13 @@ class FakeWorkspace {
 
   get reads(): CrmReads {
     return {
+      contactLists: () => Promise.resolve(this.lists.map(({ id, name }) => ({ id, name, memberCount: 0 }))),
+      recordFiles: (entityType, recordId) =>
+        Promise.resolve(
+          this.uploads
+            .filter((upload) => upload.entityType === entityType && upload.recordId === recordId)
+            .map((upload) => ({ id: upload.id, fileName: upload.fileName, byteSize: upload.bytes.byteLength })),
+        ),
       users: () => Promise.resolve([...this.users]),
       pipelines: () =>
         Promise.resolve(
@@ -339,6 +356,29 @@ class FakeWorkspace {
 
         return Promise.resolve();
       },
+      completeTask: (id) => {
+        this.calls.push({ kind: "completeTask", id });
+        this.completedTasks.push(id);
+        const record = this.records.tasks.find((candidate) => candidate.id === id);
+        if (record) record.completedAt = new Date(0).toISOString();
+        return Promise.resolve();
+      },
+      createContactList: (name) => {
+        const list = { id: `list-${this.lists.length + 1}`, name, members: new Set<string>() };
+        this.lists.push(list);
+        return Promise.resolve({ id: list.id, name, memberCount: 0 });
+      },
+      addContactListMembers: (listId, contactIds) => {
+        const list = this.lists.find((candidate) => candidate.id === listId);
+        const before = list?.members.size ?? 0;
+        for (const id of contactIds) list?.members.add(id);
+        return Promise.resolve((list?.members.size ?? 0) - before);
+      },
+      uploadRecordFile: (input) => {
+        const upload = { ...input, id: `file-${this.uploads.length + 1}` };
+        this.uploads.push(upload);
+        return Promise.resolve({ id: upload.id, fileName: input.fileName, byteSize: input.bytes.byteLength });
+      },
     };
   }
 }
@@ -357,6 +397,10 @@ function fakeSource(data: SourceData): PipedriveSource {
     notes: () => Promise.resolve(data.notes ?? []),
     leads: () => Promise.resolve(data.leads ?? []),
     leadLabels: () => Promise.resolve(data.leadLabels ?? []),
+    personFields: () => Promise.resolve(data.personFields ?? []),
+    files: () => Promise.resolve(data.files ?? []),
+    fileContent: (file) =>
+      Promise.resolve(data.fileBodies?.[file.id] ? new TextEncoder().encode(data.fileBodies[file.id]) : null),
   };
 }
 
@@ -376,6 +420,7 @@ function config(overrides: Partial<MigrationConfig> = {}): MigrationConfig {
     reportPath: null,
     provisionColumns: true,
     updateExisting: false,
+    listFields: [],
     ...overrides,
   };
 }
@@ -799,19 +844,17 @@ describe("activities", () => {
     expect(notes).not.toContain("Due:");
   });
 
-  it("keeps completion in the notes and reports it, because it has no write path", async () => {
+  it("completes a done activity's task, and does not complete it again on a re-run", async () => {
     const world = new FakeWorkspace();
 
     const report = await migrate({
       world,
       source: { users: PIPEDRIVE_USERS, activities: [activity] },
     });
+    await migrate({ world, source: { users: PIPEDRIVE_USERS, activities: [activity] } });
 
-    const created = world.calls.find((call) => call.kind === "createRecord" && call.entityPath === "tasks");
-    const notes = created && "payload" in created ? String(created.payload.notes ?? "") : "";
-
-    expect(notes).toContain("Completed in Pipedrive: yes");
-    expect(reported(report, "activity.done")).toEqual(["true"]);
+    expect(world.completedTasks).toHaveLength(1);
+    expect(reported(report, "activity.done")).toEqual([]);
   });
 
   it("no longer reports a default activity type as unmapped", async () => {
@@ -1139,5 +1182,96 @@ describe("leads", () => {
 
     expect(reported(report, "activity.lead_id")).toEqual(["lead"]);
     expect(line(report, "tasks")).toMatchObject({ created: 1 });
+  });
+});
+
+describe("list membership from a person field", () => {
+  const cdiTarget: PipedrivePersonField = {
+    id: 5,
+    key: "cdi123",
+    name: "CDI Target",
+    field_type: "set",
+    options: [
+      { id: 1, label: "Higher Ed" },
+      { id: 2, label: "Retail" },
+    ],
+  };
+  const persons: PipedrivePerson[] = [
+    { id: 301, name: "Ada One", cdi123: "1" },
+    { id: 302, name: "Ben Two", cdi123: "1,2" },
+    { id: 303, name: "Cleo Three", cdi123: null },
+  ];
+
+  it("creates one list per option with the persons that carry it, and re-runs without duplicates", async () => {
+    const world = new FakeWorkspace();
+    const source = { users: PIPEDRIVE_USERS, persons, personFields: [cdiTarget] };
+
+    const report = await migrate({ world, source, config: { listFields: ["CDI Target"] } });
+    await migrate({ world, source, config: { listFields: ["cdi target"] } });
+
+    expect(world.lists.map((list) => [list.name, list.members.size])).toEqual([
+      ["CDI Target: Higher Ed", 2],
+      ["CDI Target: Retail", 1],
+    ]);
+    expect(line(report, "lists")).toMatchObject({ sourceCount: 2, targetCount: 2, created: 2, reconciled: true });
+  });
+
+  it("reports a list field that does not exist and skips the arm without --list-fields", async () => {
+    const world = new FakeWorkspace();
+
+    const report = await migrate({
+      world,
+      source: { users: PIPEDRIVE_USERS, persons, personFields: [cdiTarget] },
+      config: { listFields: ["Region"] },
+    });
+    await migrate({ world, source: { users: PIPEDRIVE_USERS, persons, personFields: [cdiTarget] } });
+
+    expect(reported(report, "list.field")).toEqual(["Region"]);
+    expect(world.lists).toEqual([]);
+  });
+});
+
+describe("files", () => {
+  const files: PipedriveFile[] = [
+    { id: 901, file_name: "quote.pdf", file_type: "pdf", file_size: 11, person_id: 401 },
+    { id: 902, file_name: "orphan.pdf", file_size: 5, person_id: 999 },
+    { id: 903, file_name: "lead.pdf", file_size: 5, lead_id: "lead-1" },
+    { id: 904, file_name: "missing.pdf", file_size: 5, person_id: 401 },
+  ];
+
+  it("uploads a file onto its migrated record once, and skips what has no home or no content", async () => {
+    const world = new FakeWorkspace();
+    const source = {
+      users: PIPEDRIVE_USERS,
+      persons: [{ id: 401, name: "Dana Four" }],
+      files,
+      fileBodies: { 901: "%PDF quote." },
+    };
+
+    const report = await migrate({ world, source });
+    await migrate({ world, source });
+
+    expect(world.uploads).toHaveLength(1);
+    expect(world.uploads[0]).toMatchObject({ entityType: "contact", fileName: "quote.pdf", contentType: "application/pdf" });
+    expect(line(report, "files")).toMatchObject({ sourceCount: 4, targetCount: 1, skipped: 3, reconciled: true });
+  });
+
+  it("uploads a file on a lead onto the migrated lead", async () => {
+    const world = new FakeWorkspace();
+    const source = {
+      users: PIPEDRIVE_USERS,
+      leads: [{ id: "lead-1", title: "Lead with a brief", owner_id: 1 }],
+      files: [{ id: 903, file_name: "lead.pdf", file_size: 5, lead_id: "lead-1" }],
+      fileBodies: { 903: "%PDF." },
+    };
+
+    await migrate({ world, source });
+
+    expect(world.uploads).toHaveLength(1);
+    expect(world.uploads[0]).toMatchObject({
+      entityType: "lead",
+      recordId: world.records.leads[0]?.id,
+      fileName: "lead.pdf",
+    });
   });
 });

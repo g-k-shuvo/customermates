@@ -16,12 +16,15 @@ ENV
 
 cat > /etc/crontabs/root <<'CRONTAB'
 */5 * * * * . /etc/cron-env.sh && /usr/local/bin/run-cron-job sync-mailboxes
+* * * * * . /etc/cron-env.sh && /usr/local/bin/run-cron-job mail-outbox
+*/15 * * * * . /etc/cron-env.sh && /usr/local/bin/run-cron-job sync-calendars
+*/5 * * * * . /etc/cron-env.sh && /usr/local/bin/run-cron-job automations
 0 * * * * . /etc/cron-env.sh && /usr/local/bin/run-cron-job reprocess-webhook-events
 0 9 * * * . /etc/cron-env.sh && /usr/local/bin/run-cron-job lifecycle
 20 * * * * . /etc/cron-env.sh && /usr/local/bin/run-cron-job sweep-record-files
 25 * * * * . /etc/cron-env.sh && /usr/local/bin/run-cron-job sweep-record-documents
 CRONTAB
 
-echo "cron: scheduling sync-mailboxes (*/5), reprocess-webhook-events (hourly), lifecycle (daily 09:00), sweep-record-files and sweep-record-documents (hourly) against ${APP_INTERNAL_URL}"
+echo "cron: scheduling sync-mailboxes (*/5), mail-outbox (every minute), sync-calendars (*/15), automations (*/5; schedules fire only with AUTOMATION_SCHEDULE_ENABLED=true), reprocess-webhook-events (hourly), lifecycle (daily 09:00), sweep-record-files and sweep-record-documents (hourly) against ${APP_INTERNAL_URL}"
 
 exec crond -f -l 8

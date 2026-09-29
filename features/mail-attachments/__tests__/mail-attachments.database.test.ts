@@ -34,6 +34,8 @@ const { CustomErrorCode } = await import("@/core/validation/validation.types");
 const { StorageError, StorageFailure } = await import("@/core/storage/storage-provider");
 const { PrismaMailAttachmentRepo } = await import("../prisma-mail-attachment.repository");
 const { StoreMailAttachmentsService } = await import("../store/store-mail-attachments.service");
+const { NULL_VIRUS_SCANNER } = await import("@/core/storage/virus-scanner");
+const { StorageQuota } = await import("@/core/storage/storage-quota");
 const { GetMailAttachmentInteractor } = await import("../get/get-mail-attachment.interactor");
 const { SweepMailAttachmentsInteractor } = await import("../sweep/sweep-mail-attachments.interactor");
 const { ForwardMailAttachmentsService } = await import("../forward/forward-mail-attachments.service");
@@ -176,15 +178,17 @@ describeDatabase("mail attachments", () => {
 
   it("stores each attachment of a synced message and keeps the ones it cannot store as not kept", async () => {
     const stored = await asOwner(() =>
-      new StoreMailAttachmentsService(new PrismaMailAttachmentRepo(), storage.provider).store(
-        { companyId, connectedAccountId, unipileMessageId: "<quote-1@buyer.example>" },
-        [
-          attachment("Angebot.pdf", "application/pdf", "%PDF-1.4 quote"),
-          attachment("logo.png", "image/png", "png-bytes", "logo@buyer"),
-          attachment("page.html", "text/html", "<script>alert(1)</script>"),
-          attachment("huge.zip", "application/zip", "x".repeat(2048)),
-        ],
-      ),
+      new StoreMailAttachmentsService(
+        new PrismaMailAttachmentRepo(),
+        storage.provider,
+        NULL_VIRUS_SCANNER,
+        new StorageQuota({ usedBytesCompanyWide: () => Promise.resolve(0) }, null),
+      ).store({ companyId, connectedAccountId, unipileMessageId: "<quote-1@buyer.example>" }, [
+        attachment("Angebot.pdf", "application/pdf", "%PDF-1.4 quote"),
+        attachment("logo.png", "image/png", "png-bytes", "logo@buyer"),
+        attachment("page.html", "text/html", "<script>alert(1)</script>"),
+        attachment("huge.zip", "application/zip", "x".repeat(2048)),
+      ]),
     );
 
     expect(stored).toBe(3);

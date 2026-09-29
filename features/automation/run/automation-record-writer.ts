@@ -16,6 +16,13 @@ export abstract class AutomationRecordWriter {
     value: unknown;
   }): Promise<AutomationActionOutcome>;
 
+  abstract setCustomField(args: {
+    entityType: EntityType;
+    entityId: string;
+    columnId: string;
+    value: unknown;
+  }): Promise<AutomationActionOutcome>;
+
   abstract assignOwner(args: {
     entityType: EntityType;
     entityId: string;

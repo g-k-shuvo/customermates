@@ -28,6 +28,7 @@ function defaultRolePermissions() {
     routines: { canManage: "no", readAccess: "own" },
     automations: { canManage: "no", readAccess: "own" },
     invoices: { canManage: "no", readAccess: "none" },
+    campaigns: { canManage: "no", readAccess: "none" },
   } as const;
 }
 
@@ -138,6 +139,7 @@ export class RoleModalStore extends BaseModalStore<UpsertRoleData> {
       routines: { canManage: "no", readAccess: "none" },
       automations: { canManage: "no", readAccess: "none" },
       invoices: { canManage: "no", readAccess: "none" },
+      campaigns: { canManage: "no", readAccess: "none" },
     };
 
     if (role.isSystemRole) {

@@ -271,3 +271,20 @@ export function contactPointValues(input: PipedriveContactPoint[] | string | nul
 
   return [...new Set(values)];
 }
+
+/** Person fields share the deal-field shape; enum and set fields carry `options`. */
+export type PipedrivePersonField = PipedriveDealField;
+
+export type PipedriveFile = PipedriveRecord & {
+  id: number;
+  name?: string | null;
+  file_name?: string | null;
+  file_type?: string | null;
+  file_size?: number | null;
+  deal_id?: number | null;
+  person_id?: number | null;
+  org_id?: number | null;
+  lead_id?: string | null;
+  active_flag?: boolean | null;
+  add_time?: string | null;
+};

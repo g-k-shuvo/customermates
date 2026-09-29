@@ -1,5 +1,6 @@
 import type { Data, Validated } from "@/core/validation/validation.utils";
 import type { StorageProvider } from "@/core/storage/storage-provider";
+import type { StorageQuota } from "@/core/storage/storage-quota";
 import type { UserService } from "@/features/user/user.service";
 import type { CreateRecordFileUploadRepo } from "./create-record-file-upload.repo";
 
@@ -26,7 +27,13 @@ import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator"
 import { Write } from "@/core/decorators/write.decorator";
 import { mintStorageKey } from "@/core/storage/storage-key";
 import { checkUpload, UploadPolicyName } from "@/core/storage/upload-policy";
-import { fail, failAuthorization, failNotFound, failUnavailable } from "@/core/validation/interactor-failure-server";
+import {
+  fail,
+  failAuthorization,
+  failConflict,
+  failNotFound,
+  failUnavailable,
+} from "@/core/validation/interactor-failure-server";
 import { CustomErrorCode } from "@/core/validation/validation.types";
 
 export const CreateRecordFileUploadSchema = z.object({
@@ -48,6 +55,7 @@ export class CreateRecordFileUploadInteractor extends AuthenticatedInteractor<
     private repo: CreateRecordFileUploadRepo,
     private storage: StorageProvider,
     private userService: UserService,
+    private quota: StorageQuota,
   ) {
     super();
   }
@@ -70,6 +78,9 @@ export class CreateRecordFileUploadInteractor extends AuthenticatedInteractor<
       policy: UploadPolicyName.recordFile,
     });
     if (!checked.ok) return fail(UPLOAD_REFUSAL_CODE[checked.reason], [UPLOAD_REFUSAL_PATH[checked.reason]]);
+
+    if (!(await this.quota.allows(data.byteSize)))
+      return failConflict(CustomErrorCode.storageQuotaExceeded, ["byteSize"]);
 
     const storageKey = mintStorageKey({
       companyId: this.companyId,

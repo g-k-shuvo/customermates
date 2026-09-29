@@ -12,6 +12,7 @@ import {
   AutomationActionKind,
   AutomationRunStatus,
   AutomationTriggerKind,
+  CampaignRecipientStatus,
   ConnectedAccountStatus,
   CustomColumnType,
   DealStatus,
@@ -40,6 +41,7 @@ import { SignatureTemplate } from "@/ee/messaging/email-settings";
 import { AGENDA_BUCKETS } from "@/features/tasks/activity-agenda";
 import { WEB_FORM_SUBMISSION_STATUSES } from "@/features/webform/submissions/web-form-submission.schema";
 import { AUTOMATION_STEP_ERRORS } from "@/features/automation/automation-step-errors";
+import { SEND_EMAIL_RECIPIENT_KINDS } from "@/features/automation/automation-action.schema";
 import { CustomErrorCode } from "@/core/validation/validation.types";
 import { AGENT_ACTIVITY_KINDS, AGENT_APPROVAL_COPY_KINDS } from "@/ee/agent-chat/agent-activity";
 import { ROUTINE_SCHEDULE_PRESETS } from "@/ee/routines/routine-schedule-preset";
@@ -299,14 +301,25 @@ const LEAD_STATUS_KEYS = Object.values(LeadStatus).map((status) => `Common.leadS
 const DEAL_STATUS_KEYS = Object.values(DealStatus).map((status) => `Common.dealStatuses.${status}`);
 const AUTOMATION_ACTION_KEYS = Object.values(AutomationActionKind).map((kind) => `Automations.actions.${kind}`);
 const AUTOMATION_ACTION_FIELD_KEYS = [
+  "activityKind",
+  "address",
+  "assigneeUserId",
+  "bannerUrl",
   "body",
+  "dueInDays",
+  "duration",
+  "durationUnit",
   "field",
+  "includeRecord",
+  "labels",
+  "linkToTriggerRecord",
   "name",
-  "seconds",
+  "ownerUserId",
+  "pipelineId",
+  "recipient",
   "stageId",
   "subject",
   "title",
-  "to",
   "url",
   "userId",
   "value",
@@ -319,6 +332,11 @@ const AUTOMATION_TRIGGER_KIND_KEYS = Object.values(AutomationTriggerKind).map(
 );
 const AUTOMATION_TRIGGER_KEYS = Object.values(AutomationTriggerKind).map((kind) => `Automations.triggers.${kind}`);
 const AUTOMATION_STEP_ERROR_KEYS = AUTOMATION_STEP_ERRORS.map((code) => `Automations.stepErrors.${code}`);
+const CAMPAIGN_RECIPIENT_STATUS_KEYS = Object.values(CampaignRecipientStatus).map(
+  (status) => `Campaigns.recipientStatus.${status}`,
+);
+const AUTOMATION_DURATION_UNIT_KEYS = ["days", "hours", "minutes"].map((unit) => `Automations.durationUnits.${unit}`);
+const AUTOMATION_RECIPIENT_KIND_KEYS = SEND_EMAIL_RECIPIENT_KINDS.map((kind) => `Automations.recipientKinds.${kind}`);
 const LOCALE_KEYS = [...ROUTING_LOCALES, "system"].map((locale) => `Common.locales.${locale}`);
 const THEME_KEYS = Object.values(Theme).map((theme) => `Common.themes.${theme}`);
 const FILTER_OPERATOR_KEYS = Object.values(FilterOperatorKey).map((operator) => `Common.filters.operators.${operator}`);
@@ -574,6 +592,9 @@ const DYNAMIC_TEMPLATE_CONSUMERS = new Map<string, readonly string[]>([
   ["Automations.triggerKinds.${*}", AUTOMATION_TRIGGER_KIND_KEYS],
   ["Automations.triggers.${*}", AUTOMATION_TRIGGER_KEYS],
   ["Automations.stepErrors.${*}", AUTOMATION_STEP_ERROR_KEYS],
+  ["Automations.recipientKinds.${*}", AUTOMATION_RECIPIENT_KIND_KEYS],
+  ["Automations.durationUnits.${*}", AUTOMATION_DURATION_UNIT_KEYS],
+  ["Campaigns.recipientStatus.${*}", CAMPAIGN_RECIPIENT_STATUS_KEYS],
   ["Common.userStatuses.${*}", USER_STATUS_KEYS],
   ["ConnectedAccountsCard.statusLabels.${*}", CONNECTED_ACCOUNT_STATUS_KEYS],
   ["ConnectedAccountsCard.signatureTemplates.${*}", SIGNATURE_TEMPLATE_KEYS],
@@ -670,6 +691,10 @@ export const DYNAMIC_KEY_SITES = [
   "app/[locale]/(protected)/automations/components/automation-runs-modal.tsx :: t :: Automations.stepErrors.${step.error}",
   "app/[locale]/(protected)/automations/components/automation-step-fields.tsx :: t :: Automations.actionFields.${field}",
   "app/[locale]/(protected)/automations/components/automation-step-fields.tsx :: t :: Automations.actions.${kind}",
+  "app/[locale]/(protected)/automations/components/automation-step-fields.tsx :: t :: Automations.recipientKinds.${kind}",
+  "app/[locale]/(protected)/automations/components/automation-step-fields.tsx :: t :: Automations.durationUnits.${unit}",
+  "app/[locale]/(protected)/automations/components/automation-step-fields.tsx :: t :: Common.leadStatuses.${status}",
+  "app/[locale]/(protected)/campaigns/components/campaign-editor-view.tsx :: t :: Campaigns.recipientStatus.${recipient.status}",
   "app/[locale]/(protected)/operator/components/workspaces/operator-workspace-modal.tsx :: t :: Common.providers.${channel.provider}",
   "app/[locale]/(protected)/operator/components/users/use-operator-user-columns.tsx :: t :: Common.userStatuses.${row.original.status}",
   "app/[locale]/(protected)/operator/components/users/use-operator-user-columns.tsx :: t :: Subscription.planNames.${row.original.plan}",

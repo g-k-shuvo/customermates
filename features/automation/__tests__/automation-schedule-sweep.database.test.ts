@@ -19,6 +19,9 @@ const { runWithoutTenant } = await import("@/core/decorators/tenant-context");
 const { AutomationActionKind, AutomationRunStatus, AutomationTriggerKind } = await import("@/generated/prisma");
 const { PrismaAutomationRepo } = await import("@/features/automation/prisma-automation.repository");
 const { SweepDueAutomationsInteractor } = await import("@/features/automation/run/sweep-due-automations.interactor");
+const { ReconcileAutomationRunsInteractor, RECONCILE_IDLE_MS, RUN_INTERRUPTED } = await import(
+  "@/features/automation/run/reconcile-automation-runs.interactor"
+);
 
 const describeDatabase = getLocalDatabaseTestUrl() ? describe : describe.skip;
 const companyIds: string[] = [];
@@ -100,13 +103,17 @@ describeDatabase("the sweep that fires a scheduled automation", () => {
     const { companyId } = await makeScheduled({ nextRunAt: new Date(Date.now() - 60_000) });
     const dispatched: Array<{ id: string; payload: unknown }> = [];
 
-    const sweep = new SweepDueAutomationsInteractor(new PrismaAutomationRepo(), {
-      dispatch: (id: string, payload: unknown) => {
-        dispatched.push({ id, payload });
+    const sweep = new SweepDueAutomationsInteractor(
+      new PrismaAutomationRepo(),
+      {
+        dispatch: (id: string, payload: unknown) => {
+          dispatched.push({ id, payload });
 
-        return Promise.resolve();
-      },
-    } as never);
+          return Promise.resolve();
+        },
+      } as never,
+      true,
+    );
 
     const outcome = await sweep.invoke();
 
@@ -117,6 +124,67 @@ describeDatabase("the sweep that fires a scheduled automation", () => {
     expect(runs).toHaveLength(1);
     expect(runs[0]?.triggerEvent).toBe("schedule");
     expect(runs[0]?.status).toBe(AutomationRunStatus.queued);
+  });
+
+  it("does nothing while the schedule kill switch is off", async () => {
+    const { companyId } = await makeScheduled({ nextRunAt: new Date(Date.now() - 60_000) });
+    const dispatch = vi.fn(() => Promise.resolve());
+
+    const outcome = await new SweepDueAutomationsInteractor(
+      new PrismaAutomationRepo(),
+      { dispatch } as never,
+      false,
+    ).invoke();
+
+    expect(outcome).toEqual({ ok: true, data: { sweptAutomations: 0, restamped: 0, disabled: true } });
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(await runWithoutTenant(() => prisma.automationRun.count({ where: { companyId } }))).toBe(0);
+  });
+
+  it("moves a long-overdue schedule forward instead of firing its backlog", async () => {
+    const { companyId, automationId } = await makeScheduled({ nextRunAt: new Date(Date.now() - 3 * 60 * 60_000) });
+    const dispatch = vi.fn(() => Promise.resolve());
+
+    const outcome = await new SweepDueAutomationsInteractor(
+      new PrismaAutomationRepo(),
+      { dispatch } as never,
+      true,
+    ).invoke();
+
+    expect(outcome.ok && outcome.data.restamped).toBeGreaterThanOrEqual(1);
+    expect(await runWithoutTenant(() => prisma.automationRun.count({ where: { companyId } }))).toBe(0);
+    const after = await runWithoutTenant(() => prisma.automation.findUnique({ where: { id: automationId } }));
+    expect(after?.nextRunAt && after.nextRunAt.getTime() > Date.now()).toBe(true);
+  });
+
+  it("lets only the workflow that claimed a run claim it again, and settles runs whose workflow is gone", async () => {
+    const { automationId, companyId } = await makeScheduled({ nextRunAt: new Date(Date.now() - 60_000) });
+    const repo = new PrismaAutomationRepo();
+    const runId = await repo.claimScheduledAutomationUnscoped({ automationId, companyId, nextRunAt: null });
+    if (!runId) throw new Error("no run");
+
+    expect(await repo.claimRunUnscoped(runId, "wrun_first")).toBe(true);
+    expect(await repo.claimRunUnscoped(runId, "wrun_first")).toBe(true);
+    expect(await repo.claimRunUnscoped(runId, "wrun_second")).toBe(false);
+
+    const stale = new Date(Date.now() + RECONCILE_IDLE_MS + 60_000);
+    const statusOf = () =>
+      runWithoutTenant(() =>
+        prisma.automationRun.findUnique({ where: { id: runId }, select: { status: true, error: true } }),
+      );
+
+    await new ReconcileAutomationRunsInteractor(repo, { isWorkflowTerminal: () => Promise.resolve(false) }).invoke(
+      stale,
+    );
+    expect(await statusOf()).toEqual({ status: AutomationRunStatus.running, error: null });
+
+    await new ReconcileAutomationRunsInteractor(repo, {
+      isWorkflowTerminal: (token: string) => Promise.resolve(token === "wrun_first"),
+    }).invoke(stale);
+    expect(await statusOf()).toEqual({ status: AutomationRunStatus.failed, error: RUN_INTERRUPTED });
+
+    const queued = await repo.claimScheduledAutomationUnscoped({ automationId, companyId, nextRunAt: null });
+    expect(queued).toBeNull();
   });
 
   it("reads a delay step as a wait the workflow performs rather than an action", async () => {

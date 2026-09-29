@@ -1,3 +1,4 @@
+import type { NewLeadAssignment } from "@/features/lead-assignment/new-lead-assignment";
 import type { CreateLeadRepo } from "./create-lead.repo";
 import type { EventService } from "@/features/event/event.service";
 import type { Data, Validated } from "@/core/validation/validation.utils";
@@ -38,6 +39,7 @@ export class CreateManyLeadsInteractor extends AuthenticatedInteractor<CreateMan
     private repo: CreateLeadRepo,
     private eventService: EventService,
     private precheck: LeadWritePrecheckInteractor,
+    private assignment: NewLeadAssignment,
   ) {
     super();
   }
@@ -49,7 +51,9 @@ export class CreateManyLeadsInteractor extends AuthenticatedInteractor<CreateMan
     tx: BULK_WRITE_TRANSACTION,
   })
   async invoke(data: CreateManyLeadsData): Validated<LeadDto[]> {
-    const leads = await Promise.all(data.leads.map((leadData) => this.repo.createLeadOrThrow(leadData)));
+    const leads: LeadDto[] = [];
+    for (const leadData of data.leads)
+      leads.push(await this.assignment.apply(this.companyId, await this.repo.createLeadOrThrow(leadData)));
 
     await Promise.all(
       leads.map((lead) => this.eventService.publish(DomainEvent.LEAD_CREATED, { entityId: lead.id, payload: lead })),

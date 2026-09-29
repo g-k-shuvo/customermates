@@ -1,6 +1,13 @@
 "use client";
 
-import type { MailboxThreadDto, MailboxThreadSummaryDto } from "@/features/mailbox/mailbox.schema";
+import type {
+  MailboxThreadDto,
+  MailboxThreadSummaryDto,
+  MailThreadLabelDto,
+  MailView,
+} from "@/features/mailbox/mailbox.schema";
+import type { MailOutboxMessageDto } from "@/features/mail-workspace/mail-workspace.schema";
+import type { ThreadWorkspaceState } from "./mail-thread-workspace-bar";
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -10,16 +17,18 @@ import { PageState } from "@/components/page-state/page-state";
 import { runUserAction } from "@/core/errors/report-application-error";
 import { toastZodErrorTree } from "@/core/utils/toast-zod-error-tree";
 
-import { getMailboxThreadAction, getMailboxThreadsAction } from "../actions";
+import { getMailboxThreadAction, getMailboxThreadsAction, getMailOutboxAction } from "../actions";
 import { MailPageSkeleton } from "./mail-page-skeleton";
 import { MailThreadList } from "./mail-thread-list";
 import { MailThreadPanel } from "./mail-thread-panel";
-import { ALL_FOLDERS_VALUE, MailThreadToolbar } from "./mail-thread-toolbar";
+import { ALL_FOLDERS_VALUE, ALL_LABELS_VALUE, MailThreadToolbar } from "./mail-thread-toolbar";
 
 type Props = {
   threads: MailboxThreadSummaryDto[];
   folders: string[];
   initialThreadId?: string;
+  labels?: MailThreadLabelDto[];
+  outbox?: MailOutboxMessageDto[];
 };
 
 type PanelState =
@@ -28,15 +37,37 @@ type PanelState =
   | { status: "ready"; thread: MailboxThreadDto }
   | { status: "error" };
 
-type AppliedFilters = { query: string; folder: string };
+type AppliedFilters = { query: string; folder: string; view: MailView; labelId: string };
 
-const NO_FILTERS: AppliedFilters = { query: "", folder: ALL_FOLDERS_VALUE };
+const NO_FILTERS: AppliedFilters = { query: "", folder: ALL_FOLDERS_VALUE, view: "inbox", labelId: ALL_LABELS_VALUE };
 
 function isFiltered(filters: AppliedFilters): boolean {
-  return filters.query.length > 0 || filters.folder !== ALL_FOLDERS_VALUE;
+  return (
+    filters.query.length > 0 ||
+    filters.folder !== ALL_FOLDERS_VALUE ||
+    filters.view !== "inbox" ||
+    filters.labelId !== ALL_LABELS_VALUE
+  );
 }
 
-export function MailPageView({ threads: initialThreads, folders, initialThreadId }: Props) {
+function leavesView(view: MailView, patch: Partial<ThreadWorkspaceState>): boolean {
+  if (patch.archived !== undefined) return view === "inbox" ? patch.archived : view === "archived" && !patch.archived;
+  if (patch.followUpAt !== undefined) return view === "followUp" && patch.followUpAt === null;
+
+  return false;
+}
+
+function byLabelName(left: MailThreadLabelDto, right: MailThreadLabelDto): number {
+  return left.name < right.name ? -1 : left.name > right.name ? 1 : 0;
+}
+
+export function MailPageView({
+  threads: initialThreads,
+  folders,
+  initialThreadId,
+  labels: initialLabels = [],
+  outbox: initialOutbox = [],
+}: Props) {
   const t = useTranslations();
   const [threads, setThreads] = useState(initialThreads);
   const [draft, setDraft] = useState("");
@@ -47,6 +78,8 @@ export function MailPageView({ threads: initialThreads, folders, initialThreadId
   );
   const [allowRemoteImages, setAllowRemoteImages] = useState(false);
   const [readThreadIds, setReadThreadIds] = useState<string[]>([]);
+  const [labels, setLabels] = useState(initialLabels);
+  const [outbox, setOutbox] = useState(initialOutbox);
 
   const openThread = (threadId: string, remoteImages: boolean) => {
     setPanel({ status: "loading", threadId });
@@ -78,14 +111,16 @@ export function MailPageView({ threads: initialThreads, folders, initialThreadId
     openThread(panel.thread.id, true);
   };
 
-  const applyFilters = (query: string, folder: string) => {
+  const applyFilters = (next: AppliedFilters) => {
     setSearching(true);
 
     runUserAction(async () => {
       try {
         const result = await getMailboxThreadsAction({
-          query: query.length > 0 ? query : undefined,
-          folder: folder === ALL_FOLDERS_VALUE ? undefined : folder,
+          query: next.query.length > 0 ? next.query : undefined,
+          folder: next.folder === ALL_FOLDERS_VALUE ? undefined : next.folder,
+          view: next.view,
+          labelId: next.labelId === ALL_LABELS_VALUE ? undefined : next.labelId,
         });
 
         if (!result.ok) {
@@ -94,12 +129,37 @@ export function MailPageView({ threads: initialThreads, folders, initialThreadId
         }
 
         setThreads(result.data);
-        setApplied({ query, folder });
+        setApplied(next);
       } finally {
         setSearching(false);
       }
     });
   };
+
+  const refreshOutbox = () =>
+    runUserAction(async () => {
+      const result = await getMailOutboxAction();
+      if (result.ok) setOutbox(result.data);
+      if (applied.view === "outbox" || applied.view === "drafts") applyFilters(applied);
+    });
+
+  const applyWorkspace = (threadId: string, patch: Partial<ThreadWorkspaceState>) => {
+    setThreads((current) =>
+      leavesView(applied.view, patch)
+        ? current.filter((thread) => thread.id !== threadId)
+        : current.map((thread) => (thread.id === threadId ? { ...thread, ...patch } : thread)),
+    );
+    setPanel((current) =>
+      current.status === "ready" && current.thread.id === threadId
+        ? { status: "ready", thread: { ...current.thread, ...patch } }
+        : current,
+    );
+  };
+
+  const addLabel = (label: MailThreadLabelDto) =>
+    setLabels((current) =>
+      current.some((entry) => entry.id === label.id) ? current : [...current, label].sort(byLabelName),
+    );
 
   const applyShared = (threadId: string, shared: boolean) => {
     setThreads((current) =>
@@ -134,10 +194,15 @@ export function MailPageView({ threads: initialThreads, folders, initialThreadId
         draft={draft}
         folder={applied.folder}
         folders={folders}
+        labelId={applied.labelId}
+        labels={labels}
         searching={searching}
+        view={applied.view}
         onDraftChange={setDraft}
-        onFolderChange={(folder) => applyFilters(applied.query, folder)}
-        onSubmit={() => applyFilters(draft.trim(), applied.folder)}
+        onFolderChange={(folder) => applyFilters({ ...applied, folder })}
+        onLabelChange={(labelId) => applyFilters({ ...applied, labelId })}
+        onSubmit={() => applyFilters({ ...applied, query: draft.trim() })}
+        onViewChange={(view) => applyFilters({ ...applied, view })}
       />
 
       {threads.length === 0 && !hasOpenThread ? (
@@ -158,12 +223,17 @@ export function MailPageView({ threads: initialThreads, folders, initialThreadId
           />
 
           <MailThreadPanel
+            allLabels={labels}
+            outbox={outbox}
             state={panel}
+            onLabelCreated={addLabel}
+            onOutboxChanged={refreshOutbox}
             onReplySent={() => {
               if (panel.status === "ready") openThread(panel.thread.id, allowRemoteImages);
             }}
             onSharedChanged={applyShared}
             onShowRemoteImages={showRemoteImages}
+            onWorkspaceChanged={applyWorkspace}
           />
         </div>
       )}

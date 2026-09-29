@@ -5,13 +5,14 @@ import type { AutomationDto } from "@/features/automation/automation.schema";
 import { useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useTranslations } from "next-intl";
-import { Plus, Workflow } from "lucide-react";
+import { FileText, Plus, Workflow } from "lucide-react";
 
 import { AutomationRow } from "./automation-row";
 import { AutomationModal } from "./automation-modal";
 import { AutomationRunsModal } from "./automation-runs-modal";
 import { AutomationsPageSkeleton } from "./automations-page-skeleton";
 
+import { AppLink } from "@/components/shared/app-link";
 import { Button } from "@/components/ui/button";
 import { PageState } from "@/components/page-state/page-state";
 import { runUserAction } from "@/core/errors/report-application-error";
@@ -48,11 +49,21 @@ export const AutomationsPageView = observer(function AutomationsPageView({ initi
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-lg font-semibold">{t("Automations.title")}</h1>
 
-        <Button id="automations-add" size="sm" onClick={openNew}>
-          <Plus className="size-4" />
+        <div className="flex flex-wrap gap-2">
+          <Button asChild size="sm" variant="secondary">
+            <AppLink appearance="unstyled" href="/automations/templates" id="automations-templates">
+              <FileText aria-hidden className="size-4" />
 
-          {t("Automations.create")}
-        </Button>
+              {t("MessageTemplates.title")}
+            </AppLink>
+          </Button>
+
+          <Button id="automations-add" size="sm" onClick={openNew}>
+            <Plus className="size-4" />
+
+            {t("Automations.create")}
+          </Button>
+        </div>
       </div>
 
       {automations.length === 0 ? (

@@ -46,6 +46,45 @@ import { ShareThreadInteractor } from "@/features/mailbox/upsert/share-thread.in
 import { LinkThreadDealInteractor } from "@/features/mailbox/link/link-thread-deal.interactor";
 import { SendReplyInteractor } from "@/features/mailbox/outbound/send-reply.interactor";
 import { SendReplyService } from "@/features/mailbox/outbound/send-reply.service";
+import { MailboxCredentialAuth } from "@/features/mailbox/oauth/mailbox-credential-auth";
+import { mailboxOAuthSettingsFrom } from "@/features/mailbox/oauth/mailbox-oauth-providers";
+import { StartMailboxOAuthInteractor } from "@/features/mailbox/connect/start-mailbox-oauth.interactor";
+import { ConnectOAuthMailboxInteractor } from "@/features/mailbox/connect/connect-oauth-mailbox.interactor";
+import { PrismaMailWorkspaceRepo } from "@/features/mail-workspace/prisma-mail-workspace.repository";
+import { PrismaMailboxCalendarRepo } from "@/features/mailbox-calendar/prisma-mailbox-calendar.repository";
+import { MailboxCalendarSync } from "@/features/mailbox-calendar/mailbox-calendar-sync";
+import {
+  GetMailboxCalendarEventsInteractor,
+  GetCalendarMailboxesInteractor,
+  GetContactMeetingsInteractor,
+  SetMailboxCalendarSyncInteractor,
+  SyncMailboxCalendarInteractor,
+} from "@/features/mailbox-calendar/mailbox-calendar.interactor";
+import {
+  DeleteMailDraftInteractor,
+  GetMailDraftInteractor,
+  SaveMailDraftInteractor,
+} from "@/features/mail-workspace/drafts/mail-draft.interactor";
+import {
+  CancelOutboxMessageInteractor,
+  GetMailOutboxInteractor,
+  ScheduleMailInteractor,
+  SendOutboxMessageNowInteractor,
+} from "@/features/mail-workspace/outbox/mail-outbox.interactor";
+import {
+  SendDueOutboxInteractor,
+  type OutboxDelivery,
+} from "@/features/mail-workspace/outbox/send-due-outbox.interactor";
+import {
+  SetThreadArchivedInteractor,
+  SetThreadFollowUpInteractor,
+} from "@/features/mail-workspace/threads/mail-thread-state.interactor";
+import {
+  DeleteMailLabelInteractor,
+  GetMailLabelsInteractor,
+  SetThreadLabelsInteractor,
+  UpsertMailLabelInteractor,
+} from "@/features/mail-workspace/labels/mail-label.interactor";
 import { PrismaServiceRepo } from "@/features/services/prisma-service.repository";
 import { PrismaLeadRepo } from "@/features/leads/prisma-lead.repository";
 import { PrismaWebFormRepo } from "@/features/webform/prisma-webform.repository";
@@ -293,9 +332,105 @@ import { IngestWebFormSubmissionInteractor } from "@/features/webform/ingest/ing
 import { ProcessWebFormSubmissionInteractor } from "@/features/webform/process/process-web-form-submission.interactor";
 import { PrismaAutomationRepo } from "@/features/automation/prisma-automation.repository";
 import { PrismaAutomationConditionMatcher } from "@/features/automation/prisma-automation-condition-matcher";
+import { PrismaLeadAssignmentRepo } from "@/features/lead-assignment/prisma-lead-assignment.repository";
+import { LeadAssigner } from "@/features/lead-assignment/lead-assigner";
+import { NewLeadAssignment } from "@/features/lead-assignment/new-lead-assignment";
+import { LeadConditionCheck } from "@/features/lead-assignment/lead-condition-check";
+import { GetLeadAssignmentRulesInteractor } from "@/features/lead-assignment/get/get-lead-assignment-rules.interactor";
+import {
+  CreateLeadAssignmentRuleInteractor,
+  DeleteLeadAssignmentRuleInteractor,
+  UpdateLeadAssignmentRuleInteractor,
+} from "@/features/lead-assignment/upsert/upsert-lead-assignment-rule.interactor";
 import { PrismaAutomationRecordWriter } from "@/features/automation/run/prisma-automation-record-writer";
+import { ReconcileAutomationRunsInteractor } from "@/features/automation/run/reconcile-automation-runs.interactor";
 import { CrmAutomationActionExecutor } from "@/features/automation/run/crm-automation-action-executor";
-import { CrmAutomationEmailSender } from "@/features/automation/run/crm-automation-email-sender";
+import { MessagingAutomationEmailSender } from "@/features/automation/run/messaging-automation-email-sender";
+import { PrismaMessageRecipientRepo } from "@/features/messaging-send/recipients/prisma-message-recipient.repository";
+import { PrismaDeliveryTrackingRepo } from "@/features/messaging-send/tracking/prisma-delivery-tracking.repository";
+import { MarkdownMessageSender } from "@/features/messaging-send/markdown-message-sender";
+import { virusScannerFor } from "@/core/storage/virus-scanner";
+import { StorageQuota, storageQuotaBytesOf } from "@/core/storage/storage-quota";
+import { PrismaStorageUsageRepo } from "@/core/storage/prisma-storage-usage.repository";
+import { GetStorageUsageInteractor } from "@/features/storage-usage/get-storage-usage.interactor";
+import { HandleDeliveryEventInteractor } from "@/features/messaging-send/tracking/handle-delivery-event.interactor";
+import { PrismaBulkJobRepo } from "@/features/bulk-job/prisma-bulk-job.repository";
+import { BulkJobStarter } from "@/features/bulk-job/start-bulk-job";
+import {
+  FailBulkJobInteractor,
+  FinishBulkJobInteractor,
+  RunBulkJobPageInteractor,
+} from "@/features/bulk-job/run/run-bulk-job.interactor";
+import { GetBulkJobInteractor } from "@/features/bulk-job/get/get-bulk-job.interactor";
+import { PrismaContactListRepo } from "@/features/contact-lists/prisma-contact-list.repository";
+import { PrismaContactListFillRepo } from "@/features/contact-lists/fill/prisma-contact-list-fill.repository";
+import {
+  GetContactListInteractor,
+  GetContactListMembersInteractor,
+  GetContactListsInteractor,
+} from "@/features/contact-lists/get/get-contact-lists.interactor";
+import {
+  CreateContactListInteractor,
+  UpdateContactListInteractor,
+} from "@/features/contact-lists/upsert/upsert-contact-list.interactor";
+import { DeleteContactListInteractor } from "@/features/contact-lists/delete/delete-contact-list.interactor";
+import {
+  AddContactListMembersInteractor,
+  RemoveContactListMembersInteractor,
+} from "@/features/contact-lists/members/change-contact-list-members.interactor";
+import { FillContactListInteractor } from "@/features/contact-lists/fill/fill-contact-list.interactor";
+import { PrismaAudienceRepo } from "@/features/audience/prisma-audience.repository";
+import { PreviewAudienceInteractor } from "@/features/audience/preview/preview-audience.interactor";
+import { PrismaCampaignRepo } from "@/features/campaigns/prisma-campaign.repository";
+import { PrismaCampaignRetentionRepo } from "@/features/campaigns/retention/prisma-campaign-retention.repository";
+import { RedactCampaignRecipientsInteractor } from "@/features/campaigns/retention/redact-campaign-recipients.interactor";
+import { PrismaCampaignSendRepo } from "@/features/campaigns/send/prisma-campaign-send.repository";
+import {
+  GetCampaignInteractor,
+  GetCampaignRecipientsInteractor,
+  GetCampaignsInteractor,
+} from "@/features/campaigns/get/get-campaigns.interactor";
+import {
+  CreateCampaignInteractor,
+  UpdateCampaignInteractor,
+} from "@/features/campaigns/upsert/upsert-campaign.interactor";
+import { DeleteCampaignInteractor } from "@/features/campaigns/delete/delete-campaign.interactor";
+import {
+  CancelCampaignInteractor,
+  FailCampaignInteractor,
+  FinishCampaignInteractor,
+  SendCampaignChunkInteractor,
+  StartCampaignInteractor,
+} from "@/features/campaigns/send/send-campaign.interactor";
+import type { BulkJobHandlers } from "@/features/bulk-job/bulk-job-handler";
+import { PrismaMessageDeliveryRepo } from "@/features/messaging-send/prisma-message-delivery.repository";
+import { GuardedEmailSender } from "@/features/messaging-send/guarded-email-sender";
+import { PrismaSuppressionRepo } from "@/features/messaging-send/suppression/prisma-suppression.repository";
+import { PrismaSenderIdentityRepo } from "@/features/messaging-send/sender/prisma-sender-identity.repository";
+import { SenderResolver } from "@/features/messaging-send/sender/sender-resolver";
+import {
+  GetSenderIdentityInteractor,
+  SaveSenderIdentityInteractor,
+  VerifySenderDomainInteractor,
+} from "@/features/messaging-send/sender/sender-identity.interactor";
+import { UnsubscribeInteractor } from "@/features/messaging-send/suppression/unsubscribe.interactor";
+import {
+  AddSuppressionInteractor,
+  GetSuppressionsInteractor,
+  RemoveSuppressionInteractor,
+} from "@/features/messaging-send/suppression/manage-suppressions.interactor";
+import { PrismaMergeValuesRepo } from "@/features/messaging-send/render/prisma-merge-values.repository";
+import { PrismaMessageTemplateRepo } from "@/features/message-templates/prisma-message-template.repository";
+import {
+  GetMessageTemplateInteractor,
+  GetMessageTemplatesInteractor,
+} from "@/features/message-templates/get/get-message-templates.interactor";
+import {
+  CreateMessageTemplateInteractor,
+  DeleteMessageTemplateInteractor,
+  UpdateMessageTemplateInteractor,
+} from "@/features/message-templates/upsert/upsert-message-template.interactor";
+import { PreviewMessageTemplateInteractor } from "@/features/message-templates/preview/preview-message-template.interactor";
 import { PrepareAutomationRunInteractor } from "@/features/automation/run/prepare-automation-run.interactor";
 import { ExecuteAutomationStepInteractor } from "@/features/automation/run/execute-automation-step.interactor";
 import { SweepDueAutomationsInteractor } from "@/features/automation/run/sweep-due-automations.interactor";
@@ -697,9 +832,137 @@ export const getAutomationRepo = () => new PrismaAutomationRepo();
 
 export const getAutomationConditionMatcher = () => new PrismaAutomationConditionMatcher();
 
-export const getAutomationRecordWriter = () => new PrismaAutomationRecordWriter();
+// --- Lead assignment ---
+export const getLeadAssignmentRepo = () => new PrismaLeadAssignmentRepo();
+export const getLeadAssigner = () =>
+  new LeadAssigner(getLeadAssignmentRepo(), getAutomationConditionMatcher(), getAutomationRepo());
+export const getNewLeadAssignment = () => new NewLeadAssignment(getLeadAssigner(), getProcessWebFormSubmissionRepo());
+export const getLeadConditionCheck = () => new LeadConditionCheck(getLeadRepo());
+export const getGetLeadAssignmentRulesInteractor = () => new GetLeadAssignmentRulesInteractor(getLeadAssignmentRepo());
+export const getCreateLeadAssignmentRuleInteractor = () =>
+  new CreateLeadAssignmentRuleInteractor(getLeadAssignmentRepo(), getLeadConditionCheck());
+export const getUpdateLeadAssignmentRuleInteractor = () =>
+  new UpdateLeadAssignmentRuleInteractor(getLeadAssignmentRepo(), getLeadConditionCheck());
+export const getDeleteLeadAssignmentRuleInteractor = () =>
+  new DeleteLeadAssignmentRuleInteractor(getLeadAssignmentRepo());
 
-export const getAutomationEmailSender = () => new CrmAutomationEmailSender(getEmailService());
+export const getAutomationRecordWriter = () => new PrismaAutomationRecordWriter(getCustomColumnRepo());
+
+export const getMessageDeliveryRepo = () => new PrismaMessageDeliveryRepo();
+
+export const getSuppressionRepo = () => new PrismaSuppressionRepo();
+
+export const getUnsubscribeInteractor = () => new UnsubscribeInteractor(getSuppressionRepo());
+
+export const getGetSuppressionsInteractor = () => new GetSuppressionsInteractor(getSuppressionRepo());
+
+export const getAddSuppressionInteractor = () => new AddSuppressionInteractor(getSuppressionRepo());
+
+export const getRemoveSuppressionInteractor = () => new RemoveSuppressionInteractor(getSuppressionRepo());
+
+export const getGuardedEmailSender = () =>
+  new GuardedEmailSender(
+    getMessageDeliveryRepo(),
+    getEmailService(),
+    {
+      suppressions: getSuppressionRepo(),
+      tokens: getSuppressionRepo(),
+      baseUrl: env.BASE_URL,
+    },
+    new SenderResolver(getSenderIdentityRepo()),
+  );
+
+export const getSenderIdentityRepo = () => new PrismaSenderIdentityRepo();
+
+export const getGetSenderIdentityInteractor = () => new GetSenderIdentityInteractor(getSenderIdentityRepo());
+
+export const getSaveSenderIdentityInteractor = () => new SaveSenderIdentityInteractor(getSenderIdentityRepo());
+
+export const getVerifySenderDomainInteractor = () => new VerifySenderDomainInteractor(getSenderIdentityRepo());
+
+export const getMergeValuesRepo = () => new PrismaMergeValuesRepo();
+
+export const getMessageTemplateRepo = () => new PrismaMessageTemplateRepo();
+
+export const getGetMessageTemplatesInteractor = () => new GetMessageTemplatesInteractor(getMessageTemplateRepo());
+
+export const getGetMessageTemplateInteractor = () => new GetMessageTemplateInteractor(getMessageTemplateRepo());
+
+export const getCreateMessageTemplateInteractor = () => new CreateMessageTemplateInteractor(getMessageTemplateRepo());
+
+export const getUpdateMessageTemplateInteractor = () => new UpdateMessageTemplateInteractor(getMessageTemplateRepo());
+
+export const getDeleteMessageTemplateInteractor = () => new DeleteMessageTemplateInteractor(getMessageTemplateRepo());
+
+export const getPreviewMessageTemplateInteractor = () => new PreviewMessageTemplateInteractor(getMergeValuesRepo());
+
+export const getMessageRecipientRepo = () => new PrismaMessageRecipientRepo();
+export const getStorageQuota = () =>
+  new StorageQuota(new PrismaStorageUsageRepo(), storageQuotaBytesOf(env.STORAGE_QUOTA_MB));
+export const getGetStorageUsageInteractor = () => new GetStorageUsageInteractor(getStorageQuota());
+export const getVirusScanner = () => virusScannerFor({ host: env.CLAMAV_HOST, port: env.CLAMAV_PORT });
+export const getMarkdownMessageSender = () => new MarkdownMessageSender(getGuardedEmailSender());
+export const getDeliveryTrackingRepo = () => new PrismaDeliveryTrackingRepo();
+export const getHandleDeliveryEventInteractor = () => new HandleDeliveryEventInteractor(getDeliveryTrackingRepo());
+
+// --- Bulk jobs ---
+export const getBulkJobRepo = () => new PrismaBulkJobRepo();
+export const getContactListRepo = () => new PrismaContactListRepo();
+export const getBulkJobHandlers = (): BulkJobHandlers => ({
+  contactListFill: new PrismaContactListFillRepo(getContactRepo(), getContactListRepo()),
+  campaignSend: new PrismaCampaignSendRepo(
+    new PrismaAudienceRepo(),
+    new PrismaCampaignRepo(),
+    getBackgroundTaskService(),
+  ),
+});
+export const getBulkJobStarter = () =>
+  new BulkJobStarter(getBulkJobRepo(), getBulkJobHandlers(), getBackgroundTaskService());
+export const getRunBulkJobPageInteractor = () => new RunBulkJobPageInteractor(getBulkJobRepo(), getBulkJobHandlers());
+export const getFinishBulkJobInteractor = () => new FinishBulkJobInteractor(getBulkJobRepo(), getBulkJobHandlers());
+export const getFailBulkJobInteractor = () => new FailBulkJobInteractor(getBulkJobRepo(), getBulkJobHandlers());
+export const getGetBulkJobInteractor = () => new GetBulkJobInteractor(getBulkJobRepo());
+
+// --- Contact lists ---
+export const getGetContactListsInteractor = () => new GetContactListsInteractor(getContactListRepo());
+export const getGetContactListInteractor = () => new GetContactListInteractor(getContactListRepo());
+export const getGetContactListMembersInteractor = () => new GetContactListMembersInteractor(getContactListRepo());
+export const getCreateContactListInteractor = () => new CreateContactListInteractor(getContactListRepo());
+export const getUpdateContactListInteractor = () => new UpdateContactListInteractor(getContactListRepo());
+export const getDeleteContactListInteractor = () => new DeleteContactListInteractor(getContactListRepo());
+export const getAddContactListMembersInteractor = () => new AddContactListMembersInteractor(getContactListRepo());
+export const getRemoveContactListMembersInteractor = () => new RemoveContactListMembersInteractor(getContactListRepo());
+export const getFillContactListInteractor = () =>
+  new FillContactListInteractor(getContactListRepo(), getBulkJobStarter());
+
+// --- Audiences ---
+export const getAudienceRepo = () => new PrismaAudienceRepo();
+export const getPreviewAudienceInteractor = () => new PreviewAudienceInteractor(getAudienceRepo());
+
+// --- Campaigns ---
+export const getCampaignRepo = () => new PrismaCampaignRepo();
+export const getGetCampaignsInteractor = () => new GetCampaignsInteractor(getCampaignRepo());
+export const getGetCampaignInteractor = () => new GetCampaignInteractor(getCampaignRepo());
+export const getGetCampaignRecipientsInteractor = () => new GetCampaignRecipientsInteractor(getCampaignRepo());
+export const getCreateCampaignInteractor = () => new CreateCampaignInteractor(getCampaignRepo());
+export const getUpdateCampaignInteractor = () => new UpdateCampaignInteractor(getCampaignRepo());
+export const getDeleteCampaignInteractor = () => new DeleteCampaignInteractor(getCampaignRepo());
+export const getStartCampaignInteractor = () =>
+  new StartCampaignInteractor(getCampaignRepo(), getAudienceRepo(), getBulkJobStarter());
+export const getCancelCampaignInteractor = () => new CancelCampaignInteractor(getCampaignRepo());
+export const getSendCampaignChunkInteractor = () =>
+  new SendCampaignChunkInteractor(
+    getCampaignRepo(),
+    getMergeValuesRepo(),
+    getMessageRecipientRepo(),
+    getMarkdownMessageSender(),
+  );
+export const getFinishCampaignInteractor = () => new FinishCampaignInteractor(getCampaignRepo());
+export const getFailCampaignInteractor = () => new FailCampaignInteractor(getCampaignRepo());
+export const getRedactCampaignRecipientsInteractor = () =>
+  new RedactCampaignRecipientsInteractor(new PrismaCampaignRetentionRepo());
+export const getAutomationEmailSender = () =>
+  new MessagingAutomationEmailSender(getMarkdownMessageSender(), getMergeValuesRepo(), getMessageRecipientRepo());
 
 export const getAutomationActionExecutor = () =>
   new CrmAutomationActionExecutor(
@@ -712,13 +975,16 @@ export const getAutomationActionExecutor = () =>
   );
 
 export const getPrepareAutomationRunInteractor = () =>
-  new PrepareAutomationRunInteractor(getAutomationRepo(), getAutomationConditionMatcher());
+  new PrepareAutomationRunInteractor(getAutomationRepo(), getAutomationConditionMatcher(), getEventService());
 
 export const getExecuteAutomationStepInteractor = () =>
   new ExecuteAutomationStepInteractor(getAutomationRepo(), getAutomationActionExecutor());
 
 export const getSweepDueAutomationsInteractor = () =>
-  new SweepDueAutomationsInteractor(getAutomationRepo(), getBackgroundTaskService());
+  new SweepDueAutomationsInteractor(getAutomationRepo(), getBackgroundTaskService(), env.AUTOMATION_SCHEDULE_ENABLED);
+
+export const getReconcileAutomationRunsInteractor = () =>
+  new ReconcileAutomationRunsInteractor(getAutomationRepo(), getBackgroundTaskService());
 
 export const getGetAutomationsInteractor = () => new GetAutomationsInteractor(getAutomationRepo());
 
@@ -1219,7 +1485,7 @@ export const getGetLeadsConfigurationInteractor = () => new GetLeadsConfiguratio
 export const getGetLeadByIdInteractor = () => new GetLeadByIdInteractor(getLeadRepo(), getCustomColumnRepo());
 
 export const getCreateLeadInteractor = () =>
-  new CreateLeadInteractor(getLeadRepo(), getEventService(), getLeadWritePrecheck());
+  new CreateLeadInteractor(getLeadRepo(), getEventService(), getLeadWritePrecheck(), getNewLeadAssignment());
 
 export const getUpdateLeadInteractor = () =>
   new UpdateLeadInteractor(getLeadRepo(), getEventService(), getLeadWritePrecheck());
@@ -1231,7 +1497,7 @@ export const getConvertLeadToDealInteractor = () =>
   new ConvertLeadToDealInteractor(getLeadRepo(), getDealRepo(), getEventService(), getLeadWritePrecheck());
 
 export const getCreateManyLeadsInteractor = () =>
-  new CreateManyLeadsInteractor(getLeadRepo(), getEventService(), getLeadWritePrecheck());
+  new CreateManyLeadsInteractor(getLeadRepo(), getEventService(), getLeadWritePrecheck(), getNewLeadAssignment());
 
 export const getUpdateManyLeadsInteractor = () =>
   new UpdateManyLeadsInteractor(getLeadRepo(), getEventService(), getLeadWritePrecheck());
@@ -2358,6 +2624,32 @@ export const getMailboxSecretKey = () => (env.MAILBOX_SECRET_KEY ? parseSecretBo
 export const getMailboxTransport = () =>
   createImapflowTransport(undefined, undefined, { allowPrivateHosts: env.MAILBOX_ALLOW_PRIVATE_HOSTS });
 
+// OAuth mailboxes (PRD 10 W4-01): Google and Microsoft 365 sign-in instead of an app
+// password. The token bundle is sealed like a password; the resolver refreshes it on use.
+export const getMailboxOAuthSettings = () => mailboxOAuthSettingsFrom(env);
+
+export const getMailboxCredentialAuth = (secretKey: SecretBoxKey) =>
+  new MailboxCredentialAuth(secretKey, getMailboxOAuthSettings(), getMailboxRepo(), fetch, () => new Date());
+
+const mailboxCredentialAuthOrUndefined = () => {
+  const secretKey = getMailboxSecretKey();
+
+  return secretKey ? getMailboxCredentialAuth(secretKey) : undefined;
+};
+
+export const getStartMailboxOAuthInteractor = () =>
+  new StartMailboxOAuthInteractor(getMailboxSecretKey(), getMailboxOAuthSettings(), () => new Date());
+
+export const getConnectOAuthMailboxInteractor = () =>
+  new ConnectOAuthMailboxInteractor(
+    getMailboxRepo(),
+    getMailboxTransport(),
+    getMailboxSecretKey(),
+    getMailboxOAuthSettings(),
+    fetch,
+    () => new Date(),
+  );
+
 export const getSyncMailboxService = (secretKey: SecretBoxKey) =>
   new SyncMailboxService(
     getMailboxRepo(),
@@ -2365,6 +2657,7 @@ export const getSyncMailboxService = (secretKey: SecretBoxKey) =>
     secretKey,
     () => new Date(),
     getStoreMailAttachmentsService(),
+    getMailboxCredentialAuth(secretKey),
   );
 
 export const getConnectMailboxInteractor = () =>
@@ -2408,7 +2701,13 @@ export const getSendReplyService = () =>
   new SendReplyService(getMailboxTransport(), undefined, { allowPrivateHosts: env.MAILBOX_ALLOW_PRIVATE_HOSTS });
 
 export const getSendReplyInteractor = () =>
-  new SendReplyInteractor(getMailboxRepo(), getSendReplyService(), getMailboxSecretKey(), () => new Date());
+  new SendReplyInteractor(
+    getMailboxRepo(),
+    getSendReplyService(),
+    getMailboxSecretKey(),
+    () => new Date(),
+    mailboxCredentialAuthOrUndefined(),
+  );
 
 export const getForwardThreadInteractor = () =>
   new ForwardThreadInteractor(
@@ -2417,7 +2716,67 @@ export const getForwardThreadInteractor = () =>
     getMailboxSecretKey(),
     () => new Date(),
     getForwardMailAttachmentsService(),
+    mailboxCredentialAuthOrUndefined(),
   );
+
+// Mail workspace (PRD 10 W4-02): drafts, the outbox (send later, retried by the
+// mail-outbox cron as the owner), archive and follow-up, and company mail labels.
+export const getMailWorkspaceRepo = () => new PrismaMailWorkspaceRepo();
+
+export const getGetMailDraftInteractor = () => new GetMailDraftInteractor(getMailWorkspaceRepo());
+
+export const getSaveMailDraftInteractor = () => new SaveMailDraftInteractor(getMailWorkspaceRepo());
+
+export const getDeleteMailDraftInteractor = () => new DeleteMailDraftInteractor(getMailWorkspaceRepo());
+
+export const getScheduleMailInteractor = () => new ScheduleMailInteractor(getMailWorkspaceRepo(), () => new Date());
+
+export const getGetMailOutboxInteractor = () => new GetMailOutboxInteractor(getMailWorkspaceRepo());
+
+export const getCancelOutboxMessageInteractor = () => new CancelOutboxMessageInteractor(getMailWorkspaceRepo());
+
+export const getSendOutboxMessageNowInteractor = () =>
+  new SendOutboxMessageNowInteractor(getMailWorkspaceRepo(), () => new Date());
+
+export const getSendDueOutboxInteractor = (deliver: OutboxDelivery) =>
+  new SendDueOutboxInteractor(getMailWorkspaceRepo(), deliver, () => new Date());
+
+export const getSetThreadArchivedInteractor = () =>
+  new SetThreadArchivedInteractor(getMailWorkspaceRepo(), () => new Date());
+
+export const getSetThreadFollowUpInteractor = () => new SetThreadFollowUpInteractor(getMailWorkspaceRepo());
+
+export const getGetMailLabelsInteractor = () => new GetMailLabelsInteractor(getMailWorkspaceRepo());
+
+export const getUpsertMailLabelInteractor = () => new UpsertMailLabelInteractor(getMailWorkspaceRepo());
+
+export const getDeleteMailLabelInteractor = () => new DeleteMailLabelInteractor(getMailWorkspaceRepo());
+
+export const getSetThreadLabelsInteractor = () => new SetThreadLabelsInteractor(getMailWorkspaceRepo());
+
+// Calendar sync (PRD 10 F4, option B): our own read-only sync of the primary calendar of an
+// OAuth mailbox, through Google Calendar or Microsoft Graph with the mailbox's token.
+export const getMailboxCalendarRepo = () => new PrismaMailboxCalendarRepo();
+
+export const getMailboxCalendarSync = () =>
+  new MailboxCalendarSync(
+    getMailboxCalendarRepo(),
+    mailboxCredentialAuthOrUndefined() ?? null,
+    fetch,
+    () => new Date(),
+  );
+
+export const getSyncMailboxCalendarInteractor = () => new SyncMailboxCalendarInteractor(getMailboxCalendarSync());
+
+export const getSetMailboxCalendarSyncInteractor = () =>
+  new SetMailboxCalendarSyncInteractor(getMailboxCalendarRepo(), getMailboxCalendarSync());
+
+export const getGetCalendarMailboxesInteractor = () => new GetCalendarMailboxesInteractor(getMailboxCalendarRepo());
+
+export const getGetMailboxCalendarEventsInteractor = () =>
+  new GetMailboxCalendarEventsInteractor(getMailboxCalendarRepo());
+
+export const getGetContactMeetingsInteractor = () => new GetContactMeetingsInteractor(getMailboxCalendarRepo());
 
 export const getSyncMailboxInteractor = () => {
   const secretKey = getMailboxSecretKey();
@@ -2457,7 +2816,7 @@ export const getRecordFileRepo = () => new PrismaRecordFileRepo();
 export const getMailAttachmentRepo = () => new PrismaMailAttachmentRepo();
 
 export const getStoreMailAttachmentsService = () =>
-  new StoreMailAttachmentsService(getMailAttachmentRepo(), getStorageProvider());
+  new StoreMailAttachmentsService(getMailAttachmentRepo(), getStorageProvider(), getVirusScanner(), getStorageQuota());
 
 export const getGetMailAttachmentInteractor = () =>
   new GetMailAttachmentInteractor(getMailAttachmentRepo(), getStorageProvider());
@@ -2469,10 +2828,15 @@ export const getSweepMailAttachmentsInteractor = () =>
   new SweepMailAttachmentsInteractor(getMailAttachmentRepo(), getStorageProvider());
 
 export const getCreateRecordFileUploadInteractor = () =>
-  new CreateRecordFileUploadInteractor(getRecordFileRepo(), getStorageProvider(), getUserService());
+  new CreateRecordFileUploadInteractor(getRecordFileRepo(), getStorageProvider(), getUserService(), getStorageQuota());
 
 export const getCompleteRecordFileUploadInteractor = () =>
-  new CompleteRecordFileUploadInteractor(getRecordFileRepo(), getStorageProvider(), getUserService());
+  new CompleteRecordFileUploadInteractor(
+    getRecordFileRepo(),
+    getStorageProvider(),
+    getUserService(),
+    getVirusScanner(),
+  );
 
 export const getGetRecordFilesInteractor = () =>
   new GetRecordFilesInteractor(getRecordFileRepo(), getStorageProvider());
@@ -2497,7 +2861,12 @@ export const getGetRecordDocumentDownloadInteractor = () =>
   new GetRecordDocumentDownloadInteractor(getRecordDocumentRepo(), getStorageProvider());
 
 export const getCreateRecordDocumentInteractor = () =>
-  new CreateRecordDocumentInteractor(getRecordDocumentRepo(), getStorageProvider(), getUserService());
+  new CreateRecordDocumentInteractor(
+    getRecordDocumentRepo(),
+    getStorageProvider(),
+    getUserService(),
+    getStorageQuota(),
+  );
 
 export const getCreateSignedCopyUploadInteractor = () =>
   new CreateSignedCopyUploadInteractor(getRecordDocumentRepo(), getStorageProvider(), getUserService());

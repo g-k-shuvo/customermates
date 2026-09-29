@@ -55,7 +55,26 @@ vi.mock("@/components/ui/textarea", () => ({
   Textarea: (props: { placeholder?: string }) => createElement("textarea", { placeholder: props.placeholder }),
 }));
 
-vi.mock("../../actions", () => ({ forwardThreadAction, sendReplyAction }));
+vi.mock("../../actions", () => ({
+  forwardThreadAction,
+  sendReplyAction,
+  deleteMailDraftAction: vi.fn(),
+  getMailDraftAction: vi.fn(),
+  saveMailDraftAction: vi.fn(),
+  scheduleMailAction: vi.fn(),
+}));
+
+vi.mock("@/core/stores/use-hydrated-intl-store", () => ({
+  useHydratedIntlStore: () => ({ formatNumericalShortDateTime: (value: Date) => value.toISOString() }),
+}));
+
+vi.mock("@/components/ui/select", () => ({
+  Select: ({ children }: { children: ReactNode }) => createElement("div", null, children),
+  SelectContent: ({ children }: { children: ReactNode }) => createElement("div", null, children),
+  SelectItem: ({ children }: { children: ReactNode }) => createElement("div", null, children),
+  SelectTrigger: ({ children }: { children: ReactNode }) => createElement("div", null, children),
+  SelectValue: () => null,
+}));
 
 import { MailReplyBox, splitRecipients } from "../mail-reply-box";
 

@@ -2,11 +2,12 @@ import type { AutomationActionOutcome } from "./automation-action-executor";
 import type { AutomationRecordWriter, AutomationTaskLinks } from "./automation-record-writer";
 import type { AutomationStepError } from "../automation-step-errors";
 import type { NotesAppendResult } from "@/components/editor/notes-document";
+import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
 
 import type { Prisma } from "@/generated/prisma";
 import { EntityType } from "@/generated/prisma";
 
-import { RECORD_WRITABLE_FIELDS, resolveFieldWrite } from "./automation-field-writes";
+import { RECORD_WRITABLE_FIELDS, resolveCustomFieldWrite, resolveFieldWrite } from "./automation-field-writes";
 
 import { BaseRepository } from "@/core/base/base-repository";
 import { Transaction } from "@/core/decorators/transaction.decorator";
@@ -54,7 +55,28 @@ function refused(error: AutomationStepError): AutomationActionOutcome {
   return { ok: false, error };
 }
 
+export type AutomationCustomFields = {
+  findByEntityType(entityType: EntityType): Promise<CustomColumnDto[]>;
+  replaceValuesForEntity(
+    entityType: EntityType,
+    entityId: string,
+    values: Array<{ columnId: string; value?: string | null }>,
+  ): Promise<void>;
+};
+
+const CUSTOM_FIELD_MODELS: Partial<Record<EntityType, string>> = {
+  [EntityType.contact]: "contact",
+  [EntityType.organization]: "organization",
+  [EntityType.deal]: "deal",
+  [EntityType.lead]: "lead",
+  [EntityType.task]: "task",
+};
+
 export class PrismaAutomationRecordWriter extends BaseRepository implements AutomationRecordWriter {
+  constructor(private customFields: AutomationCustomFields) {
+    super();
+  }
+
   private delegate(model: string): Delegate | undefined {
     return (this.prisma as unknown as Record<string, Delegate>)[model];
   }
@@ -82,6 +104,37 @@ export class PrismaAutomationRecordWriter extends BaseRepository implements Auto
     });
 
     return count === 1 ? { ok: true, output: { field: write.field } } : refused("recordMissing");
+  }
+
+  @Transaction
+  async setCustomField(args: {
+    entityType: EntityType;
+    entityId: string;
+    columnId: string;
+    value: unknown;
+  }): Promise<AutomationActionOutcome> {
+    const columns = await this.customFields.findByEntityType(args.entityType);
+    const write = resolveCustomFieldWrite(
+      columns.find((column) => column.id === args.columnId),
+      args.value,
+    );
+    if (!write.ok) return refused(write.error);
+
+    const model = CUSTOM_FIELD_MODELS[args.entityType];
+    const delegate = model ? this.delegate(model) : undefined;
+    if (!delegate) return refused("recordUnsupported");
+
+    const record = await delegate.findFirst({
+      where: { id: args.entityId, companyId: this.companyId },
+      select: { id: true },
+    });
+    if (!record) return refused("recordMissing");
+
+    await this.customFields.replaceValuesForEntity(args.entityType, args.entityId, [
+      { columnId: args.columnId, value: write.value },
+    ]);
+
+    return { ok: true, output: { field: args.columnId } };
   }
 
   @Transaction

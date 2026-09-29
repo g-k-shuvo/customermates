@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { CHIP_COLORS } from "@/constants/chip-colors";
+
 import { MailAttachmentDtoSchema } from "@/features/mail-attachments/mail-attachment.schema";
 
 export const MAILBOX_DEFAULT_IMAP_PORT = 993;
@@ -81,6 +83,20 @@ export const SyncMailboxSchema = z.object({
 
 export type SyncMailboxData = z.infer<typeof SyncMailboxSchema>;
 
+export const MAIL_VIEWS = ["inbox", "archived", "drafts", "outbox", "followUp", "all"] as const;
+
+export type MailView = (typeof MAIL_VIEWS)[number];
+
+export const MAIL_LABEL_COLORS = CHIP_COLORS;
+
+export const MailThreadLabelDtoSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  color: z.enum(MAIL_LABEL_COLORS).catch("secondary"),
+});
+
+export type MailThreadLabelDto = z.infer<typeof MailThreadLabelDtoSchema>;
+
 export const MailboxThreadSummaryDtoSchema = z.object({
   id: z.string().uuid(),
   subject: z.string().nullable(),
@@ -90,6 +106,9 @@ export const MailboxThreadSummaryDtoSchema = z.object({
   unread: z.boolean(),
   sharedToCrm: z.boolean(),
   participants: z.array(z.object({ identifier: z.string(), displayName: z.string().nullable() })),
+  archived: z.boolean(),
+  followUpAt: z.date().nullable(),
+  labels: z.array(MailThreadLabelDtoSchema),
 });
 
 export type MailboxThreadSummaryDto = z.infer<typeof MailboxThreadSummaryDtoSchema>;
@@ -145,6 +164,8 @@ export type LinkThreadDealOutcome = z.infer<typeof LinkThreadDealOutcomeSchema>;
 export const GetMailboxThreadsSchema = z.object({
   query: z.string().trim().max(MAILBOX_MAX_THREAD_QUERY_LENGTH).optional(),
   folder: z.string().trim().max(MAILBOX_MAX_FOLDER_PATH_LENGTH).optional(),
+  view: z.enum(MAIL_VIEWS).optional(),
+  labelId: z.uuid().optional(),
 });
 
 export type GetMailboxThreadsData = z.infer<typeof GetMailboxThreadsSchema>;

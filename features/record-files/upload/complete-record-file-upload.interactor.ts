@@ -1,5 +1,6 @@
 import type { Validated } from "@/core/validation/validation.utils";
 import type { StorageProvider, StoredObjectStat } from "@/core/storage/storage-provider";
+import type { VirusScanner } from "@/core/storage/virus-scanner";
 import type { UserService } from "@/features/user/user.service";
 import type { CompleteRecordFileUploadRepo } from "./complete-record-file-upload.repo";
 
@@ -17,6 +18,7 @@ import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
 import { Write } from "@/core/decorators/write.decorator";
 import { uploadedObjectMatches } from "@/core/storage/upload-policy";
+import { type ScanVerdict } from "@/core/storage/virus-scanner";
 import {
   failAuthorization,
   failConflict,
@@ -31,6 +33,7 @@ export class CompleteRecordFileUploadInteractor extends AuthenticatedInteractor<
     private repo: CompleteRecordFileUploadRepo,
     private storage: StorageProvider,
     private userService: UserService,
+    private scanner: VirusScanner,
   ) {
     super();
   }
@@ -59,6 +62,22 @@ export class CompleteRecordFileUploadInteractor extends AuthenticatedInteractor<
       await this.repo.deletePendingFile(id);
 
       return failConflict(CustomErrorCode.fileUploadIncomplete, ["id"]);
+    }
+
+    if (this.scanner.configured) {
+      let verdict: ScanVerdict;
+      try {
+        verdict = await this.scanner.scan((await this.storage.getObject(pending.storageKey)).body);
+      } catch {
+        return failUnavailable(CustomErrorCode.virusScanUnavailable);
+      }
+
+      if (!verdict.clean) {
+        await this.storage.deleteObject(pending.storageKey).catch(() => undefined);
+        await this.repo.deletePendingFile(id);
+
+        return failConflict(CustomErrorCode.fileInfected, ["id"]);
+      }
     }
 
     const ready = await this.repo.markFileReadyOrNull(id);

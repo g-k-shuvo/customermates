@@ -6,7 +6,17 @@
  * the reconciliation report describe the run that would happen.
  */
 
-import type { CrmClient, CrmLostReason, CrmPipeline, CrmRecord, CrmService, CrmStage } from "./crm-client";
+import type {
+  CrmClient,
+  CrmContactList,
+  CrmLostReason,
+  CrmPipeline,
+  CrmRecord,
+  CrmRecordFile,
+  CrmService,
+  CrmStage,
+  RecordFileUploadInput,
+} from "./crm-client";
 import type { CustomColumnType, EntityType } from "@/generated/prisma";
 
 import { randomUUID } from "node:crypto";
@@ -31,6 +41,10 @@ export type CrmWrites = {
   markDealWon(id: string): Promise<void>;
   markDealLost(id: string, payload: { lostReasonId: string; lostNotes?: string }): Promise<void>;
   reopenDeal(id: string, stageId?: string): Promise<void>;
+  completeTask(id: string): Promise<void>;
+  createContactList(name: string): Promise<CrmContactList>;
+  addContactListMembers(listId: string, contactIds: readonly string[]): Promise<number>;
+  uploadRecordFile(input: RecordFileUploadInput): Promise<CrmRecordFile>;
 };
 
 export function liveWrites(client: CrmClient): CrmWrites {
@@ -52,6 +66,10 @@ export function liveWrites(client: CrmClient): CrmWrites {
     reopenDeal: async (id, stageId) => {
       await client.reopenDeal(id, stageId);
     },
+    completeTask: (id) => client.completeTask(id),
+    createContactList: (name) => client.createContactList(name),
+    addContactListMembers: (listId, contactIds) => client.addContactListMembers(listId, contactIds),
+    uploadRecordFile: (input) => client.uploadRecordFile(input),
   };
 }
 
@@ -97,5 +115,10 @@ export function dryRunWrites(): CrmWrites {
     markDealWon: () => resolved(undefined),
     markDealLost: () => resolved(undefined),
     reopenDeal: () => resolved(undefined),
+    completeTask: () => resolved(undefined),
+    createContactList: (name) => resolved({ id: randomUUID(), name, memberCount: 0 }),
+    addContactListMembers: (_listId, contactIds) => resolved(contactIds.length),
+    uploadRecordFile: (input) =>
+      resolved({ id: randomUUID(), fileName: input.fileName, byteSize: input.bytes.byteLength }),
   };
 }

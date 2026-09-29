@@ -11,12 +11,14 @@ export const RECORD_FILE_RESOURCE: Record<RecordFileEntityType, Resource> = {
   contact: Resource.contacts,
   organization: Resource.organizations,
   deal: Resource.deals,
+  lead: Resource.leads,
 };
 
 export const RECORD_NOT_FOUND_CODE: Record<RecordFileEntityType, CustomErrorCode> = {
   contact: CustomErrorCode.contactNotFound,
   organization: CustomErrorCode.organizationNotFound,
   deal: CustomErrorCode.dealNotFound,
+  lead: CustomErrorCode.leadNotFound,
 };
 
 export const UPLOAD_REFUSAL_CODE: Record<UploadRefusal, CustomErrorCode> = {

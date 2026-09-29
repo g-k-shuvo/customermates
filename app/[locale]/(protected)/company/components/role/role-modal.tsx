@@ -51,7 +51,8 @@ export const RoleModal = observer(({ store }: Props) => {
       ...(resource !== Resource.api &&
       resource !== Resource.auditLog &&
       resource !== Resource.inboxMessages &&
-      resource !== Resource.invoices
+      resource !== Resource.invoices &&
+      resource !== Resource.campaigns
         ? [
             {
               value: "own",
@@ -185,6 +186,8 @@ export const RoleModal = observer(({ store }: Props) => {
               {renderResourcePermissions(Resource.services)}
 
               {renderResourcePermissions(Resource.invoices)}
+
+              {renderResourcePermissions(Resource.campaigns)}
 
               {renderResourcePermissions(Resource.inboxMessages)}
 

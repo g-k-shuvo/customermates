@@ -216,96 +216,114 @@ model User {
 }
 
 model Company {
-  id                          String                       @id @default(uuid())
-  currency                    Currency                     @default(eur)
-  dealWeightingColumnId       String?
-  dealWeightingColumn         CustomColumn?                @relation("CompanyDealWeightingColumn", fields: [dealWeightingColumnId], references: [id], onDelete: SetNull)
-  createdAt                   DateTime                     @default(now())
-  updatedAt                   DateTime                     @updatedAt
-  tags                        String[]                     @default([])
-  tasks                       Task[]
-  users                       User[]
-  adAttributions              AdAttribution[]
-  conversionEvents            ConversionEvent[]
-  inviteTokens                InviteToken[]
-  contacts                    Contact[]
-  organizations               Organization[]
-  deals                       Deal[]
-  dealStageHistories          DealStageHistory[]
-  pipelines                   Pipeline[]
-  pipelineStages              PipelineStage[]
-  lostReasons                 LostReason[]
-  services                    Service[]
-  CustomColumn                CustomColumn[]
-  auditLogs                   AuditLog[]
-  customFieldValues           CustomFieldValue[]
-  serviceDeals                ServiceDeal[]
-  dealOrganizations           DealOrganization[]
-  dealUsers                   DealUser[]
-  dealContacts                DealContact[]
-  contactUsers                ContactUser[]
-  contactOrganizations        ContactOrganization[]
-  organizationUsers           OrganizationUser[]
-  serviceUsers                ServiceUser[]
-  taskUsers                   TaskUser[]
-  taskContacts                TaskContact[]
-  taskOrganizations           TaskOrganization[]
-  taskDeals                   TaskDeal[]
-  taskServices                TaskService[]
-  widgets                     Widget[]
-  userRoles                   UserRole[]
-  rolePermissions             RolePermission[]
-  p13n                        P13n[]
-  dataViews                   DataView[]
-  recordFiles                 RecordFile[]
-  mailAttachments             MailAttachment[]
-  recordDocuments             RecordDocument[]
-  duplicateScans              DuplicateScan[]
-  duplicateGroups             DuplicateGroup[]
-  duplicateMembers            DuplicateMember[]
-  duplicateDismissals         DuplicateDismissal[]
-  contactMatchKeys            ContactMatchKey[]
-  contactMergeRecords         ContactMergeRecord[]
-  organizationMergeRecords    OrganizationMergeRecord[]
-  invoices                    Invoice[]
-  invoiceLines                InvoiceLine[]
-  invoicePayments             InvoicePayment[]
-  invoiceSettings             InvoiceSettings?
-  billingProfiles             BillingProfile[]
-  recordDocumentFiles         RecordDocumentFile[]
-  webhooks                    Webhook[]
-  webhookDeliveries           WebhookDelivery[]
-  automations                 Automation[]
-  automationSteps             AutomationStep[]
-  automationRuns              AutomationRun[]
-  automationRunSteps          AutomationRunStep[]
-  connectedAccounts           ConnectedAccount[]
-  mailboxCredentials          MailboxCredential[]
-  messagingThreads            MessagingThread[]
-  messagingMessages           MessagingMessage[]
-  messagingThreadParticipants MessagingThreadParticipant[]
-  accountActivities           AccountActivity[]
-  contactIdentifiers          ContactIdentifier[]
-  calendars                   Calendar[]
-  calendarEvents              CalendarEvent[]
-  subscription                Subscription?
-  entityTerminology           EntityTerminology[]
-  agentConversations          AgentConversation[]
-  agentRunLeases              AgentRunLease[]
-  agentRunRounds              AgentRunRound[]
-  agentToolReceipts           AgentToolReceipt[]
-  agentMessages               AgentMessage[]
-  agentUsageEvents            AgentUsageEvent[]
-  agentCreditAdjustments      AgentCreditAdjustment[]
-  agentTurnRequests           AgentTurnRequest[]
-  agentApprovals              AgentApproval[]
-  agentUiCommandResults       AgentUiCommandResult[]
-  routines                    Routine[]
-  routineRuns                 RoutineRun[]
-  leads                       Lead[]
-  webFormSources              WebFormSource[]
-  webFormSubmissions          WebFormSubmission[]
-  webFormRateLimits           WebFormRateLimit[]
+  id                           String                        @id @default(uuid())
+  currency                     Currency                      @default(eur)
+  dealWeightingColumnId        String?
+  dealWeightingColumn          CustomColumn?                 @relation("CompanyDealWeightingColumn", fields: [dealWeightingColumnId], references: [id], onDelete: SetNull)
+  createdAt                    DateTime                      @default(now())
+  updatedAt                    DateTime                      @updatedAt
+  tags                         String[]                      @default([])
+  tasks                        Task[]
+  users                        User[]
+  adAttributions               AdAttribution[]
+  conversionEvents             ConversionEvent[]
+  inviteTokens                 InviteToken[]
+  contacts                     Contact[]
+  organizations                Organization[]
+  deals                        Deal[]
+  dealStageHistories           DealStageHistory[]
+  pipelines                    Pipeline[]
+  pipelineStages               PipelineStage[]
+  lostReasons                  LostReason[]
+  services                     Service[]
+  CustomColumn                 CustomColumn[]
+  auditLogs                    AuditLog[]
+  customFieldValues            CustomFieldValue[]
+  serviceDeals                 ServiceDeal[]
+  dealOrganizations            DealOrganization[]
+  dealUsers                    DealUser[]
+  dealContacts                 DealContact[]
+  contactUsers                 ContactUser[]
+  contactOrganizations         ContactOrganization[]
+  organizationUsers            OrganizationUser[]
+  serviceUsers                 ServiceUser[]
+  taskUsers                    TaskUser[]
+  taskContacts                 TaskContact[]
+  taskOrganizations            TaskOrganization[]
+  taskDeals                    TaskDeal[]
+  taskServices                 TaskService[]
+  widgets                      Widget[]
+  userRoles                    UserRole[]
+  rolePermissions              RolePermission[]
+  p13n                         P13n[]
+  dataViews                    DataView[]
+  recordFiles                  RecordFile[]
+  mailAttachments              MailAttachment[]
+  messageDeliveries            MessageDelivery[]
+  messageDeliveryEvents        MessageDeliveryEvent[]
+  bulkJobs                     BulkJob[]
+  contactLists                 ContactList[]
+  contactListMembers           ContactListMember[]
+  campaigns                    Campaign[]
+  campaignRecipients           CampaignRecipient[]
+  leadAssignmentRules          LeadAssignmentRule[]
+  mailDrafts                   MailDraft[]
+  mailOutboxMessages           MailOutboxMessage[]
+  mailLabels                   MailLabel[]
+  mailboxCalendarEvents        MailboxCalendarEvent[]
+  mailboxCalendarEventContacts MailboxCalendarEventContact[]
+  messagingThreadLabels        MessagingThreadLabel[]
+  messageTemplates             MessageTemplate[]
+  messageSuppressions          MessageSuppression[]
+  unsubscribeTokens            UnsubscribeToken[]
+  senderIdentity               SenderIdentity?
+  recordDocuments              RecordDocument[]
+  duplicateScans               DuplicateScan[]
+  duplicateGroups              DuplicateGroup[]
+  duplicateMembers             DuplicateMember[]
+  duplicateDismissals          DuplicateDismissal[]
+  contactMatchKeys             ContactMatchKey[]
+  contactMergeRecords          ContactMergeRecord[]
+  organizationMergeRecords     OrganizationMergeRecord[]
+  invoices                     Invoice[]
+  invoiceLines                 InvoiceLine[]
+  invoicePayments              InvoicePayment[]
+  invoiceSettings              InvoiceSettings?
+  billingProfiles              BillingProfile[]
+  recordDocumentFiles          RecordDocumentFile[]
+  webhooks                     Webhook[]
+  webhookDeliveries            WebhookDelivery[]
+  automations                  Automation[]
+  automationSteps              AutomationStep[]
+  automationRuns               AutomationRun[]
+  automationRunSteps           AutomationRunStep[]
+  connectedAccounts            ConnectedAccount[]
+  mailboxCredentials           MailboxCredential[]
+  messagingThreads             MessagingThread[]
+  messagingMessages            MessagingMessage[]
+  messagingThreadParticipants  MessagingThreadParticipant[]
+  accountActivities            AccountActivity[]
+  contactIdentifiers           ContactIdentifier[]
+  calendars                    Calendar[]
+  calendarEvents               CalendarEvent[]
+  subscription                 Subscription?
+  entityTerminology            EntityTerminology[]
+  agentConversations           AgentConversation[]
+  agentRunLeases               AgentRunLease[]
+  agentRunRounds               AgentRunRound[]
+  agentToolReceipts            AgentToolReceipt[]
+  agentMessages                AgentMessage[]
+  agentUsageEvents             AgentUsageEvent[]
+  agentCreditAdjustments       AgentCreditAdjustment[]
+  agentTurnRequests            AgentTurnRequest[]
+  agentApprovals               AgentApproval[]
+  agentUiCommandResults        AgentUiCommandResult[]
+  routines                     Routine[]
+  routineRuns                  RoutineRun[]
+  leads                        Lead[]
+  webFormSources               WebFormSource[]
+  webFormSubmissions           WebFormSubmission[]
+  webFormRateLimits            WebFormRateLimit[]
 }
 
 model EntityTerminology {
@@ -445,28 +463,30 @@ model AuditLog {
 }
 
 model Contact {
-  id                String                @id @default(uuid())
-  firstName         String
-  lastName          String
-  companyId         String
-  avatarUrl         String?
-  notes             Json?
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
-  company           Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  organizations     ContactOrganization[]
-  users             ContactUser[]
-  deals             DealContact[]
-  tasks             TaskContact[]
-  customFieldValues CustomFieldValue[]    @relation("ContactToCustomFieldValue")
-  customFieldRefs   CustomFieldValue[]    @relation("CustomFieldValueTargetContact")
-  identifiers       ContactIdentifier[]
-  leads             Lead[]
-  files             RecordFile[]
-  documents         RecordDocument[]
-  duplicateMembers  DuplicateMember[]
-  matchKeys         ContactMatchKey[]
-  mergeRecords      ContactMergeRecord[]
+  id                    String                        @id @default(uuid())
+  firstName             String
+  lastName              String
+  companyId             String
+  avatarUrl             String?
+  notes                 Json?
+  createdAt             DateTime                      @default(now())
+  updatedAt             DateTime                      @updatedAt
+  company               Company                       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  organizations         ContactOrganization[]
+  listMemberships       ContactListMember[]
+  users                 ContactUser[]
+  deals                 DealContact[]
+  tasks                 TaskContact[]
+  customFieldValues     CustomFieldValue[]            @relation("ContactToCustomFieldValue")
+  customFieldRefs       CustomFieldValue[]            @relation("CustomFieldValueTargetContact")
+  identifiers           ContactIdentifier[]
+  leads                 Lead[]
+  files                 RecordFile[]
+  documents             RecordDocument[]
+  duplicateMembers      DuplicateMember[]
+  matchKeys             ContactMatchKey[]
+  mergeRecords          ContactMergeRecord[]
+  mailboxCalendarEvents MailboxCalendarEventContact[]
 
   @@index([companyId])
   @@index([firstName])
@@ -1073,6 +1093,7 @@ enum Resource {
   routines
   automations
   invoices
+  campaigns
 }
 
 enum MessagingThreadState {
@@ -1382,6 +1403,7 @@ model Lead {
   owner             User?               @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
   submissions       WebFormSubmission[]
   customFieldValues CustomFieldValue[]
+  recordFiles       RecordFile[]
 
   @@index([companyId])
   @@index([companyId, status, createdAt])
@@ -1670,66 +1692,76 @@ enum SubscriptionPlan {
 }
 
 model ConnectedAccount {
-  id                 String                  @id @default(uuid())
-  companyId          String
-  company            Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  userId             String
-  user               User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  unipileAccountId   String                  @unique
-  provider           MessagingProvider
-  status             ConnectedAccountStatus  @default(connecting)
-  hasMessaging       Boolean                 @default(false)
-  hasCalendar        Boolean                 @default(false)
-  emailAddress       String?
-  displayName        String?
-  sentFolderIds      String[]                @default([])
-  folders            Json                    @default("[]")
-  selectedFolderIds  String[]                @default([])
-  foldersSyncedAt    DateTime?
-  linkedinProducts   String[]                @default([])
-  signature          String?
-  signatureFields    Json?
-  shared             Boolean                 @default(false)
-  syncing            Boolean                 @default(false)
-  ownerAvatarUrl     String?
-  lastSyncedAt       DateTime?
-  backfillClaimedAt  DateTime?
-  backfillClaimToken String?
-  createdAt          DateTime                @default(now())
-  updatedAt          DateTime                @updatedAt
-  threads            MessagingThread[]
-  messages           MessagingMessage[]
-  calendars          Calendar[]
-  calendarEvents     CalendarEvent[]
-  inboundEvents      MessagingInboundEvent[]
-  accountActivities  AccountActivity[]
-  mailboxCredential  MailboxCredential?
+  id                    String                  @id @default(uuid())
+  companyId             String
+  company               Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId                String
+  user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  unipileAccountId      String                  @unique
+  provider              MessagingProvider
+  status                ConnectedAccountStatus  @default(connecting)
+  hasMessaging          Boolean                 @default(false)
+  hasCalendar           Boolean                 @default(false)
+  emailAddress          String?
+  displayName           String?
+  sentFolderIds         String[]                @default([])
+  folders               Json                    @default("[]")
+  selectedFolderIds     String[]                @default([])
+  foldersSyncedAt       DateTime?
+  linkedinProducts      String[]                @default([])
+  signature             String?
+  signatureFields       Json?
+  shared                Boolean                 @default(false)
+  syncing               Boolean                 @default(false)
+  ownerAvatarUrl        String?
+  lastSyncedAt          DateTime?
+  backfillClaimedAt     DateTime?
+  backfillClaimToken    String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  threads               MessagingThread[]
+  messages              MessagingMessage[]
+  calendars             Calendar[]
+  calendarEvents        CalendarEvent[]
+  inboundEvents         MessagingInboundEvent[]
+  accountActivities     AccountActivity[]
+  mailboxCredential     MailboxCredential?
+  mailboxCalendarEvents MailboxCalendarEvent[]
 
   @@index([companyId])
   @@index([userId])
   @@index([companyId, provider])
 }
 
+enum MailboxOAuthProvider {
+  google
+  microsoft
+}
+
 model MailboxCredential {
-  id                 String           @id @default(uuid())
-  companyId          String
-  company            Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  connectedAccountId String           @unique
-  connectedAccount   ConnectedAccount @relation(fields: [connectedAccountId], references: [id], onDelete: Cascade)
-  imapHost           String
-  imapPort           Int
-  imapSecure         Boolean          @default(true)
-  smtpHost           String?
-  smtpPort           Int?
-  smtpSecure         Boolean?
-  username           String
-  sealedSecret       String
-  syncCursors        Json             @default("[]")
-  backfillFrom       DateTime?
-  lastSyncedAt       DateTime?
-  lastVerifiedAt     DateTime?
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
+  id                  String                @id @default(uuid())
+  companyId           String
+  company             Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  connectedAccountId  String                @unique
+  connectedAccount    ConnectedAccount      @relation(fields: [connectedAccountId], references: [id], onDelete: Cascade)
+  imapHost            String
+  imapPort            Int
+  imapSecure          Boolean               @default(true)
+  smtpHost            String?
+  smtpPort            Int?
+  smtpSecure          Boolean?
+  username            String
+  sealedSecret        String
+  oauthProvider       MailboxOAuthProvider?
+  calendarSyncEnabled Boolean               @default(false)
+  calendarSyncCursor  String?
+  calendarSyncedAt    DateTime?
+  syncCursors         Json                  @default("[]")
+  backfillFrom        DateTime?
+  lastSyncedAt        DateTime?
+  lastVerifiedAt      DateTime?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 
   @@index([companyId])
 }
@@ -1753,10 +1785,15 @@ model MessagingThread {
   sharedToCrm         Boolean                      @default(false)
   linkedDealId        String?
   linkedDeal          Deal?                        @relation(fields: [linkedDealId], references: [id], onDelete: SetNull)
+  archivedAt          DateTime?
+  followUpAt          DateTime?
   createdAt           DateTime                     @default(now())
   updatedAt           DateTime                     @updatedAt
   messages            MessagingMessage[]
   participants        MessagingThreadParticipant[]
+  drafts              MailDraft[]
+  outboxMessages      MailOutboxMessage[]
+  labels              MessagingThreadLabel[]
 
   @@unique([connectedAccountId, unipileThreadId])
   @@index([companyId])
@@ -1829,6 +1866,142 @@ model MessagingMessage {
   @@index([messagingThreadId, sentAt])
   @@index([companyId, provider, senderIdentifier])
   @@index([folderIds], type: Gin)
+}
+
+enum MessageKind {
+  transactional
+  marketing
+}
+
+enum MessageDeliveryStatus {
+  sending
+  sent
+  failed
+  suppressed
+  delivered
+  bounced
+  complained
+}
+
+enum MessageDeliveryEventKind {
+  delivered
+  delayed
+  bounced
+  complained
+}
+
+enum SuppressionReason {
+  unsubscribed
+  bounced
+  complained
+  manual
+}
+
+model SenderIdentity {
+  id                String    @id @default(uuid())
+  companyId         String    @unique
+  company           Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  fromName          String
+  fromAddress       String
+  replyTo           String?
+  allowUserSenders  Boolean   @default(false)
+  verificationToken String
+  verifiedDomain    String?
+  verifiedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model MessageSuppression {
+  id              String            @id @default(uuid())
+  companyId       String
+  company         Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  address         String
+  reason          SuppressionReason
+  note            String?
+  deliveryId      String?
+  createdByUserId String?
+  createdAt       DateTime          @default(now())
+
+  @@unique([companyId, address])
+  @@index([companyId])
+}
+
+model UnsubscribeToken {
+  id         String    @id @default(uuid())
+  companyId  String
+  company    Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  address    String
+  deliveryId String?
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([companyId])
+}
+
+model MessageTemplate {
+  id              String      @id @default(uuid())
+  companyId       String
+  company         Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name            String
+  kind            MessageKind @default(transactional)
+  subject         String
+  bodyMarkdown    String
+  bannerUrl       String?
+  createdByUserId String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@unique([companyId, name])
+  @@index([companyId])
+}
+
+model MessageDelivery {
+  id                  String                 @id @default(uuid())
+  companyId           String
+  company             Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  kind                MessageKind
+  status              MessageDeliveryStatus  @default(sending)
+  source              String
+  dedupeKey           String
+  idempotencyKey      String
+  automationRunStepId String?
+  campaignId          String?
+  recipient           String
+  contactId           String?
+  subject             String
+  transport           String?
+  providerMessageId   String?
+  error               String?
+  attempts            Int                    @default(1)
+  sentAt              DateTime?
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  events              MessageDeliveryEvent[]
+
+  @@unique([companyId, dedupeKey])
+  @@index([companyId])
+  @@index([companyId, createdAt])
+  @@index([providerMessageId])
+  @@index([automationRunStepId])
+}
+
+model MessageDeliveryEvent {
+  id              String                   @id @default(uuid())
+  companyId       String
+  company         Company                  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  deliveryId      String
+  delivery        MessageDelivery          @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  kind            MessageDeliveryEventKind
+  occurredAt      DateTime
+  providerEventId String?
+  detail          String?
+  createdAt       DateTime                 @default(now())
+
+  @@unique([deliveryId, kind, occurredAt])
+  @@index([companyId])
+  @@index([deliveryId])
 }
 
 model MailAttachment {
@@ -2547,12 +2720,17 @@ model AutomationRun {
   startedAt      DateTime?
   finishedAt     DateTime?
   error          String?
+  claimToken     String?
+  dedupeKey      String?
+  causationDepth Int                 @default(0)
+  causationChain String[]            @default([])
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
   company        Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
   automation     Automation          @relation(fields: [automationId], references: [id], onDelete: Cascade)
   steps          AutomationRunStep[]
 
+  @@unique([companyId, automationId, dedupeKey])
   @@index([companyId])
   @@index([companyId, createdAt])
   @@index([automationId, createdAt])
@@ -2592,6 +2770,7 @@ model RecordFile {
   contactId        String?
   organizationId   String?
   dealId           String?
+  leadId           String?
   storageKey       String           @unique
   fileName         String
   contentType      String
@@ -2604,6 +2783,7 @@ model RecordFile {
   contact          Contact?         @relation(fields: [contactId], references: [id], onDelete: SetNull)
   organization     Organization?    @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   deal             Deal?            @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  lead             Lead?            @relation(fields: [leadId], references: [id], onDelete: SetNull)
   uploadedBy       User?            @relation(fields: [uploadedByUserId], references: [id], onDelete: SetNull)
 
   @@index([companyId])
@@ -2611,6 +2791,7 @@ model RecordFile {
   @@index([contactId])
   @@index([organizationId])
   @@index([dealId])
+  @@index([leadId])
 }
 
 enum RecordDocumentStatus {
@@ -2957,4 +3138,279 @@ model InvoicePayment {
 
   @@index([companyId])
   @@index([invoiceId])
+}
+
+enum BulkJobKind {
+  contactListFill
+  campaignSend
+}
+
+enum BulkJobStatus {
+  running
+  completed
+  failed
+  cancelled
+}
+
+model BulkJob {
+  id            String        @id @default(uuid())
+  companyId     String
+  company       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  kind          BulkJobKind
+  status        BulkJobStatus @default(running)
+  subjectId     String
+  definition    Json
+  cursor        String?
+  processed     Int           @default(0)
+  expectedTotal Int?
+  finalTotal    Int?
+  stale         Boolean       @default(false)
+  error         String?
+  createdById   String?
+  startedAt     DateTime      @default(now())
+  finishedAt    DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([companyId])
+  @@index([companyId, kind, subjectId])
+}
+
+model ContactList {
+  id          String              @id @default(uuid())
+  companyId   String
+  company     Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  createdById String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  members     ContactListMember[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+}
+
+model ContactListMember {
+  id        String      @id @default(uuid())
+  companyId String
+  company   Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  listId    String
+  list      ContactList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  contactId String
+  contact   Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  addedById String?
+  jobId     String?
+  createdAt DateTime    @default(now())
+
+  @@unique([listId, contactId])
+  @@index([companyId])
+  @@index([contactId])
+}
+
+enum CampaignStatus {
+  draft
+  sending
+  sent
+  cancelled
+  failed
+}
+
+enum CampaignRecipientStatus {
+  pending
+  sent
+  suppressed
+  failed
+  skipped
+}
+
+model Campaign {
+  id              String              @id @default(uuid())
+  companyId       String
+  company         Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name            String
+  status          CampaignStatus      @default(draft)
+  subject         String              @default("")
+  bodyMarkdown    String              @default("")
+  bannerUrl       String?
+  audience        Json
+  lawfulBasis     String?
+  senderUserId    String?
+  createdById     String?
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  sentCount       Int                 @default(0)
+  suppressedCount Int                 @default(0)
+  failedCount     Int                 @default(0)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  recipients      CampaignRecipient[]
+
+  @@index([companyId])
+  @@index([companyId, status])
+}
+
+model CampaignRecipient {
+  id         String                  @id @default(uuid())
+  companyId  String
+  company    Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  campaignId String
+  campaign   Campaign                @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contactId  String
+  email      String
+  status     CampaignRecipientStatus @default(pending)
+  deliveryId String?
+  error      String?
+  createdAt  DateTime                @default(now())
+  updatedAt  DateTime                @updatedAt
+
+  @@unique([campaignId, contactId])
+  @@index([companyId])
+  @@index([campaignId, status])
+}
+
+enum LeadAssignmentStrategy {
+  specificUser
+  roundRobin
+}
+
+model LeadAssignmentRule {
+  id                 String                 @id @default(uuid())
+  companyId          String
+  company            Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name               String
+  position           Int                    @default(0)
+  enabled            Boolean                @default(true)
+  conditions         Json
+  strategy           LeadAssignmentStrategy
+  userIds            String[]
+  lastAssignedUserId String?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  @@index([companyId, position])
+}
+
+enum MailComposeMode {
+  reply
+  forward
+}
+
+enum MailOutboxStatus {
+  scheduled
+  sending
+  sent
+  failed
+  cancelled
+}
+
+model MailDraft {
+  id                String          @id @default(uuid())
+  companyId         String
+  company           Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId            String
+  messagingThreadId String
+  thread            MessagingThread @relation(fields: [messagingThreadId], references: [id], onDelete: Cascade)
+  mode              MailComposeMode @default(reply)
+  replyAll          Boolean         @default(false)
+  body              String          @default("")
+  recipients        String[]        @default([])
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@unique([userId, messagingThreadId])
+  @@index([companyId])
+}
+
+model MailOutboxMessage {
+  id                String           @id @default(uuid())
+  companyId         String
+  company           Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId            String
+  messagingThreadId String
+  thread            MessagingThread  @relation(fields: [messagingThreadId], references: [id], onDelete: Cascade)
+  mode              MailComposeMode  @default(reply)
+  replyAll          Boolean          @default(false)
+  body              String
+  recipients        String[]         @default([])
+  status            MailOutboxStatus @default(scheduled)
+  sendAt            DateTime
+  attempts          Int              @default(0)
+  lastError         String?
+  claimedAt         DateTime?
+  sentAt            DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([companyId])
+  @@index([status, sendAt])
+  @@index([companyId, userId, status])
+}
+
+model MailLabel {
+  id        String                 @id @default(uuid())
+  companyId String
+  company   Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name      String
+  color     String                 @default("secondary")
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  threads   MessagingThreadLabel[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+}
+
+model MessagingThreadLabel {
+  id                String          @id @default(uuid())
+  companyId         String
+  company           Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  messagingThreadId String
+  thread            MessagingThread @relation(fields: [messagingThreadId], references: [id], onDelete: Cascade)
+  mailLabelId       String
+  label             MailLabel       @relation(fields: [mailLabelId], references: [id], onDelete: Cascade)
+  createdAt         DateTime        @default(now())
+
+  @@unique([messagingThreadId, mailLabelId])
+  @@index([companyId])
+  @@index([mailLabelId])
+}
+
+model MailboxCalendarEvent {
+  id                 String                        @id @default(uuid())
+  companyId          String
+  company            Company                       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  connectedAccountId String
+  connectedAccount   ConnectedAccount              @relation(fields: [connectedAccountId], references: [id], onDelete: Cascade)
+  providerEventId    String
+  title              String?
+  location           String?
+  startsAt           DateTime
+  endsAt             DateTime
+  allDay             Boolean                       @default(false)
+  cancelled          Boolean                       @default(false)
+  organizerEmail     String?
+  attendees          Json                          @default("[]")
+  webLink            String?
+  createdAt          DateTime                      @default(now())
+  updatedAt          DateTime                      @updatedAt
+  contacts           MailboxCalendarEventContact[]
+
+  @@unique([connectedAccountId, providerEventId])
+  @@index([companyId])
+  @@index([companyId, startsAt])
+}
+
+model MailboxCalendarEventContact {
+  id        String               @id @default(uuid())
+  companyId String
+  company   Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  eventId   String
+  event     MailboxCalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  contactId String
+  contact   Contact              @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, contactId])
+  @@index([companyId])
+  @@index([contactId])
 }

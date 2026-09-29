@@ -66,4 +66,12 @@ export class PrismaAutomationConditionMatcher extends BaseRepository implements 
 
     return matches > 0;
   }
+
+  async existsInTenant(args: { companyId: string; entityType: EntityType; entityId: string }): Promise<boolean> {
+    const model = DELEGATE_BY_ENTITY_TYPE[args.entityType];
+    const delegate = (this.prisma as unknown as Record<string, { count: (input: unknown) => Promise<number> }>)[model];
+    if (!delegate) return false;
+
+    return (await delegate.count({ where: { id: args.entityId, companyId: args.companyId } })) > 0;
+  }
 }

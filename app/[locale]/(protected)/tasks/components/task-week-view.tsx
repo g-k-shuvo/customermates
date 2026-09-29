@@ -42,6 +42,7 @@ import {
 } from "@/features/tasks/activity-week";
 
 import { ActivityCompleteToggle } from "./activity-complete-toggle";
+import { WeekCalendarDayList, WeekCalendarRow } from "./task-week-calendar-events";
 import { getSystemTaskNameTranslationKey } from "./system-task.config";
 
 const SLOT_HEIGHT_PX = 22;
@@ -277,6 +278,8 @@ const WeekDayList = observer(function WeekDayList() {
         ))}
       </div>
 
+      <WeekCalendarDayList />
+
       {allDay.length + timed.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("Activities.week.emptyDay")}</p>
       ) : (
@@ -426,6 +429,8 @@ export const TaskWeekView = observer(function TaskWeekView() {
                 <WeekAllDayCell key={day.toISOString()} dayIndex={dayIndex} items={store.layout.allDay[dayIndex]} />
               ))}
             </div>
+
+            <WeekCalendarRow />
 
             <div ref={scrollRef} className="max-h-[65svh] overflow-y-auto">
               <div className="grid grid-cols-[3.5rem_repeat(7,minmax(0,1fr))]">

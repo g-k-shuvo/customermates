@@ -4,7 +4,7 @@ import nodemailer from "nodemailer";
 import MailComposer from "nodemailer/lib/mail-composer";
 
 import type { BuiltReply } from "./build-reply";
-import type { MailboxConnection, MailboxTransport } from "../sync/mailbox-transport";
+import type { MailboxAuthMethod, MailboxConnection, MailboxTransport } from "../sync/mailbox-transport";
 import type { AddressLookup } from "../sync/resolve-imap-address";
 
 import { pinImapTarget } from "../sync/resolve-imap-address";
@@ -15,6 +15,7 @@ export type SmtpDelivery = {
   secure: boolean;
   username: string;
   secret: string;
+  authMethod?: MailboxAuthMethod;
 };
 
 export type PinnedSmtpDelivery = SmtpDelivery & { servername: string };
@@ -71,7 +72,10 @@ const nodemailerMailer: ReplyMailer = async (delivery, reply, messageId) => {
     secure: delivery.secure,
     requireTLS: !delivery.secure,
     servername: delivery.servername,
-    auth: { user: delivery.username, pass: delivery.secret },
+    auth:
+      delivery.authMethod === "oauth"
+        ? { type: "OAuth2", user: delivery.username, accessToken: delivery.secret }
+        : { user: delivery.username, pass: delivery.secret },
   });
 
   const recipients = [...reply.to, ...reply.cc];

@@ -18,6 +18,7 @@ const FILE_SELECT = {
   contactId: true,
   organizationId: true,
   dealId: true,
+  leadId: true,
   storageKey: true,
   fileName: true,
   contentType: true,
@@ -32,10 +33,11 @@ const PARENT_KEY = {
   contact: "contactId",
   organization: "organizationId",
   deal: "dealId",
+  lead: "leadId",
 } as const satisfies Record<RecordFileEntityType, keyof Prisma.RecordFileWhereInput>;
 
 function recordIdOf(row: FileRow): string {
-  return row.contactId ?? row.organizationId ?? row.dealId ?? "";
+  return row.contactId ?? row.organizationId ?? row.dealId ?? row.leadId ?? "";
 }
 
 function toDto(row: FileRow): RecordFileDto {
@@ -75,13 +77,19 @@ export class PrismaRecordFileRepo
   private parentWhere(entityType: RecordFileEntityType): Prisma.RecordFileWhereInput {
     if (entityType === "contact") return { entityType, contact: this.accessWhere("contact") };
     if (entityType === "organization") return { entityType, organization: this.accessWhere("organization") };
+    if (entityType === "lead") return { entityType, lead: this.accessWhere("lead") };
     return { entityType, deal: this.accessWhere("deal") };
   }
 
   private readableWhere(): Prisma.RecordFileWhereInput {
     return {
       companyId: this.companyId,
-      OR: [this.parentWhere("contact"), this.parentWhere("organization"), this.parentWhere("deal")],
+      OR: [
+        this.parentWhere("contact"),
+        this.parentWhere("organization"),
+        this.parentWhere("deal"),
+        this.parentWhere("lead"),
+      ],
     };
   }
 
@@ -93,6 +101,9 @@ export class PrismaRecordFileRepo
         (await this.prisma.organization.count({ where: { id: recordId, ...this.accessWhere("organization") } })) > 0
       );
     }
+
+    if (entityType === "lead")
+      return (await this.prisma.lead.count({ where: { id: recordId, ...this.accessWhere("lead") } })) > 0;
 
     return (await this.prisma.deal.count({ where: { id: recordId, ...this.accessWhere("deal") } })) > 0;
   }
@@ -194,7 +205,7 @@ export class PrismaRecordFileRepo
       where: {
         OR: [
           { status: RecordFileStatus.pending, createdAt: { lt: args.pendingBefore } },
-          { contactId: null, organizationId: null, dealId: null },
+          { contactId: null, organizationId: null, dealId: null, leadId: null },
         ],
       },
       orderBy: { createdAt: "asc" },

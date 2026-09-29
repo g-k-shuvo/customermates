@@ -12,7 +12,7 @@ import type { TriggerAutomationsRepo } from "@/features/automation/trigger-autom
 
 import { UserAccessor } from "@/core/base/user-accessor";
 import { currentRoutineContext } from "@/core/decorators/routine-context";
-import { automationCausationExhausted } from "@/core/decorators/automation-context";
+import { automationCausationExhausted, automationCausationForChild } from "@/core/decorators/automation-context";
 import { automationTriggerForEvent, changedFieldsMatch } from "@/features/automation/automation-trigger-map";
 import { fieldChangesIn } from "@/features/event/changed-fields";
 import { SubscribableWebhookEventSchema, WebhookEventSchema } from "@/features/webhook/webhook.schema";
@@ -160,8 +160,12 @@ export class EventService extends UserAccessor {
     );
     if (fieldMatches.length === 0) return 0;
 
+    const causation = automationCausationForChild();
     const entityId = payload.entityId;
-    const matched = fieldMatches.map((automation) => automation.id);
+    const matched = fieldMatches
+      .map((automation) => automation.id)
+      .filter((automationId) => !causation?.chain.includes(automationId));
+    if (matched.length === 0) return 0;
 
     const admitted = await this.automationRepo.admitAutomationRunsUnscoped({
       companyId,
@@ -170,6 +174,7 @@ export class EventService extends UserAccessor {
       entityId: entityId ?? null,
       triggerEvent: event,
       triggerPayload: payload,
+      causation,
     });
 
     await Promise.all(

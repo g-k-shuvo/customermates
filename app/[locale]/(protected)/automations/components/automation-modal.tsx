@@ -1,33 +1,37 @@
 "use client";
 
 import type { AutomationDto } from "@/features/automation/automation.schema";
-import type { AutomationStepData } from "@/features/automation/automation-action.schema";
 
 import { useEffect, useState } from "react";
+import { observer } from "mobx-react-lite";
 import { useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 
-import { AutomationActionKind, AutomationTriggerKind, EntityType } from "@/generated/prisma";
+import { AutomationTriggerKind } from "@/generated/prisma";
 
-import type { AutomationTriggerEntityType } from "@/features/automation/automation.schema";
 import { AUTOMATION_TRIGGER_ENTITY_TYPES } from "@/features/automation/automation.schema";
 
+import { AutomationModalStore } from "./automation-modal.store";
 import { AutomationStepFields } from "./automation-step-fields";
 
+import { AppChip } from "@/components/chip/app-chip";
+import { FilterAccordion } from "@/components/data-view/filter-modal/filter-accordion";
+import { AppForm } from "@/components/forms/form-context";
+import { FormAutocomplete } from "@/components/forms/form-autocomplete";
+import { FormInput } from "@/components/forms/form-input";
+import { FormLabel } from "@/components/forms/form-label";
+import { FormSelect } from "@/components/forms/form-select";
 import { Button } from "@/components/ui/button";
 import { AppModal } from "@/components/modal";
 import { AppCard } from "@/components/card/app-card";
 import { AppCardHeader } from "@/components/card/app-card-header";
 import { AppCardBody } from "@/components/card/app-card-body";
 import { AppCardFooter } from "@/components/card/app-card-footer";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { runUserAction } from "@/core/errors/report-application-error";
-import { toastZodErrorTree } from "@/core/utils/toast-zod-error-tree";
-import { toast } from "sonner";
+import { reportApplicationError, runUserAction } from "@/core/errors/report-application-error";
+import { useRootStore } from "@/core/stores/root-store.provider";
+import { useChangeFieldLabel } from "@/components/entity-terminology/use-change-field-label";
 import { useEntityTerminology } from "@/components/entity-terminology/use-entity-terminology";
-import { upsertAutomationAction } from "../actions";
 
 type Props = {
   automation: AutomationDto | null;
@@ -36,51 +40,35 @@ type Props = {
   onSaved: () => void;
 };
 
-const DEFAULT_STEP: AutomationStepData = {
-  kind: AutomationActionKind.createTask,
-  config: { name: "", activityKind: null, dueInDays: null, assigneeUserId: null, linkToTriggerRecord: true },
-};
-
-export function AutomationModal({ automation, isOpen, onClose, onSaved }: Props) {
+export const AutomationModal = observer(({ automation, isOpen, onClose, onSaved }: Props) => {
   const t = useTranslations();
+  const rootStore = useRootStore();
   const { singular } = useEntityTerminology();
-
-  const [name, setName] = useState("");
-  const [triggerKind, setTriggerKind] = useState<AutomationTriggerKind>(AutomationTriggerKind.recordCreated);
-  const [entityType, setEntityType] = useState<AutomationTriggerEntityType>(EntityType.deal);
-  const [schedule, setSchedule] = useState("0 9 * * 1");
-  const [steps, setSteps] = useState<AutomationStepData[]>([DEFAULT_STEP]);
+  const changeFieldLabel = useChangeFieldLabel();
+  const [store] = useState(() => new AutomationModalStore(rootStore));
+  const { form } = store;
 
   useEffect(() => {
     if (!isOpen) return;
 
-    setName(automation?.name ?? "");
-    setTriggerKind(automation?.triggerKind ?? AutomationTriggerKind.recordCreated);
-    setEntityType((automation?.entityType as AutomationTriggerEntityType | null) ?? EntityType.deal);
-    setSchedule(automation?.schedule ?? "0 9 * * 1");
-    setSteps(
-      automation && automation.steps.length > 0
-        ? automation.steps.map((step) => ({ kind: step.kind, config: step.config }) as AutomationStepData)
-        : [DEFAULT_STEP],
-    );
-  }, [automation, isOpen]);
-
-  const isSchedule = triggerKind === AutomationTriggerKind.schedule;
+    store.open(automation);
+    void store.loadFields().catch(reportApplicationError);
+  }, [store, automation, isOpen]);
 
   const save = () =>
     runUserAction(async () => {
-      const result = await upsertAutomationAction({
-        ...(automation ? { id: automation.id } : {}),
-        name,
-        triggerKind,
-        ...(isSchedule ? { entityType: null } : { entityType }),
-        schedule: isSchedule ? schedule : null,
-        steps,
-      });
-
-      if (result?.ok) onSaved();
-      else if (!toastZodErrorTree(result?.error)) toast.error(t("Common.notifications.unexpectedError"));
+      if (await store.save()) onSaved();
     });
+
+  const triggerItems = Object.values(AutomationTriggerKind).map((kind) => ({
+    value: kind,
+    label: t(`Automations.triggerKinds.${kind}`),
+  }));
+  const entityItems = AUTOMATION_TRIGGER_ENTITY_TYPES.map((entityType) => ({
+    value: entityType,
+    label: singular(entityType),
+  }));
+  const changeItems = store.changeFields.map((field) => ({ key: field }));
 
   return (
     <AppModal
@@ -89,113 +77,114 @@ export function AutomationModal({ automation, isOpen, onClose, onSaved }: Props)
       title={automation ? t("Automations.editTitle") : t("Automations.createTitle")}
       onClose={onClose}
     >
-      <AppCard>
-        <AppCardHeader>
-          <h2 className="text-x-lg">{automation ? t("Automations.editTitle") : t("Automations.createTitle")}</h2>
-        </AppCardHeader>
+      <AppForm store={store}>
+        <AppCard>
+          <AppCardHeader>
+            <h2 className="text-x-lg">{automation ? t("Automations.editTitle") : t("Automations.createTitle")}</h2>
+          </AppCardHeader>
 
-        <AppCardBody>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="automation-name">{t("Automations.fields.name")}</Label>
+          <AppCardBody>
+            <FormInput id="name" label={t("Automations.fields.name")} />
 
-            <Input id="automation-name" value={name} onChange={(event) => setName(event.target.value)} />
-          </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FormSelect id="triggerKind" items={triggerItems} label={t("Automations.fields.trigger")} />
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="automation-trigger">{t("Automations.fields.trigger")}</Label>
-
-              <Select value={triggerKind} onValueChange={(next) => setTriggerKind(next as AutomationTriggerKind)}>
-                <SelectTrigger id="automation-trigger">
-                  <SelectValue />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {Object.values(AutomationTriggerKind).map((kind) => (
-                    <SelectItem key={kind} value={kind}>
-                      {t(`Automations.triggerKinds.${kind}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {store.isSchedule ? (
+                <FormInput id="schedule" label={t("Automations.fields.schedule")} />
+              ) : (
+                <FormSelect id="entityType" items={entityItems} label={t("Automations.fields.entityType")} />
+              )}
             </div>
 
-            {isSchedule ? (
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="automation-schedule">{t("Automations.fields.schedule")}</Label>
+            {store.watchesChanges && changeItems.length > 0 && (
+              <div className="space-y-1.5" data-automation-changed-fields="">
+                <FormAutocomplete
+                  id="changedFields"
+                  items={changeItems}
+                  label={t("Automations.fields.changedFields")}
+                  renderValue={(items) =>
+                    items.map((item) => (
+                      <AppChip key={item.key}>{changeFieldLabel(item.key, store.customColumns)}</AppChip>
+                    ))
+                  }
+                  selectionMode="multiple"
+                >
+                  {(item) => <span>{changeFieldLabel(item.key, store.customColumns)}</span>}
+                </FormAutocomplete>
 
-                <Input
-                  id="automation-schedule"
-                  value={schedule}
-                  onChange={(event) => setSchedule(event.target.value)}
-                />
-              </div>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="automation-entity">{t("Automations.fields.entityType")}</Label>
-
-                <Select value={entityType} onValueChange={(next) => setEntityType(next as AutomationTriggerEntityType)}>
-                  <SelectTrigger id="automation-entity">
-                    <SelectValue />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {AUTOMATION_TRIGGER_ENTITY_TYPES.map((candidate) => (
-                      <SelectItem key={candidate} value={candidate}>
-                        {singular(candidate)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <p className="text-subdued text-xs">{t("Automations.changedFieldsHelp")}</p>
               </div>
             )}
-          </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <Label>{t("Automations.fields.steps")}</Label>
+            {!store.isSchedule && store.filterableFields.length > 0 && (
+              <div className="space-y-1.5" data-automation-conditions="">
+                <FormLabel>{t("Automations.fields.conditions")}</FormLabel>
 
-              <Button size="sm" variant="secondary" onClick={() => setSteps([...steps, DEFAULT_STEP])}>
-                <Plus className="size-4" />
+                <FilterAccordion
+                  baseId="conditions"
+                  customColumns={store.customColumns}
+                  filterableFields={store.filterableFields}
+                  filters={form.conditions as never}
+                  variant="grouped"
+                />
 
-                {t("Automations.addStep")}
-              </Button>
-            </div>
+                <p className="text-subdued text-xs">{t("Automations.conditionsHelp")}</p>
+              </div>
+            )}
 
-            {steps.map((step, index) => (
-              <div key={`${step.kind}-${index}`} className="flex items-start gap-2 rounded-md border p-3">
-                <div className="min-w-0 flex-1">
-                  <AutomationStepFields
-                    entityType={isSchedule ? null : entityType}
-                    step={step}
-                    onChange={(next) => setSteps(steps.map((current, at) => (at === index ? next : current)))}
-                  />
-                </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <Label>{t("Automations.fields.steps")}</Label>
 
-                <Button
-                  aria-label={t("Automations.removeStep")}
-                  disabled={steps.length === 1}
-                  size="icon-sm"
-                  variant="ghost"
-                  onClick={() => setSteps(steps.filter((_, at) => at !== index))}
-                >
-                  <Trash2 className="size-4" />
+                <Button size="sm" type="button" variant="secondary" onClick={store.addStep}>
+                  <Plus className="size-4" />
+
+                  {t("Automations.addStep")}
                 </Button>
               </div>
-            ))}
-          </div>
-        </AppCardBody>
 
-        <AppCardFooter>
-          <Button variant="secondary" onClick={onClose}>
-            {t("Common.actions.cancel")}
-          </Button>
+              {form.steps.map((step, index) => (
+                <div key={store.stepKeys[index] ?? index} className="flex items-start gap-2 rounded-md border p-3">
+                  <div className="min-w-0 flex-1">
+                    <AutomationStepFields
+                      entityType={store.isSchedule ? null : form.entityType}
+                      options={store.stepOptions}
+                      step={step}
+                      onChange={(next) => store.setStep(index, next)}
+                    />
+                  </div>
 
-          <Button disabled={name.trim().length === 0} id="automation-modal-save" onClick={save}>
-            {t("Common.actions.save")}
-          </Button>
-        </AppCardFooter>
-      </AppCard>
+                  <Button
+                    aria-label={t("Automations.removeStep")}
+                    disabled={form.steps.length === 1}
+                    size="icon-sm"
+                    type="button"
+                    variant="ghost"
+                    onClick={() => store.removeStep(index)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </AppCardBody>
+
+          <AppCardFooter>
+            <Button type="button" variant="secondary" onClick={onClose}>
+              {t("Common.actions.cancel")}
+            </Button>
+
+            <Button
+              disabled={form.name.trim().length === 0 || store.isLoading}
+              id="automation-modal-save"
+              type="button"
+              onClick={save}
+            >
+              {t("Common.actions.save")}
+            </Button>
+          </AppCardFooter>
+        </AppCard>
+      </AppForm>
     </AppModal>
   );
-}
+});

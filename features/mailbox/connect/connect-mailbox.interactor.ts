@@ -20,7 +20,7 @@ import { fail, failConflict, failUnavailable } from "@/core/validation/interacto
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const FAILURE_CODES: Record<MailboxTransportFailure, CustomErrorCode> = {
+export const FAILURE_CODES: Record<MailboxTransportFailure, CustomErrorCode> = {
   hostRejected: CustomErrorCode.mailboxHostRejected,
   unresolvableHost: CustomErrorCode.mailboxUnreachable,
   connectionRefused: CustomErrorCode.mailboxUnreachable,

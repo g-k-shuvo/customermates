@@ -1,4 +1,4 @@
-import { getSweepDueAutomationsInteractor } from "@/core/di";
+import { getReconcileAutomationRunsInteractor, getSweepDueAutomationsInteractor } from "@/core/di";
 import { env } from "@/env";
 
 export const runtime = "nodejs";
@@ -12,7 +12,12 @@ export async function GET(req: Request) {
   if (env.APP_MODE === "demo") return Response.json({ skipped: "demo-mode" });
   if (env.VERCEL_ENV === "preview") return Response.json({ skipped: "preview-environment" });
 
+  const reconciled = await getReconcileAutomationRunsInteractor().invoke();
   const swept = await getSweepDueAutomationsInteractor().invoke();
 
-  return Response.json({ ok: true, ...(swept.ok ? swept.data : {}) });
+  return Response.json({
+    ok: true,
+    ...(swept.ok ? swept.data : {}),
+    settledRuns: reconciled.ok ? reconciled.data.settled : 0,
+  });
 }

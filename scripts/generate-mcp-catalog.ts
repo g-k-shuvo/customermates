@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { MCP_ALWAYS_ON_TOOLS, MCP_TOOL_GROUPS } from "@/features/mcp-tools/tool-registry";
+import { MCP_ALWAYS_ON_TOOLS, MCP_SERVER_ONLY_TOOL_GROUPS, MCP_TOOL_GROUPS } from "@/features/mcp-tools/tool-registry";
 import type { McpTool } from "@/features/mcp-tools/mcp-tool";
 import { CONTENT_LOCALES, type ContentLocale } from "@/i18n/locale-registry";
 
@@ -21,6 +21,7 @@ export const CATALOG_SECTIONS: Record<string, McpTool[]> = {
   webhooks: MCP_TOOL_GROUPS.webhooks,
   admin: MCP_TOOL_GROUPS.admin,
   support: MCP_TOOL_GROUPS.support,
+  leads: MCP_SERVER_ONLY_TOOL_GROUPS.leads,
 };
 
 export type CatalogSummaries = Record<string, string>;

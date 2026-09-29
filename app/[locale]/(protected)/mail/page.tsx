@@ -3,7 +3,12 @@ import { z } from "zod";
 import { MailPageView } from "./components/mail-page-view";
 
 import { PageContainer } from "@/components/shared/page-container";
-import { getGetMailboxFoldersInteractor, getGetMailboxThreadsInteractor } from "@/core/di";
+import {
+  getGetMailboxFoldersInteractor,
+  getGetMailboxThreadsInteractor,
+  getGetMailLabelsInteractor,
+  getGetMailOutboxInteractor,
+} from "@/core/di";
 import { requireAccess } from "@/features/auth/next/require";
 
 type Props = {
@@ -18,6 +23,8 @@ export default async function MailPage({ searchParams }: Props) {
 
   const threadsResult = await getGetMailboxThreadsInteractor().invoke({});
   const foldersResult = await getGetMailboxFoldersInteractor().invoke();
+  const labelsResult = await getGetMailLabelsInteractor().invoke();
+  const outboxResult = await getGetMailOutboxInteractor().invoke();
 
   return (
     <PageContainer>
@@ -25,6 +32,8 @@ export default async function MailPage({ searchParams }: Props) {
         <MailPageView
           folders={foldersResult.ok ? foldersResult.data : []}
           initialThreadId={initialThreadId}
+          labels={labelsResult.ok ? labelsResult.data : []}
+          outbox={outboxResult.ok ? outboxResult.data : []}
           threads={threadsResult.ok ? threadsResult.data : []}
         />
       </div>

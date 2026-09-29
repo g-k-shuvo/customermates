@@ -293,6 +293,10 @@ export class PrismaContactRepo
     return this.prisma.contact.count({ where });
   }
 
+  async contactWhereFor(params: GetQueryParams): Promise<Prisma.ContactWhereInput> {
+    return (await this.buildQueryArgs(params, this.accessWhere("contact"))).where;
+  }
+
   private exportWhere(selectedIds?: string[]): Prisma.ContactWhereInput {
     const scoped = this.accessWhere("contact");
 

@@ -101,6 +101,9 @@ function thread(sharedToCrm: boolean, dealLink: MailboxThreadDealLinkDto = NO_DE
     unread: false,
     sharedToCrm,
     participants: [{ identifier: "alice@vendor.example", displayName: "Alice" }],
+    archived: false,
+    followUpAt: null,
+    labels: [],
     messages: [
       {
         id: "message-1",

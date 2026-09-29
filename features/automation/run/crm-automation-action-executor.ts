@@ -15,7 +15,7 @@ import type { InteractorFailure } from "@/core/validation/validation.utils";
 import { AutomationActionKind, AutomationTriggerKind, EntityType, LeadStatus } from "@/generated/prisma";
 
 import { automationTriggerForEvent } from "../automation-trigger-map";
-import { DEAL_WRITABLE_FIELDS, resolveFieldWrite } from "./automation-field-writes";
+import { DEAL_WRITABLE_FIELDS, isCustomFieldKey, resolveFieldWrite } from "./automation-field-writes";
 
 import {
   AddLabelConfigSchema,
@@ -90,7 +90,7 @@ export class CrmAutomationActionExecutor implements AutomationActionExecutor {
       case AutomationActionKind.createLead:
         return await this.runCreateLead(args.config);
       case AutomationActionKind.sendEmail:
-        return await this.runSendEmail(args.config);
+        return await this.runSendEmail(args.config, args.context);
       case AutomationActionKind.callWebhook:
         return await this.runCallWebhook(args.config, args.context);
       default:
@@ -102,6 +102,15 @@ export class CrmAutomationActionExecutor implements AutomationActionExecutor {
     const parsed = UpdateFieldConfigSchema.safeParse(config);
     if (!parsed.success) return invalid();
     if (!context.entityType || !context.entityId) return noRecord();
+
+    if (isCustomFieldKey(parsed.data.field)) {
+      return await this.records.setCustomField({
+        entityType: context.entityType,
+        entityId: context.entityId,
+        columnId: parsed.data.field,
+        value: parsed.data.value,
+      });
+    }
 
     if (context.entityType === EntityType.deal)
       return await this.updateDealField(context.entityId, parsed.data.field, parsed.data.value);
@@ -239,17 +248,25 @@ export class CrmAutomationActionExecutor implements AutomationActionExecutor {
       : { ok: true, output: { leadId: outcome.data.id } };
   }
 
-  private async runSendEmail(config: unknown): Promise<AutomationActionOutcome> {
+  private async runSendEmail(config: unknown, context: AutomationActionContext): Promise<AutomationActionOutcome> {
     const parsed = SendEmailConfigSchema.safeParse(config);
     if (!parsed.success) return invalid();
 
-    const sent = await this.emailSender.send({
-      to: parsed.data.to,
+    const result = await this.emailSender.send({
+      recipient: parsed.data.recipient,
       subject: parsed.data.subject,
       body: parsed.data.body,
+      bannerUrl: parsed.data.bannerUrl,
+      runStepId: context.runStepId,
+      record:
+        context.entityType && context.entityId && triggerRecordSurvives(context)
+          ? { entityType: context.entityType, entityId: context.entityId }
+          : null,
     });
 
-    return sent ? { ok: true, output: { to: parsed.data.to } } : { ok: false, error: "the email was not accepted" };
+    return result.sent
+      ? { ok: true, output: { to: result.to, ...(result.duplicate ? { duplicate: true } : {}) } }
+      : { ok: false, error: result.code };
   }
 
   private async runCallWebhook(config: unknown, context: AutomationActionContext): Promise<AutomationActionOutcome> {

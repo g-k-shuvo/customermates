@@ -3,6 +3,7 @@ import type { EntityType } from "@/generated/prisma";
 
 export type AutomationActionContext = {
   run: AutomationRunPlan;
+  runStepId: string;
   entityType: EntityType | null;
   entityId: string | null;
 };

@@ -31,6 +31,8 @@ import { CustomErrorCode } from "@/core/validation/validation.types";
 
 import { CreateRecordFileUploadInteractor } from "../upload/create-record-file-upload.interactor";
 import { CompleteRecordFileUploadInteractor } from "../upload/complete-record-file-upload.interactor";
+import { NULL_VIRUS_SCANNER, VirusScanUnavailableError } from "@/core/storage/virus-scanner";
+import { StorageQuota } from "@/core/storage/storage-quota";
 import { GetRecordFileDownloadInteractor } from "../get/get-record-file-download.interactor";
 import { DeleteRecordFileInteractor } from "../delete/delete-record-file.interactor";
 import { SweepRecordFilesInteractor } from "../sweep/sweep-record-files.interactor";
@@ -96,14 +98,22 @@ beforeEach(() => {
   mockUser = createMockUser();
 });
 
+const quotaWith = (usedBytes: number, quotaBytes: number | null) =>
+  new StorageQuota({ usedBytesCompanyWide: () => Promise.resolve(usedBytes) }, quotaBytes);
+const unlimited = quotaWith(0, null);
+
 describe("CreateRecordFileUploadInteractor", () => {
-  function setup(storageOverrides: Partial<StorageProvider> = {}, accessible = true) {
+  function setup(storageOverrides: Partial<StorageProvider> = {}, accessible = true, quota = unlimited) {
     const repo = {
       isRecordAccessible: vi.fn(() => Promise.resolve(accessible)),
       createPendingFile: vi.fn((args: Record<string, unknown>) => Promise.resolve({ ...FILE_DTO, ...args })),
     };
     const { provider, spies } = storage(storageOverrides);
-    return { repo, spies, interactor: new CreateRecordFileUploadInteractor(repo as never, provider, userService) };
+    return {
+      repo,
+      spies,
+      interactor: new CreateRecordFileUploadInteractor(repo as never, provider, userService, quota),
+    };
   }
 
   const request = {
@@ -134,6 +144,17 @@ describe("CreateRecordFileUploadInteractor", () => {
       contentType: "application/pdf",
       byteSize: 2048,
     });
+  });
+
+  it("refuses an upload that would exceed the workspace quota, and accepts one that fits", async () => {
+    const over = setup({}, true, quotaWith(1024 * 1024 - 1000, 1024 * 1024));
+    expect(issueCodes(await over.interactor.invoke(request))).toEqual([
+      ["byteSize", CustomErrorCode.storageQuotaExceeded],
+    ]);
+    expect(over.repo.createPendingFile).not.toHaveBeenCalled();
+
+    const fits = setup({}, true, quotaWith(1024 * 1024 - 4096, 1024 * 1024));
+    expect((await fits.interactor.invoke(request)).ok).toBe(true);
   });
 
   it("refuses a file the policy rejects, naming the field, and creates nothing", async () => {
@@ -178,6 +199,8 @@ describe("CreateRecordFileUploadInteractor", () => {
   });
 });
 
+const scanner = NULL_VIRUS_SCANNER;
+
 describe("CompleteRecordFileUploadInteractor", () => {
   const pending = {
     id: FILE_ID,
@@ -196,7 +219,11 @@ describe("CompleteRecordFileUploadInteractor", () => {
       deletePendingFile: vi.fn(() => Promise.resolve()),
     };
     const { provider, spies } = storage({ statObject: vi.fn(() => Promise.resolve(stat)) });
-    return { repo, spies, interactor: new CompleteRecordFileUploadInteractor(repo as never, provider, userService) };
+    return {
+      repo,
+      spies,
+      interactor: new CompleteRecordFileUploadInteractor(repo as never, provider, userService, scanner),
+    };
   }
 
   it("lists the file once the stored object has the registered size and type", async () => {
@@ -232,11 +259,64 @@ describe("CompleteRecordFileUploadInteractor", () => {
       statObject: vi.fn(() => Promise.reject(new StorageError(StorageFailure.unavailable))),
     });
 
-    const result = await new CompleteRecordFileUploadInteractor(repo as never, provider, userService).invoke({
+    const result = await new CompleteRecordFileUploadInteractor(repo as never, provider, userService, scanner).invoke({
       id: FILE_ID,
     });
 
     expect(issueCodes(result)).toEqual([["", CustomErrorCode.fileStorageUnavailable]]);
+  });
+
+  it("scans the stored object and drops an infected upload", async () => {
+    const repo = {
+      findPendingFileOrNull: vi.fn(() => Promise.resolve(pending)),
+      markFileReadyOrNull: vi.fn(() => Promise.resolve(FILE_DTO)),
+      deletePendingFile: vi.fn(() => Promise.resolve()),
+    };
+    const { provider, spies } = storage({
+      getObject: vi.fn(() =>
+        Promise.resolve({ byteSize: 2048, contentType: "application/pdf", body: new ReadableStream() }),
+      ),
+    });
+    const infected = {
+      configured: true,
+      scan: vi.fn(() => Promise.resolve({ clean: false as const, signature: "Eicar-Test-Signature" })),
+    };
+
+    const result = await new CompleteRecordFileUploadInteractor(repo as never, provider, userService, infected).invoke({
+      id: FILE_ID,
+    });
+
+    expect(issueCodes(result)).toEqual([["id", CustomErrorCode.fileInfected]]);
+    expect(spies.deleteObject).toHaveBeenCalledWith(pending.storageKey);
+    expect(repo.deletePendingFile).toHaveBeenCalledWith(FILE_ID);
+    expect(repo.markFileReadyOrNull).not.toHaveBeenCalled();
+  });
+
+  it("refuses an upload while a configured scanner is unreachable, and keeps a clean one", async () => {
+    const repo = {
+      findPendingFileOrNull: vi.fn(() => Promise.resolve(pending)),
+      markFileReadyOrNull: vi.fn(() => Promise.resolve(FILE_DTO)),
+      deletePendingFile: vi.fn(() => Promise.resolve()),
+    };
+    const { provider } = storage({
+      getObject: vi.fn(() =>
+        Promise.resolve({ byteSize: 2048, contentType: "application/pdf", body: new ReadableStream() }),
+      ),
+    });
+    const down = { configured: true, scan: vi.fn(() => Promise.reject(new VirusScanUnavailableError("down"))) };
+    const clean = { configured: true, scan: vi.fn(() => Promise.resolve({ clean: true as const })) };
+
+    const refused = await new CompleteRecordFileUploadInteractor(repo as never, provider, userService, down).invoke({
+      id: FILE_ID,
+    });
+    expect(issueCodes(refused)).toEqual([["", CustomErrorCode.virusScanUnavailable]]);
+    expect(repo.deletePendingFile).not.toHaveBeenCalled();
+
+    const kept = await new CompleteRecordFileUploadInteractor(repo as never, provider, userService, clean).invoke({
+      id: FILE_ID,
+    });
+    expect(kept.ok).toBe(true);
+    expect(clean.scan).toHaveBeenCalledTimes(1);
   });
 });
 

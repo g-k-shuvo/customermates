@@ -1,5 +1,6 @@
 import type { Data, Validated } from "@/core/validation/validation.utils";
 import type { StorageProvider } from "@/core/storage/storage-provider";
+import type { StorageQuota } from "@/core/storage/storage-quota";
 import type { UserService } from "@/features/user/user.service";
 import type { CreateRecordDocumentRepo } from "./create-record-document.repo";
 
@@ -19,9 +20,14 @@ import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
 import { Write } from "@/core/decorators/write.decorator";
 import { mintStorageKey } from "@/core/storage/storage-key";
-import { failAuthorization, failNotFound, failUnavailable } from "@/core/validation/interactor-failure-server";
+import {
+  failAuthorization,
+  failConflict,
+  failNotFound,
+  failUnavailable,
+} from "@/core/validation/interactor-failure-server";
 import { CustomErrorCode } from "@/core/validation/validation.types";
-import { RecordFileEntityTypeSchema } from "@/features/record-files/record-file.schema";
+import { RecordDocumentEntityTypeSchema } from "@/features/record-files/record-file.schema";
 import {
   RECORD_FILE_RESOURCE,
   RECORD_FILE_WRITE_PERMISSIONS,
@@ -30,7 +36,7 @@ import {
 } from "@/features/record-files/record-file-access";
 
 export const CreateRecordDocumentSchema = RecordDocumentPdfSchema.extend({
-  entityType: RecordFileEntityTypeSchema,
+  entityType: RecordDocumentEntityTypeSchema,
   recordId: z.uuid(),
   title: z.string().trim().min(1).max(RECORD_DOCUMENT_TITLE_MAX_LENGTH).optional(),
   status: RecordDocumentStatusSchema.optional(),
@@ -47,6 +53,7 @@ export class CreateRecordDocumentInteractor extends AuthenticatedInteractor<
     private repo: CreateRecordDocumentRepo,
     private storage: StorageProvider,
     private userService: UserService,
+    private quota: StorageQuota,
   ) {
     super();
   }
@@ -68,6 +75,9 @@ export class CreateRecordDocumentInteractor extends AuthenticatedInteractor<
       maxBytes: this.storage.maxUploadBytes,
     });
     if (!checked.ok) return documentPdfRefusal(checked);
+
+    if (!(await this.quota.allows(data.byteSize)))
+      return failConflict(CustomErrorCode.storageQuotaExceeded, ["byteSize"]);
 
     const storageKey = mintStorageKey({
       companyId: this.companyId,

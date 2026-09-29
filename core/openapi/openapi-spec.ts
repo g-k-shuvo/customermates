@@ -71,6 +71,38 @@ import {
   undoOrganizationMergeOperation,
 } from "@/features/duplicates/merge/merge-organizations.openapi";
 import { getInvoiceOperation, getInvoicesOperation } from "@/features/invoices/get/get-invoices.openapi";
+import { getBulkJobOperation } from "@/features/bulk-job/get/get-bulk-job.openapi";
+import {
+  getContactListMembersOperation,
+  getContactListOperation,
+  getContactListsOperation,
+} from "@/features/contact-lists/get/get-contact-lists.openapi";
+import {
+  createContactListOperation,
+  updateContactListOperation,
+} from "@/features/contact-lists/upsert/upsert-contact-list.openapi";
+import { deleteContactListOperation } from "@/features/contact-lists/delete/delete-contact-list.openapi";
+import {
+  addContactListMembersOperation,
+  removeContactListMembersOperation,
+} from "@/features/contact-lists/members/change-contact-list-members.openapi";
+import { fillContactListOperation } from "@/features/contact-lists/fill/fill-contact-list.openapi";
+import { previewAudienceOperation } from "@/features/audience/preview/preview-audience.openapi";
+import { getStorageUsageOperation } from "@/features/storage-usage/get-storage-usage.openapi";
+import { getLeadAssignmentRulesOperation } from "@/features/lead-assignment/get/get-lead-assignment-rules.openapi";
+import {
+  createLeadAssignmentRuleOperation,
+  deleteLeadAssignmentRuleOperation,
+  updateLeadAssignmentRuleOperation,
+} from "@/features/lead-assignment/upsert/upsert-lead-assignment-rule.openapi";
+import {
+  getCampaignOperation,
+  getCampaignRecipientsOperation,
+  getCampaignsOperation,
+} from "@/features/campaigns/get/get-campaigns.openapi";
+import { createCampaignOperation, updateCampaignOperation } from "@/features/campaigns/upsert/upsert-campaign.openapi";
+import { deleteCampaignOperation } from "@/features/campaigns/delete/delete-campaign.openapi";
+import { cancelCampaignOperation, sendCampaignOperation } from "@/features/campaigns/send/send-campaign.openapi";
 import {
   createInvoiceOperation,
   deleteInvoiceOperation,
@@ -91,6 +123,33 @@ import {
   getInvoicePdfOperation,
   getInvoiceXRechnungOperation,
 } from "@/features/invoices/document/get-invoice-document.openapi";
+import {
+  getMessageTemplateOperation,
+  getMessageTemplatesOperation,
+} from "@/features/message-templates/get/get-message-templates.openapi";
+import {
+  createMessageTemplateOperation,
+  deleteMessageTemplateOperation,
+  updateMessageTemplateOperation,
+} from "@/features/message-templates/upsert/upsert-message-template.openapi";
+import { previewMessageTemplateOperation } from "@/features/message-templates/preview/preview-message-template.openapi";
+import {
+  addSuppressionOperation,
+  getSuppressionsOperation,
+  removeSuppressionOperation,
+} from "@/features/messaging-send/suppression/manage-suppressions.openapi";
+import {
+  getSenderIdentityOperation,
+  saveSenderIdentityOperation,
+  verifySenderDomainOperation,
+} from "@/features/messaging-send/sender/sender-identity.openapi";
+import { getAutomationsOperation } from "@/features/automation/get/get-automations.openapi";
+import { getAutomationRunsOperation } from "@/features/automation/get/get-automation-runs.openapi";
+import {
+  createAutomationOperation,
+  updateAutomationOperation,
+} from "@/features/automation/upsert/upsert-automation.openapi";
+import { deleteAutomationOperation } from "@/features/automation/delete/delete-automation.openapi";
 import { getRecordDocumentsOperation } from "@/features/record-documents/get/get-record-documents.openapi";
 import { getRecordDocumentDownloadOperation } from "@/features/record-documents/get/get-record-document-download.openapi";
 import { createRecordDocumentOperation } from "@/features/record-documents/upload/create-record-document.openapi";
@@ -452,6 +511,60 @@ export function generateOpenApiSpec() {
       "/v1/organizations/merges/{id}/undo": {
         post: undoOrganizationMergeOperation,
       },
+      "/v1/lead-assignment-rules": {
+        get: getLeadAssignmentRulesOperation,
+        post: createLeadAssignmentRuleOperation,
+      },
+      "/v1/lead-assignment-rules/{id}": {
+        put: updateLeadAssignmentRuleOperation,
+        delete: deleteLeadAssignmentRuleOperation,
+      },
+      "/v1/storage/usage": {
+        get: getStorageUsageOperation,
+      },
+      "/v1/audiences/preview": {
+        post: previewAudienceOperation,
+      },
+      "/v1/campaigns": {
+        get: getCampaignsOperation,
+        post: createCampaignOperation,
+      },
+      "/v1/campaigns/{id}": {
+        get: getCampaignOperation,
+        put: updateCampaignOperation,
+        delete: deleteCampaignOperation,
+      },
+      "/v1/campaigns/{id}/recipients": {
+        get: getCampaignRecipientsOperation,
+      },
+      "/v1/campaigns/{id}/send": {
+        post: sendCampaignOperation,
+      },
+      "/v1/campaigns/{id}/cancel": {
+        post: cancelCampaignOperation,
+      },
+      "/v1/bulk-jobs/{id}": {
+        get: getBulkJobOperation,
+      },
+      "/v1/contact-lists": {
+        get: getContactListsOperation,
+        post: createContactListOperation,
+      },
+      "/v1/contact-lists/{id}": {
+        get: getContactListOperation,
+        put: updateContactListOperation,
+        delete: deleteContactListOperation,
+      },
+      "/v1/contact-lists/{id}/members": {
+        get: getContactListMembersOperation,
+        post: addContactListMembersOperation,
+      },
+      "/v1/contact-lists/{id}/members/remove": {
+        post: removeContactListMembersOperation,
+      },
+      "/v1/contact-lists/{id}/fill": {
+        post: fillContactListOperation,
+      },
       "/v1/invoices": {
         get: getInvoicesOperation,
         post: createInvoiceOperation,
@@ -475,6 +588,43 @@ export function generateOpenApiSpec() {
       },
       "/v1/invoices/{id}/xrechnung": {
         get: getInvoiceXRechnungOperation,
+      },
+      "/v1/automations": {
+        get: getAutomationsOperation,
+        post: createAutomationOperation,
+      },
+      "/v1/automations/{id}": {
+        put: updateAutomationOperation,
+        delete: deleteAutomationOperation,
+      },
+      "/v1/automations/{id}/runs": {
+        get: getAutomationRunsOperation,
+      },
+      "/v1/sender-identity": {
+        get: getSenderIdentityOperation,
+        put: saveSenderIdentityOperation,
+      },
+      "/v1/sender-identity/verify": {
+        post: verifySenderDomainOperation,
+      },
+      "/v1/suppressions": {
+        get: getSuppressionsOperation,
+        post: addSuppressionOperation,
+      },
+      "/v1/suppressions/{id}": {
+        delete: removeSuppressionOperation,
+      },
+      "/v1/message-templates": {
+        get: getMessageTemplatesOperation,
+        post: createMessageTemplateOperation,
+      },
+      "/v1/message-templates/preview": {
+        post: previewMessageTemplateOperation,
+      },
+      "/v1/message-templates/{id}": {
+        get: getMessageTemplateOperation,
+        put: updateMessageTemplateOperation,
+        delete: deleteMessageTemplateOperation,
       },
       "/v1/invoice-settings": {
         get: getInvoiceSettingsOperation,

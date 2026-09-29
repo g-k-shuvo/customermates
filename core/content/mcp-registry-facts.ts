@@ -11,6 +11,16 @@ export type McpRegistryFacts = {
   total: number;
 };
 
+function hasExport(sourceFile: ts.SourceFile, exportName: string): boolean {
+  return sourceFile.statements.some(
+    (statement) =>
+      ts.isVariableStatement(statement) &&
+      statement.declarationList.declarations.some(
+        (declaration) => ts.isIdentifier(declaration.name) && declaration.name.text === exportName,
+      ),
+  );
+}
+
 function exportedInitializer(sourceFile: ts.SourceFile, exportName: string): ts.Expression {
   for (const statement of sourceFile.statements) {
     if (
@@ -55,6 +65,20 @@ export function readMcpRegistryFacts(root = process.cwd()): McpRegistryFacts {
   }
 
   if (Object.keys(groups).length === 0) throw new Error("MCP_TOOL_GROUPS has no tool groups");
+
+  const serverOnly = hasExport(sourceFile, "MCP_SERVER_ONLY_TOOL_GROUPS")
+    ? exportedInitializer(sourceFile, "MCP_SERVER_ONLY_TOOL_GROUPS")
+    : null;
+  if (serverOnly && !ts.isObjectLiteralExpression(serverOnly))
+    throw new Error("MCP_SERVER_ONLY_TOOL_GROUPS must be an object literal");
+  const serverOnlyProperties = serverOnly && ts.isObjectLiteralExpression(serverOnly) ? serverOnly.properties : [];
+  for (const property of serverOnlyProperties) {
+    if (!ts.isPropertyAssignment(property))
+      throw new Error("MCP_SERVER_ONLY_TOOL_GROUPS must use direct property assignments");
+    const name = propertyName(property);
+    if (name in groups) throw new Error(`Duplicate MCP tool group: ${name}`);
+    groups[name] = arrayIdentifiers(property.initializer, `MCP tool group ${name}`).length;
+  }
 
   const grouped = Object.values(groups).reduce((total, count) => total + count, 0);
   const alwaysOn = arrayIdentifiers(

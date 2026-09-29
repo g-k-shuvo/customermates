@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import type { RecordFileTargetData } from "@/features/record-files/record-file.schema";
+import type { RecordDocumentTargetData } from "@/features/record-files/record-file.schema";
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
     const result = await getGetSignatureSuggestionsInteractor().invoke({
-      entityType: searchParams.get("entityType") as RecordFileTargetData["entityType"],
+      entityType: searchParams.get("entityType") as RecordDocumentTargetData["entityType"],
       recordId: searchParams.get("recordId") ?? "",
     });
 

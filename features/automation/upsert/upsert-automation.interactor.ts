@@ -26,57 +26,57 @@ import { Write } from "@/core/decorators/write.decorator";
 import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
 import { FilterSchema } from "@/core/base/base-get.schema";
 
-export const UpsertAutomationSchema = z
-  .object({
-    id: z.uuid().optional(),
-    name: z.string().trim().min(1).max(AUTOMATION_NAME_MAX_LENGTH).optional(),
-    description: z.string().max(AUTOMATION_DESCRIPTION_MAX_LENGTH).nullable().optional(),
-    enabled: z.boolean().optional(),
-    entityType: AutomationTriggerEntityTypeSchema.nullable().optional(),
-    triggerKind: z.enum(AutomationTriggerKind).optional(),
-    changedFields: z.array(z.string().trim().min(1).max(100)).max(AUTOMATION_MAX_CHANGED_FIELDS).optional(),
-    conditions: z.array(FilterSchema).max(50).nullable().optional(),
-    schedule: z.string().trim().min(1).max(100).nullable().optional(),
-    scheduleTimeZone: z.string().trim().min(1).max(100).nullable().optional(),
-    steps: z.array(AutomationStepSchema).min(1).max(AUTOMATION_MAX_STEPS).optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (!data.id) {
-      if (data.name === undefined)
-        ctx.addIssue({ code: "custom", path: ["name"], params: { error: CustomErrorCode.automationNameRequired } });
-      if (data.triggerKind === undefined) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["triggerKind"],
-          params: { error: CustomErrorCode.automationTriggerRequired },
-        });
-      }
-      if (data.steps === undefined)
-        ctx.addIssue({ code: "custom", path: ["steps"], params: { error: CustomErrorCode.automationStepsRequired } });
-    }
+export const UpsertAutomationFieldsSchema = z.object({
+  id: z.uuid().optional(),
+  name: z.string().trim().min(1).max(AUTOMATION_NAME_MAX_LENGTH).optional(),
+  description: z.string().max(AUTOMATION_DESCRIPTION_MAX_LENGTH).nullable().optional(),
+  enabled: z.boolean().optional(),
+  entityType: AutomationTriggerEntityTypeSchema.nullable().optional(),
+  triggerKind: z.enum(AutomationTriggerKind).optional(),
+  changedFields: z.array(z.string().trim().min(1).max(100)).max(AUTOMATION_MAX_CHANGED_FIELDS).optional(),
+  conditions: z.array(FilterSchema).max(50).nullable().optional(),
+  schedule: z.string().trim().min(1).max(100).nullable().optional(),
+  scheduleTimeZone: z.string().trim().min(1).max(100).nullable().optional(),
+  steps: z.array(AutomationStepSchema).min(1).max(AUTOMATION_MAX_STEPS).optional(),
+});
 
-    if (data.triggerKind === AutomationTriggerKind.schedule) {
-      if (!data.schedule) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["schedule"],
-          params: { error: CustomErrorCode.automationScheduleRequired },
-        });
-      } else if (!isSupportedAutomationSchedule(data.schedule)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["schedule"],
-          params: { error: CustomErrorCode.automationScheduleInvalid },
-        });
-      }
-    } else if (data.triggerKind !== undefined && !data.entityType) {
+export const UpsertAutomationSchema = UpsertAutomationFieldsSchema.superRefine((data, ctx) => {
+  if (!data.id) {
+    if (data.name === undefined)
+      ctx.addIssue({ code: "custom", path: ["name"], params: { error: CustomErrorCode.automationNameRequired } });
+    if (data.triggerKind === undefined) {
       ctx.addIssue({
         code: "custom",
-        path: ["entityType"],
-        params: { error: CustomErrorCode.automationEntityTypeRequired },
+        path: ["triggerKind"],
+        params: { error: CustomErrorCode.automationTriggerRequired },
       });
     }
-  });
+    if (data.steps === undefined)
+      ctx.addIssue({ code: "custom", path: ["steps"], params: { error: CustomErrorCode.automationStepsRequired } });
+  }
+
+  if (data.triggerKind === AutomationTriggerKind.schedule) {
+    if (!data.schedule) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["schedule"],
+        params: { error: CustomErrorCode.automationScheduleRequired },
+      });
+    } else if (!isSupportedAutomationSchedule(data.schedule)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["schedule"],
+        params: { error: CustomErrorCode.automationScheduleInvalid },
+      });
+    }
+  } else if (data.triggerKind !== undefined && !data.entityType) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["entityType"],
+      params: { error: CustomErrorCode.automationEntityTypeRequired },
+    });
+  }
+});
 
 export type UpsertAutomationData = Data<typeof UpsertAutomationSchema>;
 

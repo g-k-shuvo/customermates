@@ -6,6 +6,7 @@ import {
   type FetchedMessage,
   type MailboxConnection,
   type MailboxFetchPage,
+  type MailboxAuthMethod,
   type MailboxFolder,
   type MailboxTransport,
 } from "./mailbox-transport";
@@ -18,6 +19,7 @@ export type ImapClientOptions = {
   servername: string;
   username: string;
   secret: string;
+  authMethod?: MailboxAuthMethod;
 };
 
 export type ImapMailboxState = { uidValidity: bigint | number | string; uidNext: number };
@@ -58,7 +60,10 @@ const defaultFactory: ImapClientFactory = (options) =>
     port: options.port,
     secure: options.secure,
     servername: options.servername,
-    auth: { user: options.username, pass: options.secret },
+    auth:
+      options.authMethod === "oauth"
+        ? { user: options.username, accessToken: options.secret }
+        : { user: options.username, pass: options.secret },
     logger: false,
     emitLogs: false,
   }) as unknown as ImapClient;
@@ -148,6 +153,7 @@ export function createImapflowTransport(
       servername: target.servername,
       username: connection.username,
       secret: connection.secret,
+      authMethod: connection.authMethod,
     });
 
     try {

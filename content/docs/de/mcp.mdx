@@ -96,7 +96,7 @@ Customermates exponiert [[derived.mcp.tools.total]] MCP-Tools, alle standardmä�
 Jedes Tool unten führt seine Zusammenfassung, sein Flag (sofern vorhanden) und seine Argumente. Zwei Flags sind wichtig: **Nur lesend** kennzeichnet ein Tool, das nichts verändert und das Sie in Ihrem Client ohne Rückfrage erlauben können, und **IRREVERSIBEL** kennzeichnet eines, das Daten löscht oder nicht rückgängig zu machen ist. Bei zusammengeführten Tools gilt das zerstörende Flag für die löschenden Actions.
 
 {/* mcp-catalog:flags */}
-**Nur lesend:** `get_record_schema`, `list_records`, `search_records`, `get_records`, `get_workspace_context`, `list_users`, `get_messaging_threads`, `get_activities`, `get_calendars`, `get_social_posts`, `get_social_post_engagement`, `get_social_profile`, `linkedin_search_sales_leads`, `linkedin_search_sales_companies`, `linkedin_get_sales_search_parameters`, `search_docs`, `get_docs_page`, `search`, `fetch`
+**Nur lesend:** `get_record_schema`, `list_records`, `search_records`, `get_records`, `get_workspace_context`, `list_users`, `get_messaging_threads`, `get_activities`, `get_calendars`, `get_social_posts`, `get_social_post_engagement`, `get_social_profile`, `linkedin_search_sales_leads`, `linkedin_search_sales_companies`, `linkedin_get_sales_search_parameters`, `search_docs`, `get_docs_page`, `search`, `fetch`, `list_leads`
 
 **IRREVERSIBEL:** `delete_records`, `manage_data_views`, `discard_message_draft`, `manage_custom_columns`, `manage_widgets`, `manage_routines`, `manage_webhooks`
 {/* /mcp-catalog */}
@@ -486,6 +486,35 @@ Sendet eine Support-Anfrage an das Customermates-Team (Betreff plus Beschreibung
 Pflicht: `subject`, `body`.
 {/* /mcp-catalog */}
 
+### Leads
+
+Diese Werkzeuge stellt der MCP-Endpunkt für externe Clients bereit; der Assistent in der App lädt sie nicht.
+
+{/* mcp-catalog:leads */}
+#### `list_leads`
+
+Leads auflisten, 25 pro Seite, nach Titelsuche und Status.
+
+**Nur lesend.** Optional: `search`, `status`, `page`.
+
+#### `create_leads`
+
+Bis zu 100 Leads anlegen; Leads ohne Verantwortlichen weisen die Zuweisungsregeln zu.
+
+Pflicht: `leads`.
+
+#### `update_leads`
+
+Bis zu 100 Leads teilweise ändern, auch Verantwortlichen und Status.
+
+Pflicht: `leads`.
+
+#### `convert_lead_to_deal`
+
+Einen Lead in einen Deal in gewählter Pipeline und Phase umwandeln.
+
+Pflicht: `id`. Optional: `name`, `pipelineId`, `stageId`, `baseValue`.{/* /mcp-catalog */}
+
 ### Eingrenzen mit ?toolsets=
 
 Alle [[derived.mcp.tools.total]] Tools sind standardmäßig an. Um nur einen Teil der Oberfläche zu exponieren, hängen Sie `?toolsets=` mit kommagetrennten Gruppen-Keys an die Endpoint-URL:
@@ -494,7 +523,7 @@ Alle [[derived.mcp.tools.total]] Tools sind standardmäßig an. Um nur einen Tei
 https://customermates.com/api/v1/mcp?toolsets=records,messaging
 ```
 
-Keys: records, workspace, views, messaging, social, docs, custom-columns, widgets, routines, webhooks, admin, support. Kein Parameter heißt alles; unbekannte Keys werden ignoriert, und eine Liste ohne erkannten Key liefert die volle Oberfläche. `search` und `fetch` sind immer an, damit Deep-Research-Connectors auch auf einer eingegrenzten Oberfläche funktionieren.
+Keys: records, workspace, views, messaging, social, docs, custom-columns, widgets, routines, webhooks, admin, support, leads. Kein Parameter heißt alles; unbekannte Keys werden ignoriert, und eine Liste ohne erkannten Key liefert die volle Oberfläche. `search` und `fetch` sind immer an, damit Deep-Research-Connectors auch auf einer eingegrenzten Oberfläche funktionieren.
 
 ### Wenn ein Aufruf abgelehnt wird
 

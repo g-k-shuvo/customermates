@@ -26,6 +26,7 @@ export type MigrationConfig = {
   reportPath: string | null;
   provisionColumns: boolean;
   updateExisting: boolean;
+  listFields: string[];
 };
 
 export class ConfigurationError extends Error {}
@@ -152,6 +153,10 @@ export function resolveConfig(argv: readonly string[], environment: NodeJS.Proce
     reportPath: option("--report"),
     provisionColumns: !options.has("--skip-column-provisioning"),
     updateExisting: options.has("--update-existing"),
+    listFields: (option("--list-fields") ?? trimmed(environment.MIGRATION_LIST_FIELDS) ?? "")
+      .split(",")
+      .map((name) => name.trim())
+      .filter(Boolean),
   };
 }
 
@@ -171,6 +176,7 @@ Options
   --fallback-owner <email>     Owner for records whose Pipedrive user has no match
   --default-currency <code>    Currency for monetary custom columns (default eur)
   --only <entities>            Comma separated subset of the migration phases
+  --list-fields <names>       Person fields (enum or set) whose options become contact lists, e.g. "CDI Target"
   --limit <n>                  Cap the number of source records per entity
   --won-stage-name <name>      Terminal won stage name (default Won)
   --lost-stage-name <name>     Terminal lost stage name (default Lost)

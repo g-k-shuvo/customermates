@@ -19,6 +19,9 @@ import { reportApplicationError } from "@/core/errors/report-application-error";
 import { CompanyForecastingSection } from "./company-forecasting-section";
 import { PipelinesSection } from "../pipelines/pipelines-section";
 import { LostReasonsSection } from "../lost-reasons/lost-reasons-section";
+import { AppLink } from "@/components/shared/app-link";
+import { SenderIdentitySection } from "../suppressions/sender-identity-section";
+import { SuppressionListSection } from "../suppressions/suppression-list-section";
 
 type Props = {
   currency: Currency;
@@ -88,6 +91,28 @@ export const CompanySettingsForm = observer(({ currency }: Props) => {
         <div className="border-t border-border" />
 
         <LostReasonsSection />
+
+        <div className="border-t border-border" />
+
+        <section className="flex flex-wrap items-center justify-between gap-2" data-lead-assignment-link="">
+          <div className="flex flex-col gap-0.5">
+            <h2 className="text-sm font-medium">{t("LeadAssignment.title")}</h2>
+
+            <p className="text-xs text-muted-foreground">{t("LeadAssignment.settingsHint")}</p>
+          </div>
+
+          <AppLink className="text-sm font-medium" href="/leads/assignment">
+            {t("LeadAssignment.manage")}
+          </AppLink>
+        </section>
+
+        <div className="border-t border-border" />
+
+        <SenderIdentitySection />
+
+        <div className="border-t border-border" />
+
+        <SuppressionListSection />
 
         <div className="border-t border-border" />
 

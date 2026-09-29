@@ -1,6 +1,13 @@
 "use client";
 
-import type { MailboxMessageDto, MailboxThreadDealLinkDto, MailboxThreadDto } from "@/features/mailbox/mailbox.schema";
+import type {
+  MailboxMessageDto,
+  MailboxThreadDealLinkDto,
+  MailboxThreadDto,
+  MailThreadLabelDto,
+} from "@/features/mailbox/mailbox.schema";
+import type { MailOutboxMessageDto } from "@/features/mail-workspace/mail-workspace.schema";
+import type { ThreadWorkspaceState } from "./mail-thread-workspace-bar";
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
@@ -22,6 +29,8 @@ import { linkThreadDealAction, shareThreadAction } from "../actions";
 import { MailMessageAttachments } from "./mail-message-attachments";
 import { MailPageSkeleton } from "./mail-page-skeleton";
 import { MailReplyBox } from "./mail-reply-box";
+import { MailThreadOutbox } from "./mail-thread-outbox";
+import { MailThreadWorkspaceBar } from "./mail-thread-workspace-bar";
 
 export type MailThreadPanelState =
   | { status: "idle" }
@@ -34,6 +43,11 @@ type Props = {
   onShowRemoteImages: () => void;
   onReplySent: () => void;
   onSharedChanged: (threadId: string, shared: boolean) => void;
+  allLabels?: MailThreadLabelDto[];
+  outbox?: MailOutboxMessageDto[];
+  onWorkspaceChanged?: (threadId: string, patch: Partial<ThreadWorkspaceState>) => void;
+  onLabelCreated?: (label: MailThreadLabelDto) => void;
+  onOutboxChanged?: () => void;
 };
 
 const SHARE_SWITCH_ID = "mail-thread-share";
@@ -61,13 +75,24 @@ function MessageBody({ message }: { message: MailboxMessageDto }) {
   return <p className="text-sm whitespace-pre-wrap break-words">{message.bodyText}</p>;
 }
 
-export function MailThreadPanel({ state, onShowRemoteImages, onReplySent, onSharedChanged }: Props) {
+export function MailThreadPanel({
+  state,
+  onShowRemoteImages,
+  onReplySent,
+  onSharedChanged,
+  allLabels = [],
+  outbox = [],
+  onWorkspaceChanged = () => undefined,
+  onLabelCreated = () => undefined,
+  onOutboxChanged = () => undefined,
+}: Props) {
   const t = useTranslations();
   const intlStore = useHydratedIntlStore();
   const { singular, plural } = useEntityTerminology();
   const [sharing, setSharing] = useState(false);
   const [linking, setLinking] = useState(false);
   const [dealLinkOverride, setDealLinkOverride] = useState<DealLinkOverride | null>(null);
+  const [draftVersion, setDraftVersion] = useState(0);
 
   const loadingThreadId = state.status === "loading" ? state.threadId : null;
   const [trackedLoad, setTrackedLoad] = useState<string | null>(loadingThreadId);
@@ -169,6 +194,14 @@ export function MailThreadPanel({ state, onShowRemoteImages, onReplySent, onShar
           {thread.participants.map((participant) => participant.displayName ?? participant.identifier).join(", ")}
         </p>
       </header>
+
+      <MailThreadWorkspaceBar
+        allLabels={allLabels}
+        state={{ archived: thread.archived, followUpAt: thread.followUpAt, labels: thread.labels }}
+        threadId={thread.id}
+        onChanged={onWorkspaceChanged}
+        onLabelCreated={onLabelCreated}
+      />
 
       <div className="flex items-start justify-between gap-3 border-b bg-muted/40 px-4 py-2">
         <div className="flex min-w-0 flex-col gap-0.5">
@@ -274,7 +307,20 @@ export function MailThreadPanel({ state, onShowRemoteImages, onReplySent, onShar
         ))}
       </div>
 
-      <MailReplyBox threadId={thread.id} onSent={onReplySent} />
+      <MailThreadOutbox
+        messages={outbox.filter((message) => message.threadId === thread.id)}
+        onChanged={({ draftRestored }) => {
+          if (draftRestored) setDraftVersion((version) => version + 1);
+          onOutboxChanged();
+        }}
+      />
+
+      <MailReplyBox
+        key={`${thread.id}:${draftVersion}`}
+        threadId={thread.id}
+        onScheduled={onOutboxChanged}
+        onSent={onReplySent}
+      />
     </section>
   );
 }

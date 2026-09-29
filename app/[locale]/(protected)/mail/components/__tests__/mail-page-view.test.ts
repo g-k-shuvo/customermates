@@ -5,12 +5,20 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
 vi.mock("@/core/errors/report-application-error", () => ({ runUserAction: vi.fn() }));
 vi.mock("@/core/utils/toast-zod-error-tree", () => ({ toastZodErrorTree: vi.fn() }));
-vi.mock("../../actions", () => ({ getMailboxThreadAction: vi.fn(), getMailboxThreadsAction: vi.fn() }));
+vi.mock("../../actions", () => ({
+  getMailboxThreadAction: vi.fn(),
+  getMailboxThreadsAction: vi.fn(),
+  getMailOutboxAction: vi.fn(),
+}));
 vi.mock("@/components/page-state/page-state", () => ({
   PageState: ({ title }: { title: string }) => createElement("div", { "data-page-state": title }),
 }));
 vi.mock("../mail-page-skeleton", () => ({ MailPageSkeleton: () => null }));
-vi.mock("../mail-thread-toolbar", () => ({ ALL_FOLDERS_VALUE: "__all__", MailThreadToolbar: () => null }));
+vi.mock("../mail-thread-toolbar", () => ({
+  ALL_FOLDERS_VALUE: "__all__",
+  ALL_LABELS_VALUE: "__all_labels__",
+  MailThreadToolbar: () => null,
+}));
 vi.mock("../mail-thread-list", () => ({
   MailThreadList: ({ selectedThreadId }: { selectedThreadId: string | null }) =>
     createElement("div", { "data-thread-list": selectedThreadId ?? "none" }),

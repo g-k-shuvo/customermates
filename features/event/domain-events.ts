@@ -69,7 +69,21 @@ export enum DomainEvent {
   LEGAL_NOTICE_SENT = "legal.notice_sent",
   LEGAL_DOCUMENTS_ACCEPTED = "legal.documents_accepted",
   RECORDS_EXPORTED = "records.exported",
+  CONTACT_AUTOMATED = "contact.automated",
+  ORGANIZATION_AUTOMATED = "organization.automated",
+  DEAL_AUTOMATED = "deal.automated",
+  SERVICE_AUTOMATED = "service.automated",
+  TASK_AUTOMATED = "task.automated",
 }
+
+export type AutomationTimelinePayload = { name: string };
+
+type AutomationTimelineEvent = {
+  userId: string;
+  companyId: string;
+  entityId: string;
+  payload: AutomationTimelinePayload;
+};
 
 type ConnectedAccountAuditPayload = {
   provider: MessagingProvider;
@@ -516,6 +530,11 @@ export type DomainEventMap = {
       scope: "selection" | "view";
     };
   };
+  [DomainEvent.CONTACT_AUTOMATED]: AutomationTimelineEvent;
+  [DomainEvent.ORGANIZATION_AUTOMATED]: AutomationTimelineEvent;
+  [DomainEvent.DEAL_AUTOMATED]: AutomationTimelineEvent;
+  [DomainEvent.SERVICE_AUTOMATED]: AutomationTimelineEvent;
+  [DomainEvent.TASK_AUTOMATED]: AutomationTimelineEvent;
 };
 
 export const AUDIT_LOG_EXCLUDED_EVENTS: ReadonlySet<DomainEvent> = new Set([

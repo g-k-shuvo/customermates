@@ -1,11 +1,14 @@
 import type { ImapHostRejectionReason } from "./imap-host-guard";
 
+export type MailboxAuthMethod = "password" | "oauth";
+
 export type MailboxConnection = {
   host: string;
   port: number;
   secure: boolean;
   username: string;
   secret: string;
+  authMethod?: MailboxAuthMethod;
 };
 
 export type MailboxFolder = {

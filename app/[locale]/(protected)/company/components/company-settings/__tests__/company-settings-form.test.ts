@@ -32,11 +32,18 @@ vi.mock("@/components/forms/form-autocomplete-currency", () => ({
   FormAutocompleteCurrency: () => createElement("div", { "data-currency": true }),
 }));
 vi.mock("@/components/card/form-actions", () => ({ FormActions: () => null }));
+vi.mock("@/components/shared/app-link", () => ({ AppLink: () => null }));
 vi.mock("../company-forecasting-section", () => ({
   CompanyForecastingSection: () => createElement("div", { "data-forecasting": true }),
 }));
 vi.mock("../../pipelines/pipelines-section", () => ({
   PipelinesSection: () => createElement("div", { "data-pipelines": true }),
+}));
+vi.mock("../../suppressions/sender-identity-section", () => ({
+  SenderIdentitySection: () => createElement("div", { "data-sender-identity": true }),
+}));
+vi.mock("../../suppressions/suppression-list-section", () => ({
+  SuppressionListSection: () => createElement("div", { "data-suppressions": true }),
 }));
 vi.mock("../../lost-reasons/lost-reasons-section", () => ({
   LostReasonsSection: () => createElement("div", { "data-lost-reasons": true }),

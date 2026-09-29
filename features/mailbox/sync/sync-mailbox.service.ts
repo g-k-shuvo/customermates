@@ -3,8 +3,9 @@ import type { MailboxFolderCursorDto, MailboxSyncOutcome } from "../mailbox.sche
 import type { MailboxTransport } from "./mailbox-transport";
 import type { SecretBoxKey } from "../credentials/secret-box";
 import type { ParsedAttachment } from "./parse-source";
+import type { MailboxCredentialAuth } from "../oauth/mailbox-credential-auth";
 
-import { openSecret } from "../credentials/secret-box";
+import { resolveMailboxAuth } from "../oauth/mailbox-credential-auth";
 import { normalizeMessage, type NormalizedMessage } from "./normalize-message";
 import { parseSourceMessage } from "./parse-source";
 import { planMailboxSync } from "./sync-plan";
@@ -26,10 +27,11 @@ export class SyncMailboxService {
     private secretKey: SecretBoxKey,
     private now: MailboxClock,
     private attachments?: MailboxAttachmentStore,
+    private auth?: MailboxCredentialAuth,
   ) {}
 
   async listSyncFolders(account: MailboxAccount): Promise<string[]> {
-    const folders = await this.transport.listFolders(this.connectionOf(account));
+    const folders = await this.transport.listFolders(await this.connectionOf(account));
     const selectedFolderIds = selectSyncFolders(folders);
 
     await this.repo.saveFolderSelection(account.connectedAccountId, {
@@ -42,7 +44,7 @@ export class SyncMailboxService {
 
   async syncFolder(account: MailboxAccount, folderPath: string, batchSize: number): Promise<MailboxSyncOutcome> {
     const cursor = account.syncCursors.find((entry) => entry.path === folderPath) ?? null;
-    const page = await this.transport.fetchSince(this.connectionOf(account), {
+    const page = await this.transport.fetchSince(await this.connectionOf(account), {
       path: folderPath,
       cursor,
       backfillFrom: account.backfillFrom,
@@ -120,13 +122,13 @@ export class SyncMailboxService {
     };
   }
 
-  private connectionOf(account: MailboxAccount) {
+  private async connectionOf(account: MailboxAccount) {
     return {
       host: account.imapHost,
       port: account.imapPort,
       secure: account.imapSecure,
       username: account.username,
-      secret: openSecret(this.secretKey, account.sealedSecret),
+      ...(await resolveMailboxAuth(this.auth, this.secretKey, account)),
     };
   }
 }

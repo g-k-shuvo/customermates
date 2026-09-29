@@ -11,6 +11,7 @@ import { getLocalDatabaseTestUrl } from "@/tests/helpers/database-test";
 import { createMockUser, createMockUserWithPermissions } from "@/tests/helpers/mock-user";
 
 import { PrismaRecordFileRepo } from "../prisma-record-file.repository";
+import { PrismaLeadRepo } from "@/features/leads/prisma-lead.repository";
 
 const databaseUrl = getLocalDatabaseTestUrl();
 const describeDatabase = databaseUrl ? describe : describe.skip;
@@ -24,6 +25,7 @@ describeDatabase("record files on PostgreSQL", () => {
   const outsiderId = randomUUID();
   const contactId = randomUUID();
   const dealId = randomUUID();
+  const leadId = randomUUID();
 
   const admin: TenantUser = createMockUser({ id: adminId, companyId });
   const rep: TenantUser = {
@@ -34,7 +36,10 @@ describeDatabase("record files on PostgreSQL", () => {
   const outsider: TenantUser = createMockUser({ id: outsiderId, companyId: foreignCompanyId });
   const as = <T>(user: TenantUser, fn: (repo: PrismaRecordFileRepo) => Promise<T>) =>
     runWithTenant(user, () => fn(new PrismaRecordFileRepo()));
-  const pendingFile = (user: TenantUser, overrides: { recordId?: string; entityType?: "contact" | "deal" } = {}) =>
+  const pendingFile = (
+    user: TenantUser,
+    overrides: { recordId?: string; entityType?: "contact" | "deal" | "lead" } = {},
+  ) =>
     as(user, (repo) =>
       repo.createPendingFile({
         entityType: overrides.entityType ?? "contact",
@@ -79,10 +84,15 @@ describeDatabase("record files on PostgreSQL", () => {
       'INSERT INTO "Deal" ("id", "name", "companyId", "updatedAt") VALUES ($1, $2, $3, CURRENT_TIMESTAMP)',
       [dealId, "Files deal", companyId],
     );
+    await client.query(
+      'INSERT INTO "Lead" ("id", "title", "companyId", "updatedAt") VALUES ($1, $2, $3, CURRENT_TIMESTAMP)',
+      [leadId, "Files lead", companyId],
+    );
   });
 
   afterAll(async () => {
     await client.query('DELETE FROM "RecordFile" WHERE "companyId" = ANY($1)', [[companyId, foreignCompanyId]]);
+    await client.query('DELETE FROM "Lead" WHERE "companyId" = $1', [companyId]);
     await client.query('DELETE FROM "Deal" WHERE "companyId" = $1', [companyId]);
     await client.query('DELETE FROM "Contact" WHERE "companyId" = $1', [companyId]);
     await client.query('DELETE FROM "User" WHERE "companyId" = ANY($1)', [[companyId, foreignCompanyId]]);
@@ -164,5 +174,36 @@ describeDatabase("record files on PostgreSQL", () => {
       [stale.id, orphan.id, fresh.id],
     ]);
     expect(left.rows.map((row) => row.id)).toEqual([fresh.id]);
+  });
+
+  it("keeps a lead's files on the lead, readable only by someone who can see the lead", async () => {
+    const file = await pendingFile(admin, { entityType: "lead", recordId: leadId });
+    await as(admin, (repo) => repo.markFileReadyOrNull(file.id));
+
+    await expect(as(admin, (repo) => repo.isRecordAccessible("lead", leadId))).resolves.toBe(true);
+    await expect(as(admin, (repo) => repo.listReadyFiles("lead", leadId))).resolves.toEqual([
+      expect.objectContaining({ id: file.id, entityType: "lead", recordId: leadId }),
+    ]);
+    await expect(as(rep, (repo) => repo.listReadyFiles("lead", leadId))).resolves.toEqual([]);
+    await expect(as(outsider, (repo) => repo.findReadyFileOrNull(file.id))).resolves.toBeNull();
+  });
+
+  it("moves a lead's files onto the deal it is converted into", async () => {
+    const convertedDealId = randomUUID();
+    await client.query(
+      'INSERT INTO "Deal" ("id", "name", "companyId", "updatedAt") VALUES ($1, $2, $3, CURRENT_TIMESTAMP)',
+      [convertedDealId, "Converted deal", companyId],
+    );
+    const file = await pendingFile(admin, { entityType: "lead", recordId: leadId });
+    await as(admin, (repo) => repo.markFileReadyOrNull(file.id));
+
+    await runWithTenant(admin, () =>
+      new PrismaLeadRepo().markLeadConvertedOrThrow({ id: leadId, dealId: convertedDealId, convertedAt: new Date() }),
+    );
+
+    await expect(as(admin, (repo) => repo.listReadyFiles("lead", leadId))).resolves.toEqual([]);
+    await expect(as(admin, (repo) => repo.listReadyFiles("deal", convertedDealId))).resolves.toContainEqual(
+      expect.objectContaining({ id: file.id, entityType: "deal", recordId: convertedDealId }),
+    );
   });
 });

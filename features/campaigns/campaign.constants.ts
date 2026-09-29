@@ -1,0 +1,1 @@
+export const CAMPAIGN_CHUNK_PAUSE_MS = 1000;

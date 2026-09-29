@@ -1,15 +1,19 @@
 export const AUTOMATION_STEP_ERRORS = [
   "assigneeUnavailable",
+  "emailNotSent",
   "fieldNotWritable",
   "fieldValueInvalid",
   "fieldValueMissing",
   "interrupted",
+  "mergeFieldUnresolved",
   "notesTooLong",
   "notesUnreadable",
   "ownerInactive",
   "ownerNotPermitted",
+  "recipientMissing",
   "recordMissing",
   "recordUnsupported",
+  "senderUnverified",
   "unexpectedError",
 ] as const;
 

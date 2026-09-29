@@ -1037,18 +1037,32 @@
   },
   "Automations": {
     "actionFields": {
+      "activityKind": "Activity type",
+      "address": "Email address",
+      "assigneeUserId": "Assignee",
+      "bannerUrl": "Header image (https link, optional)",
       "body": "Text",
+      "choose": "Choose…",
+      "defaultPipeline": "Default pipeline",
+      "dueInDays": "Due in days",
+      "duration": "Wait for",
+      "durationUnit": "Unit",
       "field": "Field",
+      "firstStage": "First stage",
+      "includeRecord": "Send the record’s type and id with the request",
       "labels": "Labels",
       "labelsPlaceholder": "Separate labels with commas",
+      "linkToTriggerRecord": "Link the task to the record that started the automation",
       "name": "Name",
-      "seconds": "Seconds to wait",
+      "nobody": "Nobody",
+      "ownerUserId": "Owner",
+      "pipelineId": "Pipeline",
+      "recipient": "Send to",
       "stageId": "Stage",
       "subject": "Subject",
       "title": "Title",
-      "to": "Recipient",
       "url": "URL",
-      "userId": "Owner user id",
+      "userId": "Owner",
       "value": "Value"
     },
     "actions": {
@@ -1065,10 +1079,17 @@
       "updateField": "Set a field"
     },
     "addStep": "Add action",
+    "changedFieldsHelp": "Leave empty to run on every change. With a field chosen, the automation runs only when an update touched it.",
+    "conditionsHelp": "Checked when the automation starts. Combined with a changed field, a stage condition fires exactly when a deal moves into that stage.",
     "create": "New automation",
     "createTitle": "New automation",
     "deleteLabel": "Delete the {name} automation",
     "disabled": "Off",
+    "durationUnits": {
+      "days": "Days",
+      "hours": "Hours",
+      "minutes": "Minutes"
+    },
     "editLabel": "Edit the {name} automation",
     "editTitle": "Edit automation",
     "emptyBody": "An automation watches for a change and then does the same thing every time, without anyone opening the record.",
@@ -1076,11 +1097,18 @@
     "enabled": "On",
     "fields": {
       "action": "Action",
+      "changedFields": "Only when these fields change",
+      "conditions": "Only when the record matches",
       "entityType": "Record type",
       "name": "Name",
       "schedule": "Schedule",
       "steps": "Actions",
       "trigger": "Trigger"
+    },
+    "recipientKinds": {
+      "address": "A fixed address",
+      "recordContact": "The record’s contact",
+      "recordOwner": "The record’s owner"
     },
     "removeStep": "Remove action",
     "rowSummary": "{trigger} · {steps}",
@@ -1099,16 +1127,20 @@
     "stepCount": "{count, plural, =1 {1 action} other {# actions}}",
     "stepErrors": {
       "assigneeUnavailable": "The user to assign is not an active member of this workspace",
+      "emailNotSent": "The email was not accepted for delivery",
       "fieldNotWritable": "An automation cannot change this field",
       "fieldValueInvalid": "The value does not fit this field",
       "fieldValueMissing": "The step does not say what value to write",
       "interrupted": "The action was interrupted and may not have completed",
+      "mergeFieldUnresolved": "A merge field in the email could not be filled from this record",
       "notesTooLong": "The note would make the notes longer than they are allowed to be",
       "notesUnreadable": "The existing notes could not be read, so they were left unchanged",
       "ownerInactive": "The user the automation runs as is no longer active",
       "ownerNotPermitted": "The user the automation runs as is not allowed to do this",
+      "recipientMissing": "The record has no one with an email address to send to",
       "recordMissing": "A record the action needs no longer exists",
       "recordUnsupported": "This action cannot be used on this kind of record",
+      "senderUnverified": "The sender address is not verified, so nothing was sent",
       "unexpectedError": "The action stopped because of an unexpected error"
     },
     "title": "Automations",
@@ -1130,6 +1162,94 @@
     "live": "live",
     "liveDemoTitle": "{brand} live demo",
     "open": "Open"
+  },
+  "CampaignMessage": {
+    "unsubscribe": "Unsubscribe from these emails"
+  },
+  "Campaigns": {
+    "audience": {
+      "add": "Add condition",
+      "addAnyGroup": "Add an “any of” group",
+      "addNoneGroup": "Add a “none of” group",
+      "addToGroup": "Add to this group",
+      "count": "{count} recipients. {withoutEmail} more match but have no email address. First 25:",
+      "field": "Choose a field",
+      "groupMode": "Group type",
+      "groups": {
+        "anyOf": "Any of these match",
+        "noneOf": "None of these match"
+      },
+      "help": "Every condition and group must match. In an “any of” group one condition is enough; a “none of” group excludes contacts that match any of its conditions. Only contacts with an email address receive the campaign.",
+      "kind": "Condition",
+      "kinds": {
+        "contactField": "Contact field is",
+        "notOnList": "Is not on the list",
+        "onList": "Is on the list",
+        "organizationField": "Organization field is"
+      },
+      "list": "Choose a list",
+      "preview": "Preview audience",
+      "remove": "Remove the condition",
+      "removeGroup": "Remove the group",
+      "title": "Audience",
+      "value": "Value",
+      "valuesPlaceholder": "One or more values, separated by commas"
+    },
+    "back": "All campaigns",
+    "cancel": "Stop sending",
+    "columns": {
+      "created": "Created",
+      "email": "Recipient",
+      "failed": "Failed",
+      "name": "Campaign",
+      "sent": "Sent",
+      "status": "Status",
+      "suppressed": "Suppressed",
+      "updated": "Last change"
+    },
+    "compliance": {
+      "help": "A campaign cannot be sent until you record why these recipients may be emailed, for example documented consent. Recording it does not make a send lawful; check it with whoever is responsible for data protection.",
+      "lawfulBasis": "Why may these recipients be emailed?",
+      "lawfulBasisPlaceholder": "For example: opted in at the 2026 conference, consent records kept in the CRM",
+      "title": "Lawful basis"
+    },
+    "confirmDelete": "Click again to delete",
+    "confirmSend": "Click again to send now",
+    "create": "New campaign",
+    "delete": "Delete draft",
+    "emptyDescription": "Create a campaign, choose its audience and record why you may email them.",
+    "emptyTitle": "No campaigns yet",
+    "fields": {
+      "body": "Message (Markdown)",
+      "companySender": "The company sender",
+      "name": "Name",
+      "sender": "Send as",
+      "subject": "Subject"
+    },
+    "next": "Next",
+    "page": "Page {page} of {pages}",
+    "previous": "Previous",
+    "progress": "{sent} sent · {suppressed} suppressed · {failed} failed · {pending} waiting",
+    "recipients": "Recipients ({count})",
+    "recipientStatus": {
+      "failed": "Failed",
+      "pending": "Waiting",
+      "sent": "Sent",
+      "skipped": "Skipped",
+      "suppressed": "Suppressed"
+    },
+    "redacted": "Address removed after the retention period",
+    "send": "Send campaign",
+    "status": {
+      "cancelled": "Stopped",
+      "draft": "Draft",
+      "failed": "Failed",
+      "sending": "Sending",
+      "sent": "Sent"
+    },
+    "subtitle": "Email a chosen audience of contacts, with unsubscribe and suppression built in.",
+    "title": "Campaigns",
+    "untitled": "Untitled campaign"
   },
   "Common": {
     "actions": {
@@ -1324,6 +1444,7 @@
       "apiKeyMaxExpiration": "API key expiration cannot exceed 365 days.",
       "apiKeyMinExpiration": "API key expiration must be at least 1 day.",
       "assigneeRequired": "You must assign yourself to this item. Please note that you will only be able to view items assigned to you.",
+      "audienceFieldUnknown": "The audience names a custom field that does not exist for that record type.",
       "automationActionNotAvailableForEntity": "That action is not available for this record type.",
       "automationEntityTypeRequired": "Choose the record type the automation watches.",
       "automationNameRequired": "Give the automation a name.",
@@ -1334,9 +1455,18 @@
       "automationStepsRequired": "Add at least one action.",
       "automationTriggerRequired": "Choose what starts the automation.",
       "billingPortalUnavailable": "The billing portal is not available for this workspace. Contact support to make changes.",
+      "bulkJobNotFound": "That background job could not be found.",
+      "bulkJobRunning": "This is already being processed in the background. Wait for it to finish.",
       "calendarEventNotFound": "Calendar event ID not found or not accessible.",
+      "campaignIncomplete": "Add a subject, a message and an audience before sending.",
+      "campaignLawfulBasisMissing": "Record the lawful basis for emailing these recipients before sending.",
+      "campaignNotDraft": "Only a draft campaign can be changed, deleted or sent.",
+      "campaignNotFound": "That campaign could not be found.",
+      "campaignNotSending": "This campaign is not sending.",
       "channelAlreadyLinked": "This channel is already linked to another contact.",
       "connectedAccountNotFound": "Channel ID not found or not accessible.",
+      "contactListNameTaken": "Another contact list already has this name.",
+      "contactListNotFound": "That contact list could not be found.",
       "contactMergeNotFound": "Merge ID not found.",
       "contactMergeNotUndoable": "This merge can no longer be undone: it was already undone, is older than 30 days, or its contact was deleted or recreated.",
       "contactMergePickNotMember": "Each field can only be taken from one of the contacts being merged.",
@@ -1384,6 +1514,7 @@
       "enterpriseCheckoutUnavailable": "Enterprise workspaces are billed manually and cannot start self-service checkout.",
       "fileEmpty": "The file is empty.",
       "fileExtensionMissing": "The file name needs an extension, such as .pdf.",
+      "fileInfected": "The virus scanner found malware in this file, so it was not kept.",
       "fileStorageNotConfigured": "File storage is not set up on this installation.",
       "fileStorageUnavailable": "File storage could not be reached. Try again in a moment.",
       "fileTooLarge": "The file is larger than the upload limit.",
@@ -1413,6 +1544,10 @@
       "invoiceSellerMissing": "Add your company's legal name and address in the invoicing settings before issuing an invoice.",
       "invoiceXRechnungIncomplete": "XRechnung needs your company's billing email, phone, VAT ID and a postal address with postcode and city, and the recipient's billing email and postal address.",
       "leadAlreadyConverted": "This lead has already been converted to a deal.",
+      "leadAssignmentConditionInvalid": "A condition does not fit the lead fields.",
+      "leadAssignmentOneUser": "A rule that assigns one user needs exactly one user.",
+      "leadAssignmentRuleNotFound": "That assignment rule could not be found.",
+      "leadAssignmentUserUnavailable": "Every user in the rule must be an active member of this workspace.",
       "leadNotFound": "Lead ID not found or not accessible.",
       "legalNoticeNotDelivered": "The current legal update has not been delivered to this workspace yet.",
       "linkedinInboxUnavailable": "This LinkedIn account has no {product} inbox. Connect the account with {product} linked to use it.",
@@ -1424,18 +1559,34 @@
       "mailAttachmentNotStored": "This attachment was not kept when the message was synced.",
       "mailboxAlreadyConnected": "This mailbox is already connected.",
       "mailboxAuthenticationFailed": "The mail server rejected those credentials. For Gmail or Microsoft 365 use an app password.",
+      "mailboxCalendarAccessMissing": "This mailbox has not allowed calendar access. Disconnect it and connect it again with Gmail or Microsoft 365 sign-in, then allow the calendar.",
+      "mailboxCalendarNeedsSignIn": "Calendar sync needs a mailbox connected with Gmail or Microsoft 365 sign-in.",
+      "mailboxCalendarSyncFailed": "The calendar could not be read right now. Try again later.",
       "mailboxDealNotOffered": "That is not the record this conversation was offered, so nothing was linked.",
       "mailboxFolderMissing": "That mail folder no longer exists on the server.",
       "mailboxHostRejected": "That mail server address is not allowed. Use the public hostname your provider gave you.",
       "mailboxNoReplyRecipient": "There is nobody to reply to in this conversation.",
       "mailboxNotFound": "This mailbox is no longer connected.",
+      "mailboxOAuthFailed": "Signing in with the provider did not complete. Try again.",
+      "mailboxOAuthNotConfigured": "Sign-in with this provider is not set up on this instance.",
       "mailboxProtocolFailed": "The mail server responded in a way we could not understand.",
       "mailboxSecretKeyMissing": "Mailbox syncing is not configured on this instance.",
       "mailboxSendingNotConfigured": "This mailbox has no outgoing server configured, so replies cannot be sent.",
       "mailboxThreadNotFound": "That conversation is no longer available.",
       "mailboxTlsFailed": "The mail server's security certificate could not be verified.",
       "mailboxUnreachable": "Could not reach that mail server. Check the host and port.",
+      "mailComposeEmpty": "Write a message, or add a recipient to forward to, before sending.",
+      "mailLabelNameTaken": "A label with this name already exists.",
+      "mailLabelNotFound": "This label no longer exists.",
+      "mailOutboxNotEditable": "This message is being sent or has already been sent, so it can no longer be changed.",
+      "mailOutboxNotFound": "This scheduled message no longer exists.",
+      "mailSendAtInPast": "Choose a send time in the future.",
+      "mergeFieldMalformed": "A merge field is not written correctly near {field}. Write the field name between double braces.",
+      "mergeFieldUnknown": "{field} is not a merge field. Use one of the offered fields.",
+      "mergeValueMissing": "This record has no value for {field}, and the template gives no default.",
       "messageContentRequired": "Add a message or an attachment.",
+      "messageTemplateNameTaken": "Another template already has this name.",
+      "messageTemplateNotFound": "Template not found or not accessible.",
       "mustNotBeBlank": "Must not be blank.",
       "mustNotContainNullChars": "Must not contain null characters.",
       "notAuthenticated": "Sign in to use this action.",
@@ -1485,6 +1636,8 @@
       "salesNavigatorNotAvailable": "This LinkedIn account doesn't have Sales Navigator connected.",
       "salesNavigatorRequiresLinkedin": "Sales Navigator requires a connected LinkedIn account, but this account is {provider}.",
       "sendEmailTargetRequired": "Select a thread or an account to send from.",
+      "senderDomainNotVerified": "The TXT record {record} was not found or does not match yet. DNS changes can take a while.",
+      "senderIdentityNotFound": "Set a sender address first.",
       "serviceNotFound": "Service ID not found or not accessible.",
       "signatureInProgress": "This document is out for signature. Cancel the signature request first.",
       "signatureNotInProgress": "This document is not out for signature.",
@@ -1495,7 +1648,9 @@
       "signingUnavailable": "DocuSign could not be reached. Try again in a moment.",
       "socialActionRequiresSocialAccount": "This action requires a LinkedIn or Instagram connected account, but this account is {provider}.",
       "socialPostsRequireSocialAccount": "Social posts require a LinkedIn or Instagram connected account, but this account is {provider}.",
+      "storageQuotaExceeded": "This upload would take the workspace over its storage quota. Delete files you no longer need, or ask an administrator to raise the quota.",
       "subjectRequired": "Add a subject.",
+      "suppressionNotFound": "Suppression not found or not accessible.",
       "taskAlreadyCompleted": "This task is already complete. Reopen it before completing it again.",
       "taskNameCannotBeChangedForSystemTasks": "Name cannot be changed for system tasks.",
       "taskNotCompleted": "This task is not complete, so there is nothing to reopen.",
@@ -1518,6 +1673,7 @@
       "userNotFound": "User ID not found or not accessible.",
       "userPlatformOperatorStatusForbidden": "This account belongs to a platform operator and cannot be deactivated here. Use the operator console.",
       "userSelfAdminUpdateForbidden": "You cannot update your own account through team administration.",
+      "virusScanUnavailable": "The virus scanner is not reachable, so the file cannot be accepted right now. Try again shortly.",
       "webFormSourceNotFound": "Web form source ID not found or not accessible.",
       "webFormSourceSlugTaken": "A web form source with this address already exists. Choose a different one.",
       "webFormSubmissionNotFound": "Web form submission ID not found or not accessible.",
@@ -1570,6 +1726,7 @@
         "updated": "Account Visibility Changed"
       },
       "contact": {
+        "automated": "Automation ran",
         "created": "Contact Created",
         "deleted": "Contact Deleted",
         "updated": "Contact Updated"
@@ -1580,6 +1737,7 @@
         "updated": "Custom Column Updated"
       },
       "deal": {
+        "automated": "Automation ran",
         "created": "Deal Created",
         "deleted": "Deal Deleted",
         "updated": "Deal Updated"
@@ -1619,6 +1777,7 @@
         }
       },
       "organization": {
+        "automated": "Automation ran",
         "created": "Organization Created",
         "deleted": "Organization Deleted",
         "updated": "Organization Updated"
@@ -1637,11 +1796,13 @@
         "updated": "Routine Updated"
       },
       "service": {
+        "automated": "Automation ran",
         "created": "Service Created",
         "deleted": "Service Deleted",
         "updated": "Service Updated"
       },
       "task": {
+        "automated": "Automation ran",
         "created": "Task Created",
         "deleted": "Task Deleted",
         "updated": "Task Updated"
@@ -2192,6 +2353,41 @@
     "linkedinOpenProfile": "Open LinkedIn profile",
     "noActivity": "No activity yet for this contact."
   },
+  "ContactLists": {
+    "columns": {
+      "added": "Added",
+      "email": "Email",
+      "name": "Contact"
+    },
+    "confirmDelete": "Click again to delete",
+    "create": "Create list",
+    "delete": "Delete list",
+    "description": "Description",
+    "emptyDescription": "Create a list, then add contacts to it from a filter.",
+    "emptyTitle": "No lists yet",
+    "fill": "Add matching contacts",
+    "fillHelp": "Every contact that matches is added in the background, including large numbers. Contacts already on the list stay once.",
+    "fillTitle": "Add contacts from a filter",
+    "filters": "Only contacts that match",
+    "jobStatus": {
+      "cancelled": "Cancelled after {processed} of {total}",
+      "completed": "Done: {processed} of {total} checked",
+      "failed": "Stopped after {processed} of {total}. Try again.",
+      "running": "Adding… {processed} of {total}"
+    },
+    "members": "Members ({count})",
+    "name": "Name",
+    "newListName": "New list",
+    "next": "Next",
+    "noEmail": "No email address",
+    "noMembers": "This list has no members yet.",
+    "page": "Page {page} of {pages}",
+    "previous": "Previous",
+    "removeMember": "Remove from the list",
+    "searchTerm": "Search",
+    "subtitle": "Group contacts into lists to send campaigns to them.",
+    "title": "Lists"
+  },
   "ContactModal": {
     "title": "Contact"
   },
@@ -2715,6 +2911,11 @@
     "taskList": "Task List",
     "underline": "Underline",
     "urlPlaceholder": "Enter URL..."
+  },
+  "EmailContent": {
+    "bannerHint": "Optional. An https link to an image shown across the top of the email; 600 px wide works best. To put an image in the text, write ![description](https://…).",
+    "bannerLabel": "Header image",
+    "bannerPlaceholder": "https://…"
   },
   "EmailLayout": {
     "tagline": "The agentic, open-source CRM"
@@ -3370,6 +3571,33 @@
     "subtitle": "A workspace administrator needs to invite {email}.",
     "title": "Join an existing workspace"
   },
+  "LeadAssignment": {
+    "add": "Add rule",
+    "back": "All leads",
+    "conditionsHelp": "Leave empty to match every lead. A territory is a rule whose conditions name the region, for example a country field.",
+    "delete": "Delete the rule",
+    "disabled": "Off",
+    "edit": "Edit",
+    "emptyDescription": "Without rules, new leads keep the owner they were created with.",
+    "emptyTitle": "No assignment rules yet",
+    "fields": {
+      "conditions": "Only leads that match",
+      "enabled": "Rule is on",
+      "name": "Rule name",
+      "position": "Order",
+      "strategy": "Assign",
+      "users": "To"
+    },
+    "manage": "Manage rules",
+    "settingsHint": "Give new leads an owner automatically, in turn or by territory.",
+    "strategies": {
+      "roundRobin": "In turn",
+      "specificUser": "One person"
+    },
+    "subtitle": "A new lead without an owner goes to the first enabled rule it matches.",
+    "summary": "{strategy} · {users} · {conditions, plural, =0 {every lead} one {# condition} other {# conditions}}",
+    "title": "Lead assignment"
+  },
   "LeadCreatedNotice": {
     "cta": "Open the lead",
     "fallback": "If the button does not work, copy and paste this link into your browser: ",
@@ -3505,6 +3733,15 @@
     "noMatchesDescription": "Try another search or a different folder.",
     "noMatchesTitle": "No conversations match",
     "noSubject": "(no subject)",
+    "oauth": {
+      "connected": "Mailbox connected. Use Sync now to fetch your mail.",
+      "description": "Gmail and Microsoft 365 mailboxes connect with your normal sign-in. No app password is needed, and access can be revoked in your provider account at any time.",
+      "failed": "The mailbox could not be connected",
+      "google": "Connect Gmail",
+      "imapRefused": "The sign-in worked, but the mail server refused access. Make sure IMAP is enabled for this mailbox (for Microsoft 365, IMAP and authenticated SMTP must be allowed by your administrator).",
+      "microsoft": "Connect Microsoft 365",
+      "title": "Sign in with your mail provider"
+    },
     "recordEmptyDescription": "Conversations that match this record's email addresses appear here after they sync. You can also share one from Mail.",
     "recordEmptyTitle": "No shared email yet",
     "remoteImagesBlocked": "{count, plural, one {# remote image blocked} other {# remote images blocked}}",
@@ -3544,7 +3781,76 @@
     "title": "Mail",
     "unknownSender": "Unknown sender",
     "usernameDescription": "Usually the full email address.",
-    "usernameLabel": "Username"
+    "usernameLabel": "Username",
+    "workspace": {
+      "addLabel": "Add label",
+      "allLabels": "All labels",
+      "archive": "Archive",
+      "archivedToast": "Conversation archived",
+      "cancelScheduled": "Cancel",
+      "colorAmber": "Amber",
+      "colorBlue": "Blue",
+      "colorGreen": "Green",
+      "colorNeutral": "Neutral",
+      "colorPrimary": "Primary",
+      "colorRed": "Red",
+      "deleteLabel": "Delete {name}",
+      "draftSaved": "Draft saved",
+      "followUpCleared": "Follow-up removed",
+      "followUpDue": "Follow-up due",
+      "followUpLabel": "Follow up",
+      "followUpNone": "No follow-up",
+      "followUpOn": "Follow up on {date}",
+      "followUpSet": "Follow-up set for {date}. It is cleared when a reply arrives.",
+      "followUpThreeDays": "Follow up in 3 days",
+      "followUpTomorrow": "Follow up tomorrow",
+      "followUpWeek": "Follow up in a week",
+      "labelColor": "Colour of {name}",
+      "labelCreated": "Label created",
+      "labelFilterLabel": "Label",
+      "labelsDescription": "Labels are shared by the whole workspace. Put them on conversations in Mail and filter by them there.",
+      "labelsEmpty": "No labels yet.",
+      "labelsLabel": "Labels",
+      "labelsTitle": "Mail labels",
+      "newLabelPlaceholder": "New label",
+      "outboxFailed": "Not sent after {count, plural, one {# attempt} other {# attempts}}",
+      "outboxRetrying": "{count, plural, one {# failed attempt} other {# failed attempts}}, retrying",
+      "outboxSending": "Sending now",
+      "retry": "Try again",
+      "scheduleCancelled": "Cancelled. The message is back in your draft.",
+      "scheduledFor": "Scheduled for {date}",
+      "sendingNow": "Sending within a minute",
+      "sendInHour": "In 1 hour",
+      "sendLater": "Send later",
+      "sendMonday": "Monday at 8:00",
+      "sendNow": "Send now",
+      "sendTomorrow": "Tomorrow at 8:00",
+      "unarchive": "Move to inbox",
+      "unarchivedToast": "Moved to the inbox",
+      "viewAll": "All conversations",
+      "viewArchived": "Archived",
+      "viewDrafts": "Drafts",
+      "viewFollowUp": "Follow-up",
+      "viewInbox": "Inbox",
+      "viewLabel": "View",
+      "viewOutbox": "Outbox"
+    }
+  },
+  "MailboxCalendar": {
+    "description": "Shows this account's calendar in Tasks → Week and meetings on contacts. Only you see them.",
+    "disabled": "Calendar sync is off; its events were removed from the CRM",
+    "emptyDescription": "Meetings from your synced calendar appear here when this contact's email address is invited.",
+    "emptyTitle": "No meetings with this contact",
+    "enabled": "Calendar sync is on",
+    "errorDescription": "Try again in a moment.",
+    "errorTitle": "Meetings could not be loaded",
+    "label": "Sync calendar",
+    "loading": "Loading meetings…",
+    "meetingsTab": "Meetings",
+    "needsSignIn": "Available for mailboxes connected with Gmail or Microsoft 365 sign-in.",
+    "syncedAt": "Calendar synced {date}. Only you see its events.",
+    "untitled": "(No title)",
+    "weekRow": "Calendar"
   },
   "MassActions": {
     "apply": "Apply to selected",
@@ -3573,6 +3879,36 @@
     },
     "subtitle": "{client} wants to connect to your account.",
     "title": "Authorize access"
+  },
+  "MessageTemplates": {
+    "create": "New template",
+    "description": "Subjects and bodies written in Markdown with merge fields, filled from the record when a message is sent.",
+    "emptyDescription": "Write a message once and reuse it in automations and campaigns.",
+    "emptyTitle": "No email templates yet",
+    "fallbackHint": "Give fields a record may lack a default, such as contact.firstName | \"there\" inside the braces. Without one, a send to such a record is refused.",
+    "fields": {
+      "body": "Message (Markdown)",
+      "kind": "Type",
+      "name": "Name",
+      "subject": "Subject"
+    },
+    "insertField": "Insert a merge field",
+    "kind": {
+      "marketing": "Marketing",
+      "marketingHint": "Carries an unsubscribe link, and is held back for anyone who unsubscribed, bounced or complained.",
+      "transactional": "Transactional",
+      "transactionalHint": "For one-to-one follow-ups. No unsubscribe link, and it is sent even to people who unsubscribed from marketing."
+    },
+    "listLabel": "Templates",
+    "preview": {
+      "empty": "Write a subject or a message to see how it will look.",
+      "record": "Record",
+      "recordType": "Preview with a",
+      "subject": "Subject:",
+      "title": "Preview"
+    },
+    "saved": "Template saved",
+    "title": "Email templates"
   },
   "MessagingUpsell": {
     "cta": "Upgrade your plan",
@@ -4191,6 +4527,7 @@
       "api": "API & Webhooks",
       "auditLog": "Audit Log",
       "automations": "Automations",
+      "campaigns": "Campaigns",
       "company": "Company",
       "contacts": "Contacts",
       "deals": "Deals",
@@ -4375,6 +4712,26 @@
     "tuesday": "Tuesday",
     "wednesday": "Wednesday"
   },
+  "SenderIdentity": {
+    "allowUserSenders": "Send as the user who triggered a message when their address is on the verified domain",
+    "description": "The name and address automations and campaigns send from. A custom address needs its domain verified; until then those emails are not sent at all, rather than going out from another address.",
+    "fromAddress": "From address",
+    "fromName": "From name",
+    "recordIntro": "Add this DNS record at your provider for {domain}, then check the domain:",
+    "recordName": "Name",
+    "recordType": "Type",
+    "recordValue": "Value",
+    "refusedUntilVerified": "Until the domain is verified, emails from this sender are refused.",
+    "replyTo": "Reply-To (optional)",
+    "save": "Save sender",
+    "saved": "Sender saved",
+    "title": "Sender",
+    "unverified": "Not verified",
+    "verified": "Verified",
+    "verifiedOn": "{domain} verified on {date}.",
+    "verifiedToast": "Domain verified",
+    "verify": "Check domain"
+  },
   "ServiceModal": {
     "title": "Service"
   },
@@ -4489,6 +4846,24 @@
     "subject": "Your account is inactive: we can help you restore access",
     "title": "Subscription inactivated"
   },
+  "Suppressions": {
+    "add": "Suppress",
+    "added": "Address suppressed",
+    "addressLabel": "Address to suppress",
+    "description": "These addresses get no marketing mail: people who unsubscribed, addresses that bounced or complained, and any you add. One-to-one and account mail still reaches them.",
+    "empty": "No suppressed addresses.",
+    "loadError": "The suppression list could not be loaded.",
+    "more": "Showing {shown} of {total}. Search to find others.",
+    "reason": {
+      "bounced": "Bounced",
+      "complained": "Complained",
+      "manual": "Added by hand",
+      "unsubscribed": "Unsubscribed"
+    },
+    "remove": "Lift the suppression of {address}",
+    "search": "Search addresses",
+    "title": "Suppressed addresses"
+  },
   "TaskModal": {
     "title": "Task"
   },
@@ -4532,6 +4907,18 @@
     "signoff": "Best regards,\nBen",
     "subject": "Welcome to {brand}",
     "title": "Welcome to your trial"
+  },
+  "Unsubscribe": {
+    "confirm": "Unsubscribe",
+    "confirmBody": "{address} will get no more marketing emails from this sender.",
+    "confirmTitle": "Stop these emails?",
+    "doneBody": "{address} will get no more marketing emails from this sender.",
+    "doneTitle": "You are unsubscribed",
+    "limitedBody": "Please try again in a minute.",
+    "limitedTitle": "Too many requests",
+    "title": "Unsubscribe",
+    "unknownBody": "It may be incomplete. Reply to the email and ask the sender to remove you.",
+    "unknownTitle": "This link is not valid"
   },
   "UserAvatar": {
     "company": "My Company",

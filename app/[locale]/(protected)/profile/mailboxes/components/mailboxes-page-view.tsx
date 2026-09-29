@@ -1,6 +1,9 @@
 "use client";
 
 import type { MailboxAccountDto } from "@/features/mailbox/mailbox.schema";
+import type { MailboxOAuthProvider } from "@/generated/prisma";
+import type { MailThreadLabelDto } from "@/features/mailbox/mailbox.schema";
+import type { CalendarMailboxDto } from "@/features/mailbox-calendar/mailbox-calendar.schema";
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
@@ -23,12 +26,24 @@ import {
 } from "../actions";
 import { MailboxConnectForm } from "./mailbox-connect-form";
 import { MailboxList } from "./mailbox-list";
+import { MailboxOAuthConnect, type MailboxOAuthOutcome } from "./mailbox-oauth-connect";
+import { MailLabelsCard } from "./mail-labels-card";
 
 type Props = {
   mailboxes: MailboxAccountDto[];
+  oauthProviders?: readonly MailboxOAuthProvider[];
+  oauthOutcome?: MailboxOAuthOutcome;
+  labels?: MailThreadLabelDto[];
+  calendars?: CalendarMailboxDto[];
 };
 
-export function MailboxesPageView({ mailboxes }: Props) {
+export function MailboxesPageView({
+  mailboxes,
+  oauthProviders = [],
+  oauthOutcome = null,
+  labels = [],
+  calendars = [],
+}: Props) {
   const t = useTranslations();
   const { showDeleteConfirmation } = useDeleteConfirmation();
   const [items, setItems] = useState(mailboxes);
@@ -108,10 +123,20 @@ export function MailboxesPageView({ mailboxes }: Props) {
           title={t("Mailbox.emptyAccountsTitle")}
         />
       ) : (
-        <MailboxList busyMailboxId={busyMailboxId} mailboxes={items} onDisconnect={disconnect} onSync={sync} />
+        <MailboxList
+          busyMailboxId={busyMailboxId}
+          calendars={calendars}
+          mailboxes={items}
+          onDisconnect={disconnect}
+          onSync={sync}
+        />
       )}
 
+      <MailboxOAuthConnect outcome={oauthOutcome} providers={oauthProviders} />
+
       <MailboxConnectForm onConnected={refresh} />
+
+      <MailLabelsCard labels={labels} />
     </div>
   );
 }

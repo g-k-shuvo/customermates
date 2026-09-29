@@ -2,13 +2,13 @@ import type { Validated } from "@/core/validation/validation.utils";
 import type { SecretBoxKey } from "../credentials/secret-box";
 import type { SendReplyService, DeliveredReply } from "./send-reply.service";
 
-import { Resource, Action } from "@/generated/prisma";
+import { Resource, Action, type MailboxOAuthProvider } from "@/generated/prisma";
 
 import { SendReplyOutcomeSchema, SendReplySchema } from "../mailbox.schema";
 import { type SendReplyData, type SendReplyOutcome } from "../mailbox.schema";
 import { MailboxTransportError, MailboxTransportFailure } from "../sync/mailbox-transport";
 import { buildReply } from "./build-reply";
-import { openSecret } from "../credentials/secret-box";
+import { resolveMailboxAuth, type MailboxAuth, type MailboxCredentialAuth } from "../oauth/mailbox-credential-auth";
 import { recoverRfcMessageId, recoverThreadRootMessageId, STORED_MESSAGE_ID_PREFIX } from "./recover-message-id";
 
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
@@ -42,6 +42,7 @@ export type ReplyContext = {
     smtpSecure: boolean | null;
     username: string;
     sealedSecret: string;
+    oauthProvider?: MailboxOAuthProvider | null;
     connectedAccount: { emailAddress: string | null; displayName: string | null };
   };
 };
@@ -78,6 +79,7 @@ export class SendReplyInteractor extends AuthenticatedInteractor<SendReplyData, 
     private service: SendReplyService,
     private secretKey: SecretBoxKey | null,
     private now: () => Date,
+    private auth?: MailboxCredentialAuth,
   ) {
     super();
   }
@@ -120,13 +122,25 @@ export class SendReplyInteractor extends AuthenticatedInteractor<SendReplyData, 
 
     if (reply.to.length === 0) return await fail(CustomErrorCode.mailboxNoReplyRecipient, ["threadId"]);
 
-    const secret = openSecret(secretKey, credential.sealedSecret);
+    let auth: MailboxAuth;
+    try {
+      auth = await resolveMailboxAuth(this.auth, secretKey, {
+        connectedAccountId: thread.connectedAccountId,
+        oauthProvider: credential.oauthProvider,
+        sealedSecret: credential.sealedSecret,
+      });
+    } catch (error) {
+      if (error instanceof MailboxTransportError)
+        return await fail(CustomErrorCode.mailboxAuthenticationFailed, ["threadId"]);
+
+      throw error;
+    }
     const imap = {
       host: credential.imapHost,
       port: credential.imapPort,
       secure: credential.imapSecure,
       username: credential.username,
-      secret,
+      ...auth,
     };
 
     let sent: DeliveredReply;
@@ -137,7 +151,7 @@ export class SendReplyInteractor extends AuthenticatedInteractor<SendReplyData, 
           port: credential.smtpPort,
           secure: credential.smtpSecure ?? true,
           username: credential.username,
-          secret,
+          ...auth,
         },
         reply,
         imap,

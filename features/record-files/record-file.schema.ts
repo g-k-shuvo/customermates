@@ -2,7 +2,7 @@ import type { Data } from "@/core/validation/validation.utils";
 
 import { z } from "zod";
 
-export const RECORD_FILE_ENTITY_TYPES = ["contact", "organization", "deal"] as const;
+export const RECORD_FILE_ENTITY_TYPES = ["contact", "organization", "deal", "lead"] as const;
 
 export const RecordFileEntityTypeSchema = z.enum(RECORD_FILE_ENTITY_TYPES);
 
@@ -62,6 +62,19 @@ export const RecordFileTargetSchema = z.object({
 });
 
 export type RecordFileTargetData = Data<typeof RecordFileTargetSchema>;
+
+export const RECORD_DOCUMENT_ENTITY_TYPES = ["contact", "organization", "deal"] as const;
+
+export const RecordDocumentEntityTypeSchema = z.enum(RECORD_DOCUMENT_ENTITY_TYPES);
+
+export type RecordDocumentEntityType = z.infer<typeof RecordDocumentEntityTypeSchema>;
+
+export const RecordDocumentTargetSchema = z.object({
+  entityType: RecordDocumentEntityTypeSchema,
+  recordId: z.uuid(),
+});
+
+export type RecordDocumentTargetData = Data<typeof RecordDocumentTargetSchema>;
 
 export const DeleteRecordFileResultSchema = z.object({ id: z.uuid() });
 

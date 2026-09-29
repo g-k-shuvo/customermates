@@ -3,9 +3,13 @@
 import type { MailboxThreadSummaryDto } from "@/features/mailbox/mailbox.schema";
 
 import { useTranslations } from "next-intl";
+import { BellRing } from "lucide-react";
 
 import { cn } from "@/core/utils/cn";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
+
+import { MailLabelChip } from "./mail-label-chip";
+import { isFollowUpDue } from "./mail-schedule-options";
 
 type Props = {
   threads: MailboxThreadSummaryDto[];
@@ -62,6 +66,28 @@ export function MailThreadList({ threads, selectedThreadId, readThreadIds, onSel
 
               {thread.lastMessagePreview ? (
                 <span className="truncate text-xs text-muted-foreground">{thread.lastMessagePreview}</span>
+              ) : null}
+
+              {thread.labels.length > 0 || thread.followUpAt ? (
+                <span className="flex flex-wrap items-center gap-1">
+                  {thread.followUpAt ? (
+                    <span
+                      className={cn(
+                        "flex items-center gap-1 text-xs",
+                        isFollowUpDue(thread.followUpAt, new Date()) ? "text-destructive" : "text-muted-foreground",
+                      )}
+                      data-mail-follow-up=""
+                    >
+                      <BellRing aria-hidden="true" className="size-3" />
+
+                      {intlStore.formatNumericalShortDate(thread.followUpAt)}
+                    </span>
+                  ) : null}
+
+                  {thread.labels.map((label) => (
+                    <MailLabelChip key={label.id} label={label} />
+                  ))}
+                </span>
               ) : null}
             </button>
           </li>

@@ -241,7 +241,7 @@ describeDatabase("running an automation through its workflow as the owning user"
   it("runs every step of a run whose record meets its conditions, each under the owner's tenant", async () => {
     const workspace = await makeWorkspace("Acme expansion");
     const taskAutomationId = await makeAutomation(workspace.companyId, EntityType.task, [
-      { kind: AutomationActionKind.createNote, config: { body: "must not run for an automation's own task" } },
+      { kind: AutomationActionKind.createNote, config: { body: "follows the deal automation's task" } },
     ]);
     const runId = await admitDealRun(
       workspace,
@@ -278,14 +278,26 @@ describeDatabase("running an automation through its workflow as the owning user"
     const audit = await runWithoutTenant(() =>
       prisma.auditLog.findMany({ where: { companyId: workspace.companyId }, select: { event: true, userId: true } }),
     );
-    expect(audit.map((row) => row.event)).toEqual(expect.arrayContaining(["task.created", "deal.updated"]));
+    expect(audit.map((row) => row.event)).toEqual(
+      expect.arrayContaining(["task.created", "deal.updated", "deal.automated"]),
+    );
     expect(new Set(audit.map((row) => row.userId))).toEqual(new Set([workspace.ownerId]));
 
-    const causedRuns = await runWithoutTenant(() =>
-      prisma.automationRun.findMany({ where: { automationId: taskAutomationId } }),
+    const dealAutomation = await runWithoutTenant(() =>
+      prisma.automationRun.findUniqueOrThrow({ where: { id: runId }, select: { automationId: true } }),
     );
-    expect(causedRuns).toEqual([]);
-    expect(dispatched).toEqual([]);
+    const causedRuns = await runWithoutTenant(() =>
+      prisma.automationRun.findMany({
+        where: { automationId: taskAutomationId },
+        select: { id: true, causationDepth: true, causationChain: true },
+      }),
+    );
+    expect(causedRuns).toEqual([
+      { id: expect.any(String), causationDepth: 1, causationChain: [dealAutomation.automationId] },
+    ]);
+    expect(dispatched).toEqual([
+      { id: "run-automation", payload: { automationRunId: causedRuns[0]?.id, companyId: workspace.companyId } },
+    ]);
   });
 
   it("skips a run whose record misses its conditions without running a step", async () => {

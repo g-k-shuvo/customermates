@@ -14,7 +14,19 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/cron/sync-calendars",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/mail-outbox",
+      "schedule": "* * * * *"
+    },
+    {
       "path": "/api/cron/routines",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/automations",
       "schedule": "*/5 * * * *"
     },
     {

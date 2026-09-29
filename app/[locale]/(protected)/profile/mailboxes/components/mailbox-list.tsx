@@ -1,6 +1,7 @@
 "use client";
 
 import type { MailboxAccountDto } from "@/features/mailbox/mailbox.schema";
+import type { CalendarMailboxDto } from "@/features/mailbox-calendar/mailbox-calendar.schema";
 
 import { observer } from "mobx-react-lite";
 import { useTranslations } from "next-intl";
@@ -12,6 +13,7 @@ import { InfoRow } from "@/components/shared/info-row";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 
 import { PROFILE_RESOURCE_CARD_GRID_CLASS_NAME } from "../../components/profile-resource-page-geometry";
+import { MailboxCalendarToggle } from "./mailbox-calendar-toggle";
 
 function smtpTargetOf(mailbox: MailboxAccountDto): string | null {
   if (!mailbox.smtpHost) return null;
@@ -25,9 +27,10 @@ type Props = {
   mailboxes: MailboxAccountDto[];
   onDisconnect: (mailbox: MailboxAccountDto) => void;
   onSync: (mailbox: MailboxAccountDto) => void;
+  calendars?: CalendarMailboxDto[];
 };
 
-export const MailboxList = observer(({ busyMailboxId, mailboxes, onDisconnect, onSync }: Props) => {
+export const MailboxList = observer(({ busyMailboxId, mailboxes, onDisconnect, onSync, calendars = [] }: Props) => {
   const t = useTranslations();
   const intlStore = useHydratedIntlStore();
 
@@ -36,6 +39,7 @@ export const MailboxList = observer(({ busyMailboxId, mailboxes, onDisconnect, o
       {mailboxes.map((mailbox) => {
         const isBusy = busyMailboxId === mailbox.connectedAccountId;
         const smtpTarget = smtpTargetOf(mailbox);
+        const calendar = calendars.find((entry) => entry.connectedAccountId === mailbox.connectedAccountId);
 
         return (
           <Card key={mailbox.id} className="gap-3 py-4">
@@ -59,6 +63,8 @@ export const MailboxList = observer(({ busyMailboxId, mailboxes, onDisconnect, o
                   ? intlStore.formatNumericalShortDateTime(mailbox.lastVerifiedAt)
                   : t("Common.never")}
               </InfoRow>
+
+              {calendar ? <MailboxCalendarToggle calendar={calendar} /> : null}
 
               <div className="mt-1 flex items-center justify-end gap-2">
                 <Button disabled={isBusy} size="xs" type="button" variant="secondary" onClick={() => onSync(mailbox)}>

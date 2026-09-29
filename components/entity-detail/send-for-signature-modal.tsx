@@ -1,6 +1,6 @@
 "use client";
 
-import type { RecordFileEntityType } from "@/features/record-files/record-file.schema";
+import type { RecordDocumentEntityType } from "@/features/record-files/record-file.schema";
 import type { RecordDocumentDto } from "@/features/record-documents/record-document.schema";
 
 import { useEffect, useState } from "react";
@@ -31,7 +31,7 @@ import {
 
 type Props = {
   document: RecordDocumentDto | null;
-  entityType: RecordFileEntityType;
+  entityType: RecordDocumentEntityType;
   recordId: string;
   onClose: () => void;
   onSent: () => Promise<void>;

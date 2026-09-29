@@ -152,9 +152,25 @@ describe("dashboard widget UI", () => {
     );
 
     expect(between(routineConfiguration, 'baseId="triggerFilters"', "/>")).toContain('variant="grouped"');
+    expect(
+      between(read("app/[locale]/(protected)/automations/components/automation-modal.tsx"), 'baseId="conditions"', "/>"),
+    ).toContain('variant="grouped"');
+    expect(
+      between(read("app/[locale]/(protected)/lists/components/lists-page-view.tsx"), 'baseId="filters"', "/>"),
+    ).toContain('variant="grouped"');
+    expect(
+      between(
+        read("app/[locale]/(protected)/leads/assignment/components/lead-assignment-page-view.tsx"),
+        'baseId="conditions"',
+        "/>",
+      ),
+    ).toContain('variant="grouped"');
     expect(groupedCallers.map((file) => relative(REPO_ROOT, file)).sort()).toEqual([
+      "app/[locale]/(protected)/automations/components/automation-modal.tsx",
       "app/[locale]/(protected)/dashboard/components/activity-filter-fields.tsx",
       "app/[locale]/(protected)/dashboard/components/widget-modal.tsx",
+      "app/[locale]/(protected)/leads/assignment/components/lead-assignment-page-view.tsx",
+      "app/[locale]/(protected)/lists/components/lists-page-view.tsx",
       "app/[locale]/(protected)/routines/components/routine-configuration-pane.tsx",
     ]);
   });

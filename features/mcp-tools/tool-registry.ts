@@ -1,6 +1,12 @@
 import { manageDataViewsTool } from "@/features/mcp-tools/data-view.mcp-tools";
 import { createContactsTool, updateContactsTool } from "@/features/mcp-tools/contact.mcp-tools";
 import { createDealsTool, updateDealsTool } from "@/features/mcp-tools/deal.mcp-tools";
+import {
+  convertLeadToDealTool,
+  createLeadsTool,
+  listLeadsTool,
+  updateLeadsTool,
+} from "@/features/mcp-tools/lead.mcp-tools";
 import { createOrganizationsTool, updateOrganizationsTool } from "@/features/mcp-tools/organization.mcp-tools";
 import { createServicesTool, updateServicesTool } from "@/features/mcp-tools/service.mcp-tools";
 import { createTasksTool, updateTasksTool } from "@/features/mcp-tools/task.mcp-tools";
@@ -102,6 +108,15 @@ export const MCP_TOOL_GROUPS: Record<string, McpTool[]> = {
   support: [requestSupportTool],
 };
 
+export const MCP_SERVER_ONLY_TOOL_GROUPS: Record<string, McpTool[]> = {
+  leads: [listLeadsTool, createLeadsTool, updateLeadsTool, convertLeadToDealTool],
+};
+
+export const MCP_SERVER_TOOL_GROUPS: Record<string, McpTool[]> = {
+  ...MCP_TOOL_GROUPS,
+  ...MCP_SERVER_ONLY_TOOL_GROUPS,
+};
+
 export const MCP_ALWAYS_ON_TOOLS: McpTool[] = [searchTool, fetchTool];
 
 export const ALL_MCP_TOOLS = [...Object.values(MCP_TOOL_GROUPS).flat(), ...MCP_ALWAYS_ON_TOOLS];
@@ -116,6 +131,8 @@ export function countMcpTools(tools: readonly Pick<McpTool, "name">[] = ALL_MCP_
   return names.length;
 }
 
-export const MCP_TOOL_COUNT = countMcpTools();
-export const MCP_GROUPED_TOOL_COUNT = Object.values(MCP_TOOL_GROUPS).flat().length;
-export const MCP_TOOLSET_COUNT = Object.keys(MCP_TOOL_GROUPS).length;
+export const ALL_MCP_SERVER_TOOLS = [...Object.values(MCP_SERVER_TOOL_GROUPS).flat(), ...MCP_ALWAYS_ON_TOOLS];
+
+export const MCP_TOOL_COUNT = countMcpTools(ALL_MCP_SERVER_TOOLS);
+export const MCP_GROUPED_TOOL_COUNT = Object.values(MCP_SERVER_TOOL_GROUPS).flat().length;
+export const MCP_TOOLSET_COUNT = Object.keys(MCP_SERVER_TOOL_GROUPS).length;

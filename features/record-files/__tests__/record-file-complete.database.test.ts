@@ -29,6 +29,7 @@ const { runWithTenant } = await import("@/core/decorators/tenant-context");
 const { PrismaRecordFileRepo } = await import("../prisma-record-file.repository");
 const { CompleteRecordFileUploadInteractor } = await import("../upload/complete-record-file-upload.interactor");
 const { DeleteRecordFileInteractor } = await import("../delete/delete-record-file.interactor");
+const { NULL_VIRUS_SCANNER } = await import("@/core/storage/virus-scanner");
 
 const databaseUrl = getLocalDatabaseTestUrl();
 const describeDatabase = databaseUrl ? describe : describe.skip;
@@ -95,7 +96,12 @@ describeDatabase("record file writes that call storage, on PostgreSQL", () => {
     const { storage, deleteObject } = storageWith({ byteSize: 10, contentType: "application/pdf" });
 
     const result = await runWithTenant(admin, () =>
-      new CompleteRecordFileUploadInteractor(new PrismaRecordFileRepo(), storage, userService).invoke({ id: file.id }),
+      new CompleteRecordFileUploadInteractor(
+        new PrismaRecordFileRepo(),
+        storage,
+        userService,
+        NULL_VIRUS_SCANNER,
+      ).invoke({ id: file.id }),
     );
 
     expect(result.ok).toBe(false);
@@ -107,9 +113,12 @@ describeDatabase("record file writes that call storage, on PostgreSQL", () => {
     const file = await pendingFile();
 
     const early = await runWithTenant(admin, () =>
-      new CompleteRecordFileUploadInteractor(new PrismaRecordFileRepo(), storageWith(null).storage, userService).invoke(
-        { id: file.id },
-      ),
+      new CompleteRecordFileUploadInteractor(
+        new PrismaRecordFileRepo(),
+        storageWith(null).storage,
+        userService,
+        NULL_VIRUS_SCANNER,
+      ).invoke({ id: file.id }),
     );
     await expect(statusOf(file.id)).resolves.toBe("pending");
 
@@ -118,6 +127,7 @@ describeDatabase("record file writes that call storage, on PostgreSQL", () => {
         new PrismaRecordFileRepo(),
         storageWith({ byteSize: 2048, contentType: "application/pdf" }).storage,
         userService,
+        NULL_VIRUS_SCANNER,
       ).invoke({ id: file.id }),
     );
 

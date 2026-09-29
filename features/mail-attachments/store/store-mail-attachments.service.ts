@@ -1,4 +1,6 @@
 import type { StorageProvider } from "@/core/storage/storage-provider";
+import type { VirusScanner } from "@/core/storage/virus-scanner";
+import type { StorageQuota } from "@/core/storage/storage-quota";
 import type { ParsedAttachment } from "@/features/mailbox/sync/parse-source";
 import type { NewMailAttachment, StoreMailAttachmentsRepo } from "../mail-attachment.repo";
 
@@ -13,6 +15,8 @@ export class StoreMailAttachmentsService {
   constructor(
     private repo: StoreMailAttachmentsRepo,
     private storage: StorageProvider,
+    private scanner: VirusScanner,
+    private quota: StorageQuota,
   ) {}
 
   async store(owner: MailAttachmentOwner, attachments: readonly ParsedAttachment[]): Promise<number> {
@@ -27,6 +31,15 @@ export class StoreMailAttachmentsService {
     await this.repo.createAttachments(messageId, rows);
 
     return rows.filter((row) => row.storageKey !== null).length;
+  }
+
+  private async passesScan(attachment: ParsedAttachment): Promise<boolean> {
+    if (!this.scanner.configured) return true;
+
+    return await this.scanner.scan(bytesOf(attachment.content)).then(
+      (verdict) => verdict.clean,
+      () => false,
+    );
   }
 
   private async upload(companyId: string, messageId: string, attachment: ParsedAttachment): Promise<NewMailAttachment> {
@@ -47,6 +60,8 @@ export class StoreMailAttachmentsService {
     };
 
     if (!check.ok || !this.storage.configured) return { ...row, storageKey: null };
+    if (!(await this.passesScan(attachment))) return { ...row, storageKey: null };
+    if (!(await this.quota.allows(attachment.byteSize))) return { ...row, storageKey: null };
 
     const mint = (extension: string | null) =>
       mintStorageKey({ companyId, scope: "mailAttachment", recordId: messageId, extension });

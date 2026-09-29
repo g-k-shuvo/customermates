@@ -1,8 +1,13 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
-export const AUTOMATION_MAX_CAUSATION_DEPTH = 1;
+export const AUTOMATION_MAX_CAUSATION_DEPTH = 3;
 
-export type AutomationCausationContext = { automationId: string; runId: string; causationDepth: number };
+export type AutomationCausationContext = {
+  automationId: string;
+  runId: string;
+  causationDepth: number;
+  causationChain?: readonly string[];
+};
 
 const automationContextStorage = new AsyncLocalStorage<AutomationCausationContext>();
 
@@ -25,4 +30,17 @@ export function automationCausationDepth(): number {
 
 export function automationCausationExhausted(): boolean {
   return automationCausationDepth() >= AUTOMATION_MAX_CAUSATION_DEPTH;
+}
+
+export type AutomationCausation = { depth: number; chain: string[]; parentRunId: string };
+
+export function automationCausationForChild(): AutomationCausation | null {
+  const context = currentAutomationContext();
+  if (!context) return null;
+
+  return {
+    depth: context.causationDepth,
+    chain: [...new Set([...(context.causationChain ?? []), context.automationId])],
+    parentRunId: context.runId,
+  };
 }

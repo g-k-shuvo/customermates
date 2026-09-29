@@ -173,8 +173,8 @@ inline in the interactor that caused them.
   (the `(static)` route group) to `/dashboard`. Do not build features that depend on
   `ConnectedAccount` — it is unavailable in our deployment.
 
-**The agreed exceptions.** Two, both of the same kind: a compiler- or test-enforced census
-under `ee/` that a core change is forced to bump. Both conflict on rebase. Neither makes an
+**The agreed exceptions.** Three, all of the same kind: a compiler- or test-enforced census
+under `ee/` that a core change is forced to bump. All conflict on rebase. None makes an
 Enterprise Feature operational.
 
 1. `ee/agent-chat/__tests__/provider-safe-schema.test.ts` pins an exact census of MCP tool
@@ -191,6 +191,12 @@ Enterprise Feature operational.
    and an early return for `lead` in `findAccessibleAuditEntityIds` before its local
    `NamedModel` union. Any further `EntityType` member needs the same two edits. Widen the
    map and skip; never add a wrong FilterFieldKey to satisfy the type.
+
+3. `ee/messaging/activities/__tests__/activity-scope.repository.test.ts` pins the audit events
+   a task timeline reads (`auditEventsForEntityTypes([task])`). The W3-14 automation timeline
+   event `task.automated` maps to tasks, so the expected list carries `TASK_AUTOMATED`. Any
+   further event mapped to an entity type in `features/event/audit-entity-type.ts` for tasks
+   must be added there too; only the assertion changes, never the ee runtime code.
 
 ---
 

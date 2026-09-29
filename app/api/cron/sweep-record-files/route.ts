@@ -1,4 +1,8 @@
-import { getSweepMailAttachmentsInteractor, getSweepRecordFilesInteractor } from "@/core/di";
+import {
+  getRedactCampaignRecipientsInteractor,
+  getSweepMailAttachmentsInteractor,
+  getSweepRecordFilesInteractor,
+} from "@/core/di";
 import { env } from "@/env";
 
 export const runtime = "nodejs";
@@ -13,8 +17,13 @@ export async function GET(req: Request) {
 
   const result = await getSweepRecordFilesInteractor().invoke();
   const mail = await getSweepMailAttachmentsInteractor().invoke();
+  const campaigns = await getRedactCampaignRecipientsInteractor().invoke();
 
   if (!result.ok) return Response.json({ ok: false });
 
-  return Response.json({ ...result.data, mailAttachmentsRemoved: mail.ok ? mail.data.removed : 0 });
+  return Response.json({
+    ...result.data,
+    mailAttachmentsRemoved: mail.ok ? mail.data.removed : 0,
+    campaignRecipientsRedacted: campaigns.ok ? campaigns.data.redacted : 0,
+  });
 }

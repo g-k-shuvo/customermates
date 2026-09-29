@@ -1,3 +1,4 @@
+import { StorageQuota } from "@/core/storage/storage-quota";
 import type { StorageProvider } from "@/core/storage/storage-provider";
 import type { TenantUser } from "@/features/user/user.schema";
 
@@ -121,7 +122,16 @@ describe("CreateRecordDocumentInteractor", () => {
       ),
     };
     const { provider, spies } = storage(storageOverrides);
-    return { repo, spies, interactor: new CreateRecordDocumentInteractor(repo as never, provider, userService) };
+    return {
+      repo,
+      spies,
+      interactor: new CreateRecordDocumentInteractor(
+        repo as never,
+        provider,
+        userService,
+        new StorageQuota({ usedBytesCompanyWide: () => Promise.resolve(0) }, null),
+      ),
+    };
   }
 
   const request = {

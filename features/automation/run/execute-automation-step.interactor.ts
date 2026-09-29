@@ -75,14 +75,22 @@ export class ExecuteAutomationStepInteractor {
         runStepId: step.id,
         kind: step.kind,
         config: step.config,
-        context: { run: plan, entityType: plan.entityType, entityId: plan.entityId },
+        context: { run: plan, runStepId: step.id, entityType: plan.entityType, entityId: plan.entityId },
       },
     };
   }
 
   async perform(begun: BegunAutomationStep): Promise<AutomationActionOutcome> {
-    return runInAutomationContext({ automationId: begun.automationId, runId: begun.runId, causationDepth: 1 }, () =>
-      this.executor.execute({ kind: begun.kind, config: begun.config, context: begun.context }),
+    const { run } = begun.context;
+
+    return runInAutomationContext(
+      {
+        automationId: begun.automationId,
+        runId: begun.runId,
+        causationDepth: (run.causationDepth ?? 0) + 1,
+        causationChain: run.causationChain ?? [],
+      },
+      () => this.executor.execute({ kind: begun.kind, config: begun.config, context: begun.context }),
     );
   }
 

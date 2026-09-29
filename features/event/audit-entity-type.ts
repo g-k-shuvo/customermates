@@ -59,6 +59,11 @@ export const AUDIT_EVENT_ENTITY_TYPE: Record<DomainEvent, EntityType | null> = {
   [DomainEvent.MESSAGING_CALENDAR_EVENT_CHANGED]: null,
   [DomainEvent.MESSAGING_RELATION_CREATED]: null,
   [DomainEvent.RECORDS_EXPORTED]: null,
+  [DomainEvent.CONTACT_AUTOMATED]: EntityType.contact,
+  [DomainEvent.ORGANIZATION_AUTOMATED]: EntityType.organization,
+  [DomainEvent.DEAL_AUTOMATED]: EntityType.deal,
+  [DomainEvent.SERVICE_AUTOMATED]: EntityType.service,
+  [DomainEvent.TASK_AUTOMATED]: EntityType.task,
 };
 
 export function auditEntityTypeFor(event: string): EntityType | null {

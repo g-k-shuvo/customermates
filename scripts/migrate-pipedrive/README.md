@@ -34,7 +34,8 @@ Everything can come from the environment (`.env` is loaded) or from a flag. Flag
 | `--fallback-owner` | `MIGRATION_FALLBACK_OWNER_EMAIL` | Nominated owner for records whose Pipedrive user has no match |
 | `--default-currency` | `MIGRATION_DEFAULT_CURRENCY` | Currency for the monetary custom columns, default `eur` |
 | `--dry-run` | — | Report only; writes nothing |
-| `--only` | — | Comma-separated subset of `organizations,contacts,pipelines,stages,lostReasons,deals,leads,tasks,notes` |
+| `--only` | — | Comma-separated subset of `organizations,contacts,pipelines,stages,lostReasons,deals,leads,tasks,notes,lists,files` |
+| `--list-fields` | `MIGRATION_LIST_FIELDS` | Comma-separated person fields (enum or set) whose options become contact lists, e.g. `CDI Target` |
 | `--limit` | — | Cap the source records read per entity (useful for a first pass) |
 | `--won-stage-name` / `--lost-stage-name` | — | Names of the terminal stages added to each imported pipeline (default `Won` / `Lost`) |
 | `--make-default-pipeline` | — | Mark the first imported pipeline as the workspace default |
@@ -54,7 +55,12 @@ exported"; a missing *directory* is a hard error.
 organizations.json   persons.json     pipelines.json   stages.json
 deals.json           deal-flow.json   activities.json  notes.json
 users.json           dealFields.json  leads.json       leadLabels.json
+personFields.json    files.json       files/
 ```
+
+`files/` holds the file contents, each named by its Pipedrive file id (`files/901`) or by its
+`file_name`. A file listed in `files.json` without content is skipped and reported. Over the
+API the contents come from `GET /files/{id}/download`.
 
 `deal-flow.json` is the concatenation of `GET /deals/{id}/flow` for every deal; each entry is
 matched back to its deal by `data.item_id`.
@@ -224,7 +230,7 @@ missing column a hard error instead (create them in the UI first if you prefer).
 
 ---
 
-### Activities land on the Task fields, with one exception
+### Activities land on the Task fields
 
 `Task` carries `activityKind`, `dueAt` and `durationMinutes`, so those are mapped rather than
 stringified:
@@ -237,19 +243,30 @@ stringified:
 - `durationMinutes` — Pipedrive's `HH:MM` duration, as whole minutes. A zero-length activity
   leaves the field empty, because the field is a positive integer.
 
-The exception is **completion**. `Task.completedAt` exists on the model but is read-only over
-the public REST API — neither `POST /api/v1/tasks` nor `PUT /api/v1/tasks/{id}` accepts it —
-and this script writes only through that API. A done activity therefore imports as an open
-task carrying `Completed in Pipedrive: yes` in its notes, and `activity.done` is listed in the
-report's unmapped values.
+**Completion** goes through `POST /api/v1/tasks/{id}/complete` after the task upsert, for every
+activity with `done: true` whose task is not completed yet, so a completion that failed on an
+earlier run is retried. A failure is reported as an unmapped `activity.done` value, not a
+skipped record, because the task itself has landed. The endpoint stamps `completedAt` with
+`now()`, so the completion *date* is a fidelity limit, like the close timestamps below; the
+notes still carry `Completed in Pipedrive: yes`.
 
-To close this, the target needs an endpoint that completes a task (the shape the deal
-transitions already use: `POST /api/v1/deals/{id}/won`). Once one exists, the migration calls
-it for every activity with `done: true` — add it to `CrmWrites`, call it after the task
-upsert, and treat a failure the way `applyClosingTransition` does: an unmapped value, not a
-skipped record, because the task itself has already landed. Note that such an endpoint stamps
-`completedAt` with `now()`, so the completion *date* stays a fidelity limit either way, like
-the close timestamps below.
+### Lists
+
+`--list-fields "CDI Target"` turns each option of that person field (type enum or set) into a
+contact list named `<field>: <option>`, e.g. `CDI Target: Higher Ed`, holding every migrated
+person that carries the option. Lists are found by name, so a re-run adds only new members.
+A field name that matches nothing is reported as an unmapped `list.field`; a person with the
+option who was not migrated is reported as `list.member`. Without `--list-fields` the arm
+does nothing.
+
+### Files
+
+Files attached to a deal, person or organization are uploaded onto the migrated record through
+the presigned record-file flow (`POST /api/v1/files/uploads`, `PUT` to the returned URL, then
+`POST /api/v1/files/{id}/complete`). A deal wins over a person, and a person over an
+organization. A file whose name and size already exist on the record is skipped on a re-run.
+A file on a lead goes onto the migrated lead (run `leads` in the same or an earlier run), and a deal still wins when a file names both. The target must have storage configured; the
+virus scan and storage quota apply to these uploads as to any other.
 
 ---
 
@@ -257,12 +274,12 @@ the close timestamps below.
 
 The PRD names three. The first of them — Pipedrive activity types having no home — is closed:
 `Task` carries `activityKind`, `dueAt` and `durationMinutes` in this tree and the migration
-uses them (see above). Only task *completion* is still unwritable. Two remain untouched.
+uses them (see above), and task completion is written. The second is mostly closed: files now
+land on their records (see above). What is left:
 
-1. **File attachments are not modelled anywhere in this product.** There is no file storage in
-   the repository at all, so Pipedrive files and the `file` deal-field type cannot be
-   migrated. `file` fields are reported as unmapped rather than silently flattened to text.
-   Attachments have to stay in Pipedrive or move somewhere else entirely.
+1. **`file` custom fields have no home.** The `file` deal-field type is still reported as
+   unmapped rather than flattened to text; files attached to deals, leads, persons and
+   organizations are migrated (see above).
 
 2. **Email threads tied to deals cannot be imported.** That surface lives in `ee/`, is Cloud
    only, and depends on `ConnectedAccount`, which is unavailable in a self-hosted deployment.
@@ -303,5 +320,6 @@ shape, the `source == target + skipped` rule and the rendered output.
 `run-migration.test.ts` drives the orchestrator itself against an in-memory workspace — a
 fake client holding records, custom columns and pipelines, and a writer that records every
 call and applies it — so the parts that are neither pure mapping nor HTTP are covered too:
-`--only`, `--update-existing`, stage appending, the closing transitions and the note merge.
+`--only`, `--update-existing`, stage appending, the closing transitions, the note merge, task completion, the lists
+arm and the files arm.
 Everything that talks HTTP is deliberately kept out of all three.

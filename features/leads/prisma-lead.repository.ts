@@ -307,6 +307,10 @@ export class PrismaLeadRepo
       where: { ...this.accessWhere("lead"), id: args.id },
       data: { convertedDealId: args.dealId, convertedAt: args.convertedAt, status: LeadStatus.converted },
     });
+    await this.prisma.recordFile.updateMany({
+      where: { companyId: this.companyId, leadId: args.id },
+      data: { entityType: "deal", dealId: args.dealId, leadId: null },
+    });
 
     return this.getOrThrowCompanyWide(args.id);
   }

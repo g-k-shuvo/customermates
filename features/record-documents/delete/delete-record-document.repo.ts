@@ -1,8 +1,8 @@
-import type { RecordFileEntityType } from "@/features/record-files/record-file.schema";
+import type { RecordDocumentEntityType } from "@/features/record-files/record-file.schema";
 
 export type DeletableRecordDocument = {
   id: string;
-  entityType: RecordFileEntityType;
+  entityType: RecordDocumentEntityType;
   title: string;
   storageKeys: string[];
 };
