@@ -109,6 +109,7 @@ import {
   updateInvoiceOperation,
 } from "@/features/invoices/upsert/upsert-invoice.openapi";
 import {
+  deleteInvoicePaymentOperation,
   issueInvoiceOperation,
   recordInvoicePaymentOperation,
   voidInvoiceOperation,
@@ -140,6 +141,7 @@ import {
 } from "@/features/messaging-send/suppression/manage-suppressions.openapi";
 import {
   getSenderIdentityOperation,
+  resetSenderIdentityOperation,
   saveSenderIdentityOperation,
   verifySenderDomainOperation,
 } from "@/features/messaging-send/sender/sender-identity.openapi";
@@ -580,6 +582,9 @@ export function generateOpenApiSpec() {
       "/v1/invoices/{id}/payments": {
         post: recordInvoicePaymentOperation,
       },
+      "/v1/invoices/{id}/payments/{paymentId}": {
+        delete: deleteInvoicePaymentOperation,
+      },
       "/v1/invoices/{id}/void": {
         post: voidInvoiceOperation,
       },
@@ -603,6 +608,7 @@ export function generateOpenApiSpec() {
       "/v1/sender-identity": {
         get: getSenderIdentityOperation,
         put: saveSenderIdentityOperation,
+        delete: resetSenderIdentityOperation,
       },
       "/v1/sender-identity/verify": {
         post: verifySenderDomainOperation,

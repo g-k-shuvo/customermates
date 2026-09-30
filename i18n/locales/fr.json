@@ -31,6 +31,7 @@
   },
   "Activities": {
     "agenda": {
+      "doneEarlier": "Terminées plus tôt ({count})",
       "emptyBody": "Pas encore de {plural} planifiées.",
       "emptyTitle": "Rien de planifié",
       "later": "Plus tard ({count})",
@@ -952,6 +953,14 @@
     "unnamed": "Sans nom"
   },
   "AuditLogModal": {
+    "changes": {
+      "after": "Après",
+      "before": "Avant",
+      "field": "Champ",
+      "no": "Non",
+      "title": "Modifications",
+      "yes": "Oui"
+    },
     "createdAt": "Créé le",
     "deletedField": "Champ supprimé",
     "deletedFieldChanged": "Valeur modifiée sur un champ supprimé depuis.",
@@ -976,10 +985,13 @@
       "effectiveAt": "En vigueur à partir du",
       "emails": "Adresses e-mail",
       "isNewCompany": "Première personne de l'espace",
+      "lostReasonId": "Motif de perte",
+      "pipelineId": "Pipeline",
       "postalCode": "Code postal",
       "prompt": "Consignes",
       "recipientEmail": "Envoyé à",
       "removalReason": "Motif de suppression",
+      "stageId": "Étape",
       "street": "Rue",
       "terminology": "Noms des enregistrements",
       "timezone": "Fuseau horaire",
@@ -1113,6 +1125,7 @@
     "removeStep": "Retirer l’action",
     "rowSummary": "{trigger} · {steps}",
     "runsEmpty": "Cette automatisation n’a pas encore été exécutée.",
+    "runSkippedReason": "Non exécutée : l'enregistrement ne remplissait pas les conditions.",
     "runsLabel": "Afficher l’historique des exécutions de l’automatisation {name}",
     "runStatuses": {
       "cancelled": "Annulée",
@@ -1143,6 +1156,7 @@
       "senderUnverified": "L’adresse d’expéditeur n’est pas vérifiée, rien n’a donc été envoyé",
       "unexpectedError": "L’action s’est arrêtée à cause d’une erreur inattendue"
     },
+    "stepNotRun": "Non exécuté",
     "title": "Automatisations",
     "toggleLabel": "Activer ou désactiver l’automatisation {name}",
     "triggerKinds": {
@@ -1536,11 +1550,13 @@
       "invalidJsonBody": "Le corps de la requête n'est pas un JSON valide.",
       "invalidSortField": "Champ de tri introuvable ou inaccessible. Champs disponibles : {validValues}.",
       "invalidUrl": "Saisissez une URL valide.",
+      "invoiceBuyerMissing": "Ajoutez le nom et l'adresse du destinataire avant d'émettre la facture.",
       "invoiceHasNoLines": "Une facture doit comporter au moins une ligne avant d'être émise.",
       "invoiceNotDraft": "Seule une facture brouillon peut être modifiée ou supprimée. Annulez plutôt une facture émise.",
       "invoiceNotFound": "ID de facture introuvable ou inaccessible.",
       "invoiceNotIssued": "Cela ne fonctionne que pour une facture émise qui n'est ni payée ni annulée.",
       "invoicePaymentExceedsBalance": "Le paiement dépasse le solde restant dû.",
+      "invoicePaymentNotFound": "Ce paiement n'existe plus sur la facture.",
       "invoiceSellerMissing": "Ajoutez la raison sociale et l'adresse de votre entreprise dans les paramètres de facturation avant d'émettre une facture.",
       "invoiceXRechnungIncomplete": "XRechnung exige l'e-mail de facturation, le téléphone, le n° de TVA et une adresse avec code postal et ville de votre entreprise, ainsi que l'e-mail de facturation et l'adresse du client.",
       "leadAlreadyConverted": "Cette piste a déjà été convertie en affaire.",
@@ -2722,6 +2738,7 @@
       "reopen": "Rouvrir"
     },
     "expectedCloseDateLabel": "Date de clôture prévue",
+    "fromLead": "Issu du lead",
     "noServicesAdded": "Aucun élément « {entity} » ajouté pour le moment",
     "pipeline": {
       "allPipelines": "Tous les pipelines",
@@ -2734,6 +2751,7 @@
       "stagePlaceholder": "Sélectionner une étape",
       "switcherLabel": "Pipeline"
     },
+    "probabilityValue": "{value} %",
     "quantityLabel": "Quantité",
     "stageBar": {
       "currentStage": "{name}, étape actuelle : {duration}",
@@ -3429,6 +3447,7 @@
       "title": "Facturé à",
       "vatId": "N° de TVA"
     },
+    "buyerMissing": "Ajoutez le nom et l'adresse sous Facturé à avant d'émettre.",
     "columns": {
       "balance": "Restant dû",
       "buyer": "Client",
@@ -3497,7 +3516,9 @@
       "note": "Note",
       "record": "Enregistrer le paiement",
       "recorded": "Paiement enregistré",
-      "title": "Paiements"
+      "title": "Paiements",
+      "undo": "Annuler",
+      "undone": "Paiement supprimé"
     },
     "previous": "Précédent",
     "seller": "Émetteur",
@@ -3610,6 +3631,8 @@
   "LeadDetail": {
     "convert": "Convertir en affaire",
     "convertDescription": "« {title} » est converti avec son contact, son organisation, son responsable et ses notes. La piste reste enregistrée, marquée comme convertie.",
+    "convertedToDeal": "Converti en affaire.",
+    "openConvertedDeal": "Ouvrir l'affaire",
     "owner": "Responsable",
     "probabilityPlaceholder": "Valeur de l’étape : {percent} %",
     "source": "Source",
@@ -3692,6 +3715,7 @@
     "backfillDaysDescription": "Jusqu'où la première synchronisation remonte.",
     "backfillDaysLabel": "Jours d'historique",
     "cancelReply": "Annuler",
+    "collapseComposer": "Masquer l'éditeur",
     "connectDescription": "Nous nous connectons au serveur de messagerie avec ces informations avant tout enregistrement, donc un hôte ou un mot de passe incorrect est signalé ici au lieu d'être enregistré.",
     "connectFailedTitle": "La boîte mail n'a pas pu être connectée",
     "connectSubmit": "Connecter la boîte mail",
@@ -3716,13 +3740,16 @@
     "emptyAccountsTitle": "Aucune boîte mail connectée",
     "emptyDescription": "Connectez une boîte mail et vos conversations apparaîtront ici.",
     "emptyTitle": "Pas encore d'e-mails",
+    "expandComposer": "Écrire",
     "folderLabel": "Dossier",
     "forward": "Transférer",
     "forwardHint": "Votre note apparaît au-dessus de l'original cité. Un transfert ouvre une nouvelle conversation pour les personnes ajoutées : leurs réponses ne reviennent pas ici.",
+    "forwardPickedHint": "Vous transférez le message choisi, avec ses pièces jointes. Votre note apparaît au-dessus de l'original cité, et les réponses ne reviennent pas dans cette conversation.",
     "forwardPlaceholder": "Ajouter une note (facultatif)",
     "forwardRecipientsLabel": "Transférer à",
     "forwardRecipientsPlaceholder": "Séparez les adresses par des virgules",
     "forwardSent": "Message transféré",
+    "forwardThisMessage": "Transférer ce message",
     "imapHostLabel": "Hôte IMAP",
     "imapPortLabel": "Port IMAP",
     "imapSecureDescription": "À désactiver uniquement pour un serveur qui attend une bascule depuis le texte clair.",
@@ -3998,13 +4025,13 @@
     },
     "footnote": "Aucun espace de travail n'est créé tant que vous n'avez pas choisi Créer et complété votre profil.",
     "join": {
-      "description": "Rejoignez une équipe qui utilise déjà Customermates. Vous aurez besoin d'une invitation d'un administrateur.",
+      "description": "Rejoignez une équipe qui utilise déjà {brandName}. Vous aurez besoin d'une invitation d'un administrateur.",
       "note": "Aucun espace de travail ne sera créé",
       "title": "Rejoindre un espace de travail existant"
     },
     "optionsLabel": "Choix de configuration de l'espace de travail",
     "signedInAs": "Connecté en tant que {email}",
-    "subtitle": "Créez un espace de travail pour votre entreprise ou rejoignez une équipe qui utilise déjà Customermates.",
+    "subtitle": "Créez un espace de travail pour votre entreprise ou rejoignez une équipe qui utilise déjà {brandName}.",
     "title": "Comment souhaitez-vous commencer ?"
   },
   "OnboardingForm": {
@@ -4723,6 +4750,11 @@
     "recordValue": "Valeur",
     "refusedUntilVerified": "Tant que le domaine n'est pas vérifié, les e-mails de cet expéditeur sont refusés.",
     "replyTo": "Adresse de réponse (facultative)",
+    "reset": "Utiliser l'expéditeur par défaut",
+    "resetConfirm": {
+      "message": "Les automatisations et campagnes enverront de nouveau avec l'expéditeur par défaut de l'installation. Votre nom, adresse et Reply-To personnalisés sont supprimés.",
+      "title": "Utiliser l'expéditeur par défaut ?"
+    },
     "save": "Enregistrer l'expéditeur",
     "saved": "Expéditeur enregistré",
     "title": "Expéditeur",

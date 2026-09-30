@@ -108,6 +108,7 @@ import {
   UpdateInvoiceInteractor,
 } from "@/features/invoices/upsert/upsert-invoice.interactor";
 import {
+  DeleteInvoicePaymentInteractor,
   IssueInvoiceInteractor,
   RecordInvoicePaymentInteractor,
   VoidInvoiceInteractor,
@@ -143,6 +144,7 @@ import { PrismaDataViewRepo } from "@/features/data-view/prisma-data-view.reposi
 import { PrismaWidgetRepo } from "@/features/widget/prisma-widget.repository";
 import { PrismaWidgetCalculatorRepo } from "@/features/widget/calculator/prisma-widget-calculator.repository";
 import { PrismaWidgetFunnelRepo } from "@/features/widget/calculator/prisma-widget-funnel.repository";
+import { PreviewFunnelWidgetInteractor } from "@/features/widget/preview-funnel-widget.interactor";
 import { PrismaWebhookRepo } from "@/features/webhook/prisma-webhook.repository";
 import { PrismaRoutineRepo } from "@/ee/routines/prisma-routine.repository";
 import { PrismaRoutineFilterMatcher } from "@/ee/routines/routine-filter-matcher";
@@ -410,6 +412,7 @@ import { PrismaSenderIdentityRepo } from "@/features/messaging-send/sender/prism
 import { SenderResolver } from "@/features/messaging-send/sender/sender-resolver";
 import {
   GetSenderIdentityInteractor,
+  ResetSenderIdentityInteractor,
   SaveSenderIdentityInteractor,
   VerifySenderDomainInteractor,
 } from "@/features/messaging-send/sender/sender-identity.interactor";
@@ -879,6 +882,8 @@ export const getGetSenderIdentityInteractor = () => new GetSenderIdentityInterac
 export const getSaveSenderIdentityInteractor = () => new SaveSenderIdentityInteractor(getSenderIdentityRepo());
 
 export const getVerifySenderDomainInteractor = () => new VerifySenderDomainInteractor(getSenderIdentityRepo());
+
+export const getResetSenderIdentityInteractor = () => new ResetSenderIdentityInteractor(getSenderIdentityRepo());
 
 export const getMergeValuesRepo = () => new PrismaMergeValuesRepo();
 
@@ -1788,6 +1793,7 @@ export const getUpdateWidgetLayoutsInteractor = () => new UpdateWidgetLayoutsInt
 export const getGetCompanyWidgetsInteractor = () => new GetCompanyWidgetsInteractor(getWidgetRepo());
 
 export const getGetWidgetByIdInteractor = () => new GetWidgetByIdInteractor(getWidgetRepo());
+export const getPreviewFunnelWidgetInteractor = () => new PreviewFunnelWidgetInteractor(getWidgetFunnelRepo());
 
 export const getGetWidgetFilterableFieldsInteractor = () =>
   new GetWidgetFilterableFieldsInteractor(
@@ -2992,6 +2998,7 @@ export const getDeleteInvoiceInteractor = () => new DeleteInvoiceInteractor(getI
 export const getIssueInvoiceInteractor = () => new IssueInvoiceInteractor(getInvoiceRepo());
 
 export const getRecordInvoicePaymentInteractor = () => new RecordInvoicePaymentInteractor(getInvoiceRepo());
+export const getDeleteInvoicePaymentInteractor = () => new DeleteInvoicePaymentInteractor(getInvoiceRepo());
 
 export const getVoidInvoiceInteractor = () => new VoidInvoiceInteractor(getInvoiceRepo());
 

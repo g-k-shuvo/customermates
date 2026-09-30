@@ -11,6 +11,7 @@ import { MailboxTransportError, MailboxTransportFailure } from "../sync/mailbox-
 import { buildForward } from "./build-forward";
 import { resolveMailboxAuth, type MailboxAuth, type MailboxCredentialAuth } from "../oauth/mailbox-credential-auth";
 import { STORED_MESSAGE_ID_PREFIX } from "./recover-message-id";
+import { resolveUserFormattingTag, resolveUserLocale } from "@/i18n/user-locale";
 
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
 import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
@@ -21,6 +22,7 @@ import { fail, failNotFound, failUnavailable } from "@/core/validation/interacto
 export type ForwardRecipientsJson = { to?: { identifier?: string }[]; cc?: { identifier?: string }[] };
 
 export type ForwardSourceRow = {
+  id: string;
   subject: string | null;
   sender: unknown;
   senderIdentifier: string | null;
@@ -34,7 +36,6 @@ export type ForwardContext = {
     id: string;
     subject: string | null;
     connectedAccountId: string;
-    messages: ForwardSourceRow[];
   };
   credential: {
     imapHost: string;
@@ -51,11 +52,15 @@ export type ForwardContext = {
 };
 
 export type ForwardAttachmentSource = {
-  load(messagingThreadId: string): Promise<OutgoingAttachment[]>;
+  load(messagingThreadId: string, messageId: string): Promise<OutgoingAttachment[]>;
 };
 
 export abstract class ForwardThreadRepo {
   abstract findReplyContext(messagingThreadId: string): Promise<ForwardContext | null>;
+  abstract findForwardSourceMessage(
+    messagingThreadId: string,
+    messageId: string | null,
+  ): Promise<ForwardSourceRow | null>;
   abstract storeOutboundReply(args: {
     messagingThreadId: string;
     connectedAccountId: string;
@@ -115,7 +120,12 @@ export class ForwardThreadInteractor extends AuthenticatedInteractor<ForwardThre
       return failUnavailable(CustomErrorCode.mailboxSendingNotConfigured);
 
     const mailboxAddress = credential.connectedAccount.emailAddress ?? credential.username;
-    const [latest] = thread.messages;
+    const latest = await this.repo.findForwardSourceMessage(thread.id, data.messageId ?? null);
+    if (data.messageId && !latest) return failNotFound(CustomErrorCode.mailboxThreadNotFound, ["messageId"]);
+    const dateFormat = new Intl.DateTimeFormat(resolveUserFormattingTag(this.user, resolveUserLocale(this.user)), {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
 
     const forward = buildForward({
       mailboxAddress,
@@ -131,11 +141,12 @@ export class ForwardThreadInteractor extends AuthenticatedInteractor<ForwardThre
         bodyText: latest?.bodyText ?? null,
       },
       body: data.body,
+      formatDate: (date) => dateFormat.format(date),
     });
 
     if (forward.to.length === 0) return await fail(CustomErrorCode.mailboxNoReplyRecipient, ["to"]);
 
-    const attachments = (await this.attachments?.load(thread.id)) ?? [];
+    const attachments = latest ? ((await this.attachments?.load(thread.id, latest.id)) ?? []) : [];
     if (attachments.length > 0) forward.attachments = attachments;
 
     let auth: MailboxAuth;

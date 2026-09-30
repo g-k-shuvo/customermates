@@ -31,6 +31,7 @@
   },
   "Activities": {
     "agenda": {
+      "doneEarlier": "Completate in precedenza ({count})",
       "emptyBody": "Non ci sono ancora {plural} pianificate.",
       "emptyTitle": "Niente in programma",
       "later": "Più avanti ({count})",
@@ -952,6 +953,14 @@
     "unnamed": "Senza nome"
   },
   "AuditLogModal": {
+    "changes": {
+      "after": "Dopo",
+      "before": "Prima",
+      "field": "Campo",
+      "no": "No",
+      "title": "Modifiche",
+      "yes": "Sì"
+    },
     "createdAt": "Creato il",
     "deletedField": "Campo eliminato",
     "deletedFieldChanged": "Valore modificato su un campo che nel frattempo è stato eliminato.",
@@ -976,10 +985,13 @@
       "effectiveAt": "In vigore dal",
       "emails": "Indirizzi e-mail",
       "isNewCompany": "Prima persona nello spazio",
+      "lostReasonId": "Motivo di perdita",
+      "pipelineId": "Pipeline",
       "postalCode": "Codice postale",
       "prompt": "Istruzioni",
       "recipientEmail": "Inviato a",
       "removalReason": "Motivo rimozione",
+      "stageId": "Fase",
       "street": "Via",
       "terminology": "Nomi dei record",
       "timezone": "Fuso orario",
@@ -1113,6 +1125,7 @@
     "removeStep": "Rimuovi azione",
     "rowSummary": "{trigger} · {steps}",
     "runsEmpty": "Questa automazione non è ancora stata eseguita.",
+    "runSkippedReason": "Non eseguita: il record non soddisfaceva le condizioni.",
     "runsLabel": "Mostra la cronologia delle esecuzioni dell’automazione {name}",
     "runStatuses": {
       "cancelled": "Annullata",
@@ -1143,6 +1156,7 @@
       "senderUnverified": "L’indirizzo del mittente non è verificato, quindi non è stato inviato nulla",
       "unexpectedError": "L’azione si è interrotta a causa di un errore imprevisto"
     },
+    "stepNotRun": "Non eseguito",
     "title": "Automazioni",
     "toggleLabel": "Attiva o disattiva l’automazione {name}",
     "triggerKinds": {
@@ -1536,11 +1550,13 @@
       "invalidJsonBody": "Il corpo della richiesta non è un JSON valido.",
       "invalidSortField": "Campo di ordinamento non trovato o non accessibile. Campi disponibili: {validValues}.",
       "invalidUrl": "Inserisci un URL valido.",
+      "invoiceBuyerMissing": "Aggiungi nome e indirizzo del destinatario prima di emettere la fattura.",
       "invoiceHasNoLines": "Una fattura deve avere almeno una riga prima di essere emessa.",
       "invoiceNotDraft": "Solo una fattura in bozza può essere modificata o eliminata. Annulla invece una fattura emessa.",
       "invoiceNotFound": "ID della fattura non trovato o non accessibile.",
       "invoiceNotIssued": "Funziona solo con una fattura emessa non ancora pagata né annullata.",
       "invoicePaymentExceedsBalance": "Il pagamento supera il saldo aperto.",
+      "invoicePaymentNotFound": "Questo pagamento non esiste più nella fattura.",
       "invoiceSellerMissing": "Aggiungi la ragione sociale e l'indirizzo della tua azienda nelle impostazioni di fatturazione prima di emettere una fattura.",
       "invoiceXRechnungIncomplete": "XRechnung richiede email di fatturazione, telefono, partita IVA e un indirizzo con CAP e città della tua azienda, oltre a email di fatturazione e indirizzo del cliente.",
       "leadAlreadyConverted": "Questo lead è già stato convertito in una trattativa.",
@@ -2722,6 +2738,7 @@
       "reopen": "Riapri"
     },
     "expectedCloseDateLabel": "Data di chiusura prevista",
+    "fromLead": "Dal lead",
     "noServicesAdded": "Ancora nessuna voce «{entity}» aggiunta",
     "pipeline": {
       "allPipelines": "Tutte le pipeline",
@@ -2734,6 +2751,7 @@
       "stagePlaceholder": "Seleziona una fase",
       "switcherLabel": "Pipeline"
     },
+    "probabilityValue": "{value}%",
     "quantityLabel": "Quantità",
     "stageBar": {
       "currentStage": "{name}, fase attuale: {duration}",
@@ -3429,6 +3447,7 @@
       "title": "Intestata a",
       "vatId": "Partita IVA"
     },
+    "buyerMissing": "Aggiungi nome e indirizzo in Intestata a prima di emettere.",
     "columns": {
       "balance": "Aperto",
       "buyer": "Cliente",
@@ -3497,7 +3516,9 @@
       "note": "Nota",
       "record": "Registra pagamento",
       "recorded": "Pagamento registrato",
-      "title": "Pagamenti"
+      "title": "Pagamenti",
+      "undo": "Annulla",
+      "undone": "Pagamento rimosso"
     },
     "previous": "Precedente",
     "seller": "Emittente",
@@ -3610,6 +3631,8 @@
   "LeadDetail": {
     "convert": "Converti in trattativa",
     "convertDescription": "«{title}» viene convertito con contatto, organizzazione, responsabile e note. Il lead resta registrato, contrassegnato come convertito.",
+    "convertedToDeal": "Convertito in trattativa.",
+    "openConvertedDeal": "Apri la trattativa",
     "owner": "Responsabile",
     "probabilityPlaceholder": "Valore della fase: {percent}%",
     "source": "Origine",
@@ -3692,6 +3715,7 @@
     "backfillDaysDescription": "Quanto indietro legge la prima sincronizzazione.",
     "backfillDaysLabel": "Giorni di storico",
     "cancelReply": "Annulla",
+    "collapseComposer": "Nascondi editor",
     "connectDescription": "Accediamo al server di posta con questi dati prima di salvare qualsiasi cosa, quindi un host o una password errati vengono segnalati qui invece di essere salvati.",
     "connectFailedTitle": "Non è stato possibile collegare la casella",
     "connectSubmit": "Collega la casella",
@@ -3716,13 +3740,16 @@
     "emptyAccountsTitle": "Nessuna casella collegata",
     "emptyDescription": "Collega una casella di posta e le tue conversazioni compariranno qui.",
     "emptyTitle": "Ancora nessuna email",
+    "expandComposer": "Scrivi",
     "folderLabel": "Cartella",
     "forward": "Inoltra",
     "forwardHint": "La tua nota compare sopra l'originale citato. Un inoltro avvia una nuova conversazione per le persone che aggiungi, quindi le loro risposte non tornano qui.",
+    "forwardPickedHint": "Stai inoltrando il messaggio scelto, con i suoi allegati. La tua nota compare sopra l'originale citato e le risposte non tornano in questa conversazione.",
     "forwardPlaceholder": "Aggiungi una nota (facoltativa)",
     "forwardRecipientsLabel": "Inoltra a",
     "forwardRecipientsPlaceholder": "Separa gli indirizzi con le virgole",
     "forwardSent": "Messaggio inoltrato",
+    "forwardThisMessage": "Inoltra questo messaggio",
     "imapHostLabel": "Host IMAP",
     "imapPortLabel": "Porta IMAP",
     "imapSecureDescription": "Disattivalo solo per un server che si aspetta un passaggio dal testo in chiaro.",
@@ -3998,13 +4025,13 @@
     },
     "footnote": "Non viene creato alcuno spazio di lavoro finché non scegli Crea e completi il tuo profilo.",
     "join": {
-      "description": "Entra in un team che usa già Customermates. Avrai bisogno dell'invito di un amministratore.",
+      "description": "Entra in un team che usa già {brandName}. Avrai bisogno dell'invito di un amministratore.",
       "note": "Non verrà creato alcuno spazio di lavoro",
       "title": "Entra in uno spazio di lavoro esistente"
     },
     "optionsLabel": "Opzioni di configurazione dello spazio di lavoro",
     "signedInAs": "Accesso effettuato come {email}",
-    "subtitle": "Crea uno spazio di lavoro per la tua azienda o entra in un team che usa già Customermates.",
+    "subtitle": "Crea uno spazio di lavoro per la tua azienda o entra in un team che usa già {brandName}.",
     "title": "Come vuoi iniziare?"
   },
   "OnboardingForm": {
@@ -4723,6 +4750,11 @@
     "recordValue": "Valore",
     "refusedUntilVerified": "Finché il dominio non è verificato, le email di questo mittente vengono rifiutate.",
     "replyTo": "Rispondi a (facoltativo)",
+    "reset": "Usa il mittente predefinito",
+    "resetConfirm": {
+      "message": "Automazioni e campagne invieranno di nuovo con il mittente predefinito dell'installazione. Nome, indirizzo e Reply-To personalizzati vengono rimossi.",
+      "title": "Usare il mittente predefinito?"
+    },
     "save": "Salva mittente",
     "saved": "Mittente salvato",
     "title": "Mittente",

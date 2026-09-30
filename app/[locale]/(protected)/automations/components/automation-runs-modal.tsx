@@ -32,6 +32,15 @@ const STATUS_COLOR = {
   [AutomationRunStatus.cancelled]: "warning",
 } as const;
 
+const SETTLED_WITHOUT_RUNNING = new Set<AutomationRunStatus>([
+  AutomationRunStatus.skipped,
+  AutomationRunStatus.cancelled,
+]);
+
+export function stepNeverRan(runStatus: AutomationRunStatus, stepStatus: AutomationRunStatus): boolean {
+  return SETTLED_WITHOUT_RUNNING.has(runStatus) && stepStatus === AutomationRunStatus.queued;
+}
+
 export function AutomationRunsModal({ automation, isOpen, onClose }: Props) {
   const t = useTranslations();
   const intlStore = useHydratedIntlStore();
@@ -71,12 +80,20 @@ export function AutomationRunsModal({ automation, isOpen, onClose }: Props) {
                     {intlStore.formatNumericalShortDateTime(run.createdAt)}
                   </span>
 
+                  {run.status === AutomationRunStatus.skipped ? (
+                    <span className="text-xs text-muted-foreground" data-automation-run-skipped="">
+                      {t("Automations.runSkippedReason")}
+                    </span>
+                  ) : null}
+
                   {run.steps.map((step) => (
                     <span key={step.id} className="text-xs text-muted-foreground">
                       {t("Automations.runStepSummary", {
                         position: step.position + 1,
                         action: step.kind ? t(`Automations.actions.${step.kind}`) : "",
-                        status: t(`Automations.runStatuses.${step.status}`),
+                        status: stepNeverRan(run.status, step.status)
+                          ? t("Automations.stepNotRun")
+                          : t(`Automations.runStatuses.${step.status}`),
                       })}
 
                       {step.error

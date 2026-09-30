@@ -704,6 +704,32 @@ export class PrismaMailboxRepo extends BaseRepository {
     });
   }
 
+  async findForwardSourceMessage(messagingThreadId: string, messageId: string | null) {
+    const where = {
+      messagingThreadId,
+      companyId: this.companyId,
+      thread: { provider: "mail" as const, ...this.ownedByCaller },
+    };
+    const select = {
+      id: true,
+      subject: true,
+      sender: true,
+      senderIdentifier: true,
+      recipients: true,
+      direction: true,
+      bodyText: true,
+      sentAt: true,
+    } as const;
+    const orderBy = [{ sentAt: "desc" as const }, { id: "desc" as const }];
+
+    if (messageId) return this.prisma.messagingMessage.findFirst({ where: { ...where, id: messageId }, select });
+
+    return (
+      (await this.prisma.messagingMessage.findFirst({ where: { ...where, direction: "inbound" }, select, orderBy })) ??
+      (await this.prisma.messagingMessage.findFirst({ where, select, orderBy }))
+    );
+  }
+
   async findReplyContext(messagingThreadId: string) {
     const thread = await this.prisma.messagingThread.findFirst({
       where: { id: messagingThreadId, companyId: this.companyId, provider: "mail", ...this.ownedByCaller },

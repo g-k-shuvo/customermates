@@ -24,6 +24,8 @@ import { reportApplicationError } from "@/core/errors/report-application-error";
 import { DEAL_DETAIL_FIELD } from "./deal-detail-personalization";
 import { DealActivitiesList } from "./deal-activities-list";
 import { DealCloseActions } from "./deal-close-actions";
+import { DealForecastField } from "./deal-forecast-fields";
+import { DealSourceLeadLink } from "./deal-source-lead-link";
 import { DealPipelineFields } from "./deal-pipeline-fields";
 import { DealServicesSelection } from "./deal-services-selection";
 import { DealStatusBadge } from "./deal-status-badges";
@@ -85,6 +87,8 @@ export const DealDetailView = observer(({ layout = "drawer" }: Props) => {
           />
         )}
 
+        <DealSourceLeadLink deal={fetchedEntity} />
+
         <DealCloseActions deal={fetchedEntity} />
 
         <DealPipelineFields />
@@ -123,10 +127,16 @@ export const DealDetailView = observer(({ layout = "drawer" }: Props) => {
           <FormNumberInput id="baseValue" label={columnLabel("baseValue")} />
         </EntityDetailField>
 
+        <DealForecastField field={DEAL_DETAIL_FIELD.expectedCloseDate} />
+
+        <DealForecastField field={DEAL_DETAIL_FIELD.probability} />
+
         <DealServicesSelection />
       </>
     ) : (
       <>
+        <DealSourceLeadLink deal={fetchedEntity} />
+
         <DealCloseActions deal={fetchedEntity} />
 
         <EntityDetailOverview
@@ -253,6 +263,14 @@ export const DealDetailView = observer(({ layout = "drawer" }: Props) => {
                   />
                 </EntityDetailField>
               ),
+            },
+            {
+              id: DEAL_DETAIL_FIELD.expectedCloseDate,
+              content: <DealForecastField showFieldActions field={DEAL_DETAIL_FIELD.expectedCloseDate} />,
+            },
+            {
+              id: DEAL_DETAIL_FIELD.probability,
+              content: <DealForecastField showFieldActions field={DEAL_DETAIL_FIELD.probability} />,
             },
             {
               id: DEAL_DETAIL_FIELD.serviceIds,

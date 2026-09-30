@@ -56,9 +56,10 @@ export class PrismaMailAttachmentRepo
     });
   }
 
-  async listForwardableAttachments(messagingThreadId: string): Promise<StoredMailAttachment[]> {
+  async listForwardableAttachments(messagingThreadId: string, messageId: string): Promise<StoredMailAttachment[]> {
     const latest = await this.prisma.messagingMessage.findFirst({
       where: {
+        id: messageId,
         companyId: this.companyId,
         messagingThreadId,
         thread: { ...this.readableThread, connectedAccount: { userId: this.userId } },

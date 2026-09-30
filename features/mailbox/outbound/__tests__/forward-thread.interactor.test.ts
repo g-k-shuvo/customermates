@@ -32,6 +32,7 @@ import { parseSecretBoxKey, sealSecret } from "../../credentials/secret-box";
 const KEY = parseSecretBoxKey(Buffer.alloc(32, 7).toString("base64"));
 const THREAD_ID = "00000000-0000-4000-8000-0000000000f1";
 const ACCOUNT_ID = "00000000-0000-4000-8000-0000000000f2";
+const MESSAGE_ID = "00000000-0000-4000-8000-0000000000f3";
 const NOW = () => new Date("2026-09-10T10:00:00Z");
 
 type Issue = { params?: { error?: CustomErrorCode } };
@@ -48,6 +49,7 @@ function context(overrides: { smtpHost?: string | null; smtpPort?: number | null
       connectedAccountId: ACCOUNT_ID,
       messages: [
         {
+          id: MESSAGE_ID,
           subject: "Quarterly numbers",
           sender: { identifier: "alice@vendor.example", displayName: "Alice Vendor" },
           senderIdentifier: "alice@vendor.example",
@@ -71,8 +73,10 @@ function context(overrides: { smtpHost?: string | null; smtpPort?: number | null
   };
 }
 
-function harness(found: unknown = context(), secretKey: typeof KEY | null = KEY) {
+function harness(found: ReturnType<typeof context> | null = context(), secretKey: typeof KEY | null = KEY) {
   const findReplyContext = vi.fn().mockResolvedValue(found);
+  const findForwardSourceMessage = vi.fn().mockResolvedValue(found?.thread.messages[0] ?? null);
+  const load = vi.fn().mockResolvedValue([]);
   const storeOutboundReply = vi.fn().mockResolvedValue(undefined);
   const send = vi.fn().mockResolvedValue({
     messageId: "<sent@agency.example>",
@@ -83,12 +87,15 @@ function harness(found: unknown = context(), secretKey: typeof KEY | null = KEY)
 
   return {
     interactor: new ForwardThreadInteractor(
-      { findReplyContext, storeOutboundReply } as never,
+      { findReplyContext, findForwardSourceMessage, storeOutboundReply } as never,
       { send } as never,
       secretKey,
       NOW,
+      { load },
     ),
     findReplyContext,
+    findForwardSourceMessage,
+    load,
     storeOutboundReply,
     send,
   };
@@ -109,6 +116,45 @@ describe("ForwardThreadInteractor", () => {
     expect(forward.references).toEqual([]);
     expect(forward.text).toContain("From: Alice Vendor <alice@vendor.example>");
     expect(forward.text).toContain("Numbers attached.");
+  });
+
+  it("forwards the message picked in the conversation with that message's attachments", async () => {
+    const { interactor, findForwardSourceMessage, load } = harness();
+
+    await interactor.invoke({
+      threadId: THREAD_ID,
+      messageId: MESSAGE_ID,
+      to: ["carol@partner.example"],
+      body: "FYI",
+    });
+
+    expect(findForwardSourceMessage).toHaveBeenCalledWith(THREAD_ID, MESSAGE_ID);
+    expect(load).toHaveBeenCalledWith(THREAD_ID, MESSAGE_ID);
+  });
+
+  it("reports a picked message that is not in the conversation as not found", async () => {
+    const { interactor, findForwardSourceMessage, send } = harness();
+    findForwardSourceMessage.mockResolvedValue(null);
+
+    const result = await interactor.invoke({
+      threadId: THREAD_ID,
+      messageId: MESSAGE_ID,
+      to: ["carol@partner.example"],
+      body: "FYI",
+    });
+
+    expect(errorCodesOf(result)).toContain(CustomErrorCode.mailboxThreadNotFound);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("dates the forwarded header in the reader's format rather than as a timestamp", async () => {
+    const { interactor, send } = harness();
+
+    await interactor.invoke({ threadId: THREAD_ID, to: ["carol@partner.example"], body: "FYI" });
+
+    const [, forward] = send.mock.calls[0];
+    expect(forward.text).not.toContain("2026-09-01T09:15:00.000Z");
+    expect(forward.text).toMatch(/Date: .*2026/);
   });
 
   it("records the forwarded copy on the conversation it came from", async () => {

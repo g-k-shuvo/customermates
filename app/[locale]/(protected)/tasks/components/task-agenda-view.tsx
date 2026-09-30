@@ -31,6 +31,7 @@ const BUCKET_LABEL_KEY: Record<AgendaBucket, string> = {
   thisWeek: "Activities.agenda.thisWeek",
   later: "Activities.agenda.later",
   undated: "Activities.agenda.undated",
+  doneEarlier: "Activities.agenda.doneEarlier",
 };
 
 const AgendaRow = observer(function AgendaRow({ activity }: { activity: TaskDto }) {

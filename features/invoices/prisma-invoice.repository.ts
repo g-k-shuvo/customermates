@@ -371,6 +371,38 @@ export class PrismaInvoiceRepo extends BaseRepository implements InvoiceRepo {
     });
   }
 
+  async removePayment(id: string, paymentId: string) {
+    const removed = await this.prisma.invoicePayment.deleteMany({
+      where: { id: paymentId, invoiceId: id, companyId: this.companyId },
+    });
+    if (removed.count === 0) return false;
+
+    const [invoice, paid] = await Promise.all([
+      this.prisma.invoice.findFirst({
+        where: { id, companyId: this.companyId },
+        select: { grossTotal: true, status: true },
+      }),
+      this.prisma.invoicePayment.aggregate({
+        where: { companyId: this.companyId, invoiceId: id },
+        _sum: { amount: true },
+      }),
+    ]);
+    if (!invoice) return true;
+
+    const paidAmount = toNumber(paid._sum.amount);
+    const settled = balanceDue(toNumber(invoice.grossTotal), paidAmount) <= 0;
+
+    await this.prisma.invoice.updateMany({
+      where: { id, companyId: this.companyId },
+      data: {
+        paidAmount,
+        ...(invoice.status === InvoiceStatus.paid && !settled ? { status: InvoiceStatus.issued, paidAt: null } : {}),
+      },
+    });
+
+    return true;
+  }
+
   async markVoid(id: string) {
     const updated = await this.prisma.invoice.updateMany({
       where: { id, companyId: this.companyId, status: InvoiceStatus.issued },

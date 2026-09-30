@@ -140,4 +140,18 @@ describe("resolvePublicNavbarActions", () => {
       signOut: "default",
     });
   });
+
+  it("leaves a deactivated member only the sign-out", () => {
+    expect(
+      resolvePublicNavbarActions({
+        accountState: "inactive",
+        hasValidSession: true,
+        pathname: "/auth/error",
+      }),
+    ).toEqual({
+      cta: null,
+      showContact: false,
+      signOut: "default",
+    });
+  });
 });

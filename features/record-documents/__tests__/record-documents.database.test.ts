@@ -41,6 +41,7 @@ function storageWith(stat: StoredObjectStat | null) {
     configured: true,
     maxUploadBytes: 1024 * 1024,
     statObject: vi.fn(() => Promise.resolve(stat)),
+    getObject: vi.fn(() => Promise.resolve({ body: new Blob(["%PDF-1.7"]).stream() })),
     deleteObject,
   } as unknown as StorageProvider;
 

@@ -213,3 +213,25 @@ describe("DealDetailStore pipeline placement", () => {
     expect(store.form.stageId).toBe(STAGE_ID);
   });
 });
+
+describe("DealDetailStore forecast fields", () => {
+  it("keeps the expected close date and the probability the deal was saved with", () => {
+    const store = new DealDetailStore(rootStore(true));
+
+    store.hydrate({ ...deal(), expectedCloseDate: new Date("2026-11-30T00:00:00.000Z"), probability: 70 }, [
+      stageColumn,
+    ]);
+
+    expect(store.form.expectedCloseDate).toEqual(new Date("2026-11-30T00:00:00.000Z"));
+    expect(store.form.probability).toBe(70);
+  });
+
+  it("starts a new deal with both forecast fields present but empty, so their inputs stay editable", () => {
+    const store = new DealDetailStore(rootStore(true));
+
+    store.initialize();
+
+    expect(store.form).toHaveProperty("expectedCloseDate", undefined);
+    expect(store.form).toHaveProperty("probability", undefined);
+  });
+});

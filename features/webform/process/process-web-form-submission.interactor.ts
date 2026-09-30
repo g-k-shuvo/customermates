@@ -79,6 +79,9 @@ export class ProcessWebFormSubmissionInteractor {
         name: fields.organizationName,
       });
 
+      if (contactId && organizationId)
+        await this.repo.linkContactToOrganizationUnscoped(submission.companyId, contactId, organizationId);
+
       const title = renderTitle(submission.fieldMapping.titleTemplate, fields, {
         formTitle: readDotPath(submission.rawPayload, "form_title"),
         sourceName: submission.sourceName,

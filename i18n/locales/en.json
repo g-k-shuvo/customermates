@@ -31,6 +31,7 @@
   },
   "Activities": {
     "agenda": {
+      "doneEarlier": "Done earlier ({count})",
       "emptyBody": "No {plural} are scheduled yet.",
       "emptyTitle": "Nothing scheduled",
       "later": "Later ({count})",
@@ -952,6 +953,14 @@
     "unnamed": "Unnamed"
   },
   "AuditLogModal": {
+    "changes": {
+      "after": "After",
+      "before": "Before",
+      "field": "Field",
+      "no": "No",
+      "title": "Changes",
+      "yes": "Yes"
+    },
     "createdAt": "Created At",
     "deletedField": "Deleted field",
     "deletedFieldChanged": "Value changed on a field that has since been deleted.",
@@ -976,10 +985,13 @@
       "effectiveAt": "Effective from",
       "emails": "Email addresses",
       "isNewCompany": "First user in the workspace",
+      "lostReasonId": "Lost reason",
+      "pipelineId": "Pipeline",
       "postalCode": "Postal code",
       "prompt": "Instructions",
       "recipientEmail": "Sent to",
       "removalReason": "Removal reason",
+      "stageId": "Stage",
       "street": "Street",
       "terminology": "Record naming",
       "timezone": "Time zone",
@@ -1113,6 +1125,7 @@
     "removeStep": "Remove action",
     "rowSummary": "{trigger} · {steps}",
     "runsEmpty": "This automation has not run yet.",
+    "runSkippedReason": "Not run: the record did not meet the conditions.",
     "runsLabel": "Show the run history of the {name} automation",
     "runStatuses": {
       "cancelled": "Cancelled",
@@ -1143,6 +1156,7 @@
       "senderUnverified": "The sender address is not verified, so nothing was sent",
       "unexpectedError": "The action stopped because of an unexpected error"
     },
+    "stepNotRun": "Not run",
     "title": "Automations",
     "toggleLabel": "Turn the {name} automation on or off",
     "triggerKinds": {
@@ -1536,11 +1550,13 @@
       "invalidJsonBody": "The request body is not valid JSON.",
       "invalidSortField": "Sort field not found or not accessible. Available fields: {validValues}.",
       "invalidUrl": "Enter a valid URL.",
+      "invoiceBuyerMissing": "Add the recipient's name and address before issuing the invoice.",
       "invoiceHasNoLines": "An invoice needs at least one line before it can be issued.",
       "invoiceNotDraft": "Only a draft invoice can be changed or deleted. Void an issued invoice instead.",
       "invoiceNotFound": "Invoice ID not found or not accessible.",
       "invoiceNotIssued": "This works only on an issued invoice that is not yet paid or void.",
       "invoicePaymentExceedsBalance": "The payment is larger than the open balance.",
+      "invoicePaymentNotFound": "This payment no longer exists on the invoice.",
       "invoiceSellerMissing": "Add your company's legal name and address in the invoicing settings before issuing an invoice.",
       "invoiceXRechnungIncomplete": "XRechnung needs your company's billing email, phone, VAT ID and a postal address with postcode and city, and the recipient's billing email and postal address.",
       "leadAlreadyConverted": "This lead has already been converted to a deal.",
@@ -2722,6 +2738,7 @@
       "reopen": "Reopen"
     },
     "expectedCloseDateLabel": "Expected close date",
+    "fromLead": "From lead",
     "noServicesAdded": "No {entity} added yet",
     "pipeline": {
       "allPipelines": "All pipelines",
@@ -2734,6 +2751,7 @@
       "stagePlaceholder": "Select a stage",
       "switcherLabel": "Pipeline"
     },
+    "probabilityValue": "{value}%",
     "quantityLabel": "Quantity",
     "stageBar": {
       "currentStage": "{name}, current stage: {duration}",
@@ -3429,6 +3447,7 @@
       "title": "Billed to",
       "vatId": "VAT ID"
     },
+    "buyerMissing": "Add the recipient's name and address under Billed to before issuing.",
     "columns": {
       "balance": "Open",
       "buyer": "Billed to",
@@ -3497,7 +3516,9 @@
       "note": "Note",
       "record": "Record payment",
       "recorded": "Payment recorded",
-      "title": "Payments"
+      "title": "Payments",
+      "undo": "Undo",
+      "undone": "Payment removed"
     },
     "previous": "Previous",
     "seller": "From",
@@ -3610,6 +3631,8 @@
   "LeadDetail": {
     "convert": "Convert to deal",
     "convertDescription": "“{title}” is converted with its contact, organization, owner and notes. The lead stays on record, marked converted.",
+    "convertedToDeal": "Converted to a deal.",
+    "openConvertedDeal": "Open the deal",
     "owner": "Owner",
     "probabilityPlaceholder": "Stage default: {percent}%",
     "source": "Source",
@@ -3692,6 +3715,7 @@
     "backfillDaysDescription": "How far back the first sync reads.",
     "backfillDaysLabel": "Backfill days",
     "cancelReply": "Cancel",
+    "collapseComposer": "Hide composer",
     "connectDescription": "We sign in to the mail server with these details before anything is saved, so a wrong host or password is reported here instead of stored.",
     "connectFailedTitle": "The mailbox could not be connected",
     "connectSubmit": "Connect mailbox",
@@ -3716,13 +3740,16 @@
     "emptyAccountsTitle": "No mailboxes connected",
     "emptyDescription": "Connect a mailbox and your conversations will appear here.",
     "emptyTitle": "No mail yet",
+    "expandComposer": "Write",
     "folderLabel": "Folder",
     "forward": "Forward",
     "forwardHint": "Your note goes above the quoted original. A forward starts a new conversation for the people you add, so their replies do not come back to this one.",
+    "forwardPickedHint": "You are forwarding the message you picked, with its attachments. Your note goes above the quoted original, and replies do not come back to this conversation.",
     "forwardPlaceholder": "Add a note (optional)",
     "forwardRecipientsLabel": "Forward to",
     "forwardRecipientsPlaceholder": "Separate addresses with commas",
     "forwardSent": "Message forwarded",
+    "forwardThisMessage": "Forward this message",
     "imapHostLabel": "IMAP host",
     "imapPortLabel": "IMAP port",
     "imapSecureDescription": "Turn this off only for a server that expects an upgrade from plain text.",
@@ -3998,13 +4025,13 @@
     },
     "footnote": "No workspace is created until you choose Create and complete your profile.",
     "join": {
-      "description": "Join a team that already uses Customermates. You will need an invitation from a workspace administrator.",
+      "description": "Join a team that already uses {brandName}. You will need an invitation from a workspace administrator.",
       "note": "No workspace will be created",
       "title": "Join an existing workspace"
     },
     "optionsLabel": "Workspace setup choices",
     "signedInAs": "Signed in as {email}",
-    "subtitle": "Create a workspace for your company or join a team that already uses Customermates.",
+    "subtitle": "Create a workspace for your company or join a team that already uses {brandName}.",
     "title": "Choose how to get started"
   },
   "OnboardingForm": {
@@ -4723,6 +4750,11 @@
     "recordValue": "Value",
     "refusedUntilVerified": "Until the domain is verified, emails from this sender are refused.",
     "replyTo": "Reply-To (optional)",
+    "reset": "Use the default sender",
+    "resetConfirm": {
+      "message": "Automations and campaigns will send as the installation's default sender again. Your custom name, address and Reply-To are removed.",
+      "title": "Use the default sender?"
+    },
     "save": "Save sender",
     "saved": "Sender saved",
     "title": "Sender",

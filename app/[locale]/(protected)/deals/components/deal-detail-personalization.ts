@@ -9,6 +9,8 @@ export const DEAL_DETAIL_FIELD = {
   nextActivity: "nextActivity",
   activities: "activities",
   baseValue: "baseValue",
+  expectedCloseDate: "expectedCloseDate",
+  probability: "probability",
   totalValue: "totalValue",
   totalQuantity: "totalQuantity",
   weightedValue: "weightedValue",

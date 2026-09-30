@@ -31,7 +31,7 @@ type Props = {
 
 export const SignUpForm = observer(({ invitationIntent, inviterName, socialProviders }: Props) => {
   const t = useTranslations();
-  const { signUpStore, appMode } = useRootStore();
+  const { signUpStore, appMode, branding } = useRootStore();
   useState(() => {
     signUpStore.onInitOrRefresh({ onboardingIntent: invitationIntent });
     signUpStore.setWithUnsavedChangesGuard(false);
@@ -60,7 +60,7 @@ export const SignUpForm = observer(({ invitationIntent, inviterName, socialProvi
               </AppLink>
             ),
           })}
-          title={isInvited ? t("SignUpForm.inviteTitle") : t("SignUpForm.title")}
+          title={isInvited ? t("SignUpForm.inviteTitle") : t("SignUpForm.title", { brandName: branding.name })}
         />
 
         <AppCardBody>
@@ -68,7 +68,7 @@ export const SignUpForm = observer(({ invitationIntent, inviterName, socialProvi
 
           {isInvited ? (
             <Alert className="mb-4" role="note">
-              <p className="text-x-sm">{t("SignUpForm.inviteSubtitle", { inviterName: inviterName ?? "" })}</p>
+              <p className="text-x-sm">{t("SignUpForm.inviteSubtitle", { brandName: branding.name })}</p>
             </Alert>
           ) : appMode === "cloud" ? (
             <Alert className="mb-4" color="primary">

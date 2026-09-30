@@ -49,6 +49,19 @@ const userService = {
     ),
 } as never;
 
+function objectWith(text: string) {
+  return {
+    byteSize: 2048,
+    contentType: "application/pdf",
+    body: new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(text));
+        controller.close();
+      },
+    }),
+  };
+}
+
 function storage(overrides: Partial<StorageProvider> = {}) {
   const spies = {
     presignUpload: vi.fn((args: { key: string }) =>
@@ -68,7 +81,7 @@ function storage(overrides: Partial<StorageProvider> = {}) {
     configured: true,
     maxUploadBytes: 1024 * 1024,
     statObject: vi.fn(() => Promise.resolve({ byteSize: 2048, contentType: "application/pdf" })),
-    getObject: vi.fn(),
+    getObject: vi.fn(() => Promise.resolve(objectWith("%PDF-1.4"))),
     putObject: vi.fn(),
     ...spies,
     ...overrides,
@@ -273,9 +286,7 @@ describe("CompleteRecordFileUploadInteractor", () => {
       deletePendingFile: vi.fn(() => Promise.resolve()),
     };
     const { provider, spies } = storage({
-      getObject: vi.fn(() =>
-        Promise.resolve({ byteSize: 2048, contentType: "application/pdf", body: new ReadableStream() }),
-      ),
+      getObject: vi.fn(() => Promise.resolve(objectWith("%PDF-1.4"))),
     });
     const infected = {
       configured: true,
@@ -292,6 +303,26 @@ describe("CompleteRecordFileUploadInteractor", () => {
     expect(repo.markFileReadyOrNull).not.toHaveBeenCalled();
   });
 
+  it("drops an upload whose bytes are an executable, whatever its extension says", async () => {
+    const repo = {
+      findPendingFileOrNull: vi.fn(() => Promise.resolve(pending)),
+      markFileReadyOrNull: vi.fn(() => Promise.resolve(FILE_DTO)),
+      deletePendingFile: vi.fn(() => Promise.resolve()),
+    };
+    const { provider, spies } = storage({ getObject: vi.fn(() => Promise.resolve(objectWith("MZ\u0090\u0000"))) });
+    const clean = { configured: true, scan: vi.fn(() => Promise.resolve({ clean: true as const })) };
+
+    const result = await new CompleteRecordFileUploadInteractor(repo as never, provider, userService, clean).invoke({
+      id: FILE_ID,
+    });
+
+    expect(issueCodes(result)).toEqual([["id", CustomErrorCode.fileTypeMismatch]]);
+    expect(spies.deleteObject).toHaveBeenCalledWith(pending.storageKey);
+    expect(repo.deletePendingFile).toHaveBeenCalledWith(FILE_ID);
+    expect(clean.scan).not.toHaveBeenCalled();
+    expect(repo.markFileReadyOrNull).not.toHaveBeenCalled();
+  });
+
   it("refuses an upload while a configured scanner is unreachable, and keeps a clean one", async () => {
     const repo = {
       findPendingFileOrNull: vi.fn(() => Promise.resolve(pending)),
@@ -299,9 +330,7 @@ describe("CompleteRecordFileUploadInteractor", () => {
       deletePendingFile: vi.fn(() => Promise.resolve()),
     };
     const { provider } = storage({
-      getObject: vi.fn(() =>
-        Promise.resolve({ byteSize: 2048, contentType: "application/pdf", body: new ReadableStream() }),
-      ),
+      getObject: vi.fn(() => Promise.resolve(objectWith("%PDF-1.4"))),
     });
     const down = { configured: true, scan: vi.fn(() => Promise.reject(new VirusScanUnavailableError("down"))) };
     const clean = { configured: true, scan: vi.fn(() => Promise.resolve({ clean: true as const })) };

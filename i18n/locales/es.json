@@ -31,6 +31,7 @@
   },
   "Activities": {
     "agenda": {
+      "doneEarlier": "Hechas antes ({count})",
       "emptyBody": "Aún no hay {plural} programadas.",
       "emptyTitle": "Nada programado",
       "later": "Más adelante ({count})",
@@ -952,6 +953,14 @@
     "unnamed": "Sin nombre"
   },
   "AuditLogModal": {
+    "changes": {
+      "after": "Después",
+      "before": "Antes",
+      "field": "Campo",
+      "no": "No",
+      "title": "Cambios",
+      "yes": "Sí"
+    },
     "createdAt": "Creado el",
     "deletedField": "Campo eliminado",
     "deletedFieldChanged": "Valor modificado en un campo que se ha eliminado desde entonces.",
@@ -976,10 +985,13 @@
       "effectiveAt": "Vigente desde",
       "emails": "Direcciones de correo",
       "isNewCompany": "Primera persona del espacio",
+      "lostReasonId": "Motivo de pérdida",
+      "pipelineId": "Embudo",
       "postalCode": "Código postal",
       "prompt": "Instrucciones",
       "recipientEmail": "Enviado a",
       "removalReason": "Motivo de eliminación",
+      "stageId": "Etapa",
       "street": "Calle",
       "terminology": "Nombres de registros",
       "timezone": "Zona horaria",
@@ -1113,6 +1125,7 @@
     "removeStep": "Quitar acción",
     "rowSummary": "{trigger} · {steps}",
     "runsEmpty": "Esta automatización todavía no se ha ejecutado.",
+    "runSkippedReason": "No se ejecutó: el registro no cumplía las condiciones.",
     "runsLabel": "Mostrar el historial de ejecuciones de la automatización {name}",
     "runStatuses": {
       "cancelled": "Cancelada",
@@ -1143,6 +1156,7 @@
       "senderUnverified": "La dirección del remitente no está verificada, así que no se envió nada",
       "unexpectedError": "La acción se detuvo por un error inesperado"
     },
+    "stepNotRun": "No ejecutado",
     "title": "Automatizaciones",
     "toggleLabel": "Activar o desactivar la automatización {name}",
     "triggerKinds": {
@@ -1536,11 +1550,13 @@
       "invalidJsonBody": "El cuerpo de la solicitud no es JSON válido.",
       "invalidSortField": "Campo de ordenación no encontrado o no accesible. Campos disponibles: {validValues}.",
       "invalidUrl": "Introduce una URL válida.",
+      "invoiceBuyerMissing": "Añade el nombre y la dirección del destinatario antes de emitir la factura.",
       "invoiceHasNoLines": "Una factura necesita al menos una línea antes de emitirse.",
       "invoiceNotDraft": "Solo una factura en borrador se puede cambiar o eliminar. Anula una factura emitida en su lugar.",
       "invoiceNotFound": "ID de factura no encontrado o no accesible.",
       "invoiceNotIssued": "Esto solo funciona con una factura emitida que aún no esté pagada ni anulada.",
       "invoicePaymentExceedsBalance": "El pago supera el saldo pendiente.",
+      "invoicePaymentNotFound": "Este pago ya no existe en la factura.",
       "invoiceSellerMissing": "Añade la razón social y la dirección de tu empresa en los ajustes de facturación antes de emitir una factura.",
       "invoiceXRechnungIncomplete": "XRechnung necesita el correo de facturación, el teléfono, el NIF-IVA y una dirección con código postal y ciudad de tu empresa, y el correo de facturación y la dirección del cliente.",
       "leadAlreadyConverted": "Este lead ya se ha convertido en una oportunidad.",
@@ -2722,6 +2738,7 @@
       "reopen": "Reabrir"
     },
     "expectedCloseDateLabel": "Fecha de cierre prevista",
+    "fromLead": "Del lead",
     "noServicesAdded": "Aún no se ha añadido ningún elemento «{entity}»",
     "pipeline": {
       "allPipelines": "Todos los embudos",
@@ -2734,6 +2751,7 @@
       "stagePlaceholder": "Selecciona una etapa",
       "switcherLabel": "Embudo"
     },
+    "probabilityValue": "{value} %",
     "quantityLabel": "Cantidad",
     "stageBar": {
       "currentStage": "{name}, etapa actual: {duration}",
@@ -3429,6 +3447,7 @@
       "title": "Facturar a",
       "vatId": "NIF-IVA"
     },
+    "buyerMissing": "Añade el nombre y la dirección en Facturar a antes de emitir.",
     "columns": {
       "balance": "Pendiente",
       "buyer": "Cliente",
@@ -3497,7 +3516,9 @@
       "note": "Nota",
       "record": "Registrar pago",
       "recorded": "Pago registrado",
-      "title": "Pagos"
+      "title": "Pagos",
+      "undo": "Deshacer",
+      "undone": "Pago eliminado"
     },
     "previous": "Anterior",
     "seller": "Emisor",
@@ -3610,6 +3631,8 @@
   "LeadDetail": {
     "convert": "Convertir en oportunidad",
     "convertDescription": "«{title}» se convierte con su contacto, organización, responsable y notas. El lead se conserva, marcado como convertido.",
+    "convertedToDeal": "Convertido en oportunidad.",
+    "openConvertedDeal": "Abrir la oportunidad",
     "owner": "Responsable",
     "probabilityPlaceholder": "Valor de la etapa: {percent} %",
     "source": "Origen",
@@ -3692,6 +3715,7 @@
     "backfillDaysDescription": "Cuánto tiempo atrás lee la primera sincronización.",
     "backfillDaysLabel": "Días de histórico",
     "cancelReply": "Cancelar",
+    "collapseComposer": "Ocultar editor",
     "connectDescription": "Iniciamos sesión en el servidor de correo con estos datos antes de guardar nada, así que un host o una contraseña incorrectos se informan aquí en lugar de guardarse.",
     "connectFailedTitle": "No se pudo conectar el buzón",
     "connectSubmit": "Conectar buzón",
@@ -3716,13 +3740,16 @@
     "emptyAccountsTitle": "No hay buzones conectados",
     "emptyDescription": "Conecte un buzón y sus conversaciones aparecerán aquí.",
     "emptyTitle": "Todavía no hay correo",
+    "expandComposer": "Escribir",
     "folderLabel": "Carpeta",
     "forward": "Reenviar",
     "forwardHint": "Su nota aparece encima del original citado. Un reenvío inicia una conversación nueva para las personas que añada, así que sus respuestas no vuelven a esta.",
+    "forwardPickedHint": "Está reenviando el mensaje que eligió, con sus adjuntos. Su nota aparece encima del original citado y las respuestas no vuelven a esta conversación.",
     "forwardPlaceholder": "Añada una nota (opcional)",
     "forwardRecipientsLabel": "Reenviar a",
     "forwardRecipientsPlaceholder": "Separe las direcciones con comas",
     "forwardSent": "Mensaje reenviado",
+    "forwardThisMessage": "Reenviar este mensaje",
     "imapHostLabel": "Host IMAP",
     "imapPortLabel": "Puerto IMAP",
     "imapSecureDescription": "Desactívalo solo para un servidor que espera una actualización desde texto plano.",
@@ -3998,13 +4025,13 @@
     },
     "footnote": "No se crea ningún espacio de trabajo hasta que eliges Crear y completas tu perfil.",
     "join": {
-      "description": "Únete a un equipo que ya usa Customermates. Necesitarás una invitación de un administrador.",
+      "description": "Únete a un equipo que ya usa {brandName}. Necesitarás una invitación de un administrador.",
       "note": "No se creará ningún espacio de trabajo",
       "title": "Unirte a un espacio de trabajo existente"
     },
     "optionsLabel": "Opciones de configuración del espacio de trabajo",
     "signedInAs": "Sesión iniciada como {email}",
-    "subtitle": "Crea un espacio de trabajo para tu empresa o únete a un equipo que ya usa Customermates.",
+    "subtitle": "Crea un espacio de trabajo para tu empresa o únete a un equipo que ya usa {brandName}.",
     "title": "¿Cómo quieres empezar?"
   },
   "OnboardingForm": {
@@ -4723,6 +4750,11 @@
     "recordValue": "Valor",
     "refusedUntilVerified": "Hasta que el dominio esté verificado, los correos de este remitente se rechazan.",
     "replyTo": "Responder a (opcional)",
+    "reset": "Usar el remitente predeterminado",
+    "resetConfirm": {
+      "message": "Las automatizaciones y campañas volverán a enviar con el remitente predeterminado de la instalación. Se eliminan tu nombre, dirección y Reply-To personalizados.",
+      "title": "¿Usar el remitente predeterminado?"
+    },
     "save": "Guardar remitente",
     "saved": "Remitente guardado",
     "title": "Remitente",

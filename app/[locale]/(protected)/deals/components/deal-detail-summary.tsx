@@ -89,6 +89,21 @@ export const DealDetailSummary = observer(function DealDetailSummary() {
       value: weightedValueBreakdown ? intlStore.formatCurrency(weightedValueBreakdown.weightedValue) : undefined,
     },
     {
+      id: DEAL_DETAIL_FIELD.expectedCloseDate,
+      label: t("DealModal.expectedCloseDateLabel"),
+      value: fetchedEntity.expectedCloseDate
+        ? intlStore.formatNumericalShortDate(fetchedEntity.expectedCloseDate)
+        : null,
+    },
+    {
+      id: DEAL_DETAIL_FIELD.probability,
+      label: t("Common.probability"),
+      value:
+        fetchedEntity.probability === null
+          ? null
+          : t("DealModal.probabilityValue", { value: intlStore.formatNumber(fetchedEntity.probability) }),
+    },
+    {
       id: DEAL_DETAIL_FIELD.contactIds,
       label: plural(EntityType.contact),
       value: <EntityDetailAvatarSummaryValue entityType={EntityType.contact} items={contacts} />,

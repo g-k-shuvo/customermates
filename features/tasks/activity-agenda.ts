@@ -1,6 +1,6 @@
 import { isOverdue } from "./task-overdue";
 
-export const AGENDA_BUCKETS = ["overdue", "today", "tomorrow", "thisWeek", "later", "undated"] as const;
+export const AGENDA_BUCKETS = ["overdue", "today", "tomorrow", "thisWeek", "later", "undated", "doneEarlier"] as const;
 
 export type AgendaBucket = (typeof AGENDA_BUCKETS)[number];
 
@@ -30,7 +30,8 @@ export function agendaBucketFor(entry: AgendaEntry, now: Date): AgendaBucket {
 
   const days = localDaysBetween(now, entry.dueAt);
 
-  if (days <= 0) return "today";
+  if (days < 0) return "doneEarlier";
+  if (days === 0) return "today";
   if (days === 1) return "tomorrow";
   if (days < 7) return "thisWeek";
 

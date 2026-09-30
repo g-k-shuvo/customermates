@@ -12,7 +12,7 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("@/core/stores/root-store.provider", () => ({
-  useRootStore: () => ({ appMode: "cloud" }),
+  useRootStore: () => ({ appMode: "cloud", branding: { name: "Customermates" } }),
 }));
 
 vi.mock("@/i18n/navigation", () => ({

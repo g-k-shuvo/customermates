@@ -64,6 +64,9 @@ export const RecordInvoicePaymentSchema = z.object({
 });
 export type RecordInvoicePaymentData = Data<typeof RecordInvoicePaymentSchema>;
 
+export const DeleteInvoicePaymentSchema = z.object({ id: z.uuid(), paymentId: z.uuid() });
+export type DeleteInvoicePaymentData = Data<typeof DeleteInvoicePaymentSchema>;
+
 export const GetInvoicesSchema = z.object({
   status: z.enum(InvoiceStatus).optional(),
   dealId: z.uuid().optional(),

@@ -53,6 +53,8 @@ export function resolvePublicNavbarActions({
     };
   }
 
+  if (accountState === "inactive") return { cta: null, showContact: false, signOut: "default" };
+
   const cta: PublicNavbarCta | null =
     accountState === "allowed" && pathname !== "/dashboard" ? { href: "/dashboard", label: "openApp" } : null;
 

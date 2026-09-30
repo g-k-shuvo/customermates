@@ -252,10 +252,14 @@ describeDatabase("mail attachments", () => {
     expect(shared.ok).toBe(true);
   });
 
-  it("forwards the latest message's stored, non-inline attachments", async () => {
+  it("forwards the chosen message's stored, non-inline attachments, and none of another message's", async () => {
     const loaded = await asOwner(() =>
-      new ForwardMailAttachmentsService(new PrismaMailAttachmentRepo(), storage.provider).load(threadId),
+      new ForwardMailAttachmentsService(new PrismaMailAttachmentRepo(), storage.provider).load(threadId, messageId),
     );
+    const other = await asOwner(() =>
+      new ForwardMailAttachmentsService(new PrismaMailAttachmentRepo(), storage.provider).load(threadId, randomUUID()),
+    );
+    expect(other).toEqual([]);
 
     expect(loaded.map((entry) => [entry.filename, entry.content.toString()])).toEqual(
       expect.arrayContaining([

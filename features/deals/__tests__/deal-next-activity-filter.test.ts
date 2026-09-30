@@ -46,6 +46,9 @@ const fake = vi.hoisted(() => {
       findFirst: () => Promise.resolve({ ...deal }),
       findMany: () => Promise.resolve([{ ...deal }]),
     },
+    lead: {
+      findFirst: () => Promise.resolve(null),
+    },
   };
 
   return { ids, deal, client, prisma: { ...client, $transaction: (fn: any) => fn(client) } };

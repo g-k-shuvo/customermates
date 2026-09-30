@@ -16,6 +16,7 @@ import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
 import { Write } from "@/core/decorators/write.decorator";
 import { uploadedObjectMatches } from "@/core/storage/upload-policy";
+import { contentMatchesType, readObjectHead } from "@/core/storage/content-signature";
 import {
   failAuthorization,
   failConflict,
@@ -66,6 +67,20 @@ export class CompleteRecordDocumentFileInteractor extends AuthenticatedInteracto
       await this.repo.discardPendingFile(pending);
 
       return failConflict(CustomErrorCode.fileUploadIncomplete, ["fileId"]);
+    }
+
+    let head: Uint8Array;
+    try {
+      head = await readObjectHead(this.storage, pending.storageKey);
+    } catch (error) {
+      return storageFailure(error);
+    }
+
+    if (!contentMatchesType("application/pdf", head)) {
+      await this.storage.deleteObject(pending.storageKey).catch(() => undefined);
+      await this.repo.discardPendingFile(pending);
+
+      return failConflict(CustomErrorCode.fileTypeMismatch, ["fileId"]);
     }
 
     const superseded =

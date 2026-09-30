@@ -8,8 +8,14 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Action, Resource } from "@/generated/prisma";
 
-import { getSenderIdentityAction, saveSenderIdentityAction, verifySenderDomainAction } from "../../messaging-actions";
+import {
+  getSenderIdentityAction,
+  resetSenderIdentityAction,
+  saveSenderIdentityAction,
+  verifySenderDomainAction,
+} from "../../messaging-actions";
 
+import { useDeleteConfirmation } from "@/components/modal/hooks/use-delete-confirmation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,6 +43,7 @@ export const SenderIdentitySection = observer(() => {
   const [identity, setIdentity] = useState<SenderIdentityDto | null>(null);
   const [draft, setDraft] = useState<Draft>({ fromName: "", fromAddress: "", replyTo: "", allowUserSenders: false });
   const [busy, setBusy] = useState(false);
+  const { showConfirmation } = useDeleteConfirmation();
 
   const apply = (next: SenderIdentityDto) => {
     setIdentity(next);
@@ -75,6 +82,25 @@ export const SenderIdentitySection = observer(() => {
 
       apply(result.data);
       toast.success(t("SenderIdentity.saved"));
+    });
+
+  const resetToDefault = () =>
+    showConfirmation({
+      title: t("SenderIdentity.resetConfirm.title"),
+      message: t("SenderIdentity.resetConfirm.message"),
+      confirmLabel: t("SenderIdentity.reset"),
+      confirmVariant: "destructive",
+      successKey: "Common.notifications.updated",
+      onConfirm: async () => {
+        const result = await resetSenderIdentityAction();
+        if (!result.ok) {
+          toastZodErrorTree(result.error);
+          return false;
+        }
+
+        apply(result.data);
+        return true;
+      },
     });
 
   const verify = () =>
@@ -176,6 +202,12 @@ export const SenderIdentitySection = observer(() => {
           {identity.configured && !identity.verified && !dirty && (
             <Button disabled={busy} size="sm" type="button" onClick={verify}>
               {t("SenderIdentity.verify")}
+            </Button>
+          )}
+
+          {identity.configured && (
+            <Button disabled={busy} size="sm" type="button" variant="ghost" onClick={resetToDefault}>
+              {t("SenderIdentity.reset")}
             </Button>
           )}
         </div>

@@ -5,14 +5,14 @@ import type { CustomColumnDto } from "@/features/custom-column/custom-column.sch
 import type { Filter } from "@/core/base/base-get.schema";
 import type { ReactNode } from "react";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useTranslations } from "next-intl";
 import { WidgetKind } from "@/generated/prisma";
 
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import { DisplayType } from "@/features/widget/widget.schema";
+import { DisplayType, type FunnelStagePoint, type FunnelSummary } from "@/features/widget/widget.schema";
 import { ActivitiesList } from "@/features/messaging/activities/activities-list";
 import { useOwnedActivitiesStore } from "@/features/messaging/activities/use-owned-activities-store";
 
@@ -27,9 +27,35 @@ import { widgetMetricNote } from "./widget-metric-note";
 import { widgetSubheader } from "./widget-subheader";
 import { resolveResourcePageState } from "@/components/page-state/resource-page-state";
 import { useDebouncedValue } from "@/core/utils/use-debounced-value";
+import { previewFunnelWidgetAction } from "../actions";
 
 const ACTIVITY_PREVIEW_PAGE_SIZE = 5;
 const ACTIVITY_PREVIEW_DEBOUNCE_MS = 400;
+
+type LiveFunnel = { stages: FunnelStagePoint[]; summary: FunnelSummary | null };
+
+function useLiveFunnel(pipelineId: string | undefined, periodDays: number | undefined): LiveFunnel | null {
+  const [live, setLive] = useState<{ key: string; funnel: LiveFunnel } | null>(null);
+  const key = useDebouncedValue(JSON.stringify({ pipelineId, periodDays }), ACTIVITY_PREVIEW_DEBOUNCE_MS);
+
+  useEffect(() => {
+    const request = JSON.parse(key) as { pipelineId?: string; periodDays?: number };
+    if (!request.pipelineId) return;
+
+    let active = true;
+    void previewFunnelWidgetAction({ pipelineId: request.pipelineId, periodDays: request.periodDays })
+      .then((result) => {
+        if (active && result && result.stages.length > 0) setLive({ key, funnel: result });
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [key]);
+
+  return live && live.key === JSON.stringify({ pipelineId, periodDays }) ? live.funnel : null;
+}
 
 type Props = {
   activeFilterCount: number;
@@ -139,12 +165,18 @@ export const WidgetPreview = observer(({ activeFilterCount, activityFilters, cus
   const { summaryLabel } = useFunnelCopy();
   const title = form.name.trim() || t("Dashboard.widgetEditor.preview.untitled");
   const showSummary = form.displayOptions?.showFilters !== false;
+  const liveFunnel = useLiveFunnel(
+    form.kind === WidgetKind.funnel ? form.pipelineId || undefined : undefined,
+    form.kind === WidgetKind.funnel ? (form.periodDays ?? undefined) : undefined,
+  );
 
   if (form.kind === WidgetKind.funnel) {
-    const previewStages = buildFunnelPreviewStages(
-      [1, 2, 3, 4].map((number) => t("Dashboard.widgetEditor.preview.stageLabel", { number })),
-    );
-    const funnelSummary = summaryLabel(funnelPreviewSummary()) ?? "";
+    const previewStages =
+      liveFunnel?.stages ??
+      buildFunnelPreviewStages(
+        [1, 2, 3, 4].map((number) => t("Dashboard.widgetEditor.preview.stageLabel", { number })),
+      );
+    const funnelSummary = summaryLabel(liveFunnel ? liveFunnel.summary : funnelPreviewSummary()) ?? "";
 
     return (
       <WidgetPreviewFrame

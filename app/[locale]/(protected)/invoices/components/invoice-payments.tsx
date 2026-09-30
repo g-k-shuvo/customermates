@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { InvoiceStatus } from "@/generated/prisma";
 
-import { recordInvoicePaymentAction } from "../actions";
+import { deleteInvoicePaymentAction, recordInvoicePaymentAction } from "../actions";
 
 import { FormIsoDatePicker } from "@/components/forms/form-iso-date-picker";
 import { FormNumberInput } from "@/components/forms/form-number-input";
@@ -46,13 +46,36 @@ export function InvoicePayments({ invoice, canRecord, onChanged }: Props) {
         return;
       }
 
-      toast.success(t("Invoices.payments.recorded"));
+      const knownPaymentIds = new Set(invoice.payments.map((payment) => payment.id));
+      const recordedPayment = result.data.payments.find((payment) => !knownPaymentIds.has(payment.id));
+      toast.success(t("Invoices.payments.recorded"), {
+        ...(recordedPayment
+          ? {
+              action: {
+                label: t("Invoices.payments.undo"),
+                onClick: () => runUserAction(() => undoPayment(result.data.id, recordedPayment.id)),
+              },
+            }
+          : {}),
+      });
       setAmount(result.data.balance);
       setNote("");
       onChanged(result.data);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const undoPayment = async (invoiceId: string, paymentId: string) => {
+    const result = await deleteInvoicePaymentAction({ id: invoiceId, paymentId });
+    if (!result.ok) {
+      toastZodErrorTree(result.error);
+      return;
+    }
+
+    toast.success(t("Invoices.payments.undone"));
+    setAmount(result.data.balance);
+    onChanged(result.data);
   };
 
   if (invoice.payments.length === 0 && !acceptsPayments) return null;

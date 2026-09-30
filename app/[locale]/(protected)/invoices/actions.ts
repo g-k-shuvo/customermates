@@ -2,6 +2,7 @@
 
 import type {
   CreateInvoiceData,
+  DeleteInvoicePaymentData,
   GetInvoicesData,
   IssueInvoiceData,
   RecordInvoicePaymentData,
@@ -13,6 +14,7 @@ import type {
 import {
   getCreateInvoiceInteractor,
   getDeleteInvoiceInteractor,
+  getDeleteInvoicePaymentInteractor,
   getGetBillingProfileInteractor,
   getGetInvoiceInteractor,
   getGetInvoicesInteractor,
@@ -51,6 +53,10 @@ export async function issueInvoiceAction(data: IssueInvoiceData) {
 
 export async function recordInvoicePaymentAction(data: RecordInvoicePaymentData) {
   return serializeResult(getRecordInvoicePaymentInteractor().invoke(data));
+}
+
+export async function deleteInvoicePaymentAction(data: DeleteInvoicePaymentData) {
+  return serializeResult(getDeleteInvoicePaymentInteractor().invoke(data));
 }
 
 export async function voidInvoiceAction(id: string) {

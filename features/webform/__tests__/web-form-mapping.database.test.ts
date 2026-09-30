@@ -86,6 +86,7 @@ describeDatabase("mapping a web form onto lead value and custom fields", () => {
           fieldMapping: {
             email: "fields.email",
             firstName: "fields.first_name",
+            organizationName: "fields.company",
             value: "fields.budget",
             titleTemplate: "{firstName} — {form_title}",
             customFields: [
@@ -168,6 +169,23 @@ describeDatabase("mapping a web form onto lead value and custom fields", () => {
       }),
     );
     expect(phones).toEqual([{ value: "+49301234567" }]);
+  });
+
+  it("links the contact to the organization it names, once, however often the person submits", async () => {
+    const fields = { email: "lin@linked.example", first_name: "Lin", company: "Linked GmbH" };
+    const first = await submitAndProcess(fields);
+    await submitAndProcess(fields);
+
+    const lead = await runWithoutTenant(() =>
+      prisma.lead.findUnique({ where: { id: first ?? "" }, select: { contactId: true, organizationId: true } }),
+    );
+    const links = await runWithoutTenant(() =>
+      prisma.contactOrganization.findMany({
+        where: { companyId, contactId: lead?.contactId ?? "" },
+        select: { organizationId: true },
+      }),
+    );
+    expect(links).toEqual([{ organizationId: lead?.organizationId }]);
   });
 
   it("refuses a source that maps a field onto a column other than a lead or contact one", async () => {

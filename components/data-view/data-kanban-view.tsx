@@ -26,7 +26,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Button } from "@/components/ui/button";
 import { AppChip } from "@/components/chip/app-chip";
 import type { ChipColor } from "@/constants/chip-colors";
-import type { GroupValueSums } from "@/core/base/base-get.schema";
+import { type GroupValueSums, STAGE_GROUPING_FIELD } from "@/core/base/base-get.schema";
 import { NO_VALUE_GROUP_KEY } from "@/core/base/grouping/grouping.schema";
 import { projectValueSumsForGroup } from "@/core/base/grouping/project-value-sums";
 import { DEAL_GROUP_SUM_FIELDS } from "@/features/deals/deal-weighting";
@@ -319,7 +319,8 @@ export const DataKanbanView = observer(function DataKanbanView<E extends HasCust
   const itemsById = new Map(store.items.map((item) => [item.id, item]));
 
   async function handleDragEnd(event: DragEndEvent) {
-    if (!supportsDragWriteBack || !writeBackColumnId) return;
+    const isStageMove = store.groupingResult?.kind === "stage";
+    if (!supportsDragWriteBack || (!isStageMove && !writeBackColumnId)) return;
     if (!event.over || !event.active) return;
 
     const itemId = String(event.active.id);
@@ -334,7 +335,9 @@ export const DataKanbanView = observer(function DataKanbanView<E extends HasCust
 
     await store.moveItemBetweenGroups({
       item,
-      optimisticItem: patchCustomFieldValue(item, writeBackColumnId, nextValue),
+      optimisticItem: writeBackColumnId
+        ? patchCustomFieldValue(item, writeBackColumnId, nextValue)
+        : { ...item, [STAGE_GROUPING_FIELD]: nextValue },
       fromGroupKey,
       toGroupKey: targetGroup,
       value: nextValue,

@@ -49,6 +49,10 @@ export class PrismaSenderIdentityRepo extends BaseRepository implements SenderId
     return await this.findIdentityOrNull();
   }
 
+  async deleteIdentity(): Promise<void> {
+    await this.prisma.senderIdentity.deleteMany({ where: { companyId: this.companyId } });
+  }
+
   async findUserOrNull(userId: string) {
     return await this.prisma.user.findFirst({
       where: { id: userId, companyId: this.companyId },

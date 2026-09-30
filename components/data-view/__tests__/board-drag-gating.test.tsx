@@ -220,6 +220,20 @@ describe("board drag gating", () => {
     });
   });
 
+  it("moves a deal between pipeline stages, which carry no custom column", async () => {
+    const moveItemBetweenGroups = vi.fn();
+    render(store({ kind: "stage", supportsDragWriteBack: true, columnId: undefined }, moveItemBetweenGroups));
+
+    await drop("e-1", "won", "new");
+
+    expect(moveItemBetweenGroups).toHaveBeenCalledTimes(1);
+    expect(moveItemBetweenGroups.mock.calls[0][0]).toMatchObject({
+      toGroupKey: "won",
+      value: "won",
+      optimisticItem: { id: "e-1", stageId: "won" },
+    });
+  });
+
   it("ignores a drop back onto the group the card already sits in", async () => {
     const moveItemBetweenGroups = vi.fn();
     render(store({}, moveItemBetweenGroups));

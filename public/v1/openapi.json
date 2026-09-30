@@ -18921,6 +18921,32 @@
                         }
                       ]
                     },
+                    "sourceLead": {
+                      "description": "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "title": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "title"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "wonAt": {
                       "anyOf": [
                         {
@@ -19430,6 +19456,32 @@
                       "anyOf": [
                         {
                           "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "sourceLead": {
+                      "description": "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "title": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "title"
+                          ],
+                          "additionalProperties": false
                         },
                         {
                           "type": "null"
@@ -19953,6 +20005,32 @@
                           }
                         ]
                       },
+                      "sourceLead": {
+                        "description": "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "title": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "title"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
                       "wonAt": {
                         "anyOf": [
                           {
@@ -20463,6 +20541,32 @@
                         "anyOf": [
                           {
                             "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "sourceLead": {
+                        "description": "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "title": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "title"
+                            ],
+                            "additionalProperties": false
                           },
                           {
                             "type": "null"
@@ -22489,6 +22593,32 @@
                               }
                             ]
                           },
+                          "sourceLead": {
+                            "description": "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "title"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "wonAt": {
                             "anyOf": [
                               {
@@ -24094,6 +24224,32 @@
                                 }
                               ]
                             },
+                            "sourceLead": {
+                              "description": "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string",
+                                      "format": "uuid",
+                                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                    },
+                                    "title": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "title"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "wonAt": {
                               "anyOf": [
                                 {
@@ -25645,6 +25801,32 @@
                         }
                       ]
                     },
+                    "sourceLead": {
+                      "description": "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "title": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "title"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "wonAt": {
                       "anyOf": [
                         {
@@ -26244,6 +26426,32 @@
                         }
                       ]
                     },
+                    "sourceLead": {
+                      "description": "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "title": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "title"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "wonAt": {
                       "anyOf": [
                         {
@@ -26792,6 +27000,32 @@
                         }
                       ]
                     },
+                    "sourceLead": {
+                      "description": "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "title": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "title"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "wonAt": {
                       "anyOf": [
                         {
@@ -27139,7 +27373,7 @@
       "post": {
         "operationId": "reopenDeal",
         "summary": "Reopen a closed deal",
-        "description": "Reopens a won or lost deal. Sets the status back to open, clears wonAt, lostAt, closedAt, the lost reason and the lost notes, and resets the probability to null so the deal inherits its stage weighting again. The deal moves to the first stage of its pipeline.",
+        "description": "Reopens a won or lost deal. Sets the status back to open, clears wonAt, lostAt, closedAt, the lost reason and the lost notes, and resets the probability to null so the deal inherits its stage weighting again. Without a stageId the deal goes back to the open stage it left when it was closed, stays in its stage if that stage is open, and otherwise moves to the first stage of its pipeline.",
         "tags": [
           "deals"
         ],
@@ -27308,6 +27542,32 @@
                       "anyOf": [
                         {
                           "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "sourceLead": {
+                      "description": "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "title": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "title"
+                          ],
+                          "additionalProperties": false
                         },
                         {
                           "type": "null"
@@ -42690,7 +42950,7 @@
       "post": {
         "operationId": "issueInvoice",
         "summary": "Issue an invoice",
-        "description": "Issues a draft: it gets the next number from the invoicing settings (prefix plus a four-digit sequence), today's date as the issue date, a due date from the payment terms unless the draft set one, and a copy of the seller details, which later changes to the settings do not alter. Refused while the seller's legal name or address is missing, or when the draft has no lines.",
+        "description": "Issues a draft: it gets the next number from the invoicing settings (prefix plus a four-digit sequence), today's date as the issue date, a due date from the payment terms unless the draft set one, and a copy of the seller details, which later changes to the settings do not alter. Refused while the seller's legal name or address is missing, while the buyer's name or address is missing, or when the draft has no lines.",
         "tags": [
           "invoices"
         ],
@@ -43305,7 +43565,7 @@
             }
           },
           "400": {
-            "description": "Seller details are missing or the draft has no lines.",
+            "description": "Seller or buyer details are missing, or the draft has no lines.",
             "content": {
               "application/json": {
                 "schema": {
@@ -44056,6 +44316,697 @@
           },
           "409": {
             "description": "The invoice is not issued, or is already paid or void.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/invoices/{id}/payments/{paymentId}": {
+      "delete": {
+        "operationId": "deleteInvoicePayment",
+        "summary": "Delete a payment",
+        "description": "Removes a payment recorded against an issued or paid invoice, for example one entered by mistake. The paid amount is recalculated, and a paid invoice whose payments no longer cover the total goes back to issued.",
+        "tags": [
+          "invoices"
+        ],
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "paymentId",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "description": "This action takes no request body.",
+          "content": {}
+        },
+        "responses": {
+          "200": {
+            "description": "The payment was removed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "number": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "issued",
+                        "paid",
+                        "void"
+                      ]
+                    },
+                    "deal": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "organization": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "currency": {
+                      "type": "string",
+                      "enum": [
+                        "eur",
+                        "usd",
+                        "gbp",
+                        "jpy",
+                        "cny",
+                        "inr",
+                        "brl",
+                        "cad",
+                        "aud",
+                        "chf",
+                        "sek",
+                        "nok",
+                        "dkk",
+                        "pln",
+                        "czk",
+                        "huf",
+                        "try",
+                        "twd",
+                        "zar",
+                        "mxn",
+                        "krw",
+                        "hkd",
+                        "sgd",
+                        "nzd",
+                        "aed",
+                        "sar",
+                        "ils",
+                        "afn",
+                        "all",
+                        "amd",
+                        "aoa",
+                        "ars",
+                        "awg",
+                        "azn",
+                        "bam",
+                        "bbd",
+                        "bdt",
+                        "bhd",
+                        "bif",
+                        "bmd",
+                        "bnd",
+                        "bob",
+                        "bsd",
+                        "btn",
+                        "bwp",
+                        "byn",
+                        "bzd",
+                        "cdf",
+                        "clp",
+                        "cop",
+                        "crc",
+                        "cup",
+                        "cve",
+                        "djf",
+                        "dop",
+                        "dzd",
+                        "egp",
+                        "ern",
+                        "etb",
+                        "fjd",
+                        "fkp",
+                        "gel",
+                        "ghs",
+                        "gip",
+                        "gmd",
+                        "gnf",
+                        "gtq",
+                        "gyd",
+                        "hnl",
+                        "htg",
+                        "idr",
+                        "iqd",
+                        "irr",
+                        "isk",
+                        "jmd",
+                        "jod",
+                        "kes",
+                        "kgs",
+                        "khr",
+                        "kmf",
+                        "kpw",
+                        "kwd",
+                        "kyd",
+                        "kzt",
+                        "lak",
+                        "lbp",
+                        "lkr",
+                        "lrd",
+                        "lsl",
+                        "lyd",
+                        "mad",
+                        "mdl",
+                        "mga",
+                        "mkd",
+                        "mmk",
+                        "mnt",
+                        "mop",
+                        "mru",
+                        "mur",
+                        "mvr",
+                        "mwk",
+                        "myr",
+                        "mzn",
+                        "nad",
+                        "ngn",
+                        "nio",
+                        "npr",
+                        "omr",
+                        "pab",
+                        "pen",
+                        "pgk",
+                        "php",
+                        "pkr",
+                        "pyg",
+                        "qar",
+                        "ron",
+                        "rsd",
+                        "rub",
+                        "rwf",
+                        "sbd",
+                        "scr",
+                        "sdg",
+                        "shp",
+                        "sle",
+                        "sos",
+                        "srd",
+                        "ssp",
+                        "stn",
+                        "svc",
+                        "syp",
+                        "szl",
+                        "thb",
+                        "tjs",
+                        "tmt",
+                        "tnd",
+                        "top",
+                        "ttd",
+                        "tzs",
+                        "uah",
+                        "ugx",
+                        "uyu",
+                        "uzs",
+                        "ved",
+                        "ves",
+                        "vnd",
+                        "vuv",
+                        "wst",
+                        "xaf",
+                        "xcd",
+                        "xcg",
+                        "xof",
+                        "xpf",
+                        "yer",
+                        "zmw",
+                        "zwg"
+                      ]
+                    },
+                    "buyerName": {
+                      "type": "string"
+                    },
+                    "issueDate": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "dueDate": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "grossTotal": {
+                      "type": "number"
+                    },
+                    "paidAmount": {
+                      "type": "number"
+                    },
+                    "balance": {
+                      "type": "number"
+                    },
+                    "overdue": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "buyerAddress": {
+                      "type": "string"
+                    },
+                    "buyerVatId": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "buyerEmail": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "notes": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "netTotal": {
+                      "type": "number"
+                    },
+                    "taxTotal": {
+                      "type": "number"
+                    },
+                    "taxBreakdown": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "taxRate": {
+                            "type": "number"
+                          },
+                          "netAmount": {
+                            "type": "number"
+                          },
+                          "taxAmount": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "taxRate",
+                          "netAmount",
+                          "taxAmount"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "paidAt": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "issuedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "voidedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "seller": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "address": {
+                              "type": "string"
+                            },
+                            "vatId": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "email": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "phone": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "bankDetails": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "footer": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "address",
+                            "vatId",
+                            "email",
+                            "bankDetails",
+                            "footer"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "lines": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "position": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "quantity": {
+                            "type": "number"
+                          },
+                          "unitPrice": {
+                            "type": "number"
+                          },
+                          "discountPercent": {
+                            "type": "number"
+                          },
+                          "taxRate": {
+                            "type": "number"
+                          },
+                          "netAmount": {
+                            "type": "number"
+                          },
+                          "taxAmount": {
+                            "type": "number"
+                          },
+                          "serviceId": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "position",
+                          "description",
+                          "quantity",
+                          "unitPrice",
+                          "discountPercent",
+                          "taxRate",
+                          "netAmount",
+                          "taxAmount",
+                          "serviceId"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "payments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "amount": {
+                            "type": "number"
+                          },
+                          "paidAt": {
+                            "type": "string"
+                          },
+                          "note": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "amount",
+                          "paidAt",
+                          "note"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "number",
+                    "status",
+                    "deal",
+                    "organization",
+                    "currency",
+                    "buyerName",
+                    "issueDate",
+                    "dueDate",
+                    "grossTotal",
+                    "paidAmount",
+                    "balance",
+                    "overdue",
+                    "createdAt",
+                    "buyerAddress",
+                    "buyerVatId",
+                    "buyerEmail",
+                    "notes",
+                    "netTotal",
+                    "taxTotal",
+                    "taxBreakdown",
+                    "paidAt",
+                    "issuedAt",
+                    "voidedAt",
+                    "seller",
+                    "lines",
+                    "payments",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No invoice with this ID exists, or the payment does not belong to it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The invoice is a draft or void.",
             "content": {
               "application/json": {
                 "schema": {
@@ -48834,6 +49785,158 @@
         "responses": {
           "200": {
             "description": "The sender identity was saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "configured": {
+                      "type": "boolean"
+                    },
+                    "fromName": {
+                      "type": "string"
+                    },
+                    "fromAddress": {
+                      "type": "string"
+                    },
+                    "replyTo": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "allowUserSenders": {
+                      "type": "boolean"
+                    },
+                    "domain": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "verified": {
+                      "type": "boolean"
+                    },
+                    "verifiedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "verificationRecord": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "TXT"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "name",
+                            "value"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "configured",
+                    "fromName",
+                    "fromAddress",
+                    "replyTo",
+                    "allowUserSenders",
+                    "domain",
+                    "verified",
+                    "verifiedAt",
+                    "verificationRecord"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseSchema"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "resetSenderIdentity",
+        "summary": "Reset the sender identity",
+        "description": "Removes the workspace's own From name, address and Reply-To, so automations and campaigns send as the installation's default sender again. Requires permission to update the company.",
+        "tags": [
+          "sender-identity"
+        ],
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The workspace sends as the default sender.",
             "content": {
               "application/json": {
                 "schema": {
@@ -92653,6 +93756,31 @@
                       }
                     ]
                   },
+                  "sourceLead": {
+                    "description": "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "title": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "wonAt": {
                     "anyOf": [
                       {
@@ -93123,6 +94251,31 @@
                         "anyOf": [
                           {
                             "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "sourceLead": {
+                        "description": "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                              },
+                              "title": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "title"
+                            ]
                           },
                           {
                             "type": "null"
@@ -93815,6 +94968,61 @@
                           "previous",
                           "current"
                         ]
+                      },
+                      "sourceLead": {
+                        "type": "object",
+                        "properties": {
+                          "previous": {
+                            "description": "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "title"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "current": {
+                            "description": "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "title"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
                       },
                       "wonAt": {
                         "type": "object",
@@ -94588,6 +95796,31 @@
                     "anyOf": [
                       {
                         "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "sourceLead": {
+                    "description": "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "title": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title"
+                        ]
                       },
                       {
                         "type": "null"

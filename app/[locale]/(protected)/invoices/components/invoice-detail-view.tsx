@@ -72,6 +72,7 @@ export const InvoiceDetailView = observer(({ initial, settings }: Props) => {
   const canDelete = userStore.can(Resource.invoices, Action.delete);
   const isDraft = invoice.status === InvoiceStatus.draft;
   const sellerMissing = settings.sellerName.trim() === "" || settings.sellerAddress.trim() === "";
+  const buyerMissing = !store.form.buyerName.trim() || !store.form.buyerAddress.trim();
   const title = invoice.number ?? t("Invoices.draftNumber");
 
   useEffect(() => {
@@ -215,7 +216,7 @@ export const InvoiceDetailView = observer(({ initial, settings }: Props) => {
           )}
 
           {isDraft && canUpdate && (
-            <Button disabled={isBusy || store.isLoading || sellerMissing} size="sm" onClick={issue}>
+            <Button disabled={isBusy || store.isLoading || sellerMissing || buyerMissing} size="sm" onClick={issue}>
               {t("Invoices.issue")}
             </Button>
           )}
@@ -235,6 +236,12 @@ export const InvoiceDetailView = observer(({ initial, settings }: Props) => {
               link: (chunks) => <AppLink href="/company/invoicing">{chunks}</AppLink>,
             })}
           </AlertDescription>
+        </Alert>
+      )}
+
+      {isDraft && !sellerMissing && buyerMissing && (
+        <Alert data-invoice-buyer-missing="">
+          <AlertDescription>{t("Invoices.buyerMissing")}</AlertDescription>
         </Alert>
       )}
 

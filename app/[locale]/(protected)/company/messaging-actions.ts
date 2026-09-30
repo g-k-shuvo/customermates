@@ -12,6 +12,7 @@ import {
   getGetSenderIdentityInteractor,
   getGetSuppressionsInteractor,
   getRemoveSuppressionInteractor,
+  getResetSenderIdentityInteractor,
   getSaveSenderIdentityInteractor,
   getVerifySenderDomainInteractor,
 } from "@/core/di";
@@ -35,6 +36,10 @@ export async function getSenderIdentityAction() {
 
 export async function saveSenderIdentityAction(data: SaveSenderIdentityData) {
   return serializeResult(getSaveSenderIdentityInteractor().invoke(data));
+}
+
+export async function resetSenderIdentityAction() {
+  return serializeResult(getResetSenderIdentityInteractor().invoke({}));
 }
 
 export async function verifySenderDomainAction() {

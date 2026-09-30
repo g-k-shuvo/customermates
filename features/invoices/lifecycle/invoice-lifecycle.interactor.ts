@@ -5,6 +5,8 @@ import { addDays } from "date-fns";
 import { InvoiceStatus } from "@/generated/prisma";
 
 import {
+  type DeleteInvoicePaymentData,
+  DeleteInvoicePaymentSchema,
   type InvoiceDto,
   InvoiceDtoSchema,
   type InvoiceIdData,
@@ -34,6 +36,8 @@ export class IssueInvoiceInteractor extends AuthenticatedInteractor<IssueInvoice
     if (!invoice) return failNotFound(CustomErrorCode.invoiceNotFound, ["id"]);
     if (invoice.status !== InvoiceStatus.draft) return failConflict(CustomErrorCode.invoiceNotDraft, ["id"]);
     if (invoice.lines.length === 0) return fail(CustomErrorCode.invoiceHasNoLines, ["id"]);
+    if (!invoice.buyerName.trim() || !invoice.buyerAddress.trim())
+      return fail(CustomErrorCode.invoiceBuyerMissing, ["id"]);
 
     const settings = await this.repo.getSettings();
     if (!settings.sellerName.trim() || !settings.sellerAddress.trim())
@@ -82,6 +86,25 @@ export class RecordInvoicePaymentInteractor extends AuthenticatedInteractor<Reco
       paidAt: data.paidAt ?? new Date(),
       note: data.note ?? null,
     });
+
+    return { ok: true as const, data: (await this.repo.findInvoiceOrNull(invoice.id)) as InvoiceDto };
+  }
+}
+
+@TenantInteractor(INVOICE_UPDATE)
+export class DeleteInvoicePaymentInteractor extends AuthenticatedInteractor<DeleteInvoicePaymentData, InvoiceDto> {
+  constructor(private repo: InvoiceRepo) {
+    super();
+  }
+
+  @Write({ input: DeleteInvoicePaymentSchema, output: InvoiceDtoSchema })
+  async invoke(data: DeleteInvoicePaymentData): Validated<InvoiceDto> {
+    const invoice = await this.repo.findInvoiceOrNull(data.id);
+    if (!invoice) return failNotFound(CustomErrorCode.invoiceNotFound, ["id"]);
+    if (invoice.status !== InvoiceStatus.issued && invoice.status !== InvoiceStatus.paid)
+      return failConflict(CustomErrorCode.invoiceNotIssued, ["id"]);
+    if (!(await this.repo.removePayment(invoice.id, data.paymentId)))
+      return failNotFound(CustomErrorCode.invoicePaymentNotFound, ["paymentId"]);
 
     return { ok: true as const, data: (await this.repo.findInvoiceOrNull(invoice.id)) as InvoiceDto };
   }

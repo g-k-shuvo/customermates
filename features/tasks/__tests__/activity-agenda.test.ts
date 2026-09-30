@@ -18,8 +18,17 @@ describe("agendaBucketFor", () => {
     expect(agendaBucketFor(entry(new Date(2026, 8, 5, 9, 0, 0)), NOW)).toBe("overdue");
   });
 
-  it("keeps a completed activity out of the overdue bucket and in its own day", () => {
-    expect(agendaBucketFor(entry(new Date(2026, 8, 5, 9, 0, 0), new Date(2026, 8, 5, 10, 0, 0)), NOW)).toBe("today");
+  it("files a completed activity due on an earlier day under done earlier, never under today or overdue", () => {
+    expect(agendaBucketFor(entry(new Date(2026, 8, 5, 9, 0, 0), new Date(2026, 8, 5, 10, 0, 0)), NOW)).toBe(
+      "doneEarlier",
+    );
+    expect(agendaBucketFor(entry(new Date(2026, 7, 30, 9, 0, 0), new Date(2026, 8, 6, 8, 0, 0)), NOW)).toBe(
+      "doneEarlier",
+    );
+  });
+
+  it("keeps a completed activity due today under today", () => {
+    expect(agendaBucketFor(entry(new Date(2026, 8, 6, 9, 0, 0), new Date(2026, 8, 6, 10, 0, 0)), NOW)).toBe("today");
   });
 
   it("separates the rest of today, tomorrow, the coming week and later", () => {

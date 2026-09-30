@@ -37,7 +37,7 @@ const { PrismaSuppressionRepo } = await import("../suppression/prisma-suppressio
 const { UnsubscribeInteractor } = await import("../suppression/unsubscribe.interactor");
 const { PrismaSenderIdentityRepo } = await import("../sender/prisma-sender-identity.repository");
 const { SenderResolver, SENDER_UNVERIFIED } = await import("../sender/sender-resolver");
-const { SaveSenderIdentityInteractor, VerifySenderDomainInteractor } = await import(
+const { ResetSenderIdentityInteractor, SaveSenderIdentityInteractor, VerifySenderDomainInteractor } = await import(
   "../sender/sender-identity.interactor"
 );
 
@@ -295,5 +295,15 @@ describeDatabase("guarded email sending", () => {
     );
     const moved = await send(service, randomUUID());
     expect(moved).toMatchObject({ status: "failed", code: SENDER_UNVERIFIED });
+
+    const reset = await runAsBackgroundTenant(userId, () =>
+      new ResetSenderIdentityInteractor(new PrismaSenderIdentityRepo()).invoke({}),
+    );
+    expect(reset).toMatchObject({ ok: true, data: { configured: false, fromAddress: "" } });
+
+    const callsBefore = deliver.mock.calls.length;
+    const restored = await send(service, randomUUID());
+    expect(restored).not.toMatchObject({ code: SENDER_UNVERIFIED });
+    expect(deliver.mock.calls.length).toBe(callsBefore + 1);
   });
 });

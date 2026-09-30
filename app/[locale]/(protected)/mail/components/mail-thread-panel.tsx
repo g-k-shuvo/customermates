@@ -11,7 +11,7 @@ import type { ThreadWorkspaceState } from "./mail-thread-workspace-bar";
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { ImageOff, MailOpen } from "lucide-react";
+import { Forward, ImageOff, MailOpen } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -93,6 +93,7 @@ export function MailThreadPanel({
   const [linking, setLinking] = useState(false);
   const [dealLinkOverride, setDealLinkOverride] = useState<DealLinkOverride | null>(null);
   const [draftVersion, setDraftVersion] = useState(0);
+  const [forwardPick, setForwardPick] = useState<{ threadId: string; messageId: string } | null>(null);
 
   const loadingThreadId = state.status === "loading" ? state.threadId : null;
   const [trackedLoad, setTrackedLoad] = useState<string | null>(loadingThreadId);
@@ -295,9 +296,24 @@ export function MailThreadPanel({
                 {message.senderIdentifier ?? t("Mailbox.unknownSender")}
               </span>
 
-              <span className="shrink-0 text-xs text-muted-foreground">
-                {intlStore.formatNumericalShortDateTime(message.sentAt)}
-              </span>
+              <div className="flex shrink-0 items-center gap-1">
+                <span className="text-xs text-muted-foreground">
+                  {intlStore.formatNumericalShortDateTime(message.sentAt)}
+                </span>
+
+                <Button
+                  aria-label={t("Mailbox.forwardThisMessage")}
+                  className="size-7"
+                  data-mail-forward-message={message.id}
+                  size="icon"
+                  title={t("Mailbox.forwardThisMessage")}
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setForwardPick({ threadId: thread.id, messageId: message.id })}
+                >
+                  <Forward aria-hidden="true" className="size-3.5" />
+                </Button>
+              </div>
             </div>
 
             <MessageBody message={message} />
@@ -317,7 +333,9 @@ export function MailThreadPanel({
 
       <MailReplyBox
         key={`${thread.id}:${draftVersion}`}
+        forwardMessageId={forwardPick?.threadId === thread.id ? forwardPick.messageId : null}
         threadId={thread.id}
+        onForwardMessageCleared={() => setForwardPick(null)}
         onScheduled={onOutboxChanged}
         onSent={onReplySent}
       />

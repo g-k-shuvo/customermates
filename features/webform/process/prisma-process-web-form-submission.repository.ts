@@ -186,6 +186,14 @@ export class PrismaProcessWebFormSubmissionRepo extends BaseRepository implement
   }
 
   @BypassTenantGuard
+  async linkContactToOrganizationUnscoped(companyId: string, contactId: string, organizationId: string): Promise<void> {
+    await this.prisma.contactOrganization.createMany({
+      data: [{ companyId, contactId, organizationId }],
+      skipDuplicates: true,
+    });
+  }
+
+  @BypassTenantGuard
   async createLeadFromSubmissionUnscoped(args: CreateLeadFromSubmissionArgs): Promise<string> {
     const notes = args.message ? plainTextToNotesDocument(args.message) : null;
     const lead = await this.prisma.lead.create({

@@ -144,6 +144,8 @@ export enum CustomErrorCode {
   invoiceNotFound = "invoiceNotFound",
   invoiceNotIssued = "invoiceNotIssued",
   invoicePaymentExceedsBalance = "invoicePaymentExceedsBalance",
+  invoicePaymentNotFound = "invoicePaymentNotFound",
+  invoiceBuyerMissing = "invoiceBuyerMissing",
   invoiceSellerMissing = "invoiceSellerMissing",
   invoiceXRechnungIncomplete = "invoiceXRechnungIncomplete",
   contactMergeNotFound = "contactMergeNotFound",

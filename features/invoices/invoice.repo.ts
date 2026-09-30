@@ -65,6 +65,7 @@ export abstract class InvoiceRepo {
     seller: SellerSnapshot;
   }): Promise<boolean>;
   abstract addPayment(args: { id: string; amount: number; paidAt: Date; note: string | null }): Promise<void>;
+  abstract removePayment(id: string, paymentId: string): Promise<boolean>;
   abstract markVoid(id: string): Promise<boolean>;
   abstract deleteDraft(id: string): Promise<boolean>;
   abstract findBillingProfileOrNull(organizationId: string): Promise<BillingProfileDto | null>;

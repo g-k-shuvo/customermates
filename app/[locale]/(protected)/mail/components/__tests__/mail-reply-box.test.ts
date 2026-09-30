@@ -142,4 +142,24 @@ describe("MailReplyBox", () => {
     expect(sendReplyAction).not.toHaveBeenCalled();
     expect(forwardThreadAction).not.toHaveBeenCalled();
   });
+
+  it("opens in forward mode with the picked-message hint when a message is chosen for forwarding", () => {
+    const markup = renderToStaticMarkup(
+      createElement(MailReplyBox, {
+        threadId: THREAD_ID,
+        forwardMessageId: "00000000-0000-4000-8000-0000000000eb",
+        onSent: vi.fn(),
+      }),
+    );
+
+    expect(markup).toContain("Mailbox.forwardRecipientsLabel");
+    expect(markup).toContain("Mailbox.forwardPickedHint");
+    expect(buttonLabelled("Mailbox.sendForward")).toBeDefined();
+  });
+
+  it("offers to hide the composer", () => {
+    render();
+
+    expect(buttonLabelled("Mailbox.collapseComposer")).toBeDefined();
+  });
 });

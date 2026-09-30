@@ -18,6 +18,7 @@ import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
 import { Write } from "@/core/decorators/write.decorator";
 import { uploadedObjectMatches } from "@/core/storage/upload-policy";
+import { contentMatchesType, readObjectHead } from "@/core/storage/content-signature";
 import { type ScanVerdict } from "@/core/storage/virus-scanner";
 import {
   failAuthorization,
@@ -62,6 +63,20 @@ export class CompleteRecordFileUploadInteractor extends AuthenticatedInteractor<
       await this.repo.deletePendingFile(id);
 
       return failConflict(CustomErrorCode.fileUploadIncomplete, ["id"]);
+    }
+
+    let head: Uint8Array;
+    try {
+      head = await readObjectHead(this.storage, pending.storageKey);
+    } catch (error) {
+      return storageFailure(error);
+    }
+
+    if (!contentMatchesType(pending.contentType, head)) {
+      await this.storage.deleteObject(pending.storageKey).catch(() => undefined);
+      await this.repo.deletePendingFile(id);
+
+      return failConflict(CustomErrorCode.fileTypeMismatch, ["id"]);
     }
 
     if (this.scanner.configured) {

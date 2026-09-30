@@ -11,6 +11,7 @@ import { Action } from "@/generated/prisma";
 import type { Resource } from "@/generated/prisma";
 
 import { toastZodErrorTree } from "../utils/toast-zod-error-tree";
+import { revealFirstInvalidField } from "../utils/reveal-first-invalid-field";
 
 import { BaseStore } from "./base.store";
 
@@ -71,7 +72,10 @@ export abstract class BaseFormStore<T extends object = object> extends BaseStore
 
   setError = (error: $ZodErrorTree<T> | undefined) => {
     this.error = error;
-    if (error) toastZodErrorTree(error);
+    if (!error) return;
+
+    toastZodErrorTree(error);
+    revealFirstInvalidField();
   };
 
   resetForm = () => {

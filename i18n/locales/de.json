@@ -31,6 +31,7 @@
   },
   "Activities": {
     "agenda": {
+      "doneEarlier": "Bereits erledigt ({count})",
       "emptyBody": "Es sind noch keine {plural} geplant.",
       "emptyTitle": "Nichts geplant",
       "later": "Später ({count})",
@@ -952,6 +953,14 @@
     "unnamed": "Unbenannt"
   },
   "AuditLogModal": {
+    "changes": {
+      "after": "Nachher",
+      "before": "Vorher",
+      "field": "Feld",
+      "no": "Nein",
+      "title": "Änderungen",
+      "yes": "Ja"
+    },
     "createdAt": "Erstellt am",
     "deletedField": "Gelöschtes Feld",
     "deletedFieldChanged": "Ein Feld wurde geändert, das inzwischen gelöscht wurde.",
@@ -976,10 +985,13 @@
       "effectiveAt": "Gültig ab",
       "emails": "E-Mail-Adressen",
       "isNewCompany": "Erste Person im Workspace",
+      "lostReasonId": "Verlustgrund",
+      "pipelineId": "Pipeline",
       "postalCode": "Postleitzahl",
       "prompt": "Anweisungen",
       "recipientEmail": "Gesendet an",
       "removalReason": "Entfernungsgrund",
+      "stageId": "Phase",
       "street": "Straße",
       "terminology": "Datensatzbenennung",
       "timezone": "Zeitzone",
@@ -1113,6 +1125,7 @@
     "removeStep": "Aktion entfernen",
     "rowSummary": "{trigger} · {steps}",
     "runsEmpty": "Diese Automatisierung wurde noch nicht ausgeführt.",
+    "runSkippedReason": "Nicht ausgeführt: Der Datensatz erfüllte die Bedingungen nicht.",
     "runsLabel": "Ausführungsverlauf der Automatisierung {name} anzeigen",
     "runStatuses": {
       "cancelled": "Abgebrochen",
@@ -1143,6 +1156,7 @@
       "senderUnverified": "Die Absenderadresse ist nicht verifiziert, daher wurde nichts gesendet",
       "unexpectedError": "Die Aktion wurde wegen eines unerwarteten Fehlers abgebrochen"
     },
+    "stepNotRun": "Nicht ausgeführt",
     "title": "Automatisierungen",
     "toggleLabel": "Automatisierung {name} ein- oder ausschalten",
     "triggerKinds": {
@@ -1536,11 +1550,13 @@
       "invalidJsonBody": "Der Request-Body ist kein gültiges JSON.",
       "invalidSortField": "Sortierfeld nicht gefunden oder nicht zugänglich. Verfügbare Felder: {validValues}.",
       "invalidUrl": "Gib eine gültige URL ein.",
+      "invoiceBuyerMissing": "Hinterlegen Sie vor dem Ausstellen Name und Anschrift des Empfängers.",
       "invoiceHasNoLines": "Eine Rechnung braucht mindestens eine Position, bevor sie ausgestellt werden kann.",
       "invoiceNotDraft": "Nur ein Rechnungsentwurf lässt sich ändern oder löschen. Stornieren Sie eine ausgestellte Rechnung stattdessen.",
       "invoiceNotFound": "Rechnungs-ID nicht gefunden oder nicht zugänglich.",
       "invoiceNotIssued": "Das geht nur bei einer ausgestellten Rechnung, die noch nicht bezahlt oder storniert ist.",
       "invoicePaymentExceedsBalance": "Die Zahlung ist höher als der offene Betrag.",
+      "invoicePaymentNotFound": "Diese Zahlung ist auf der Rechnung nicht mehr vorhanden.",
       "invoiceSellerMissing": "Hinterlegen Sie vor dem Ausstellen den Firmennamen und die Anschrift Ihres Unternehmens in den Rechnungseinstellungen.",
       "invoiceXRechnungIncomplete": "Für eine XRechnung braucht es Rechnungs-E-Mail, Telefon, USt-IdNr. und eine Anschrift mit Postleitzahl und Ort Ihres Unternehmens sowie Rechnungs-E-Mail und Anschrift des Empfängers.",
       "leadAlreadyConverted": "Dieser Lead wurde bereits in einen Deal umgewandelt.",
@@ -2722,6 +2738,7 @@
       "reopen": "Wieder öffnen"
     },
     "expectedCloseDateLabel": "Voraussichtliches Abschlussdatum",
+    "fromLead": "Aus Lead",
     "noServicesAdded": "Noch keine {entity} hinzugefügt",
     "pipeline": {
       "allPipelines": "Alle Pipelines",
@@ -2734,6 +2751,7 @@
       "stagePlaceholder": "Phase auswählen",
       "switcherLabel": "Pipeline"
     },
+    "probabilityValue": "{value} %",
     "quantityLabel": "Anzahl",
     "stageBar": {
       "currentStage": "{name}, aktuelle Phase: {duration}",
@@ -3429,6 +3447,7 @@
       "title": "Rechnungsempfänger",
       "vatId": "USt-IdNr."
     },
+    "buyerMissing": "Tragen Sie vor dem Ausstellen Name und Anschrift unter Rechnungsempfänger ein.",
     "columns": {
       "balance": "Offen",
       "buyer": "Empfänger",
@@ -3497,7 +3516,9 @@
       "note": "Notiz",
       "record": "Zahlung erfassen",
       "recorded": "Zahlung erfasst",
-      "title": "Zahlungen"
+      "title": "Zahlungen",
+      "undo": "Rückgängig",
+      "undone": "Zahlung entfernt"
     },
     "previous": "Zurück",
     "seller": "Absender",
@@ -3610,6 +3631,8 @@
   "LeadDetail": {
     "convert": "In Deal umwandeln",
     "convertDescription": "„{title}“ wird mit Kontakt, Organisation, Zuständigem und Notizen umgewandelt. Der Lead bleibt erhalten und wird als umgewandelt markiert.",
+    "convertedToDeal": "In einen Deal umgewandelt.",
+    "openConvertedDeal": "Deal öffnen",
     "owner": "Zuständig",
     "probabilityPlaceholder": "Standard der Phase: {percent} %",
     "source": "Quelle",
@@ -3692,6 +3715,7 @@
     "backfillDaysDescription": "Wie weit die erste Synchronisierung zurückliest.",
     "backfillDaysLabel": "Tage rückwirkend",
     "cancelReply": "Abbrechen",
+    "collapseComposer": "Editor ausblenden",
     "connectDescription": "Wir melden uns mit diesen Angaben am Mailserver an, bevor etwas gespeichert wird. Ein falscher Host oder ein falsches Passwort wird deshalb hier gemeldet statt gespeichert.",
     "connectFailedTitle": "Das Postfach konnte nicht verbunden werden",
     "connectSubmit": "Postfach verbinden",
@@ -3716,13 +3740,16 @@
     "emptyAccountsTitle": "Keine Postfächer verbunden",
     "emptyDescription": "Verbinden Sie ein Postfach, dann erscheinen Ihre Konversationen hier.",
     "emptyTitle": "Noch keine E-Mails",
+    "expandComposer": "Schreiben",
     "folderLabel": "Ordner",
     "forward": "Weiterleiten",
     "forwardHint": "Ihre Notiz steht über dem zitierten Original. Eine Weiterleitung beginnt für die hinzugefügten Personen eine neue Konversation, ihre Antworten kommen also nicht hierher zurück.",
+    "forwardPickedHint": "Sie leiten die gewählte Nachricht mit ihren Anhängen weiter. Ihre Notiz steht über dem zitierten Original, und Antworten kommen nicht in diese Konversation zurück.",
     "forwardPlaceholder": "Notiz hinzufügen (optional)",
     "forwardRecipientsLabel": "Weiterleiten an",
     "forwardRecipientsPlaceholder": "Adressen mit Komma trennen",
     "forwardSent": "Nachricht weitergeleitet",
+    "forwardThisMessage": "Diese Nachricht weiterleiten",
     "imapHostLabel": "IMAP-Host",
     "imapPortLabel": "IMAP-Port",
     "imapSecureDescription": "Nur für einen Server abschalten, der ein Upgrade aus dem Klartext erwartet.",
@@ -3998,13 +4025,13 @@
     },
     "footnote": "Ein Workspace wird erst erstellt, wenn du Erstellen wählst und dein Profil abschließt.",
     "join": {
-      "description": "Tritt einem Team bei, das Customermates bereits nutzt. Dafür brauchst du eine Einladung von einem Workspace-Administrator.",
+      "description": "Tritt einem Team bei, das {brandName} bereits nutzt. Dafür brauchst du eine Einladung von einem Workspace-Administrator.",
       "note": "Es wird kein Workspace erstellt",
       "title": "Bestehendem Workspace beitreten"
     },
     "optionsLabel": "Auswahl für die Workspace-Einrichtung",
     "signedInAs": "Angemeldet als {email}",
-    "subtitle": "Erstelle einen Workspace für dein Unternehmen oder tritt einem Team bei, das Customermates bereits nutzt.",
+    "subtitle": "Erstelle einen Workspace für dein Unternehmen oder tritt einem Team bei, das {brandName} bereits nutzt.",
     "title": "Wie möchtest du starten?"
   },
   "OnboardingForm": {
@@ -4723,6 +4750,11 @@
     "recordValue": "Wert",
     "refusedUntilVerified": "Bis die Domain verifiziert ist, werden E-Mails dieses Absenders abgelehnt.",
     "replyTo": "Antwortadresse (optional)",
+    "reset": "Standardabsender verwenden",
+    "resetConfirm": {
+      "message": "Automationen und Kampagnen senden wieder mit dem Standardabsender der Installation. Ihr eigener Name, Ihre Adresse und Reply-To werden entfernt.",
+      "title": "Standardabsender verwenden?"
+    },
     "save": "Absender speichern",
     "saved": "Absender gespeichert",
     "title": "Absender",

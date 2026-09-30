@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Forward, Reply, ReplyAll } from "lucide-react";
+import { ChevronDown, ChevronUp, Forward, Reply, ReplyAll } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -26,8 +26,10 @@ import { SEND_LATER_OPTIONS, sendLaterDateFor, type SendLaterOption } from "./ma
 
 type Props = {
   threadId: string;
+  forwardMessageId?: string | null;
   onSent: () => void;
   onScheduled?: () => void;
+  onForwardMessageCleared?: () => void;
 };
 
 type ComposeMode = "reply" | "forward";
@@ -36,6 +38,7 @@ type Compose = { mode: ComposeMode; body: string; recipients: string; replyAll: 
 
 const RECIPIENTS_FIELD_ID = "mail-forward-recipients";
 const DRAFT_SAVE_DELAY_MS = 800;
+const WARNING_TOAST_DURATION_MS = 6000;
 const SEND_LATER_PLACEHOLDER = "pick";
 const EMPTY_COMPOSE: Compose = { mode: "reply", body: "", recipients: "", replyAll: false };
 
@@ -46,12 +49,20 @@ export function splitRecipients(value: string): string[] {
     .filter((entry) => entry.length > 0);
 }
 
-export function MailReplyBox({ threadId, onSent, onScheduled }: Props) {
+export function MailReplyBox({
+  threadId,
+  forwardMessageId = null,
+  onSent,
+  onScheduled,
+  onForwardMessageCleared,
+}: Props) {
   const t = useTranslations();
   const intlStore = useHydratedIntlStore();
   const [compose, setCompose] = useState<Compose>(EMPTY_COMPOSE);
   const [sending, setSending] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [trackedPick, setTrackedPick] = useState<string | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { mode, body, recipients, replyAll } = compose;
@@ -59,6 +70,14 @@ export function MailReplyBox({ threadId, onSent, onScheduled }: Props) {
   const to = splitRecipients(recipients);
   const ready = forwarding ? to.length > 0 : body.trim().length > 0;
   const drafted = body.length > 0 || recipients.length > 0;
+
+  if (trackedPick !== forwardMessageId) {
+    setTrackedPick(forwardMessageId);
+    if (forwardMessageId) {
+      setCompose((current) => ({ ...current, mode: "forward" }));
+      setCollapsed(false);
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -105,6 +124,7 @@ export function MailReplyBox({ threadId, onSent, onScheduled }: Props) {
     const next = { ...compose, ...patch };
     setCompose(next);
     saveDraftLater(next);
+    if (next.mode === "reply" && forwardMessageId) onForwardMessageCleared?.();
   };
 
   const cancelPendingSave = () => {
@@ -116,6 +136,7 @@ export function MailReplyBox({ threadId, onSent, onScheduled }: Props) {
     cancelPendingSave();
     setCompose(EMPTY_COMPOSE);
     setDraftSaved(false);
+    if (forwardMessageId) onForwardMessageCleared?.();
   };
 
   const discard = () => {
@@ -132,7 +153,12 @@ export function MailReplyBox({ threadId, onSent, onScheduled }: Props) {
     runUserAction(async () => {
       try {
         const result = forwarding
-          ? await forwardThreadAction({ threadId, to, body })
+          ? await forwardThreadAction({
+              threadId,
+              to,
+              body,
+              ...(forwardMessageId ? { messageId: forwardMessageId } : {}),
+            })
           : await sendReplyAction({ threadId, body, replyAll });
 
         if (!result.ok) {
@@ -140,8 +166,14 @@ export function MailReplyBox({ threadId, onSent, onScheduled }: Props) {
           return;
         }
 
-        toast.success(forwarding ? t("Mailbox.forwardSent") : t("Mailbox.replySent"));
-        if (!result.data.sentCopySaved) toast.warning(t("Mailbox.sentCopyNotSaved"));
+        const sentMessage = forwarding ? t("Mailbox.forwardSent") : t("Mailbox.replySent");
+        if (result.data.sentCopySaved) toast.success(sentMessage);
+        else {
+          toast.warning(sentMessage, {
+            description: t("Mailbox.sentCopyNotSaved"),
+            duration: WARNING_TOAST_DURATION_MS,
+          });
+        }
         clear();
         await deleteMailDraftAction({ threadId });
         onSent();
@@ -195,8 +227,32 @@ export function MailReplyBox({ threadId, onSent, onScheduled }: Props) {
     });
   };
 
+  if (collapsed) {
+    return (
+      <div className="flex items-center justify-between gap-2 border-t px-4 py-2" data-mail-composer-collapsed="">
+        <span className="text-xs text-muted-foreground">
+          {drafted ? t("Mailbox.workspace.draftSaved") : t("Mailbox.replyPlaceholder")}
+        </span>
+
+        <Button className="h-8" size="sm" type="button" variant="ghost" onClick={() => setCollapsed(false)}>
+          <ChevronUp aria-hidden="true" className="size-3.5" />
+
+          {t("Mailbox.expandComposer")}
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2 border-t p-4">
+      <div className="flex justify-end">
+        <Button className="h-7" size="sm" type="button" variant="ghost" onClick={() => setCollapsed(true)}>
+          <ChevronDown aria-hidden="true" className="size-3.5" />
+
+          {t("Mailbox.collapseComposer")}
+        </Button>
+      </div>
+
       {forwarding ? (
         <div className="flex flex-col gap-1.5">
           <Label htmlFor={RECIPIENTS_FIELD_ID}>{t("Mailbox.forwardRecipientsLabel")}</Label>
@@ -209,7 +265,9 @@ export function MailReplyBox({ threadId, onSent, onScheduled }: Props) {
             onChange={(event) => change({ recipients: event.target.value })}
           />
 
-          <p className="text-xs text-muted-foreground">{t("Mailbox.forwardHint")}</p>
+          <p className="text-xs text-muted-foreground">
+            {forwardMessageId ? t("Mailbox.forwardPickedHint") : t("Mailbox.forwardHint")}
+          </p>
         </div>
       ) : null}
 

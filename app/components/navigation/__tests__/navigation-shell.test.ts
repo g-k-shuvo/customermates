@@ -16,7 +16,16 @@ describe("resolveNavigationShell", () => {
     ).toBe("app");
   });
 
-  it.each(["overdueVerification", "inactive", "pending", "onboarding", "legal", "subscription"] as const)(
+  it("shows a deactivated member the bare public shell rather than the workspace navigation", () => {
+    expect(resolveNavigationShell({ accountState: "inactive", pathname: "/auth/error", isRegistered: true })).toBe(
+      "public",
+    );
+    expect(resolveNavigationShell({ accountState: "inactive", pathname: "/docs/api", isRegistered: true })).toBe(
+      "public",
+    );
+  });
+
+  it.each(["overdueVerification", "pending", "onboarding", "legal", "subscription"] as const)(
     "keeps the restricted shell for a registered %s operator",
     (accountState) => {
       expect(
@@ -86,7 +95,7 @@ describe("resolveNavigationShell", () => {
     ).toBe("docs");
   });
 
-  it.each(["overdueVerification", "inactive", "pending", "onboarding", "legal", "subscription"] as const)(
+  it.each(["overdueVerification", "pending", "onboarding", "legal", "subscription"] as const)(
     "keeps account controls available for registered %s users visiting docs",
     (state) => {
       expect(
@@ -109,7 +118,7 @@ describe("resolveNavigationShell", () => {
     ).toBe("docs");
   });
 
-  it.each(["overdueVerification", "inactive", "pending", "onboarding", "legal", "subscription"] as const)(
+  it.each(["overdueVerification", "pending", "onboarding", "legal", "subscription"] as const)(
     "uses the restricted shell for %s on state and mismatched app routes",
     (state) => {
       expect(

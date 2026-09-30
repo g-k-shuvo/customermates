@@ -419,7 +419,12 @@ export class PrismaDealRepo
 
     if (!deal) return null;
 
-    return this.toDto(deal);
+    const sourceLead = await this.prisma.lead.findFirst({
+      where: { convertedDealId: id, ...this.accessWhere("lead") },
+      select: { id: true, title: true },
+    });
+
+    return { ...this.toDto(deal), sourceLead };
   }
 
   async getOrThrowCompanyWide(id: string) {
@@ -968,8 +973,7 @@ export class PrismaDealRepo
     });
 
     const reopenedAt = new Date();
-    const targetStageId =
-      stageId ?? (existing.pipelineId ? await getPipelineRepo().getFirstStageOfPipeline(existing.pipelineId) : null);
+    const targetStageId = stageId ?? (await this.findReopenStageId(id, existing.pipelineId, existing.stageId));
     const stageMove = dealStageMove(targetStageId, existing.stageId, reopenedAt);
     const movedPipelineIds = stageMove.stageId
       ? await getPipelineRepo().findPipelineIdsByStageIds(new Set([stageMove.stageId]))
@@ -994,6 +998,28 @@ export class PrismaDealRepo
         ...(stageMove.stageId ? { pipelineId: movedPipelineIds?.get(stageMove.stageId) ?? existing.pipelineId } : {}),
       },
     );
+  }
+
+  private async findReopenStageId(dealId: string, pipelineId: string | null, currentStageId: string | null) {
+    if (!pipelineId) return null;
+
+    const openStages = await this.prisma.pipelineStage.findMany({
+      where: { companyId: this.companyId, pipelineId, kind: StageKind.open },
+      select: { id: true },
+    });
+    const openStageIds = new Set(openStages.map((stage) => stage.id));
+    if (currentStageId && openStageIds.has(currentStageId)) return currentStageId;
+
+    const closingMove = currentStageId
+      ? await this.prisma.dealStageHistory.findFirst({
+          where: { dealId, companyId: this.companyId, toStageId: currentStageId, fromStageId: { not: null } },
+          orderBy: { enteredAt: "desc" },
+          select: { fromStageId: true },
+        })
+      : null;
+    if (closingMove?.fromStageId && openStageIds.has(closingMove.fromStageId)) return closingMove.fromStageId;
+
+    return getPipelineRepo().getFirstStageOfPipeline(pipelineId);
   }
 
   async findOpenStageHistory(dealId: string) {

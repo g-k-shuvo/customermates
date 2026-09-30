@@ -120,6 +120,23 @@ export class SaveSenderIdentityInteractor extends AuthenticatedInteractor<SaveSe
   }
 }
 
+export const ResetSenderIdentitySchema = z.object({});
+export type ResetSenderIdentityData = Data<typeof ResetSenderIdentitySchema>;
+
+@TenantInteractor(SENDER_WRITE)
+export class ResetSenderIdentityInteractor extends AuthenticatedInteractor<ResetSenderIdentityData, SenderIdentityDto> {
+  constructor(private repo: SenderIdentityRepo) {
+    super();
+  }
+
+  @Write({ input: ResetSenderIdentitySchema, output: SenderIdentityDtoSchema })
+  async invoke(_data: ResetSenderIdentityData): Validated<SenderIdentityDto> {
+    await this.repo.deleteIdentity();
+
+    return { ok: true as const, data: toDto(null) };
+  }
+}
+
 export const VerifySenderDomainSchema = z.object({});
 export type VerifySenderDomainData = Data<typeof VerifySenderDomainSchema>;
 

@@ -203,6 +203,7 @@ export type SendReplyData = z.infer<typeof SendReplySchema>;
 
 export const ForwardThreadSchema = z.object({
   threadId: z.string().uuid(),
+  messageId: z.string().uuid().optional(),
   to: z.array(z.string().trim().email()).min(1).max(MAILBOX_MAX_FORWARD_RECIPIENTS),
   body: z.string().trim().max(100_000).default(""),
 });

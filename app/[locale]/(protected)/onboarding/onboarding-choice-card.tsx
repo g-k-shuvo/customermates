@@ -49,12 +49,16 @@ type Props = {
 
 export function OnboardingChoiceCard({ email, trialDays }: Props) {
   const t = useTranslations();
-  const { appMode } = useRootStore();
+  const { appMode, branding } = useRootStore();
   const [, formAction, isPending] = useActionState(chooseWorkspaceAction, null);
 
   return (
     <AppCard className="max-w-2xl">
-      <CardHeroHeader alt="" subtitle={t("OnboardingChoice.subtitle")} title={t("OnboardingChoice.title")} />
+      <CardHeroHeader
+        alt=""
+        subtitle={t("OnboardingChoice.subtitle", { brandName: branding.name })}
+        title={t("OnboardingChoice.title")}
+      />
 
       <AppCardBody className="gap-5 pt-2">
         <p className="mx-auto max-w-full rounded-full border border-border bg-muted/40 px-3 py-1.5 text-center text-xs text-muted-foreground [overflow-wrap:anywhere]">
@@ -77,7 +81,7 @@ export function OnboardingChoiceCard({ email, trialDays }: Props) {
 
             <WorkspaceChoice
               choice="join"
-              description={t("OnboardingChoice.join.description")}
+              description={t("OnboardingChoice.join.description", { brandName: branding.name })}
               isPending={isPending}
               note={t("OnboardingChoice.join.note")}
               title={t("OnboardingChoice.join.title")}

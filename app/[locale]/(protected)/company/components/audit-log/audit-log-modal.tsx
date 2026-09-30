@@ -17,6 +17,8 @@ import { CopyableChip } from "@/components/chip/copyable-chip";
 import { AppChip } from "@/components/chip/app-chip";
 import { CodeBlockAccordion } from "@/components/shared/code-block-accordion";
 
+import { AuditLogChanges } from "./audit-log-changes";
+
 export const AuditLogModal = observer(() => {
   const t = useTranslations();
   const { auditLogModalStore: store, userModalStore } = useRootStore();
@@ -61,6 +63,8 @@ export const AuditLogModal = observer(() => {
           <InfoRow label={t("AuditLogModal.createdAt")}>
             {intlStore.formatNumericalShortDateTime(auditLog.createdAt)}
           </InfoRow>
+
+          <AuditLogChanges eventData={auditLog.eventData} />
 
           <CodeBlockAccordion code={JSON.stringify(auditLog.eventData, null, 2)} title={t("AuditLogModal.eventData")} />
         </AppCardBody>

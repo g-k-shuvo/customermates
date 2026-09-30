@@ -96,6 +96,8 @@ export class DealDetailStore extends BaseCustomColumnEntityModalStore<CreateDeal
       services: [],
       pipelineId: this.rootStore.dealsStore.defaultPipelineId ?? undefined,
       stageId: undefined,
+      expectedCloseDate: undefined,
+      probability: undefined,
     };
   }
 

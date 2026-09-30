@@ -532,6 +532,21 @@ describeDatabase("lead writes stay inside the caller's reach", () => {
     expect((await readLead(reviewersLead))?.convertedDealId).toEqual(expect.any(String));
   });
 
+  it("links the converted deal back to the lead it came from", async () => {
+    const title = `Origin ${randomUUID()}`;
+    const leadId = await makeLead(mine, { ownerUserId: admin, title });
+
+    const converted = await runAsBackgroundTenant(admin, () =>
+      di.getConvertLeadToDealInteractor().invoke({ id: leadId }),
+    );
+    if (!converted.ok) throw new Error("convert failed");
+    const dealId = (await readLead(leadId))?.convertedDealId ?? "";
+
+    const read = await runAsBackgroundTenant(admin, () => di.getGetDealByIdInteractor().invoke({ id: dealId }));
+
+    expect(read).toMatchObject({ ok: true, data: { deal: { sourceLead: { id: leadId, title } } } });
+  });
+
   it("carries markdown notes over as a document, and refuses notes no editor can read", async () => {
     const markdownLead = await makeLead(mine, { ownerUserId: admin, notes: "Called twice, **very** keen" });
     const brokenLead = await makeLead(mine, { ownerUserId: admin, notes: { message: "Legacy web form text" } });

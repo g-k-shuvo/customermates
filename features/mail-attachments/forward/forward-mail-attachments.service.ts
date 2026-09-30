@@ -23,10 +23,10 @@ export class ForwardMailAttachmentsService {
     private storage: StorageProvider,
   ) {}
 
-  async load(messagingThreadId: string): Promise<OutgoingAttachment[]> {
+  async load(messagingThreadId: string, messageId: string): Promise<OutgoingAttachment[]> {
     if (!this.storage.configured) return [];
 
-    const stored = await this.repo.listForwardableAttachments(messagingThreadId);
+    const stored = await this.repo.listForwardableAttachments(messagingThreadId, messageId);
     const loaded: OutgoingAttachment[] = [];
     let total = 0;
 

@@ -37,6 +37,22 @@ export const saveSenderIdentityOperation: ZodOpenApiOperationObject = {
   },
 };
 
+export const resetSenderIdentityOperation: ZodOpenApiOperationObject = {
+  operationId: "resetSenderIdentity",
+  summary: "Reset the sender identity",
+  description:
+    "Removes the workspace's own From name, address and Reply-To, so automations and campaigns send as the installation's default sender again. Requires permission to update the company.",
+  tags: ["sender-identity"],
+  security: [{ apiKeyAuth: [] }],
+  responses: {
+    "200": {
+      description: "The workspace sends as the default sender.",
+      content: { "application/json": { schema: SenderIdentityDtoSchema } },
+    },
+    ...CommonApiResponses,
+  },
+};
+
 export const verifySenderDomainOperation: ZodOpenApiOperationObject = {
   operationId: "verifySenderDomain",
   summary: "Verify the sending domain",

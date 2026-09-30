@@ -12,12 +12,15 @@ export type ForwardSourceMessage = {
   bodyText: string | null;
 };
 
+export type ForwardDateFormatter = (date: Date) => string;
+
 export type ForwardRequest = {
   mailboxAddress: string;
   mailboxDisplayName: string | null;
   recipients: readonly string[];
   source: ForwardSourceMessage;
   body: string;
+  formatDate?: ForwardDateFormatter;
 };
 
 const FORWARD_PREFIX = /^\s*(fwd?|wg|tr|rv|doorst|vs)\s*(\[\d+\])?\s*:\s*/i;
@@ -50,10 +53,13 @@ function senderLine(source: ForwardSourceMessage): string | null {
   return displayName.length > 0 ? `${displayName} <${address}>` : address;
 }
 
-export function quoteForwardedMessage(source: ForwardSourceMessage): string {
+export function quoteForwardedMessage(
+  source: ForwardSourceMessage,
+  formatDate: ForwardDateFormatter = (date) => date.toISOString(),
+): string {
   const headers = [
     ...headerLine("From", senderLine(source)),
-    ...headerLine("Date", source.sentAt ? source.sentAt.toISOString() : null),
+    ...headerLine("Date", source.sentAt ? formatDate(source.sentAt) : null),
     ...headerLine("Subject", (source.subject ?? "").trim() || null),
     ...headerLine("To", addressList(source.toIdentifiers)),
     ...headerLine("Cc", addressList(source.ccIdentifiers)),
@@ -67,7 +73,7 @@ export function quoteForwardedMessage(source: ForwardSourceMessage): string {
 
 export function buildForward(request: ForwardRequest): BuiltReply {
   const body = request.body.trim();
-  const quoted = quoteForwardedMessage(request.source);
+  const quoted = quoteForwardedMessage(request.source, request.formatDate);
 
   return {
     from: fromHeader(request.mailboxAddress, request.mailboxDisplayName),

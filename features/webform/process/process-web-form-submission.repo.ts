@@ -48,6 +48,11 @@ export abstract class ProcessWebFormSubmissionRepo {
   abstract appendMessageToLeadUnscoped(companyId: string, leadId: string, message: string | null): Promise<void>;
   abstract openContactReviewUnscoped(companyId: string, contactId: string): Promise<void>;
   abstract resolveOrganizationUnscoped(args: ResolveOrganizationArgs): Promise<string | null>;
+  abstract linkContactToOrganizationUnscoped(
+    companyId: string,
+    contactId: string,
+    organizationId: string,
+  ): Promise<void>;
   abstract createLeadFromSubmissionUnscoped(args: CreateLeadFromSubmissionArgs): Promise<string>;
   abstract findMappableCustomColumnsUnscoped(
     companyId: string,

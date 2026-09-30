@@ -27,7 +27,7 @@ export abstract class GetMailAttachmentRepo {
 }
 
 export abstract class ForwardMailAttachmentsRepo {
-  abstract listForwardableAttachments(messagingThreadId: string): Promise<StoredMailAttachment[]>;
+  abstract listForwardableAttachments(messagingThreadId: string, messageId: string): Promise<StoredMailAttachment[]>;
 }
 
 export abstract class SweepMailAttachmentsRepo {

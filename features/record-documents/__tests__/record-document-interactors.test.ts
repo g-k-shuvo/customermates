@@ -51,6 +51,19 @@ const userService = {
     ),
 } as never;
 
+function objectWith(text: string) {
+  return {
+    byteSize: 2048,
+    contentType: "application/pdf",
+    body: new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(text));
+        controller.close();
+      },
+    }),
+  };
+}
+
 function storage(overrides: Partial<StorageProvider> = {}) {
   const spies = {
     presignUpload: vi.fn((args: { key: string }) =>
@@ -70,7 +83,7 @@ function storage(overrides: Partial<StorageProvider> = {}) {
     configured: true,
     maxUploadBytes: 1024 * 1024,
     statObject: vi.fn(() => Promise.resolve({ byteSize: 4096, contentType: "application/pdf" })),
-    getObject: vi.fn(),
+    getObject: vi.fn(() => Promise.resolve(objectWith("%PDF-1.4"))),
     putObject: vi.fn(),
     ...spies,
     ...overrides,

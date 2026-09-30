@@ -10,7 +10,7 @@ export const reopenDealOperation: ZodOpenApiOperationObject = {
   operationId: "reopenDeal",
   summary: "Reopen a closed deal",
   description:
-    "Reopens a won or lost deal. Sets the status back to open, clears wonAt, lostAt, closedAt, the lost reason and the lost notes, and resets the probability to null so the deal inherits its stage weighting again. The deal moves to the first stage of its pipeline.",
+    "Reopens a won or lost deal. Sets the status back to open, clears wonAt, lostAt, closedAt, the lost reason and the lost notes, and resets the probability to null so the deal inherits its stage weighting again. Without a stageId the deal goes back to the open stage it left when it was closed, stays in its stage if that stage is open, and otherwise moves to the first stage of its pipeline.",
   tags: ["deals"],
   security: [{ apiKeyAuth: [] }],
   requestParams: { path: z.object({ id: z.uuid() }) },

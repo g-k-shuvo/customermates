@@ -58,6 +58,12 @@ export const DealDtoSchema = z.object({
       "Name of the lost reason the deal was closed with, resolved at read time so list and board views can label a lost deal without a second request. Null while the deal is not lost.",
     ),
   lostNotes: z.string().nullable(),
+  sourceLead: z
+    .object({ id: z.uuid(), title: z.string() })
+    .nullish()
+    .describe(
+      "The lead this deal was converted from, resolved when a single deal is read and only for callers who may read that lead. Absent on list reads, null for deals that did not come from a lead.",
+    ),
   wonAt: z.date().nullable(),
   lostAt: z.date().nullable(),
   closedAt: z.date().nullable(),

@@ -173,7 +173,7 @@ describeDatabase("invoices", () => {
     expect(codes(deleteIssued)).toEqual([CustomErrorCode.invoiceNotDraft]);
   });
 
-  it("records partial payments, refuses an overpayment, and marks the invoice paid at the balance", async () => {
+  it("refuses to issue without the buyer address, records partial payments, refuses an overpayment, and marks the invoice paid at the balance", async () => {
     const created = await asAdmin(() =>
       di.getCreateInvoiceInteractor().invoke({
         lines: [{ description: "Advice", quantity: 1, unitPrice: 100, discountPercent: 0, taxRate: 19 }],
@@ -181,6 +181,13 @@ describeDatabase("invoices", () => {
       }),
     );
     if (!created.ok) throw new Error("create failed");
+
+    const noAddress = (await asAdmin(() => di.getIssueInvoiceInteractor().invoke({ id: created.data.id }))) as Outcome;
+    expect(codes(noAddress)).toEqual([CustomErrorCode.invoiceBuyerMissing]);
+
+    await asAdmin(() =>
+      di.getUpdateInvoiceInteractor().invoke({ id: created.data.id, buyerAddress: "Marktplatz 3, 80331 München" }),
+    );
     await asAdmin(() => di.getIssueInvoiceInteractor().invoke({ id: created.data.id }));
 
     const partial = await asAdmin(() =>
@@ -200,6 +207,35 @@ describeDatabase("invoices", () => {
 
     const voidPaid = (await asAdmin(() => di.getVoidInvoiceInteractor().invoke({ id: created.data.id }))) as Outcome;
     expect(codes(voidPaid)).toEqual([CustomErrorCode.invoiceNotIssued]);
+  });
+
+  it("removes a payment, reopening a paid invoice, and refuses a payment of another invoice", async () => {
+    const created = await asAdmin(() =>
+      di.getCreateInvoiceInteractor().invoke({
+        lines: [{ description: "Advice", quantity: 1, unitPrice: 100, discountPercent: 0, taxRate: 0 }],
+        buyerName: "Walk-in",
+        buyerAddress: "Marktplatz 3, 80331 München",
+      }),
+    );
+    if (!created.ok) throw new Error("create failed");
+    await asAdmin(() => di.getIssueInvoiceInteractor().invoke({ id: created.data.id }));
+
+    const paid = await asAdmin(() =>
+      di.getRecordInvoicePaymentInteractor().invoke({ id: created.data.id, amount: 100 }),
+    );
+    if (!paid.ok) throw new Error("payment failed");
+    expect(paid.data.status).toBe("paid");
+    const [payment] = paid.data.payments;
+
+    const foreign = (await asAdmin(() =>
+      di.getDeleteInvoicePaymentInteractor().invoke({ id: created.data.id, paymentId: randomUUID() }),
+    )) as Outcome;
+    expect(codes(foreign)).toEqual([CustomErrorCode.invoicePaymentNotFound]);
+
+    const undone = await asAdmin(() =>
+      di.getDeleteInvoicePaymentInteractor().invoke({ id: created.data.id, paymentId: payment.id }),
+    );
+    expect(undone).toMatchObject({ ok: true, data: { status: "issued", paidAmount: 0, balance: 100, payments: [] } });
   });
 
   it("renders a PDF for drafts and issued invoices, and an XRechnung once the e-invoice details are complete", async () => {

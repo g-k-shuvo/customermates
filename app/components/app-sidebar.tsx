@@ -213,14 +213,6 @@ const FullAppSidebar = observer(
               icon: Mail,
               visible: canAccess(Resource.inboxMessages),
             },
-            {
-              key: "tasks",
-              title: plural(EntityType.task),
-              href: "/tasks",
-              icon: CheckCircle2,
-              visible: canAccess(Resource.tasks),
-              badge: systemTaskCount,
-            },
           ].filter((i) => i.visible),
         },
         {
