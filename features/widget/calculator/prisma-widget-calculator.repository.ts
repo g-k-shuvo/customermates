@@ -204,7 +204,8 @@ export class PrismaWidgetCalculatorRepo extends BaseRepository {
       if (entityType === EntityType.service) {
         const deals = await getWidgetDataFetcher().getDealsForEntityType(widget);
         const totalValue = deals.reduce(
-          (sum, deal) => sum + (deal.services ?? []).reduce((s, sd) => s + sd.service.amount * sd.quantity, 0),
+          (sum, deal) =>
+            sum + (deal.services ?? []).reduce((s, sd) => s + (sd.unitPrice ?? sd.service.amount) * sd.quantity, 0),
           0,
         );
         return [{ labelKind: "system", systemLabelKey: "total", value: totalValue }];

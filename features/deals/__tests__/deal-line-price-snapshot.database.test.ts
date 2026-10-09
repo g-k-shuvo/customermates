@@ -20,6 +20,7 @@ vi.mock("@/core/di", () => ({
 const { PrismaCompanyRepo } = await import("@/features/company/prisma-company.repository");
 const { PrismaDealRepo } = await import("@/features/deals/prisma-deal.repository");
 const { PrismaServiceRepo } = await import("@/features/services/prisma-service.repository");
+const { PrismaInvoiceRepo } = await import("@/features/invoices/prisma-invoice.repository");
 const { PrismaCustomColumnRepo } = await import("@/features/custom-column/prisma-custom-column.repository");
 const { prisma } = await import("@/prisma/db");
 const { runWithTenant, runWithoutTenant } = await import("@/core/decorators/tenant-context");
@@ -86,5 +87,10 @@ describeDatabase("deal lines keep the price they were added at", () => {
 
     const shown = await as(() => deals.getOrThrowCompanyWide(fixture.won.id));
     expect(shown.services).toEqual([expect.objectContaining({ id: fixture.service.id, amount: 100, quantity: 3 })]);
+
+    const forInvoice = await as(() => new PrismaInvoiceRepo().findDealForInvoiceOrNull(fixture.won.id));
+    expect(forInvoice?.services).toEqual([
+      expect.objectContaining({ serviceId: fixture.service.id, amount: 100, quantity: 3 }),
+    ]);
   });
 });

@@ -180,12 +180,12 @@ export class WidgetGroupingService extends BaseRepository {
   }
 
   private getServiceValue(
-    service: { service: { amount: number }; quantity: number },
+    service: { service: { amount: number }; quantity: number; unitPrice?: number | null },
     aggregationType: AggregationType,
   ): number {
     switch (aggregationType) {
       case AggregationType.dealValue:
-        return service.service.amount * service.quantity;
+        return (service.unitPrice ?? service.service.amount) * service.quantity;
       case AggregationType.dealQuantity:
         return service.quantity;
       case AggregationType.count:

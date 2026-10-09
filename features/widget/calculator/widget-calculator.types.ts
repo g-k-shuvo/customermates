@@ -39,7 +39,11 @@ export type DealRecord = {
   weightedValue: number | null;
   contacts?: { contact: { id: string; firstName: string | null; lastName: string | null } }[];
   organizations?: { organization: { id: string; name: string | null } }[];
-  services?: { service: { id: string; name: string | null; amount: number }; quantity: number }[];
+  services?: {
+    service: { id: string; name: string | null; amount: number };
+    quantity: number;
+    unitPrice?: number | null;
+  }[];
 };
 
 export type PipelinePosition = {

@@ -48,6 +48,7 @@ export class MessagingAutomationEmailSender implements AutomationEmailSender {
 
     if (outcome.status === "sent") return { sent: true, to: recipient.address, duplicate: false };
     if (outcome.status === "duplicate") return { sent: true, to: recipient.address, duplicate: true };
+    if (outcome.status === "suppressed") return { sent: false, code: "recipientSuppressed" };
     if (outcome.status === "failed" && outcome.code === SENDER_UNVERIFIED)
       return { sent: false, code: "senderUnverified" };
 

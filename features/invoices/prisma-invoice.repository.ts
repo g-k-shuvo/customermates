@@ -177,7 +177,9 @@ export class PrismaInvoiceRepo extends BaseRepository implements InvoiceRepo {
         id: true,
         name: true,
         baseValue: true,
-        services: { select: { quantity: true, service: { select: { id: true, name: true, amount: true } } } },
+        services: {
+          select: { quantity: true, unitPrice: true, service: { select: { id: true, name: true, amount: true } } },
+        },
         organizations: {
           select: { organization: { select: { id: true, name: true, billingProfile: { select: BILLING_SELECT } } } },
           take: 1,
@@ -195,7 +197,7 @@ export class PrismaInvoiceRepo extends BaseRepository implements InvoiceRepo {
       services: deal.services.map((entry) => ({
         serviceId: entry.service.id,
         name: entry.service.name,
-        amount: entry.service.amount,
+        amount: entry.unitPrice ?? entry.service.amount,
         quantity: entry.quantity,
       })),
       organization: organization

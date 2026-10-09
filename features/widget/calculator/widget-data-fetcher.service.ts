@@ -690,7 +690,7 @@ export class WidgetDataFetcher extends BaseRepository {
     if (entityType === EntityType.service) {
       select.services = {
         where: { service: entityWhere as Prisma.ServiceWhereInput },
-        select: { quantity: true, service: { select: { id: true, name: true, amount: true } } },
+        select: { quantity: true, unitPrice: true, service: { select: { id: true, name: true, amount: true } } },
       };
     }
 

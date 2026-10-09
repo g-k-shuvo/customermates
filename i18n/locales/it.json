@@ -1160,6 +1160,7 @@
       "ownerInactive": "L’account con cui viene eseguita l’automazione non è più attivo",
       "ownerNotPermitted": "L’account con cui viene eseguita l’automazione non è autorizzato a eseguire questa operazione",
       "recipientMissing": "Il record non ha nessun destinatario con un indirizzo email",
+      "recipientSuppressed": "L'indirizzo del destinatario ha già respinto un messaggio o segnalato spam, quindi l'email non è stata inviata",
       "recordMissing": "Un record necessario all’azione non esiste più",
       "recordUnsupported": "Questa azione non può essere usata su questo tipo di record",
       "senderUnverified": "L’indirizzo del mittente non è verificato, quindi non è stato inviato nulla",

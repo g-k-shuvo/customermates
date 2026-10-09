@@ -1160,6 +1160,7 @@
       "ownerInactive": "La cuenta con la que se ejecuta la automatización ya no está activa",
       "ownerNotPermitted": "La cuenta con la que se ejecuta la automatización no tiene permiso para hacer esto",
       "recipientMissing": "El registro no tiene a nadie con una dirección de correo a quien enviar",
+      "recipientSuppressed": "La dirección del destinatario rebotó o marcó como spam anteriormente, así que el correo no se envió",
       "recordMissing": "Un registro que necesita la acción ya no existe",
       "recordUnsupported": "Esta acción no se puede usar con este tipo de registro",
       "senderUnverified": "La dirección del remitente no está verificada, así que no se envió nada",

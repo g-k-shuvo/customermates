@@ -1160,6 +1160,7 @@
       "ownerInactive": "The user the automation runs as is no longer active",
       "ownerNotPermitted": "The user the automation runs as is not allowed to do this",
       "recipientMissing": "The record has no one with an email address to send to",
+      "recipientSuppressed": "The recipient's address bounced or reported spam earlier, so the email was not sent",
       "recordMissing": "A record the action needs no longer exists",
       "recordUnsupported": "This action cannot be used on this kind of record",
       "senderUnverified": "The sender address is not verified, so nothing was sent",

@@ -7,7 +7,7 @@ import type { SenderResolver } from "./sender/sender-resolver";
 
 import { createHash, randomBytes } from "node:crypto";
 
-import { MessageKind } from "@/generated/prisma";
+import { MessageKind, SuppressionReason } from "@/generated/prisma";
 
 import { dedupeKeyFor, idempotencyKeyFor, normalizeAddress } from "./messaging-send.contract";
 
@@ -46,6 +46,10 @@ export function unsubscribeUrlFor(baseUrl: string, token: string): string {
   return `${baseUrl.replace(/\/+$/, "")}/api/unsubscribe/${token}`;
 }
 
+const TRANSACTIONAL_HOLDS: Partial<Record<DedupeSource, readonly SuppressionReason[]>> = {
+  automation: [SuppressionReason.bounced, SuppressionReason.complained],
+};
+
 export class GuardedEmailSender {
   constructor(
     private repo: MessageDeliveryRepo,
@@ -81,6 +85,15 @@ export class GuardedEmailSender {
     if (!sender.ok) {
       await this.repo.markFailed(claim.id, { transport: null, error: sender.code });
       return { status: "failed", deliveryId: claim.id, code: sender.code };
+    }
+
+    const holds = kind === MessageKind.transactional ? TRANSACTIONAL_HOLDS[message.source] : undefined;
+    if (holds) {
+      const reason = (await this.unsubscribe.suppressions.findSuppressed([recipient])).get(recipient);
+      if (reason && holds.includes(reason)) {
+        await this.repo.markSuppressed(claim.id, reason);
+        return { status: "suppressed", reason };
+      }
     }
 
     let unsubscribeUrl: string | null = null;

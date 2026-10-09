@@ -3,7 +3,7 @@
 import { observer } from "mobx-react-lite";
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { DealStatus, StageKind } from "@/generated/prisma";
+import { DealStatus, Resource, StageKind } from "@/generated/prisma";
 
 import { EntityDetailField } from "@/components/entity-detail/entity-detail-field";
 import { EntityDetailFieldActions } from "@/components/entity-detail/entity-detail-field-actions";
@@ -20,7 +20,7 @@ type Props = {
 
 export const DealPipelineFields = observer(function DealPipelineFields({ showFieldActions = false }: Props) {
   const t = useTranslations();
-  const { dealDetailStore, dealsStore } = useRootStore();
+  const { dealDetailStore, dealsStore, userStore } = useRootStore();
 
   useEffect(() => {
     void dealsStore.ensurePipelinesLoaded().then(dealDetailStore.applyDefaultPipeline).catch(reportApplicationError);
@@ -28,6 +28,7 @@ export const DealPipelineFields = observer(function DealPipelineFields({ showFie
 
   const pipelineLabel = t("DealModal.pipeline.label");
   const stageLabel = t("DealModal.pipeline.stageLabel");
+  const pipelinesLoading = dealsStore.pipelines.length === 0 && userStore.canAccess(Resource.pipelines);
   const isClosed = (dealDetailStore.fetchedEntity?.status ?? DealStatus.open) !== DealStatus.open;
   const selectedPipelineId = dealDetailStore.form.pipelineId;
 
@@ -57,6 +58,7 @@ export const DealPipelineFields = observer(function DealPipelineFields({ showFie
               <EntityDetailFieldActions fieldId={DEAL_DETAIL_FIELD.pipelineId} label={pipelineLabel} />
             ) : undefined
           }
+          optionsLoading={pipelinesLoading}
           placeholder={t("DealModal.pipeline.placeholder")}
           onValueChange={dealDetailStore.selectPipeline}
         />
@@ -72,6 +74,7 @@ export const DealPipelineFields = observer(function DealPipelineFields({ showFie
               <EntityDetailFieldActions fieldId={DEAL_DETAIL_FIELD.stageId} label={stageLabel} />
             ) : undefined
           }
+          optionsLoading={pipelinesLoading}
           placeholder={t("DealModal.pipeline.stagePlaceholder")}
           readOnly={isClosed}
           onValueChange={dealDetailStore.selectStage}

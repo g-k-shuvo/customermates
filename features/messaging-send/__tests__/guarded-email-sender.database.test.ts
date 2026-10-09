@@ -233,6 +233,38 @@ describeDatabase("guarded email sending", () => {
     expect((deliver.mock.calls[1] as unknown as [{ headers?: unknown }])[0].headers).toBeUndefined();
   });
 
+  it("holds automation mail to an address that bounced or complained, but not other transactional mail", async () => {
+    const { deliver, service } = emailService([]);
+    await runWithoutTenant(() =>
+      prisma.messageSuppression.createMany({
+        data: [
+          { companyId, address: "bounced@prospect.example", reason: "bounced" },
+          { companyId, address: "complained@prospect.example", reason: "complained" },
+        ],
+      }),
+    );
+
+    expect(await send(service, randomUUID(), "Bounced@Prospect.example")).toEqual({
+      status: "suppressed",
+      reason: "bounced",
+    });
+    expect(await send(service, randomUUID(), "complained@prospect.example")).toEqual({
+      status: "suppressed",
+      reason: "complained",
+    });
+    const manual = await runAsBackgroundTenant(userId, () =>
+      sender(service).send({
+        source: "manual",
+        sourceId: randomUUID(),
+        to: "bounced@prospect.example",
+        subject: "Your quote",
+        render: () => react,
+      }),
+    );
+    expect(manual.status).toBe("sent");
+    expect(deliver).toHaveBeenCalledTimes(1);
+  });
+
   it("answers an unknown or malformed token without revealing anything", async () => {
     const interactor = new UnsubscribeInteractor(new PrismaSuppressionRepo());
 

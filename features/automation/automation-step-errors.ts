@@ -17,6 +17,7 @@ export const AUTOMATION_STEP_ERRORS = [
   "ownerInactive",
   "ownerNotPermitted",
   "recipientMissing",
+  "recipientSuppressed",
   "recordMissing",
   "recordUnsupported",
   "senderUnverified",

@@ -1160,6 +1160,7 @@
       "ownerInactive": "Le compte sous lequel l’automatisation s’exécute n’est plus actif",
       "ownerNotPermitted": "Le compte sous lequel l’automatisation s’exécute n’est pas autorisé à effectuer cette action",
       "recipientMissing": "L’enregistrement n’a aucun destinataire avec une adresse e-mail",
+      "recipientSuppressed": "L'adresse du destinataire a déjà rejeté un message ou signalé un spam, l'e-mail n'a donc pas été envoyé",
       "recordMissing": "Un enregistrement nécessaire à l’action n’existe plus",
       "recordUnsupported": "Cette action ne peut pas être utilisée sur ce type d’enregistrement",
       "senderUnverified": "L’adresse d’expéditeur n’est pas vérifiée, rien n’a donc été envoyé",

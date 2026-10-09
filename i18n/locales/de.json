@@ -1160,6 +1160,7 @@
       "ownerInactive": "Das Konto, unter dem die Automatisierung läuft, ist nicht mehr aktiv",
       "ownerNotPermitted": "Das Konto, unter dem die Automatisierung läuft, darf diese Aktion nicht ausführen",
       "recipientMissing": "Der Datensatz hat niemanden mit einer E-Mail-Adresse als Empfänger",
+      "recipientSuppressed": "Die Adresse des Empfängers ist zuvor unzustellbar gewesen oder hat Spam gemeldet, daher wurde die E-Mail nicht gesendet",
       "recordMissing": "Ein Datensatz, den die Aktion benötigt, existiert nicht mehr",
       "recordUnsupported": "Diese Aktion ist für diese Art von Datensatz nicht verfügbar",
       "senderUnverified": "Die Absenderadresse ist nicht verifiziert, daher wurde nichts gesendet",
