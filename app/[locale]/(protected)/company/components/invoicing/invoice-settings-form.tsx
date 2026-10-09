@@ -58,15 +58,14 @@ export const InvoiceSettingsForm = observer(({ settings }: { settings: InvoiceSe
             <p className="text-subdued text-xs">{t("InvoiceSettings.sellerDescription")}</p>
           </div>
 
-          <FormInput required id="sellerName" label={t("InvoiceSettings.sellerName")} maxLength={200} />
-
-          <FormTextarea
-            required
-            id="sellerAddress"
-            label={t("InvoiceSettings.sellerAddress")}
-            maxLength={1000}
-            rows={3}
+          <FormInput
+            description={t("InvoiceSettings.sellerNeededToIssue")}
+            id="sellerName"
+            label={t("InvoiceSettings.sellerName")}
+            maxLength={200}
           />
+
+          <FormTextarea id="sellerAddress" label={t("InvoiceSettings.sellerAddress")} maxLength={1000} rows={3} />
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <FormInput id="sellerVatId" label={t("InvoiceSettings.sellerVatId")} maxLength={64} />

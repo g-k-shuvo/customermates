@@ -74,6 +74,8 @@ export enum CustomErrorCode {
   numberTooSmallExclusive = "numberTooSmallExclusive",
   numberTooBig = "numberTooBig",
   numberTooBigExclusive = "numberTooBigExclusive",
+  textTooLong = "textTooLong",
+  wholeNumberRequired = "wholeNumberRequired",
   emailLinkColourInvalid = "emailLinkColourInvalid",
   legalNoticeNotDelivered = "legalNoticeNotDelivered",
   termsNotAgreed = "termsNotAgreed",

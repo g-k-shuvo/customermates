@@ -20,8 +20,8 @@ import {
 } from "@/i18n/user-locale";
 
 export const UpdateUserDetailsSchema = z.object({
-  firstName: z.string().min(1).max(255).optional(),
-  lastName: z.string().min(1).max(255).optional(),
+  firstName: zx.nonBlankText(255).optional(),
+  lastName: zx.nonBlankText(255).optional(),
   country: z.enum(CountryCode).optional(),
   avatarUrl: zx.secureUrl().or(z.literal("")).nullable().optional(),
   theme: z.enum(Theme).optional(),

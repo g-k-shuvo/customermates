@@ -7,11 +7,13 @@ import { ActivityKind } from "@/generated/prisma";
 
 import { zx } from "@/core/validation/validation.utils";
 
+import { ActivityDurationSchema } from "../activity-duration.schema";
+
 export const ScheduleFollowUpSchema = z.object({
   name: zx.nonBlankText(255),
   activityKind: z.enum(ActivityKind).optional(),
   dueAt: z.coerce.date(),
-  durationMinutes: z.number().int().min(1).optional(),
+  durationMinutes: ActivityDurationSchema.optional(),
 });
 
 export type ScheduleFollowUpData = Data<typeof ScheduleFollowUpSchema>;

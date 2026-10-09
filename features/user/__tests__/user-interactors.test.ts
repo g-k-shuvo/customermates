@@ -793,3 +793,24 @@ describe("avatar schemas require an absolute URL", () => {
     });
   });
 });
+
+describe("user name schemas refuse blank names", () => {
+  it.each([[""], ["   "]])("refuses the first and last name %j on the self-update schema", (name) => {
+    expect(UpdateUserDetailsSchema.safeParse({ firstName: name }).success).toBe(false);
+    expect(UpdateUserDetailsSchema.safeParse({ lastName: name }).success).toBe(false);
+  });
+
+  it("refuses a blank name on the admin schema", () => {
+    const result = AdminUpdateUserDetailsSchema.safeParse({
+      email: "max.bergmann@customermates.com",
+      firstName: "   ",
+      lastName: "Bergmann",
+      country: CountryCode.de,
+      status: "active",
+      avatarUrl: null,
+      roleId: "00000000-0000-4000-8000-000000000001",
+    });
+
+    expect(result.success).toBe(false);
+  });
+});

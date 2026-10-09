@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { CustomFieldValueInputSchema, NotesSchema } from "@/core/base/base-entity.schema";
 import { zx } from "@/core/validation/validation.utils";
+import { moneyAmount } from "@/core/validation/money-amount";
 
 export const BaseCreateDealSchema = z.object({
   name: zx.nonBlankText(255),
@@ -10,7 +11,7 @@ export const BaseCreateDealSchema = z.object({
   stageId: z.uuid().optional(),
   expectedCloseDate: zx.isoDateTime().optional(),
   probability: z.number().min(0).max(100).optional(),
-  baseValue: z.number().min(0).optional().describe("The deal's own value on top of its service lines. Defaults to 0."),
+  baseValue: moneyAmount().optional().describe("The deal's own value on top of its service lines. Defaults to 0."),
   organizationIds: z.array(z.uuid()).optional().default([]),
   userIds: z.array(z.uuid()).optional().default([]),
   contactIds: z.array(z.uuid()).optional().default([]),

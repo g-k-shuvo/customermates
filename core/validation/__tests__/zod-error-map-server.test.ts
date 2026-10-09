@@ -76,6 +76,31 @@ describe("getZodParseContext", () => {
     expect(tooShort.error?.issues[0].message).not.toBe(`${locale}:Common.errors.required`);
   });
 
+  it.each(APP_LOCALES)(
+    "asks for a choice instead of naming the id format when a %s picker is left empty",
+    async (locale) => {
+      registry.locale = locale;
+      const context = await getZodParseContext();
+
+      const unselected = z.object({ serviceId: z.uuid() }).safeParse({ serviceId: "" }, context);
+      const malformed = z.uuid().safeParse("not-an-id", context);
+
+      expect(unselected.error?.issues[0].message).toBe(`${locale}:Common.errors.required`);
+      expect(malformed.error?.issues[0].message).not.toBe(`${locale}:Common.errors.required`);
+    },
+  );
+
+  it.each(APP_LOCALES)("asks for at least one entry when a required %s list is empty", async (locale) => {
+    registry.locale = locale;
+    const context = await getZodParseContext();
+
+    const empty = z.array(z.email()).min(1).safeParse([], context);
+    const tooFew = z.array(z.email()).min(2).safeParse(["a@example.com"], context);
+
+    expect(empty.error?.issues[0].message).toBe(`${locale}:Common.errors.required`);
+    expect(tooFew.error?.issues[0].message).not.toBe(`${locale}:Common.errors.required`);
+  });
+
   it.each(APP_LOCALES)("does not show the regular expression of a failed %s pattern", async (locale) => {
     registry.locale = locale;
     const context = await getZodParseContext();
@@ -99,6 +124,24 @@ describe("getZodParseContext", () => {
     expect(positive.error?.issues[0].message).toBe(`${locale}:Common.errors.numberTooSmallExclusive`);
     expect(atLeast.error?.issues[0].message).toBe(`${locale}:Common.errors.numberTooSmall`);
     expect(atMost.error?.issues[0].message).toBe(`${locale}:Common.errors.numberTooBig`);
+  });
+
+  it.each(APP_LOCALES)("uses application copy for %s text that is too long", async (locale) => {
+    registry.locale = locale;
+    const context = await getZodParseContext();
+
+    const tooLong = z.string().max(255).safeParse("a".repeat(256), context);
+
+    expect(tooLong.error?.issues[0].message).toBe(`${locale}:Common.errors.textTooLong`);
+  });
+
+  it.each(APP_LOCALES)("uses application copy for %s fractions where a whole number is required", async (locale) => {
+    registry.locale = locale;
+    const context = await getZodParseContext();
+
+    const fraction = z.number().int().safeParse(1.5, context);
+
+    expect(fraction.error?.issues[0].message).toBe(`${locale}:Common.errors.wholeNumberRequired`);
   });
 
   it("loads the registry-selected Zod locale without mutating global configuration", async () => {

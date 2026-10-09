@@ -3,6 +3,7 @@ import { LeadStatus } from "@/generated/prisma";
 
 import { CustomFieldValueInputSchema, NotesSchema } from "@/core/base/base-entity.schema";
 import { zx } from "@/core/validation/validation.utils";
+import { moneyAmount } from "@/core/validation/money-amount";
 
 export const BaseUpdateLeadSchema = z.object({
   id: z.uuid(),
@@ -14,7 +15,7 @@ export const BaseUpdateLeadSchema = z.object({
   organizationId: z.uuid().nullish(),
   ownerUserId: z.uuid().nullish(),
   labels: z.array(zx.nonBlankText(64)).optional(),
-  value: z.number().min(0).nullish(),
+  value: moneyAmount().nullish(),
   notes: NotesSchema,
   customFieldValues: z.array(CustomFieldValueInputSchema).optional(),
 });

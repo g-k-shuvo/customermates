@@ -22,8 +22,8 @@ import { failAuthorization } from "@/core/validation/interactor-failure-server";
 
 export const AdminUpdateUserDetailsSchema = z.object({
   email: z.email(),
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
+  firstName: zx.nonBlankText(255),
+  lastName: zx.nonBlankText(255),
   country: z.enum(CountryCode),
   status: z.enum([Status.active, Status.inactive]),
   avatarUrl: zx.secureUrl().or(z.literal("")).nullable(),

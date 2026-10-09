@@ -69,6 +69,7 @@ export class InvoiceSettingsStore extends BaseFormStore<InvoiceSettingsForm> {
       }
 
       this.onInitOrRefresh(invoiceSettingsForm(result.data));
+      this.toastSuccess("Common.notifications.saved");
     } finally {
       this.setIsLoading(false);
     }

@@ -20,6 +20,7 @@ import { failConflict } from "@/core/validation/interactor-failure-server";
 import { validateNotes } from "@/core/validation/validate-notes";
 import { CustomErrorCode } from "@/core/validation/validation.types";
 import { zx } from "@/core/validation/validation.utils";
+import { moneyAmount } from "@/core/validation/money-amount";
 import { getZodParseContext } from "@/core/validation/zod-error-map-server";
 
 const CarriedNotesSchema = z.object({ notes: NotesSchema }).superRefine((carried, ctx) => {
@@ -33,7 +34,7 @@ export const ConvertLeadToDealSchema = z.object({
   stageId: z.uuid().optional(),
   expectedCloseDate: zx.isoDateTime().optional(),
   probability: z.number().min(0).max(100).optional(),
-  baseValue: z.number().min(0).optional().describe("The deal's own value. Defaults to the lead's value."),
+  baseValue: moneyAmount().optional().describe("The deal's own value. Defaults to the lead's value."),
 });
 export type ConvertLeadToDealData = Data<typeof ConvertLeadToDealSchema>;
 

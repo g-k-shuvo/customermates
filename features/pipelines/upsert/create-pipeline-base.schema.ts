@@ -3,10 +3,12 @@ import { StageKind } from "@/generated/prisma";
 
 import { zx } from "@/core/validation/validation.utils";
 
+import { MAX_ROTTING_DAYS } from "../pipeline.schema";
+
 export const CreatePipelineStageInputSchema = z.object({
   name: zx.nonBlankText(255),
   probability: z.number().min(0).max(100).optional().default(0),
-  rottingDays: z.number().int().min(1).nullable().optional().default(null),
+  rottingDays: z.number().int().min(1).max(MAX_ROTTING_DAYS).nullable().optional().default(null),
   kind: z.enum(StageKind).optional().default(StageKind.open),
 });
 

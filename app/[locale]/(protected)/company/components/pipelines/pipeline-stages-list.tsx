@@ -39,20 +39,18 @@ export function selectableStageKinds(stages: PipelineStageDto[], stageId: string
   return STAGE_KINDS.filter((kind) => kind === StageKind.open || !claimed.has(kind));
 }
 
-export function clampProbability(value: number | undefined, fallback: number): number {
+export function committedProbability(value: number | undefined, fallback: number): number {
   if (value === undefined || Number.isNaN(value)) return fallback;
 
-  return Math.min(100, Math.max(0, Math.round(value)));
+  return Math.round(value);
 }
 
-export const MAX_ROTTING_DAYS = 3650;
-
-export function clampRottingDays(value: number | undefined): number | null {
+export function committedRottingDays(value: number | undefined): number | null {
   if (value === undefined || Number.isNaN(value)) return null;
 
   const days = Math.round(value);
 
-  return days < 1 ? null : Math.min(MAX_ROTTING_DAYS, days);
+  return days === 0 ? null : days;
 }
 
 type StageRowProps = {
@@ -111,13 +109,13 @@ const SortableStageRow = observer(
     }
 
     function commitProbability() {
-      const next = clampProbability(draftProbability, stage.probability);
+      const next = committedProbability(draftProbability, stage.probability);
       setDraftProbability(next);
       if (next !== stage.probability) onProbabilityChange(next);
     }
 
     function commitRottingDays() {
-      const next = clampRottingDays(draftRottingDays);
+      const next = committedRottingDays(draftRottingDays);
       setDraftRottingDays(next ?? undefined);
       if (next !== stage.rottingDays) onRottingDaysChange(next);
     }

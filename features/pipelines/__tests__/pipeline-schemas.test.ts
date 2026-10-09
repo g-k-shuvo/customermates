@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import { StageKind } from "@/generated/prisma";
 
-import { PipelineDtoSchema, PipelineStageDtoSchema } from "../pipeline.schema";
+import { MAX_ROTTING_DAYS, PipelineDtoSchema, PipelineStageDtoSchema } from "../pipeline.schema";
 import { BaseCreatePipelineSchema, CreatePipelineStageInputSchema } from "../upsert/create-pipeline-base.schema";
 import { BaseUpdatePipelineSchema } from "../upsert/update-pipeline-base.schema";
 import { duplicateStageKindIndex } from "../stage-kind-uniqueness";
@@ -283,5 +283,16 @@ describe("PipelineDtoSchema", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+});
+
+describe("stage rotting window bound", () => {
+  it("refuses a rotting window longer than the editor allows", () => {
+    expect(CreatePipelineStageInputSchema.safeParse({ name: "Lead", rottingDays: MAX_ROTTING_DAYS + 1 }).success).toBe(
+      false,
+    );
+    expect(CreatePipelineStageInputSchema.safeParse({ name: "Lead", rottingDays: MAX_ROTTING_DAYS }).success).toBe(
+      true,
+    );
   });
 });

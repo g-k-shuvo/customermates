@@ -6,7 +6,7 @@ import type { ValidatePipelineIdsInteractor } from "@/core/validation/validators
 import { z } from "zod";
 import { Resource, Action, StageKind } from "@/generated/prisma";
 
-import { type PipelineStageDto, PipelineStageDtoSchema } from "../pipeline.schema";
+import { MAX_ROTTING_DAYS, type PipelineStageDto, PipelineStageDtoSchema } from "../pipeline.schema";
 
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
 import { Write } from "@/core/decorators/write.decorator";
@@ -20,7 +20,7 @@ export const CreateStageSchema = z.object({
   name: zx.nonBlankText(255),
   position: z.number().int().min(0).optional(),
   probability: z.number().min(0).max(100).optional().default(0),
-  rottingDays: z.number().int().min(1).nullish(),
+  rottingDays: z.number().int().min(1).max(MAX_ROTTING_DAYS).nullish(),
   kind: z.enum(StageKind).optional().default(StageKind.open),
 });
 export type CreateStageData = Data<typeof CreateStageSchema>;

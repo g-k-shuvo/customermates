@@ -3,6 +3,8 @@ import type { Data } from "@/core/validation/validation.utils";
 import { z } from "zod";
 import { StageKind } from "@/generated/prisma";
 
+export const MAX_ROTTING_DAYS = 3650;
+
 export const PipelineStageDtoSchema = z.object({
   id: z.uuid(),
   name: z.string(),

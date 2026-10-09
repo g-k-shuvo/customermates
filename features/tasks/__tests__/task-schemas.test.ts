@@ -58,6 +58,13 @@ describe("BaseCreateTaskSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("bounds the duration to one day so it never overflows the database column", () => {
+    expect(BaseCreateTaskSchema.safeParse({ name: "Task", durationMinutes: 1440 }).success).toBe(true);
+    expect(BaseCreateTaskSchema.safeParse({ name: "Task", durationMinutes: 1441 }).success).toBe(false);
+    expect(BaseCreateTaskSchema.safeParse({ name: "Task", durationMinutes: 999_999_999_999 }).success).toBe(false);
+    expect(BaseUpdateTaskSchema.safeParse({ id: VALID_UUID, durationMinutes: 999_999_999_999 }).success).toBe(false);
+  });
+
   it("rejects missing name", () => {
     const result = BaseCreateTaskSchema.safeParse({});
     expect(result.success).toBe(false);

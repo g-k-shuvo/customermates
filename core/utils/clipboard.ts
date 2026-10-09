@@ -10,6 +10,24 @@ function writeItem(text: ClipboardPayload): Promise<void> {
   return navigator.clipboard.write([new ClipboardItem({ "text/plain": blob })]);
 }
 
+function writeWithCopyEvent(text: string): boolean {
+  let written = false;
+  const onCopy = (event: ClipboardEvent) => {
+    if (!event.clipboardData) return;
+
+    event.clipboardData.setData("text/plain", text);
+    event.preventDefault();
+    written = true;
+  };
+
+  document.addEventListener("copy", onCopy, true);
+  try {
+    return document.execCommand("copy") && written;
+  } finally {
+    document.removeEventListener("copy", onCopy, true);
+  }
+}
+
 function writeWithSelection(text: string): boolean {
   const selection = document.getSelection();
   const previous = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
@@ -25,6 +43,8 @@ function writeWithSelection(text: string): boolean {
 
   try {
     textarea.focus();
+    if (document.activeElement !== textarea) return false;
+
     textarea.select();
     textarea.setSelectionRange(0, text.length);
 
@@ -73,6 +93,10 @@ export async function copyToClipboard(text: ClipboardPayload): Promise<boolean> 
       return true;
     } catch {}
   }
+
+  try {
+    if (writeWithCopyEvent(text)) return true;
+  } catch {}
 
   try {
     return writeWithSelection(text);

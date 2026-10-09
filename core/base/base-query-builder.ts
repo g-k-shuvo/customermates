@@ -15,6 +15,7 @@ import { FilterFieldKey } from "@/core/types/filter-field-key";
 import { isCustomField } from "@/core/utils/custom-field";
 import { groupScopeFragment } from "@/core/base/grouping/group-scope";
 import { normalizeFilter } from "@/core/base/filter-compat";
+import { searchTermVariants } from "@/core/base/search-term-variants";
 
 export interface SortableField {
   field: string;
@@ -407,7 +408,7 @@ export abstract class BaseQueryBuilder<TWhereInput extends Record<string, unknow
     if (!tokens.length) return undefined;
 
     const tokenGroups = tokens.map((token) => {
-      const predicates = this.buildSearchConditions(token);
+      const predicates = searchTermVariants(token).flatMap((variant) => this.buildSearchConditions(variant));
       return { OR: predicates };
     });
 

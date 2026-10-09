@@ -30,8 +30,8 @@ import {
 const RegisterUserSchema = z
   .object({
     email: z.email(),
-    firstName: z.string().min(1),
-    lastName: z.string().min(1),
+    firstName: zx.nonBlankText(255),
+    lastName: zx.nonBlankText(255),
     country: z.enum(CountryCode),
     avatarUrl: zx.secureUrl().or(z.literal("")).nullable(),
     agreeToTerms: z.boolean(),

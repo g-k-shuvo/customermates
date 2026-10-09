@@ -13446,7 +13446,8 @@
                         },
                         "value": {
                           "type": "number",
-                          "minimum": 0
+                          "minimum": 0,
+                          "maximum": 999999999.99
                         },
                         "notes": {
                           "description": "Markdown content. Writing this REPLACES the record's existing notes; read them first, or use update_record_notes to append without losing what is there.",
@@ -13914,7 +13915,8 @@
                           "anyOf": [
                             {
                               "type": "number",
-                              "minimum": 0
+                              "minimum": 0,
+                              "maximum": 999999999.99
                             },
                             {
                               "type": "null"
@@ -18278,7 +18280,8 @@
                     "anyOf": [
                       {
                         "type": "number",
-                        "minimum": 0
+                        "minimum": 0,
+                        "maximum": 999999999.99
                       },
                       {
                         "type": "null"
@@ -18765,7 +18768,8 @@
                   "baseValue": {
                     "description": "The deal's own value. Defaults to the lead's value.",
                     "type": "number",
-                    "minimum": 0
+                    "minimum": 0,
+                    "maximum": 999999999.99
                   }
                 }
               }
@@ -25523,7 +25527,8 @@
                   "baseValue": {
                     "description": "The deal's own value on top of its service lines. The total is recalculated.",
                     "type": "number",
-                    "minimum": 0
+                    "minimum": 0,
+                    "maximum": 999999999.99
                   },
                   "organizationIds": {
                     "anyOf": [
@@ -57523,7 +57528,7 @@
                       {
                         "type": "integer",
                         "minimum": 1,
-                        "maximum": 9007199254740991
+                        "maximum": 3650
                       },
                       {
                         "type": "null"
@@ -57914,7 +57919,7 @@
                       {
                         "type": "integer",
                         "minimum": 1,
-                        "maximum": 9007199254740991
+                        "maximum": 3650
                       },
                       {
                         "type": "null"
@@ -65206,7 +65211,8 @@
                   },
                   "amount": {
                     "type": "number",
-                    "exclusiveMinimum": 0
+                    "exclusiveMinimum": 0,
+                    "maximum": 999999999.99
                   },
                   "notes": {
                     "description": "Markdown content. Writing this REPLACES the record's existing notes; read them first, or use update_record_notes to append without losing what is there.",
@@ -70838,7 +70844,7 @@
                       {
                         "type": "integer",
                         "minimum": 1,
-                        "maximum": 9007199254740991
+                        "maximum": 1440
                       },
                       {
                         "type": "null"
@@ -71440,7 +71446,7 @@
                           "durationMinutes": {
                             "type": "integer",
                             "minimum": 1,
-                            "maximum": 9007199254740991
+                            "maximum": 1440
                           }
                         },
                         "required": [
@@ -89667,7 +89673,8 @@
           },
           "value": {
             "type": "number",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 999999999.99
           },
           "notes": {
             "description": "Markdown content. Writing this REPLACES the record's existing notes; read them first, or use update_record_notes to append without losing what is there.",
@@ -89767,7 +89774,8 @@
           "baseValue": {
             "description": "The deal's own value on top of its service lines. Defaults to 0.",
             "type": "number",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 999999999.99
           },
           "organizationIds": {
             "default": [],
@@ -89905,7 +89913,8 @@
                 "baseValue": {
                   "description": "The deal's own value on top of its service lines. Defaults to 0.",
                   "type": "number",
-                  "minimum": 0
+                  "minimum": 0,
+                  "maximum": 999999999.99
                 },
                 "organizationIds": {
                   "default": [],
@@ -90082,7 +90091,8 @@
                 "baseValue": {
                   "description": "The deal's own value on top of its service lines. The total is recalculated.",
                   "type": "number",
-                  "minimum": 0
+                  "minimum": 0,
+                  "maximum": 999999999.99
                 },
                 "organizationIds": {
                   "anyOf": [
@@ -90256,7 +90266,7 @@
                     {
                       "type": "integer",
                       "minimum": 1,
-                      "maximum": 9007199254740991
+                      "maximum": 3650
                     },
                     {
                       "type": "null"
@@ -90329,7 +90339,8 @@
           },
           "amount": {
             "type": "number",
-            "exclusiveMinimum": 0
+            "exclusiveMinimum": 0,
+            "maximum": 999999999.99
           },
           "notes": {
             "description": "Markdown content. Writing this REPLACES the record's existing notes; read them first, or use update_record_notes to append without losing what is there.",
@@ -90417,7 +90428,8 @@
                 },
                 "amount": {
                   "type": "number",
-                  "exclusiveMinimum": 0
+                  "exclusiveMinimum": 0,
+                  "maximum": 999999999.99
                 },
                 "notes": {
                   "description": "Markdown content. Writing this REPLACES the record's existing notes; read them first, or use update_record_notes to append without losing what is there.",
@@ -90516,7 +90528,8 @@
                 },
                 "amount": {
                   "type": "number",
-                  "exclusiveMinimum": 0
+                  "exclusiveMinimum": 0,
+                  "maximum": 999999999.99
                 },
                 "notes": {
                   "description": "Markdown content. Writing this REPLACES the record's existing notes; read them first, or use update_record_notes to append without losing what is there.",
@@ -90669,7 +90682,7 @@
           "durationMinutes": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 9007199254740991
+            "maximum": 1440
           },
           "userIds": {
             "default": [],
@@ -90790,7 +90803,7 @@
                 "durationMinutes": {
                   "type": "integer",
                   "minimum": 1,
-                  "maximum": 9007199254740991
+                  "maximum": 1440
                 },
                 "userIds": {
                   "default": [],
@@ -90938,7 +90951,7 @@
                     {
                       "type": "integer",
                       "minimum": 1,
-                      "maximum": 9007199254740991
+                      "maximum": 1440
                     },
                     {
                       "type": "null"
@@ -106558,7 +106571,8 @@
           "baseValue": {
             "description": "The deal's own value. Defaults to the lead's value.",
             "type": "number",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 999999999.99
           }
         },
         "required": [
@@ -106666,7 +106680,8 @@
             "anyOf": [
               {
                 "type": "number",
-                "minimum": 0
+                "minimum": 0,
+                "maximum": 999999999.99
               },
               {
                 "type": "null"
@@ -106800,7 +106815,8 @@
           "baseValue": {
             "description": "The deal's own value on top of its service lines. The total is recalculated.",
             "type": "number",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 999999999.99
           },
           "organizationIds": {
             "anyOf": [
@@ -107063,7 +107079,7 @@
               {
                 "type": "integer",
                 "minimum": 1,
-                "maximum": 9007199254740991
+                "maximum": 3650
               },
               {
                 "type": "null"
@@ -107115,7 +107131,7 @@
               {
                 "type": "integer",
                 "minimum": 1,
-                "maximum": 9007199254740991
+                "maximum": 3650
               },
               {
                 "type": "null"
@@ -107244,7 +107260,8 @@
           },
           "amount": {
             "type": "number",
-            "exclusiveMinimum": 0
+            "exclusiveMinimum": 0,
+            "maximum": 999999999.99
           },
           "notes": {
             "description": "Markdown content. Writing this REPLACES the record's existing notes; read them first, or use update_record_notes to append without losing what is there.",
@@ -107423,7 +107440,7 @@
               {
                 "type": "integer",
                 "minimum": 1,
-                "maximum": 9007199254740991
+                "maximum": 1440
               },
               {
                 "type": "null"

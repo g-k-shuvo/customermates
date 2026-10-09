@@ -90,6 +90,33 @@ describe("copyToClipboard", () => {
     expect(document.querySelector("textarea")).toBeNull();
   });
 
+  it("copies through the copy event on a plain-http page, where the clipboard API does not exist", async () => {
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
+    let copied = "";
+    execCommand.mockImplementation(() => {
+      const data = { setData: (_type: string, value: string) => (copied = value) };
+      const event = Object.assign(new Event("copy", { cancelable: true }), { clipboardData: data });
+      document.dispatchEvent(event);
+      return true;
+    });
+
+    expect(await copyToClipboard("http://crm.example/invitation/abc")).toBe(true);
+    expect(copied).toBe("http://crm.example/invitation/abc");
+  });
+
+  it("reports failure instead of a false success when a dialog keeps focus away from the scratch textarea", async () => {
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
+    const trap = document.createElement("button");
+    document.body.appendChild(trap);
+    trap.focus();
+    const focus = vi.spyOn(HTMLTextAreaElement.prototype, "focus").mockImplementation(() => {});
+
+    expect(await copyToClipboard("hello")).toBe(false);
+
+    focus.mockRestore();
+    trap.remove();
+  });
+
   it("removes the scratch textarea even when the copy command throws", async () => {
     writeText.mockRejectedValue(new DOMException("denied", "NotAllowedError"));
     write.mockRejectedValue(new DOMException("denied", "NotAllowedError"));

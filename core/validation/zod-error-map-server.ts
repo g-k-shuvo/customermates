@@ -41,10 +41,24 @@ function numberBoundError(issue: $ZodRawIssue, errors: Record<string, string>): 
   return undefined;
 }
 
+function textLengthError(issue: $ZodRawIssue, errors: Record<string, string>): string | undefined {
+  if (issue.code !== "too_big" || issue.origin !== "string") return undefined;
+
+  return errors[CustomErrorCode.textTooLong]?.replace("{maximum}", String(issue.maximum));
+}
+
+function wholeNumberError(issue: $ZodRawIssue, errors: Record<string, string>): string | undefined {
+  if (issue.code !== "invalid_type" || issue.expected !== "int" || typeof issue.input !== "number") return undefined;
+
+  return errors[CustomErrorCode.wholeNumberRequired];
+}
+
 function missingValueError(issue: $ZodRawIssue, errors: Record<string, string>): string | undefined {
   const emptyString = issue.code === "too_small" && issue.origin === "string" && issue.minimum === 1;
+  const emptyList = issue.code === "too_small" && issue.origin === "array" && issue.minimum === 1;
   const absent = issue.code === "invalid_type" && issue.input === undefined;
-  return emptyString || absent ? errors[CustomErrorCode.required] : undefined;
+  const unselected = issue.code === "invalid_format" && issue.input === "";
+  return emptyString || emptyList || absent || unselected ? errors[CustomErrorCode.required] : undefined;
 }
 
 export async function getZodParseContext(): Promise<ParseContext<$ZodIssue>> {
@@ -65,6 +79,8 @@ export async function getZodParseContext(): Promise<ParseContext<$ZodIssue>> {
       invalidFormatError(issue, customErrorTranslations) ??
       missingValueError(issue, customErrorTranslations) ??
       numberBoundError(issue, customErrorTranslations) ??
+      textLengthError(issue, customErrorTranslations) ??
+      wholeNumberError(issue, customErrorTranslations) ??
       localeConfig.localeError(issue),
   };
 }

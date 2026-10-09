@@ -102,10 +102,9 @@ vi.mock("@/core/stores/root-store.provider", () => ({
 import { StageKind } from "@/generated/prisma";
 
 import {
-  MAX_ROTTING_DAYS,
   PipelineStagesList,
-  clampProbability,
-  clampRottingDays,
+  committedProbability,
+  committedRottingDays,
   selectableStageKinds,
 } from "../pipeline-stages-list";
 
@@ -121,30 +120,30 @@ beforeEach(() => {
   store.isSaving = false;
 });
 
-describe("clampProbability", () => {
-  it("keeps a probability inside the zero to one hundred range", () => {
-    expect(clampProbability(-20, 10)).toBe(0);
-    expect(clampProbability(140, 10)).toBe(100);
-    expect(clampProbability(42.4, 10)).toBe(42);
+describe("committedProbability", () => {
+  it("passes an out-of-range probability on so the server can say why it is refused", () => {
+    expect(committedProbability(-20, 10)).toBe(-20);
+    expect(committedProbability(140, 10)).toBe(140);
+    expect(committedProbability(42.4, 10)).toBe(42);
   });
 
   it("falls back to the stored probability when the field is cleared", () => {
-    expect(clampProbability(undefined, 30)).toBe(30);
-    expect(clampProbability(Number.NaN, 30)).toBe(30);
+    expect(committedProbability(undefined, 30)).toBe(30);
+    expect(committedProbability(Number.NaN, 30)).toBe(30);
   });
 });
 
-describe("clampRottingDays", () => {
-  it("disables rotting for an empty, zero or negative window", () => {
-    expect(clampRottingDays(undefined)).toBeNull();
-    expect(clampRottingDays(Number.NaN)).toBeNull();
-    expect(clampRottingDays(0)).toBeNull();
-    expect(clampRottingDays(-3)).toBeNull();
+describe("committedRottingDays", () => {
+  it("disables rotting for an empty or zero window", () => {
+    expect(committedRottingDays(undefined)).toBeNull();
+    expect(committedRottingDays(Number.NaN)).toBeNull();
+    expect(committedRottingDays(0)).toBeNull();
   });
 
-  it("rounds a window to whole days and caps it", () => {
-    expect(clampRottingDays(14.4)).toBe(14);
-    expect(clampRottingDays(MAX_ROTTING_DAYS + 500)).toBe(MAX_ROTTING_DAYS);
+  it("rounds a window to whole days and leaves the bounds to the server", () => {
+    expect(committedRottingDays(14.4)).toBe(14);
+    expect(committedRottingDays(-3)).toBe(-3);
+    expect(committedRottingDays(5000)).toBe(5000);
   });
 });
 
