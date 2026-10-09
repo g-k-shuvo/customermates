@@ -11,7 +11,9 @@ import { Validate } from "@/core/decorators/validate.decorator";
 export const UnsubscribeSchema = z.object({ token: z.string().regex(/^[A-Za-z0-9_-]{20,100}$/) });
 export type UnsubscribeData = Data<typeof UnsubscribeSchema>;
 
-export type UnsubscribeOutcome = { status: "unsubscribed"; address: string } | { status: "unknown" };
+export type UnsubscribeOutcome =
+  | { status: "unsubscribed" | "alreadyUnsubscribed"; address: string }
+  | { status: "unknown" };
 
 export function maskAddress(address: string): string {
   const [local = "", domain = ""] = address.split("@");
@@ -39,7 +41,12 @@ export class UnsubscribeInteractor {
     if (!UnsubscribeSchema.safeParse({ token }).success) return { status: "unknown" };
 
     const target = await this.repo.findTokenUnscoped(hashUnsubscribeToken(token));
+    if (!target) return { status: "unknown" };
 
-    return target ? { status: "unsubscribed", address: maskAddress(target.address) } : { status: "unknown" };
+    const address = maskAddress(target.address);
+
+    return (await this.repo.isSuppressedUnscoped(target))
+      ? { status: "alreadyUnsubscribed", address }
+      : { status: "unsubscribed", address };
   }
 }

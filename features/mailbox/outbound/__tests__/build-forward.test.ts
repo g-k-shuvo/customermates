@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildForward, forwardSubject, quoteForwardedMessage } from "../build-forward";
+import { buildForward, forwardSubject, isSentForward, quoteForwardedMessage } from "../build-forward";
 
 const SOURCE = {
   subject: "Quarterly numbers",
@@ -41,6 +41,18 @@ describe("forwardSubject", () => {
   it("falls back to the bare prefix when there is no subject", () => {
     expect(forwardSubject(null)).toBe("Fwd:");
     expect(forwardSubject("   ")).toBe("Fwd:");
+  });
+});
+
+describe("isSentForward", () => {
+  it("recognises a forward this mailbox sent", () => {
+    expect(isSentForward({ direction: "outbound", subject: "Fwd: Renewal" })).toBe(true);
+  });
+
+  it("leaves a reply, a received forward and a subjectless message alone", () => {
+    expect(isSentForward({ direction: "outbound", subject: "Re: Fwd: Renewal" })).toBe(false);
+    expect(isSentForward({ direction: "inbound", subject: "Fwd: Renewal" })).toBe(false);
+    expect(isSentForward({ direction: "outbound", subject: null })).toBe(false);
   });
 });
 

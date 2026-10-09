@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
 
-import { readAuditChanges } from "../audit-log-changes";
+import { pipelineReferenceName, readAuditChanges } from "../audit-log-changes";
 
 describe("readAuditChanges", () => {
   it("lists each changed field with its previous and current value, leaving out timestamps", () => {
@@ -34,5 +34,23 @@ describe("readAuditChanges", () => {
     expect(readAuditChanges({ deal: { id: "d1" } })).toEqual([]);
     expect(readAuditChanges(null)).toEqual([]);
     expect(readAuditChanges({ changes: [1, 2] })).toEqual([]);
+  });
+});
+
+describe("pipelineReferenceName", () => {
+  const catalog = {
+    stageById: new Map([["s1", { name: "Negotiation" }]]),
+    pipelines: [{ id: "p1", name: "Sales" }],
+  };
+
+  it("names a stage and a pipeline instead of showing their ids", () => {
+    expect(pipelineReferenceName("stageId", "s1", catalog)).toBe("Negotiation");
+    expect(pipelineReferenceName("pipelineId", "p1", catalog)).toBe("Sales");
+  });
+
+  it("leaves unknown ids, other fields and empty values to the generic description", () => {
+    expect(pipelineReferenceName("stageId", "gone", catalog)).toBeNull();
+    expect(pipelineReferenceName("name", "s1", catalog)).toBeNull();
+    expect(pipelineReferenceName("stageId", null, catalog)).toBeNull();
   });
 });

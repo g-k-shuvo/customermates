@@ -3,6 +3,7 @@
 import type { DeleteWidgetData } from "@/features/widget/delete-widget.interactor";
 import type { GetWidgetByIdData } from "@/features/widget/get-widget-by-id.interactor";
 import type { PreviewFunnelWidgetData } from "@/features/widget/preview-funnel-widget.interactor";
+import type { PreviewChartWidgetData } from "@/features/widget/preview-chart-widget.interactor";
 import type { UpsertWidgetData } from "@/features/widget/upsert-widget.interactor";
 import type { UpdateWidgetLayoutsData } from "@/features/widget/update-widget-layouts.interactor";
 import type { UpdateUserDetailsData } from "@/features/user/upsert/update-user-details.interactor";
@@ -13,6 +14,7 @@ import {
   getGetCompanyWidgetsInteractor,
   getGetWidgetByIdInteractor,
   getPreviewFunnelWidgetInteractor,
+  getPreviewChartWidgetInteractor,
   getUpdateWidgetLayoutsInteractor,
   getGetWidgetsInteractor,
   getUpdateUserDetailsInteractor,
@@ -38,6 +40,11 @@ export async function getWidgetByIdAction(data: GetWidgetByIdData) {
 
 export async function previewFunnelWidgetAction(data: PreviewFunnelWidgetData) {
   const result = await getPreviewFunnelWidgetInteractor().invoke(data);
+  return result.ok ? result.data : null;
+}
+
+export async function previewChartWidgetAction(data: PreviewChartWidgetData) {
+  const result = await getPreviewChartWidgetInteractor().invoke(data);
   return result.ok ? result.data : null;
 }
 

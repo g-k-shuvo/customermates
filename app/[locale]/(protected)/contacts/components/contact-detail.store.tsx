@@ -95,7 +95,7 @@ export class ContactDetailStore extends BaseCustomColumnEntityModalStore<
       lastName: "",
       notes: null,
       organizationIds: [],
-      userIds: [],
+      userIds: this.rootStore.userStore.user ? [this.rootStore.userStore.user.id] : [],
       dealIds: [],
       taskIds: [],
       identifiers: [],

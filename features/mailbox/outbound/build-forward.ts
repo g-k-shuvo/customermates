@@ -25,11 +25,15 @@ export type ForwardRequest = {
 
 const FORWARD_PREFIX = /^\s*(fwd?|wg|tr|rv|doorst|vs)\s*(\[\d+\])?\s*:\s*/i;
 const FORWARD_BANNER = "---------- Forwarded message ----------";
-const EMPTY_SUBJECT = "Fwd:";
+const FORWARD_SUBJECT_PREFIX = "Fwd:";
+
+export function isSentForward(message: { direction: string; subject: string | null }): boolean {
+  return message.direction === "outbound" && (message.subject ?? "").startsWith(FORWARD_SUBJECT_PREFIX);
+}
 
 export function forwardSubject(subject: string | null): string {
   const trimmed = (subject ?? "").trim();
-  if (trimmed.length === 0) return EMPTY_SUBJECT;
+  if (trimmed.length === 0) return FORWARD_SUBJECT_PREFIX;
 
   return FORWARD_PREFIX.test(trimmed) ? trimmed.replace(FORWARD_PREFIX, "Fwd: ") : `Fwd: ${trimmed}`;
 }

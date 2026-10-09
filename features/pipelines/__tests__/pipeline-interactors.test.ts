@@ -86,6 +86,13 @@ describe("DeleteStageInteractor", () => {
     mockRepo = {
       countStagesInPipeline: vi.fn().mockResolvedValue(3),
       countDealsInStage: vi.fn().mockResolvedValue(0),
+      findStageKinds: vi.fn().mockResolvedValue(
+        new Map([
+          [STAGE_ID, "open"],
+          [MOVE_TO_STAGE_ID, "open"],
+        ]),
+      ),
+      countOtherStagesOfSameKind: vi.fn().mockResolvedValue(1),
       moveDealsToStage: vi.fn().mockResolvedValue([]),
       deleteStageOrThrow: vi.fn().mockResolvedValue(makeStageDto()),
     };
@@ -174,6 +181,43 @@ describe("DeleteStageInteractor", () => {
     expect(result.ok).toBe(true);
     expect(mockEventService.publish).toHaveBeenCalledTimes(2);
     expect(mockEventService.publish.mock.calls[0][1].payload.changes).toHaveProperty("stageId");
+  });
+
+  it("refuses to delete the only stage of its type while deals are in it, with the reason", async () => {
+    mockRepo.countDealsInStage.mockResolvedValue(3);
+    mockRepo.countOtherStagesOfSameKind.mockResolvedValue(0);
+
+    const result: any = await createInteractor().invoke({ id: STAGE_ID, moveToStageId: MOVE_TO_STAGE_ID });
+
+    expect(result.ok).toBe(false);
+    expect(JSON.stringify(result)).toContain("pipelineStageNoSameKindTarget");
+    expect(mockRepo.moveDealsToStage).not.toHaveBeenCalled();
+    expect(mockRepo.deleteStageOrThrow).not.toHaveBeenCalled();
+  });
+
+  it("still deletes an empty stage that is the only one of its type", async () => {
+    mockRepo.countOtherStagesOfSameKind.mockResolvedValue(0);
+
+    const result: any = await createInteractor().invoke({ id: STAGE_ID });
+
+    expect(result.ok).toBe(true);
+    expect(mockRepo.deleteStageOrThrow).toHaveBeenCalled();
+  });
+
+  it("refuses to move open deals into a won or lost stage, which would leave them open there", async () => {
+    mockRepo.countDealsInStage.mockResolvedValue(2);
+    mockRepo.findStageKinds.mockResolvedValue(
+      new Map([
+        [STAGE_ID, "open"],
+        [MOVE_TO_STAGE_ID, "lost"],
+      ]),
+    );
+
+    const result: any = await createInteractor().invoke({ id: STAGE_ID, moveToStageId: MOVE_TO_STAGE_ID });
+
+    expect(result.ok).toBe(false);
+    expect(mockRepo.moveDealsToStage).not.toHaveBeenCalled();
+    expect(mockRepo.deleteStageOrThrow).not.toHaveBeenCalled();
   });
 
   it("refuses a moveToStageId belonging to a different pipeline", async () => {

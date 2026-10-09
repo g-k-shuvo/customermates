@@ -161,7 +161,14 @@ describeDatabase("message templates", () => {
     )) as Outcome;
 
     expect(preview).toMatchObject({ ok: true, data: { subject: "Rollout for Anna Weber", text: "Regards, Max" } });
-    expect(codes(missing)).toEqual([CustomErrorCode.mergeValueMissing]);
+    expect(codes(missing)).toEqual([CustomErrorCode.mergePreviewNeedsRecord]);
+
+    const senderOnly = await asAdmin(() =>
+      di
+        .getPreviewMessageTemplateInteractor()
+        .invoke({ subject: "Hi", bodyMarkdown: "Regards, {{ sender.firstName }}", record: null }),
+    );
+    expect(senderOnly).toMatchObject({ ok: true, data: { text: "Regards, Max" } });
   });
 
   it("keeps templates read-only for a role without automation update rights", async () => {

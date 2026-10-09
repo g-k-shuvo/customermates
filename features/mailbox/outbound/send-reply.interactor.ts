@@ -6,8 +6,10 @@ import { Resource, Action, type MailboxOAuthProvider } from "@/generated/prisma"
 
 import { SendReplyOutcomeSchema, SendReplySchema } from "../mailbox.schema";
 import { type SendReplyData, type SendReplyOutcome } from "../mailbox.schema";
-import { MailboxTransportError, MailboxTransportFailure } from "../sync/mailbox-transport";
+import { MailboxTransportError } from "../sync/mailbox-transport";
+import { FAILURE_CODES } from "../connect/connect-mailbox.interactor";
 import { buildReply } from "./build-reply";
+import { isSentForward } from "./build-forward";
 import { resolveMailboxAuth, type MailboxAuth, type MailboxCredentialAuth } from "../oauth/mailbox-credential-auth";
 import { recoverRfcMessageId, recoverThreadRootMessageId, STORED_MESSAGE_ID_PREFIX } from "./recover-message-id";
 
@@ -101,7 +103,7 @@ export class SendReplyInteractor extends AuthenticatedInteractor<SendReplyData, 
       return failUnavailable(CustomErrorCode.mailboxSendingNotConfigured);
 
     const mailboxAddress = credential.connectedAccount.emailAddress ?? credential.username;
-    const [latest] = thread.messages;
+    const latest = thread.messages.find((message) => !isSentForward(message));
     const answered = recoverRfcMessageId(latest?.unipileMessageId);
     const root = recoverThreadRootMessageId(thread.unipileThreadId);
 
@@ -157,8 +159,7 @@ export class SendReplyInteractor extends AuthenticatedInteractor<SendReplyData, 
         imap,
       );
     } catch (error) {
-      if (error instanceof MailboxTransportError && error.failure === MailboxTransportFailure.hostRejected)
-        return await fail(CustomErrorCode.mailboxHostRejected, ["threadId"]);
+      if (error instanceof MailboxTransportError) return await fail(FAILURE_CODES[error.failure], ["threadId"]);
 
       throw error;
     }

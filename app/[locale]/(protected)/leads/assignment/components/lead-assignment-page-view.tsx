@@ -49,13 +49,13 @@ export const LeadAssignmentPageView = observer(({ initial }: { initial: LeadAssi
   useEffect(() => {
     layoutStore.setRuntimeIdentity({
       scope: "entity",
-      key: "lead-assignment",
+      key: "leads:assignment",
       title,
       pictureUrl: null,
       avatarKind: null,
     });
 
-    return () => layoutStore.clearRuntimeIdentity("entity", "lead-assignment");
+    return () => layoutStore.clearRuntimeIdentity("entity", "leads:assignment");
   }, [layoutStore, title]);
 
   useEffect(() => {

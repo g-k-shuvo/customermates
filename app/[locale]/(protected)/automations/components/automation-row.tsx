@@ -19,9 +19,10 @@ type Props = {
   onChanged: () => void;
   onEdit: () => void;
   onShowRuns: () => void;
+  schedulesEnabled: boolean;
 };
 
-export function AutomationRow({ automation, onChanged, onEdit, onShowRuns }: Props) {
+export function AutomationRow({ automation, onChanged, onEdit, onShowRuns, schedulesEnabled }: Props) {
   const t = useTranslations();
   const { singular } = useEntityTerminology();
 
@@ -46,6 +47,12 @@ export function AutomationRow({ automation, onChanged, onEdit, onShowRuns }: Pro
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
+        {automation.triggerKind === AutomationTriggerKind.schedule && !schedulesEnabled ? (
+          <AppChip size="sm" variant="warning">
+            {t("Automations.schedulesOff")}
+          </AppChip>
+        ) : null}
+
         <AppChip size="sm" variant={automation.enabled ? "success" : "secondary"}>
           {automation.enabled ? t("Automations.enabled") : t("Automations.disabled")}
         </AppChip>

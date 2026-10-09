@@ -93,6 +93,19 @@ describe("app topbar crumbs", () => {
     expect(JSON.stringify(result)).not.toContain("Previous customer");
   });
 
+  it("names the company invoicing page from the identity it publishes", () => {
+    const result = buildAppTopbarCrumbs(
+      "/en/company/invoicing",
+      translate,
+      ENTITY_LABELS,
+      { scope: "entity", key: "company:invoicing", title: "Invoicing", pictureUrl: null, avatarKind: null },
+      "self-hosted",
+      canAccess,
+    );
+
+    expect(result.crumbs.at(-1)).toMatchObject({ isLoading: false, label: "Invoicing" });
+  });
+
   it("renders a matching resolved identity", () => {
     const result = buildAppTopbarCrumbs(
       `/en/contacts/${OPAQUE_ID}`,

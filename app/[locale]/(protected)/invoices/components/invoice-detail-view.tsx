@@ -33,6 +33,8 @@ import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { useRootStore } from "@/core/stores/root-store.provider";
 import { toastZodErrorTree } from "@/core/utils/toast-zod-error-tree";
 import { useRouter } from "@/i18n/navigation";
+import { CALENDAR_DATE } from "@/core/stores/intl.store";
+import { toLocalIso } from "@/components/forms/iso-date-values";
 
 type Props = { initial: InvoiceDto; settings: InvoiceSettingsDto };
 
@@ -105,7 +107,7 @@ export const InvoiceDetailView = observer(({ initial, settings }: Props) => {
       onConfirm: async () => {
         if (store.hasUnsavedChanges && !(await store.save())) return false;
 
-        const result = await issueInvoiceAction({ id: invoice.id });
+        const result = await issueInvoiceAction({ id: invoice.id, issueDate: new Date(toLocalIso(new Date(), true)) });
         if (!result.ok) {
           toastZodErrorTree(result.error);
           return false;
@@ -164,11 +166,13 @@ export const InvoiceDetailView = observer(({ initial, settings }: Props) => {
       )}
 
       {invoice.issueDate && (
-        <span>{t("Invoices.issuedOn", { date: intlStore.formatNumericalShortDate(invoice.issueDate) })}</span>
+        <span>
+          {t("Invoices.issuedOn", { date: intlStore.formatNumericalShortDate(invoice.issueDate, CALENDAR_DATE) })}
+        </span>
       )}
 
       {invoice.dueDate && (
-        <span>{t("Invoices.dueOn", { date: intlStore.formatNumericalShortDate(invoice.dueDate) })}</span>
+        <span>{t("Invoices.dueOn", { date: intlStore.formatNumericalShortDate(invoice.dueDate, CALENDAR_DATE) })}</span>
       )}
     </div>
   );

@@ -150,6 +150,7 @@ function makePrecheck(options: { user?: TenantUser; stored?: Record<string, Part
     findPipelineIdsByStageIds: vi.fn((ids: Set<string>) =>
       Promise.resolve(new Map([...PIPELINE_BY_STAGE].filter(([stageId]) => ids.has(stageId)))),
     ),
+    findStageKinds: vi.fn().mockResolvedValue(new Map()),
   };
   const dealPrecheck = new DealWritePrecheckInteractor(
     passing,
@@ -164,7 +165,10 @@ function makePrecheck(options: { user?: TenantUser; stored?: Record<string, Part
     new ValidatePipelineStageIdsInteractor(lookup([STAGE, OTHER_PIPELINE_STAGE, ARCHIVED_PIPELINE_STAGE]) as never),
     stagePipelines,
     archivedPipelines,
-    { findPipelineIdsByDealIds: vi.fn().mockResolvedValue(new Map()) },
+    {
+      findPipelineIdsByDealIds: vi.fn().mockResolvedValue(new Map()),
+      findStatusAndStageByDealIds: vi.fn().mockResolvedValue(new Map()),
+    },
     passing,
   );
 

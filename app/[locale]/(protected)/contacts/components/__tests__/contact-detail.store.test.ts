@@ -28,6 +28,8 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
+const CREATOR_ID = "30000000-0000-4000-8000-000000000001";
+
 function stubRoot(): RootStore {
   return {
     registerModalStore: vi.fn(),
@@ -44,6 +46,7 @@ function stubRoot(): RootStore {
       removeRecentItem: vi.fn(),
     },
     localeStore: { locale: "en", getTranslation: (key: string) => key },
+    userStore: { user: { id: CREATOR_ID } },
   } as unknown as RootStore;
 }
 
@@ -176,7 +179,7 @@ describe("ContactDetailStore create draft", () => {
     expect(store.channels).toEqual([]);
     expect(store.form.organizationIds).toEqual([]);
     expect(store.form.dealIds).toEqual([]);
-    expect(store.form.userIds).toEqual([]);
+    expect(store.form.userIds).toEqual([CREATOR_ID]);
     expect(store.form.id).toBeUndefined();
     expect(store.fetchedEntity).toBeNull();
   });
@@ -186,6 +189,13 @@ describe("ContactDetailStore create draft", () => {
     await store.add();
 
     expect(store.hasUnsavedChanges).toBe(false);
+  });
+
+  it("assigns a new contact to the person creating it", async () => {
+    const store = makeStore();
+    await store.add();
+
+    expect(store.form.userIds).toEqual([CREATOR_ID]);
   });
 });
 

@@ -226,7 +226,11 @@ export const AssignedUsersField = observer(
           controlStartAddon={personalization ? <EntityDetailFieldDragHandle label={fieldLabel} /> : undefined}
           getItems={getUsersAction}
           id="userIds"
-          items={items ?? []}
+          items={
+            userStore.user && !(items ?? []).some((item) => item.id === userStore.user?.id)
+              ? [...(items ?? []), userStore.user]
+              : (items ?? [])
+          }
           labelEndAddon={
             personalization || labelEndAddon ? (
               <span className="flex items-center gap-1">

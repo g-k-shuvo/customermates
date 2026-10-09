@@ -19,6 +19,7 @@ import { useCopyToClipboard } from "@/core/utils/use-copy-to-clipboard";
 import { runUserAction } from "@/core/errors/report-application-error";
 
 import { InviteByEmailForm } from "./invite-by-email-form";
+import { PendingInvitationsList } from "./pending-invitations-list";
 
 export const CompanyInviteModal = observer(() => {
   const t = useTranslations();
@@ -79,6 +80,8 @@ export const CompanyInviteModal = observer(() => {
 
             <TabsContent className="mt-3" value="email">
               <InviteByEmailForm />
+
+              <PendingInvitationsList />
             </TabsContent>
           </Tabs>
         </AppCardBody>

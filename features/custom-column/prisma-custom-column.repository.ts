@@ -198,8 +198,6 @@ export class PrismaCustomColumnRepo
 
       if (args.id)
         await this.cleanupInvalidOptionValues(column.id, args.entityType, validOptionValues, defaultOption?.value);
-
-      if (defaultOption) await this.createDefaultCustomFieldValues(column.id, args.entityType, defaultOption.value);
     }
 
     await this.recalculateDealsWhenWeightingColumn(column.id);
@@ -368,41 +366,6 @@ export class PrismaCustomColumnRepo
         },
       ];
     });
-  }
-
-  private async createDefaultCustomFieldValues(columnId: string, entityType: EntityType, defaultValue: string) {
-    const { companyId } = this.user;
-
-    const entityConfig = {
-      [EntityType.contact]: () => this.prisma.contact.findMany({ where: { companyId }, select: { id: true } }),
-      [EntityType.organization]: () =>
-        this.prisma.organization.findMany({ where: { companyId }, select: { id: true } }),
-      [EntityType.deal]: () => this.prisma.deal.findMany({ where: { companyId }, select: { id: true } }),
-      [EntityType.service]: () => this.prisma.service.findMany({ where: { companyId }, select: { id: true } }),
-      [EntityType.task]: () => this.prisma.task.findMany({ where: { companyId }, select: { id: true } }),
-      [EntityType.lead]: () => this.prisma.lead.findMany({ where: { companyId }, select: { id: true } }),
-    } satisfies Record<EntityType, () => Promise<{ id: string }[]>>;
-
-    const entities = await entityConfig[entityType]();
-    const entityIds = entities.map((e) => e.id);
-    if (entityIds.length === 0) return;
-
-    const valueByEntityId = await this.findCustomFieldValuesMap(columnId, entityType, entityIds);
-    const entitiesNeedingDefault = entityIds.filter((id) => !valueByEntityId.has(id));
-    if (entitiesNeedingDefault.length === 0) return;
-
-    const idField = this.entityIdFieldByType[entityType];
-
-    const createData = entitiesNeedingDefault.map((entityId) => ({
-      companyId,
-      columnId,
-      entityType,
-      value: defaultValue,
-      type: CustomColumnType.singleSelect,
-      [idField]: entityId,
-    }));
-
-    await this.prisma.customFieldValue.createMany({ data: createData });
   }
 
   private async cleanupInvalidOptionValues(

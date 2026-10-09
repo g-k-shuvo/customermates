@@ -31,6 +31,7 @@ import { MailPageSkeleton } from "./mail-page-skeleton";
 import { MailReplyBox } from "./mail-reply-box";
 import { MailThreadOutbox } from "./mail-thread-outbox";
 import { MailThreadWorkspaceBar } from "./mail-thread-workspace-bar";
+import { MAIL_TOAST_OPTIONS } from "./mail-toast-options";
 
 export type MailThreadPanelState =
   | { status: "idle" }
@@ -158,7 +159,10 @@ export function MailThreadPanel({
         if (!result.data.sharedToCrm) setDealLinkOverride({ threadId: thread.id, link: UNLINKED });
 
         onSharedChanged(thread.id, result.data.sharedToCrm);
-        toast.success(result.data.sharedToCrm ? t("Mailbox.shareEnabled") : t("Mailbox.shareDisabled"));
+        toast.success(
+          result.data.sharedToCrm ? t("Mailbox.shareEnabled") : t("Mailbox.shareDisabled"),
+          MAIL_TOAST_OPTIONS,
+        );
       } finally {
         setSharing(false);
       }
@@ -179,7 +183,10 @@ export function MailThreadPanel({
 
         setDealLinkOverride({ threadId: thread.id, link: result.data.dealLink });
         onSharedChanged(thread.id, result.data.sharedToCrm);
-        toast.success(dealId === null ? t("Mailbox.dealUnlinked") : t("Mailbox.dealLinked", { name: dealName }));
+        toast.success(
+          dealId === null ? t("Mailbox.dealUnlinked") : t("Mailbox.dealLinked", { name: dealName }),
+          MAIL_TOAST_OPTIONS,
+        );
       } finally {
         setLinking(false);
       }

@@ -257,6 +257,25 @@ describe("SendReplyInteractor failures", () => {
     expect(storeOutboundReply).not.toHaveBeenCalled();
   });
 
+  it.each([
+    [MailboxTransportFailure.tlsFailed, CustomErrorCode.mailboxTlsFailed],
+    [MailboxTransportFailure.authenticationFailed, CustomErrorCode.mailboxAuthenticationFailed],
+    [MailboxTransportFailure.connectionRefused, CustomErrorCode.mailboxUnreachable],
+  ])("reports an smtp %s as a typed result instead of throwing", async (failure, code) => {
+    const storeOutboundReply = vi.fn();
+    const context = replyContext();
+    context.credential.sealedSecret = sealSecret(KEY, "app-password");
+    const repo = { findReplyContext: vi.fn().mockResolvedValue(context), storeOutboundReply } as never;
+    const send = vi.fn().mockRejectedValue(new MailboxTransportError(failure));
+    const interactor = new SendReplyInteractor(repo, { send } as never, KEY, NOW);
+
+    const result = await interactor.invoke(body);
+
+    expect(result.ok).toBe(false);
+    expect(errorCodesOf(result)).toContain(code);
+    expect(storeOutboundReply).not.toHaveBeenCalled();
+  });
+
   it("sends and appends outside a write transaction, so a slow server holds no company lock", async () => {
     const context = replyContext();
     context.credential.sealedSecret = sealSecret(KEY, "app-password");
@@ -277,6 +296,37 @@ describe("SendReplyInteractor failures", () => {
     expect(send).toHaveBeenCalled();
     expect(storeOutboundReply).toHaveBeenCalled();
     expect(MOCK_PRISMA_DB_MODULE.prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("answers the conversation, not the people a forward from it went to", async () => {
+    const context = replyContext();
+    context.credential.sealedSecret = sealSecret(KEY, "app-password");
+    context.thread.messages.unshift({
+      unipileMessageId: "imap:msg:id:forward@vendor.example",
+      subject: "Fwd: Renewal",
+      senderIdentifier: "max@vendor.example",
+      recipients: { to: [{ identifier: "carol@partner.example" }], cc: [] },
+      direction: "outbound",
+    });
+    const repo = {
+      findReplyContext: vi.fn().mockResolvedValue(context),
+      storeOutboundReply: vi.fn().mockResolvedValue(undefined),
+    } as never;
+    const send = vi.fn().mockResolvedValue({
+      messageId: "<sent@vendor.example>",
+      raw: Buffer.from(""),
+      recipients: ["anna@buyer.example"],
+      sentCopySaved: true,
+    });
+    const interactor = new SendReplyInteractor(repo, { send } as never, KEY, NOW);
+
+    const result = await interactor.invoke(body);
+
+    expect(result.ok).toBe(true);
+    const [, reply] = send.mock.calls[0] as [unknown, { to: string[]; subject: string; inReplyTo: string | null }];
+    expect(reply.to).toEqual(["anna@buyer.example"]);
+    expect(reply.subject).toBe("Re: Renewal");
+    expect(reply.inReplyTo).toBe("<root@buyer.example>");
   });
 
   it("refuses to send when the mailbox has no outgoing server", async () => {

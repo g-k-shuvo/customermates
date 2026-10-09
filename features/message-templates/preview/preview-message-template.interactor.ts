@@ -9,6 +9,8 @@ import {
   TEMPLATE_READ,
 } from "../message-template.schema";
 import { failMerge } from "../merge-failure";
+import { fail } from "@/core/validation/interactor-failure-server";
+import { CustomErrorCode } from "@/core/validation/validation.types";
 
 import { AuthenticatedInteractor } from "@/core/base/authenticated-interactor";
 import { AllowInDemoMode } from "@/core/decorators/allow-in-demo-mode.decorator";
@@ -37,6 +39,8 @@ export class PreviewMessageTemplateInteractor extends AuthenticatedInteractor<
       markdown: data.bodyMarkdown,
       values: mergeValuesFrom(source),
     });
+    if (!rendered.ok && !data.record && rendered.failure.code === "missingMergeValue")
+      return fail(CustomErrorCode.mergePreviewNeedsRecord, ["record"], { field: rendered.failure.field });
     if (!rendered.ok) return failMerge(rendered.failure, "bodyMarkdown");
 
     const banner = data.bannerUrl ? emailBannerHtml(data.bannerUrl) : "";

@@ -132,7 +132,7 @@ const SortableStageRow = observer(
     return (
       <li
         ref={setNodeRef}
-        className="flex items-center gap-2"
+        className="flex flex-wrap items-center gap-2"
         style={{ transform: CSS.Transform.toString(transform), transition }}
       >
         <span
@@ -150,7 +150,7 @@ const SortableStageRow = observer(
 
         <Input
           aria-label={t("Pipelines.stageNameLabel", { name: stage.name })}
-          className="h-9 min-w-0 flex-1"
+          className="h-9 min-w-0 flex-1 basis-40"
           disabled={isDisabled}
           value={draftName}
           onBlur={commitName}
@@ -193,8 +193,8 @@ const SortableStageRow = observer(
 
         <FormNumberInput
           aria-label={t("Pipelines.rottingDaysLabel", { name: stage.name })}
-          className="text-right"
-          containerClassName="w-24 shrink-0"
+          className="pr-12 text-right"
+          containerClassName="w-28 shrink-0"
           disabled={isDisabled}
           endContent={t("Common.filters.daysSuffix")}
           id={`pipelineStages[${index}].rottingDays`}

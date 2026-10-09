@@ -30,16 +30,16 @@ import {
   UpdateFieldConfigSchema,
 } from "../automation-action.schema";
 import { interactorFailureKind, isInteractorFailure } from "@/core/validation/validation.utils";
+import { checkWebhookTarget } from "@/features/webhook/webhook-target-guard";
 
-const CONFIG_INVALID = "configuration is not valid for this action";
-const NO_RECORD = "the trigger carried no record to act on";
+const WEBHOOK_TIMEOUT_MS = 10_000;
 
 function invalid(): AutomationActionOutcome {
-  return { ok: false, error: CONFIG_INVALID };
+  return { ok: false, error: "configInvalid" };
 }
 
 function noRecord(): AutomationActionOutcome {
-  return { ok: false, error: NO_RECORD };
+  return { ok: false, error: "noTriggerRecord" };
 }
 
 function triggerRecordSurvives(context: AutomationActionContext): boolean {
@@ -65,6 +65,7 @@ export class CrmAutomationActionExecutor implements AutomationActionExecutor {
     private createLead: CreateLeadInteractor,
     private updateDeal: UpdateDealInteractor,
     private emailSender: AutomationEmailSender,
+    private allowPrivateWebhookTargets = false,
   ) {}
 
   async execute(args: {
@@ -94,7 +95,7 @@ export class CrmAutomationActionExecutor implements AutomationActionExecutor {
       case AutomationActionKind.callWebhook:
         return await this.runCallWebhook(args.config, args.context);
       default:
-        return { ok: false, error: `unsupported action ${args.kind}` };
+        return { ok: false, error: "actionUnsupported" };
     }
   }
 
@@ -174,7 +175,7 @@ export class CrmAutomationActionExecutor implements AutomationActionExecutor {
     const outcome = await this.updateDeal.invoke({ id: context.entityId, stageId: parsed.data.stageId });
 
     return isInteractorFailure(outcome)
-      ? { ok: false, error: "the stage move was rejected" }
+      ? { ok: false, error: "stageMoveRejected" }
       : { ok: true, output: { stageId: parsed.data.stageId } };
   }
 
@@ -203,7 +204,7 @@ export class CrmAutomationActionExecutor implements AutomationActionExecutor {
     });
 
     return isInteractorFailure(outcome)
-      ? { ok: false, error: "the task could not be created" }
+      ? { ok: false, error: "taskNotCreated" }
       : { ok: true, output: { taskId: outcome.data.id } };
   }
 
@@ -225,7 +226,7 @@ export class CrmAutomationActionExecutor implements AutomationActionExecutor {
     });
 
     return isInteractorFailure(outcome)
-      ? { ok: false, error: "the deal could not be created" }
+      ? { ok: false, error: "dealNotCreated" }
       : { ok: true, output: { dealId: outcome.data.id } };
   }
 
@@ -244,7 +245,7 @@ export class CrmAutomationActionExecutor implements AutomationActionExecutor {
     });
 
     return isInteractorFailure(outcome)
-      ? { ok: false, error: "the lead could not be created" }
+      ? { ok: false, error: "leadNotCreated" }
       : { ok: true, output: { leadId: outcome.data.id } };
   }
 
@@ -281,14 +282,21 @@ export class CrmAutomationActionExecutor implements AutomationActionExecutor {
       ...(parsed.data.includeRecord ? { entityType: context.entityType, entityId: context.entityId } : {}),
     };
 
-    const response = await fetch(parsed.data.url, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    const target = await checkWebhookTarget(parsed.data.url, { allowPrivateHosts: this.allowPrivateWebhookTargets });
+    if (target === "refused") return { ok: false, error: "webhookTargetRefused" };
 
-    return response.ok
-      ? { ok: true, output: { status: response.status } }
-      : { ok: false, error: `the endpoint answered ${response.status}` };
+    let response: Response;
+    try {
+      response = await fetch(parsed.data.url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
+      });
+    } catch {
+      return { ok: false, error: "webhookUnreachable" };
+    }
+
+    return response.ok ? { ok: true, output: { status: response.status } } : { ok: false, error: "webhookRejected" };
   }
 }

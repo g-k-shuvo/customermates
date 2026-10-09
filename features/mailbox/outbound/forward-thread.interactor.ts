@@ -7,7 +7,8 @@ import { Resource, Action, type MailboxOAuthProvider } from "@/generated/prisma"
 
 import { ForwardThreadSchema, SendReplyOutcomeSchema } from "../mailbox.schema";
 import { type ForwardThreadData, type SendReplyOutcome } from "../mailbox.schema";
-import { MailboxTransportError, MailboxTransportFailure } from "../sync/mailbox-transport";
+import { MailboxTransportError } from "../sync/mailbox-transport";
+import { FAILURE_CODES } from "../connect/connect-mailbox.interactor";
 import { buildForward } from "./build-forward";
 import { resolveMailboxAuth, type MailboxAuth, type MailboxCredentialAuth } from "../oauth/mailbox-credential-auth";
 import { STORED_MESSAGE_ID_PREFIX } from "./recover-message-id";
@@ -184,8 +185,7 @@ export class ForwardThreadInteractor extends AuthenticatedInteractor<ForwardThre
         imap,
       );
     } catch (error) {
-      if (error instanceof MailboxTransportError && error.failure === MailboxTransportFailure.hostRejected)
-        return await fail(CustomErrorCode.mailboxHostRejected, ["threadId"]);
+      if (error instanceof MailboxTransportError) return await fail(FAILURE_CODES[error.failure], ["threadId"]);
 
       throw error;
     }

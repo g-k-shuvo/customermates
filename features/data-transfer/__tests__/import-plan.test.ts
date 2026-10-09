@@ -124,6 +124,22 @@ describe("buildPlan custom fields and relations", () => {
     expect(result.create[0].payload.customFieldValues).toEqual([{ columnId: STATUS_A, value: WON }]);
   });
 
+  it("stores an exported date range as plain dates, so it does not shift a day in other time zones", () => {
+    const window = { ...status, id: STATUS_B, label: "Window", type: CustomColumnType.dateRange, options: null };
+    const result = buildPlan({
+      rows: rows([["2026-10-06T00:00:00.000Z / 2026-10-16T00:00:00.000Z"]]),
+      sources: sources(["Window"]),
+      mapping: [{ kind: "customField", columnId: STATUS_B }],
+      descriptor: contact,
+      customColumns: [window as never],
+      relationIndex,
+    });
+
+    expect(result.create[0].payload.customFieldValues).toEqual([
+      { columnId: STATUS_B, value: "2026-10-06,2026-10-16" },
+    ]);
+  });
+
   it("reports an option that no longer exists instead of writing it through", () => {
     const result = plan([{ kind: "customField", columnId: STATUS_A }], ["Status"], [["Retired"]]);
 

@@ -223,7 +223,11 @@ describeDatabase("sending a campaign", () => {
     await materialize(draft.data.id);
 
     const cancelled = await as(() => di.getCancelCampaignInteractor().invoke({ id: draft.data.id }));
-    expect(cancelled.ok && cancelled.data).toMatchObject({ status: CampaignStatus.cancelled, pendingCount: 0 });
+    expect(cancelled.ok && cancelled.data).toMatchObject({
+      status: CampaignStatus.cancelled,
+      pendingCount: 0,
+      skippedCount: 29,
+    });
     expect(await as(() => di.getSendCampaignChunkInteractor().invoke({ id: draft.data.id }))).toEqual({
       ok: true,
       data: { remaining: 0 },

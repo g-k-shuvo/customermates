@@ -1,8 +1,9 @@
-import { Resource } from "@/generated/prisma";
+import { redirect } from "next/navigation";
+import { Action, Resource } from "@/generated/prisma";
 
 import { WebFormSourcesPageView } from "../components/webform/web-form-sources-page-view";
 
-import { getGetWebFormSourcesInteractor } from "@/core/di";
+import { getGetWebFormSourcesInteractor, getUserService } from "@/core/di";
 import { requireAccess } from "@/features/auth/next/require";
 import { readSurfaceParams } from "@/core/data-view/next/read-surface-params";
 import { SURFACE } from "@/core/data-view/data-view-keys";
@@ -15,6 +16,8 @@ type Props = {
 
 export default async function CompanyWebFormsPage({ searchParams }: Props) {
   await requireAccess({ resource: Resource.leads });
+
+  if (!(await getUserService().hasPermission(Resource.leads, Action.readAll))) redirect("/dashboard");
 
   const sourceParams = await readSurfaceParams(SURFACE.webFormSources, searchParams);
 

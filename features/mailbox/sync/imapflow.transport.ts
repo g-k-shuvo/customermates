@@ -83,7 +83,7 @@ function codeOf(error: unknown): string {
   return typeof code === "string" ? code.toUpperCase() : "";
 }
 
-function classifyImapError(error: unknown): MailboxTransportFailure {
+export function classifyImapError(error: unknown): MailboxTransportFailure {
   if (error instanceof MailboxTransportError) return error.failure;
 
   const code = codeOf(error);

@@ -9,6 +9,7 @@ import { Resource, Action } from "@/generated/prisma";
 
 import { SubscribableWebhookEventSchema, WebhookDtoSchema } from "./webhook.schema";
 import { WebhookHeadersSchema, allowsCredentialedHeaders } from "./webhook-headers";
+import { isPublicWebhookUrl } from "./webhook-target-guard";
 import { toWebhookEventPayload } from "./webhook-event-payload";
 import { WEBHOOK_BODY_TEMPLATE_MAX_CHARS, isRenderableWebhookBodyTemplate } from "./webhook-body-template";
 
@@ -70,6 +71,11 @@ export abstract class UpsertWebhookRepo {
   abstract upsertWebhookOrThrow(args: UpsertWebhookData): Promise<WebhookDto>;
   abstract getWebhookByIdOrThrow(id: string): Promise<WebhookDto>;
   abstract getWebhookById(id: string): Promise<WebhookDto | null>;
+  abstract findWebhooksByUrl(url: string): Promise<WebhookDto[]>;
+}
+
+function carriesDeliveryOverrides(webhook: Pick<WebhookDto, "headers" | "bodyTemplate">): boolean {
+  return webhook.bodyTemplate !== null || Object.keys(webhook.headers ?? {}).length > 0;
 }
 
 @TenantInteractor({ resource: Resource.api, action: Action.update })
@@ -78,6 +84,7 @@ export class UpsertWebhookInteractor extends AuthenticatedInteractor<UpsertWebho
     private repo: UpsertWebhookRepo,
     private eventService: EventService,
     private validator: ValidateWebhookIdsInteractor,
+    private allowPrivateTargets = false,
   ) {
     super();
   }
@@ -127,5 +134,17 @@ export class UpsertWebhookInteractor extends AuthenticatedInteractor<UpsertWebho
         params: { error: CustomErrorCode.webhookHeadersRequireHttps },
       });
     }
+
+    if (!url) return;
+
+    if (!isPublicWebhookUrl(url, { allowPrivateHosts: this.allowPrivateTargets }))
+      ctx.addIssue({ code: "custom", path: ["url"], params: { error: CustomErrorCode.webhookTargetPrivate } });
+
+    const bodyTemplate = data.bodyTemplate === undefined ? (existing?.bodyTemplate ?? null) : data.bodyTemplate;
+    const others = (await this.repo.findWebhooksByUrl(url)).filter((webhook) => webhook.id !== data.id);
+    const saved = { headers: headers ?? null, bodyTemplate };
+
+    if (others.length > 0 && (carriesDeliveryOverrides(saved) || others.some(carriesDeliveryOverrides)))
+      ctx.addIssue({ code: "custom", path: ["url"], params: { error: CustomErrorCode.webhookUrlAmbiguous } });
   }
 }

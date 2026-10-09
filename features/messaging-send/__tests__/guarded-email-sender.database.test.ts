@@ -211,10 +211,18 @@ describeDatabase("guarded email sending", () => {
     const stored = await runWithoutTenant(() => prisma.unsubscribeToken.findMany({ where: { companyId } }));
     expect(stored.some((row) => row.tokenHash === token)).toBe(false);
 
+    expect(await new UnsubscribeInteractor(new PrismaSuppressionRepo()).lookup({ token })).toEqual({
+      status: "unsubscribed",
+      address: "l***@prospect.example",
+    });
     const unsubscribed = await new UnsubscribeInteractor(new PrismaSuppressionRepo()).invoke({ token });
     expect(unsubscribed).toEqual({ ok: true, data: { status: "unsubscribed", address: "l***@prospect.example" } });
     const again = await new UnsubscribeInteractor(new PrismaSuppressionRepo()).invoke({ token });
     expect(again.ok).toBe(true);
+    expect(await new UnsubscribeInteractor(new PrismaSuppressionRepo()).lookup({ token })).toEqual({
+      status: "alreadyUnsubscribed",
+      address: "l***@prospect.example",
+    });
 
     const held = await marketing(randomUUID());
     expect(held).toEqual({ status: "suppressed", reason: "unsubscribed" });

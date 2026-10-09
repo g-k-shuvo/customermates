@@ -4,7 +4,7 @@ import type { RootStore } from "../root.store";
 
 import { Currency, Locale } from "@/generated/prisma";
 
-import { IntlStore } from "../intl.store";
+import { CALENDAR_DATE, IntlStore } from "../intl.store";
 
 describe("IntlStore currency formatting", () => {
   it("formats the company currency as IDR", () => {
@@ -90,5 +90,27 @@ describe("IntlStore zoned-value hydration gate", () => {
     const store = createStore();
 
     expect(store.formatNumber(1234.5)).not.toBe("");
+  });
+});
+
+describe("IntlStore calendar dates", () => {
+  it("shows a stored calendar date on the same day in a time zone west of UTC", () => {
+    const previous = process.env.TZ;
+    process.env.TZ = "America/New_York";
+
+    try {
+      const store = new IntlStore({
+        companyStore: { company: null },
+        localeStore: { locale: "en" },
+        userStore: { user: { formattingLocale: Locale.en } },
+      } as unknown as RootStore);
+      store.markClientHydrated();
+      const dueDate = new Date("2026-10-10T00:00:00.000Z");
+
+      expect(store.formatNumericalShortDate(dueDate, CALENDAR_DATE)).toBe("10/10/26");
+      expect(store.formatNumericalShortDate(dueDate, CALENDAR_DATE)).not.toBe(store.formatNumericalShortDate(dueDate));
+    } finally {
+      process.env.TZ = previous;
+    }
   });
 });

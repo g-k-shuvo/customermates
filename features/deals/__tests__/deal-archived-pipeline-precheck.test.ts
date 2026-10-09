@@ -16,14 +16,18 @@ const ACTIVE_STAGE_ID = "00000000-0000-4000-8000-000000000050";
 const ARCHIVED_STAGE_ID = "00000000-0000-4000-8000-000000000052";
 const ACTIVE_DEAL_ID = "00000000-0000-4000-8000-000000000001";
 const ARCHIVED_DEAL_ID = "00000000-0000-4000-8000-000000000002";
+const WON_STAGE_ID = "00000000-0000-4000-8000-000000000053";
+const WON_DEAL_ID = "00000000-0000-4000-8000-000000000003";
 
 const PIPELINE_BY_STAGE = new Map<string, string>([
   [ACTIVE_STAGE_ID, ACTIVE_PIPELINE_ID],
+  [WON_STAGE_ID, ACTIVE_PIPELINE_ID],
   [ARCHIVED_STAGE_ID, ARCHIVED_PIPELINE_ID],
 ]);
 
 const PIPELINE_BY_DEAL = new Map<string, string>([
   [ACTIVE_DEAL_ID, ACTIVE_PIPELINE_ID],
+  [WON_DEAL_ID, ACTIVE_PIPELINE_ID],
   [ARCHIVED_DEAL_ID, ARCHIVED_PIPELINE_ID],
 ]);
 
@@ -39,6 +43,11 @@ function makePrecheck() {
         Promise.resolve(
           new Map([...ids].flatMap((id) => (PIPELINE_BY_STAGE.has(id) ? [[id, PIPELINE_BY_STAGE.get(id)]] : []))),
         ),
+      ),
+    findStageKinds: vi
+      .fn()
+      .mockImplementation((ids: string[]) =>
+        Promise.resolve(new Map(ids.map((id) => [id, id === WON_STAGE_ID ? "won" : "open"]))),
       ),
   };
 
@@ -56,6 +65,18 @@ function makePrecheck() {
       .mockImplementation((ids: Set<string>) =>
         Promise.resolve(
           new Map([...ids].flatMap((id) => (PIPELINE_BY_DEAL.has(id) ? [[id, PIPELINE_BY_DEAL.get(id)]] : []))),
+        ),
+      ),
+    findStatusAndStageByDealIds: vi
+      .fn()
+      .mockImplementation((ids: Set<string>) =>
+        Promise.resolve(
+          new Map(
+            [...ids].map((id) => [
+              id,
+              id === WON_DEAL_ID ? { status: "won", stageId: WON_STAGE_ID } : { status: "open", stageId: null },
+            ]),
+          ),
         ),
       ),
   };
@@ -134,6 +155,31 @@ describe("DealWritePrecheckInteractor archived pipelines", () => {
 
     expect(codes(issues)).toEqual([CustomErrorCode.pipelineArchived]);
     expect(issues[0].path).toEqual(["stageId"]);
+  });
+
+  it("refuses to move a won deal into an open stage, which would leave it won there", async () => {
+    const { precheck, ctx, issues } = makePrecheck();
+
+    await precheck.update({ id: WON_DEAL_ID, stageId: ACTIVE_STAGE_ID } as unknown as UpdateDealData, ctx);
+
+    expect(codes(issues)).toEqual([CustomErrorCode.pipelineStageKindMismatch]);
+    expect(issues[0].path).toEqual(["stageId"]);
+  });
+
+  it("refuses to move an open deal into a won stage without closing it", async () => {
+    const { precheck, ctx, issues } = makePrecheck();
+
+    await precheck.update({ id: ACTIVE_DEAL_ID, stageId: WON_STAGE_ID } as unknown as UpdateDealData, ctx);
+
+    expect(codes(issues)).toEqual([CustomErrorCode.pipelineStageKindMismatch]);
+  });
+
+  it("lets a won deal be saved while it stays in its won stage", async () => {
+    const { precheck, ctx, issues } = makePrecheck();
+
+    await precheck.update({ id: WON_DEAL_ID, stageId: WON_STAGE_ID } as unknown as UpdateDealData, ctx);
+
+    expect(issues).toEqual([]);
   });
 
   it("reports the archived pipeline per row for a bulk create", async () => {

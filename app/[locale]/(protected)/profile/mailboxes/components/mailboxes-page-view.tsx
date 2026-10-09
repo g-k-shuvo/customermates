@@ -45,7 +45,7 @@ export function MailboxesPageView({
   calendars = [],
 }: Props) {
   const t = useTranslations();
-  const { showDeleteConfirmation } = useDeleteConfirmation();
+  const { showConfirmation } = useDeleteConfirmation();
   const [items, setItems] = useState(mailboxes);
   const [busyMailboxId, setBusyMailboxId] = useState<string | null>(null);
 
@@ -61,17 +61,24 @@ export function MailboxesPageView({
   };
 
   const disconnect = (mailbox: MailboxAccountDto) =>
-    showDeleteConfirmation(async () => {
-      const result = await disconnectMailboxAction({ connectedAccountId: mailbox.connectedAccountId });
+    showConfirmation({
+      title: t("Mailbox.disconnectConfirmTitle"),
+      message: t("Mailbox.disconnectConfirmMessage", { address: mailbox.emailAddress }),
+      confirmLabel: t("Mailbox.disconnect"),
+      confirmVariant: "destructive",
+      successKey: "Mailbox.disconnected",
+      onConfirm: async () => {
+        const result = await disconnectMailboxAction({ connectedAccountId: mailbox.connectedAccountId });
 
-      if (!result.ok) {
-        toastZodErrorTree(result.error);
-        return false;
-      }
+        if (!result.ok) {
+          toastZodErrorTree(result.error);
+          return false;
+        }
 
-      await refresh();
-      return true;
-    }, mailbox.emailAddress);
+        await refresh();
+        return true;
+      },
+    });
 
   const sync = (mailbox: MailboxAccountDto) => {
     if (busyMailboxId) return;

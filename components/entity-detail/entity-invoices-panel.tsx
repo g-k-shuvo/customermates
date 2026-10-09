@@ -16,6 +16,7 @@ import { runUserAction } from "@/core/errors/report-application-error";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { toastZodErrorTree } from "@/core/utils/toast-zod-error-tree";
 import { useRouter } from "@/i18n/navigation";
+import { CALENDAR_DATE } from "@/core/stores/intl.store";
 
 type Props =
   | { dealId: string; organizationId?: undefined; canCreate: boolean; canEditBilling?: undefined }
@@ -108,7 +109,9 @@ export function EntityInvoicesPanel({ dealId, organizationId, canCreate, canEdit
 
                 <span className="truncate text-xs text-muted-foreground">
                   {invoice.issueDate
-                    ? t("Invoices.issuedOn", { date: intlStore.formatNumericalShortDate(invoice.issueDate) })
+                    ? t("Invoices.issuedOn", {
+                        date: intlStore.formatNumericalShortDate(invoice.issueDate, CALENDAR_DATE),
+                      })
                     : t("Invoices.createdOn", { date: intlStore.formatNumericalShortDate(invoice.createdAt) })}
                 </span>
               </div>

@@ -117,6 +117,7 @@ function toMailboxAccountDto(row: MailboxAccountRow): MailboxAccountDto {
 }
 
 const STORED_FOLDER_LIMIT = 200;
+const REPLY_SOURCE_WINDOW = 25;
 
 function byCodeUnitOrder(left: string, right: string): number {
   if (left === right) return 0;
@@ -688,7 +689,7 @@ export class PrismaMailboxRepo extends BaseRepository {
               orderBy: { createdAt: "asc" },
             },
           },
-          orderBy: [{ sentAt: "asc" }, { id: "asc" }],
+          orderBy: [{ sentAt: "asc" }, { createdAt: "asc" }, { id: "asc" }],
           take: 500,
         },
       },
@@ -720,7 +721,7 @@ export class PrismaMailboxRepo extends BaseRepository {
       bodyText: true,
       sentAt: true,
     } as const;
-    const orderBy = [{ sentAt: "desc" as const }, { id: "desc" as const }];
+    const orderBy = [{ sentAt: "desc" as const }, { createdAt: "desc" as const }, { id: "desc" as const }];
 
     if (messageId) return this.prisma.messagingMessage.findFirst({ where: { ...where, id: messageId }, select });
 
@@ -749,8 +750,8 @@ export class PrismaMailboxRepo extends BaseRepository {
             bodyText: true,
             sentAt: true,
           },
-          orderBy: [{ sentAt: "desc" }, { id: "desc" }],
-          take: 1,
+          orderBy: [{ sentAt: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+          take: REPLY_SOURCE_WINDOW,
         },
       },
     });

@@ -194,12 +194,16 @@ function splitMulti(value: string): string[] {
 
 const RANGE_COLUMN_TYPES = new Set<CustomColumnType>([CustomColumnType.dateRange, CustomColumnType.dateTimeRange]);
 
+const ISO_DATE_TIME_PREFIX = /^\d{4}-\d{2}-\d{2}T/;
+
 function resolveOptionValue(column: CustomColumnDto, raw: string): string | null {
   if (RANGE_COLUMN_TYPES.has(column.type)) {
+    const dateOnly = column.type === CustomColumnType.dateRange;
+    const toStored = (part: string) => (dateOnly && ISO_DATE_TIME_PREFIX.test(part) ? part.slice(0, 10) : part);
     return raw.includes(RANGE_SEPARATOR)
       ? raw
           .split(RANGE_SEPARATOR)
-          .map((part) => part.trim())
+          .map((part) => toStored(part.trim()))
           .join(STORED_MULTI_VALUE_SEPARATOR)
       : raw;
   }

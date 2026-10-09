@@ -178,6 +178,14 @@ describe("DealDetailStore pipeline placement", () => {
     expect(store.stageOptions.map((stage) => stage.id)).toEqual([STAGE_ID]);
   });
 
+  it("keeps the won stage a closed deal sits in, so its stage still shows", () => {
+    const store = new DealDetailStore(rootStore(true));
+
+    store.hydrate({ ...deal(), pipelineId: PIPELINE_ID, stageId: WON_STAGE_ID }, [stageColumn]);
+
+    expect(store.stageOptions.map((stage) => stage.id)).toEqual([STAGE_ID, WON_STAGE_ID]);
+  });
+
   it("seeds a new record with the default pipeline so its stage list is scoped from the start", () => {
     const store = new DealDetailStore(rootStore(true));
 
@@ -185,6 +193,14 @@ describe("DealDetailStore pipeline placement", () => {
 
     expect(store.form.pipelineId).toBe(PIPELINE_ID);
     expect(store.stageOptions.map((stage) => stage.id)).toEqual([STAGE_ID]);
+  });
+
+  it("assigns a new deal to the person creating it", () => {
+    const store = new DealDetailStore(rootStore(true));
+
+    store.initialize();
+
+    expect(store.form.userIds).toEqual(["user-1"]);
   });
 
   it("narrows the stages to the chosen pipeline and drops a stage from the old one", () => {

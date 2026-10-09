@@ -66,10 +66,17 @@ export class DeleteStageInteractor extends AuthenticatedInteractor<DeleteStageDa
 
     const dealCount = await this.repo.countDealsInStage(data.id);
 
+    if (dealCount > 0 && (await this.repo.countOtherStagesOfSameKind(data.id)) === 0)
+      return failConflict(CustomErrorCode.pipelineStageNoSameKindTarget, ["id"]);
+
     if (dealCount > 0 && !data.moveToStageId)
       return failConflict(CustomErrorCode.pipelineStageHasDeals, ["id"], { count: dealCount });
 
     if (dealCount > 0 && data.moveToStageId) {
+      const kinds = await this.repo.findStageKinds([data.id, data.moveToStageId]);
+      if (kinds.get(data.id) !== kinds.get(data.moveToStageId))
+        return fail(CustomErrorCode.pipelineStageKindMismatch, ["moveToStageId"]);
+
       const moved = await this.repo.moveDealsToStage(data.id, data.moveToStageId);
 
       for (const { before, after } of moved) {

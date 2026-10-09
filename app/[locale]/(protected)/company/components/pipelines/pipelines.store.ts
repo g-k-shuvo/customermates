@@ -115,7 +115,10 @@ export class PipelinesStore extends BaseStore {
 
     const pipeline = this.sortedPipelines.find((entry) => entry.id === prompt.pipelineId);
 
-    return (pipeline?.stages ?? []).filter((stage) => stage.id !== prompt.stageId);
+    const stages = pipeline?.stages ?? [];
+    const kind = stages.find((stage) => stage.id === prompt.stageId)?.kind;
+
+    return stages.filter((stage) => stage.id !== prompt.stageId && stage.kind === kind);
   }
 
   setLoading = (isLoading: boolean) => {

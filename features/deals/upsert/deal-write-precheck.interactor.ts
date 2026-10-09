@@ -39,6 +39,8 @@ type StagePlacementEntry = {
 
 type ArchivedPipelineTarget = { pipelineId: string; path: (string | number)[] };
 
+type StageKindEntry = { dealId: string; stageId?: string | null; path: (string | number)[] };
+
 export class DealWritePrecheckInteractor {
   constructor(
     private organizationValidator: ValidateOrganizationIdsInteractor,
@@ -89,6 +91,7 @@ export class DealWritePrecheckInteractor {
       this.taskValidator.invoke([{ ids: data.taskIds, path: ["taskIds"] }], ctx),
       this.pipelineValidator.invoke([{ ids: data.pipelineId, path: ["pipelineId"] }], ctx),
       this.stageValidator.invoke([{ ids: data.stageId, path: ["stageId"] }], ctx),
+      this.checkStageKindMatchesStatus([{ dealId: data.id, stageId: data.stageId, path: ["stageId"] }], ctx),
       this.checkPipelinePlacement(
         [
           {
@@ -198,6 +201,10 @@ export class DealWritePrecheckInteractor {
         data.deals.map((deal, i) => ({ ids: deal.stageId, path: ["deals", i, "stageId"] })),
         ctx,
       ),
+      this.checkStageKindMatchesStatus(
+        data.deals.map((deal, i) => ({ dealId: deal.id, stageId: deal.stageId, path: ["deals", i, "stageId"] })),
+        ctx,
+      ),
       this.checkPipelinePlacement(
         data.deals.map((deal, i) => ({
           dealId: deal.id,
@@ -256,6 +263,24 @@ export class DealWritePrecheckInteractor {
       this.dealValidator.invoke([{ ids: data.id, path: ["id"] }], ctx),
       this.stageValidator.invoke([{ ids: data.stageId, path: ["stageId"] }], ctx),
     ]);
+  }
+
+  private async checkStageKindMatchesStatus(entries: StageKindEntry[], ctx: z.RefinementCtx) {
+    const moves = entries.filter((entry): entry is StageKindEntry & { stageId: string } => Boolean(entry.stageId));
+    if (moves.length === 0) return;
+
+    const [deals, kinds] = await Promise.all([
+      this.dealPipelineRepo.findStatusAndStageByDealIds(new Set(moves.map(({ dealId }) => dealId))),
+      this.stagePipelineRepo.findStageKinds(unique(moves.map(({ stageId }) => stageId))),
+    ]);
+
+    for (const { dealId, stageId, path } of moves) {
+      const deal = deals.get(dealId);
+      const kind = kinds.get(stageId);
+      if (!deal || !kind || deal.stageId === stageId || kind === deal.status) continue;
+
+      ctx.addIssue({ code: "custom", params: { error: CustomErrorCode.pipelineStageKindMismatch }, path });
+    }
   }
 
   private async checkPipelinePlacement(entries: StagePlacementEntry[], ctx: z.RefinementCtx) {

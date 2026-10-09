@@ -102,14 +102,20 @@ describe("UpsertWebhookInteractor (create)", () => {
       upsertWebhookOrThrow: vi.fn().mockResolvedValue(makeWebhookDto()),
       getWebhookByIdOrThrow: vi.fn().mockResolvedValue(makeWebhookDto()),
       getWebhookById: vi.fn().mockResolvedValue(makeWebhookDto()),
+      findWebhooksByUrl: vi.fn().mockResolvedValue([]),
     };
     mockEventService = {
       publish: vi.fn().mockResolvedValue(undefined),
     };
   });
 
-  function createInteractor() {
-    return new UpsertWebhookInteractor(mockRepo, mockEventService, new ValidateWebhookIdsInteractor(getWebhookRepo()));
+  function createInteractor(allowPrivateTargets = false) {
+    return new UpsertWebhookInteractor(
+      mockRepo,
+      mockEventService,
+      new ValidateWebhookIdsInteractor(getWebhookRepo()),
+      allowPrivateTargets,
+    );
   }
 
   it("never publishes the secret or header values in the event payload", async () => {
@@ -154,6 +160,54 @@ describe("UpsertWebhookInteractor (create)", () => {
     );
   });
 
+  it("refuses a second webhook on a URL when custom headers would make deliveries ambiguous", async () => {
+    mockRepo.findWebhooksByUrl = vi
+      .fn()
+      .mockResolvedValue([makeWebhookDto({ id: "00000000-0000-4000-8000-0000000000aa" })]);
+
+    const result: any = await createInteractor().invoke({
+      url: "https://example.com/webhook",
+      events: ["deal.updated"],
+      enabled: true,
+      headers: { "X-Team": "sales" },
+    });
+
+    expect(result.ok).toBe(false);
+    expect(JSON.stringify(result)).toContain(CustomErrorCode.webhookUrlAmbiguous);
+    expect(mockRepo.upsertWebhookOrThrow).not.toHaveBeenCalled();
+  });
+
+  it("refuses a private or loopback URL unless the installation allows private hosts", async () => {
+    const refused: any = await createInteractor().invoke({
+      url: "http://127.0.0.1:4777/hook",
+      events: ["deal.updated"],
+      enabled: true,
+    });
+    const allowed: any = await createInteractor(true).invoke({
+      url: "http://127.0.0.1:4777/hook",
+      events: ["deal.updated"],
+      enabled: true,
+    });
+
+    expect(refused.ok).toBe(false);
+    expect(JSON.stringify(refused)).toContain(CustomErrorCode.webhookTargetPrivate);
+    expect(allowed.ok).toBe(true);
+  });
+
+  it("still allows plain webhooks to share a URL", async () => {
+    mockRepo.findWebhooksByUrl = vi
+      .fn()
+      .mockResolvedValue([makeWebhookDto({ id: "00000000-0000-4000-8000-0000000000aa" })]);
+
+    const result: any = await createInteractor().invoke({
+      url: "https://example.com/webhook",
+      events: ["deal.updated"],
+      enabled: true,
+    });
+
+    expect(result.ok).toBe(true);
+  });
+
   it("returns { ok: true, data: webhook }", async () => {
     const interactor = createInteractor();
     const result: any = await interactor.invoke({
@@ -181,6 +235,7 @@ describe("UpsertWebhookInteractor (update)", () => {
       upsertWebhookOrThrow: vi.fn().mockResolvedValue(updatedWebhook),
       getWebhookByIdOrThrow: vi.fn().mockResolvedValue(previousWebhook),
       getWebhookById: vi.fn().mockResolvedValue(previousWebhook),
+      findWebhooksByUrl: vi.fn().mockResolvedValue([]),
     };
     mockEventService = {
       publish: vi.fn().mockResolvedValue(undefined),

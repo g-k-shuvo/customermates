@@ -274,6 +274,7 @@ export class PrismaServiceRepo
             dealId,
             companyId,
             quantity: 1,
+            unitPrice: amount,
           })),
         }),
       );
@@ -335,7 +336,7 @@ export class PrismaServiceRepo
 
     const existingServiceDeals = await this.prisma.serviceDeal.findMany({
       where: { serviceId: id, companyId },
-      select: { dealId: true, quantity: true },
+      select: { dealId: true, quantity: true, unitPrice: true },
     });
 
     const deletePromises: Promise<unknown>[] = [];
@@ -350,6 +351,8 @@ export class PrismaServiceRepo
 
       if (dealIds !== null && dealIds.length > 0) {
         const existingQuantities = new Map(existingServiceDeals.map((sd) => [sd.dealId, sd.quantity]));
+        const existingUnitPrices = new Map(existingServiceDeals.map((sd) => [sd.dealId, sd.unitPrice]));
+        const current = await this.prisma.service.findFirst({ where: { id, companyId }, select: { amount: true } });
 
         createPromises.push(
           this.prisma.serviceDeal.createMany({
@@ -358,6 +361,7 @@ export class PrismaServiceRepo
               dealId,
               companyId,
               quantity: existingQuantities.get(dealId) ?? 1,
+              unitPrice: existingUnitPrices.get(dealId) ?? current?.amount,
             })),
           }),
         );

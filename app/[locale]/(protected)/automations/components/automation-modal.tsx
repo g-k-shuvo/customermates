@@ -30,6 +30,8 @@ import { AppCardFooter } from "@/components/card/app-card-footer";
 import { Label } from "@/components/ui/label";
 import { reportApplicationError, runUserAction } from "@/core/errors/report-application-error";
 import { useRootStore } from "@/core/stores/root-store.provider";
+import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useChangeFieldLabel } from "@/components/entity-terminology/use-change-field-label";
 import { useEntityTerminology } from "@/components/entity-terminology/use-entity-terminology";
 
@@ -38,11 +40,13 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   onSaved: () => void;
+  schedulesEnabled: boolean;
 };
 
-export const AutomationModal = observer(({ automation, isOpen, onClose, onSaved }: Props) => {
+export const AutomationModal = observer(({ automation, isOpen, onClose, onSaved, schedulesEnabled }: Props) => {
   const t = useTranslations();
   const rootStore = useRootStore();
+  const intlStore = useHydratedIntlStore();
   const { singular } = useEntityTerminology();
   const changeFieldLabel = useChangeFieldLabel();
   const [store] = useState(() => new AutomationModalStore(rootStore));
@@ -90,11 +94,21 @@ export const AutomationModal = observer(({ automation, isOpen, onClose, onSaved 
               <FormSelect id="triggerKind" items={triggerItems} label={t("Automations.fields.trigger")} />
 
               {store.isSchedule ? (
-                <FormInput id="schedule" label={t("Automations.fields.schedule")} />
+                <FormInput
+                  description={t("Automations.scheduleHint", { timeZone: intlStore.timeZone })}
+                  id="schedule"
+                  label={t("Automations.fields.schedule")}
+                />
               ) : (
                 <FormSelect id="entityType" items={entityItems} label={t("Automations.fields.entityType")} />
               )}
             </div>
+
+            {store.isSchedule && !schedulesEnabled ? (
+              <Alert data-automation-schedules-off="">
+                <AlertDescription>{t("Automations.schedulesOffNotice")}</AlertDescription>
+              </Alert>
+            ) : null}
 
             {store.watchesChanges && changeItems.length > 0 && (
               <div className="space-y-1.5" data-automation-changed-fields="">

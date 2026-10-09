@@ -64,7 +64,7 @@ describe("public navigation preferences", () => {
 
     expect(navbar.match(/<LocaleMenu/g)).toHaveLength(1);
     expect(navbar.match(/<ThemeSwitcher/g)).toHaveLength(1);
-    expect(navbar.match(/\{renderPreferenceButtons\(\)\}/g)).toHaveLength(2);
+    expect(navbar.match(/\{renderPreferenceButtons\(\)\}/g)).toHaveLength(3);
     expect(navbar).toContain(
       'className="hidden items-center gap-1 justify-self-end xl:flex"',
     );

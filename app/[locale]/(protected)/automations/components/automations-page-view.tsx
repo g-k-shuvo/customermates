@@ -20,9 +20,13 @@ import { getAutomationsAction } from "../actions";
 
 type Props = {
   initialAutomations: AutomationDto[];
+  schedulesEnabled: boolean;
 };
 
-export const AutomationsPageView = observer(function AutomationsPageView({ initialAutomations }: Props) {
+export const AutomationsPageView = observer(function AutomationsPageView({
+  initialAutomations,
+  schedulesEnabled,
+}: Props) {
   const t = useTranslations();
   const [automations, setAutomations] = useState(initialAutomations);
   const [editing, setEditing] = useState<AutomationDto | null>(null);
@@ -85,6 +89,7 @@ export const AutomationsPageView = observer(function AutomationsPageView({ initi
             <AutomationRow
               key={automation.id}
               automation={automation}
+              schedulesEnabled={schedulesEnabled}
               onChanged={refresh}
               onEdit={() => openExisting(automation)}
               onShowRuns={() => setRunsFor(automation)}
@@ -98,6 +103,7 @@ export const AutomationsPageView = observer(function AutomationsPageView({ initi
       <AutomationModal
         automation={editing}
         isOpen={isOpen}
+        schedulesEnabled={schedulesEnabled}
         onClose={() => setIsOpen(false)}
         onSaved={() => {
           setIsOpen(false);

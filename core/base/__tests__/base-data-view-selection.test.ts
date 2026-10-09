@@ -10,11 +10,13 @@ import { Action, CustomColumnType, EntityType, Resource } from "@/generated/pris
 import { FilterOperatorKey } from "../base-query-builder";
 import { BaseDataViewStore, MAX_SELECTION_SIZE } from "../base-data-view.store";
 
-const { bulkDeleteEntitiesAction, bulkUpdateCustomFieldValuesAction, toastError } = vi.hoisted(() => ({
-  bulkDeleteEntitiesAction: vi.fn(),
-  bulkUpdateCustomFieldValuesAction: vi.fn(),
-  toastError: vi.fn(),
-}));
+const { bulkDeleteEntitiesAction, bulkUpdateAssigneesAction, bulkUpdateCustomFieldValuesAction, toastError } =
+  vi.hoisted(() => ({
+    bulkDeleteEntitiesAction: vi.fn(),
+    bulkUpdateAssigneesAction: vi.fn(),
+    bulkUpdateCustomFieldValuesAction: vi.fn(),
+    toastError: vi.fn(),
+  }));
 
 vi.mock("sonner", () => ({
   toast: {
@@ -25,6 +27,7 @@ vi.mock("sonner", () => ({
 
 vi.mock("@/app/actions", () => ({
   bulkDeleteEntitiesAction,
+  bulkUpdateAssigneesAction,
   bulkUpdateCustomFieldValuesAction,
   getCustomColumnsByEntityTypeAction: vi.fn(),
   updateEntityStageAction: vi.fn(),
@@ -266,6 +269,33 @@ describe("data view selection", () => {
 
     expect(result).toBe(false);
     expect(bulkUpdateCustomFieldValuesAction).not.toHaveBeenCalled();
+  });
+
+  it("assigns every selected record to the chosen people and clears the selection", async () => {
+    bulkUpdateAssigneesAction.mockResolvedValue({ ok: true, data: [] });
+    const store = makeStore();
+    store.selectedIds.add("a");
+    store.selectedIds.add("b");
+
+    const result = await store.bulkUpdateAssignees(["user-1"]);
+
+    expect(result).toBe(true);
+    expect(bulkUpdateAssigneesAction).toHaveBeenCalledWith({
+      entityType: EntityType.contact,
+      entityIds: ["a", "b"],
+      userIds: ["user-1"],
+    });
+    expect(store.selectedIds.size).toBe(0);
+  });
+
+  it("refuses a bulk assignment larger than the server limit without calling the server", async () => {
+    const store = makeStore();
+    for (let index = 0; index <= MAX_SELECTION_SIZE; index += 1) store.selectedIds.add(`row-${index}`);
+
+    const result = await store.bulkUpdateAssignees(["user-1"]);
+
+    expect(result).toBe(false);
+    expect(bulkUpdateAssigneesAction).not.toHaveBeenCalled();
   });
 
   it("gates each mass verb on the permission its own interactor enforces", () => {

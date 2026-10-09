@@ -33,11 +33,12 @@ import { InviteUsersByEmailInteractor } from "../invite-users-by-email.interacto
 
 function makeInteractor() {
   const emailService = { send: vi.fn().mockResolvedValue(undefined) };
-  const tokenInteractor = { invoke: vi.fn().mockResolvedValue({ ok: true, data: { token: "invite-token" } }) };
+  const invitations = { issueEmailInviteToken: vi.fn().mockResolvedValue("invite-token") };
 
   return {
     emailService,
-    interactor: new InviteUsersByEmailInteractor(emailService as never, tokenInteractor as never),
+    invitations,
+    interactor: new InviteUsersByEmailInteractor(emailService as never, invitations),
   };
 }
 
@@ -80,6 +81,24 @@ describe("InviteUsersByEmailInteractor", () => {
     expect(emailService.send.mock.calls.map(([message]) => message.to)).toEqual([
       "new.member@example.com",
       "second.member@example.com",
+    ]);
+  });
+
+  it("gives every invited address its own invitation link", async () => {
+    const { emailService, invitations, interactor } = makeInteractor();
+    invitations.issueEmailInviteToken.mockImplementation(({ email }: { email: string }) =>
+      Promise.resolve(`token-${email.split("@")[0]}`),
+    );
+
+    await interactor.invoke({ emails: ["first@example.com", "second@example.com"] });
+
+    expect(invitations.issueEmailInviteToken.mock.calls.map(([args]) => args.email)).toEqual([
+      "first@example.com",
+      "second@example.com",
+    ]);
+    expect(emailService.send.mock.calls.map(([message]) => message.react.props.inviteLink)).toEqual([
+      "https://feat-inbox.customermates.com/invitation/token-first",
+      "https://feat-inbox.customermates.com/invitation/token-second",
     ]);
   });
 });

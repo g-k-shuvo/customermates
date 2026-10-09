@@ -1,10 +1,13 @@
 "use client";
 
+import { useEffect } from "react";
 import { observer } from "mobx-react-lite";
 import { useTranslations } from "next-intl";
 
 import { useCanonicalColumnLabel } from "@/components/entity-terminology/use-column-label";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
+import { useRootStore } from "@/core/stores/root-store.provider";
+import { reportApplicationError } from "@/core/errors/report-application-error";
 import { IGNORED_CHANGE_KEYS } from "@/core/utils/calculate-changes";
 
 import { NotesDiff } from "./notes-diff";
@@ -12,6 +15,7 @@ import { NotesDiff } from "./notes-diff";
 type Change = { previous: unknown; current: unknown };
 
 const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
+const PIPELINE_REFERENCE_FIELDS: ReadonlySet<string> = new Set(["stageId", "pipelineId"]);
 const NAME_KEYS = ["name", "title", "label", "email", "value", "id"] as const;
 
 export function readAuditChanges(eventData: unknown): [string, Change][] {
@@ -28,6 +32,19 @@ export function readAuditChanges(eventData: unknown): [string, Change][] {
   );
 }
 
+type PipelineCatalog = {
+  stageById: ReadonlyMap<string, { name: string }>;
+  pipelines: readonly { id: string; name: string }[];
+};
+
+export function pipelineReferenceName(field: string, value: unknown, catalog: PipelineCatalog): string | null {
+  if (typeof value !== "string") return null;
+  if (field === "stageId") return catalog.stageById.get(value)?.name ?? null;
+  if (field === "pipelineId") return catalog.pipelines.find((pipeline) => pipeline.id === value)?.name ?? null;
+
+  return null;
+}
+
 function describeObject(value: object): string {
   const record = value as Record<string, unknown>;
   if (typeof record.firstName === "string" || typeof record.lastName === "string")
@@ -42,7 +59,13 @@ export const AuditLogChanges = observer(function AuditLogChanges({ eventData }: 
   const t = useTranslations();
   const intlStore = useHydratedIntlStore();
   const columnLabel = useCanonicalColumnLabel();
+  const { dealsStore } = useRootStore();
   const changes = readAuditChanges(eventData);
+  const refersToPipelines = changes.some(([field]) => PIPELINE_REFERENCE_FIELDS.has(field));
+
+  useEffect(() => {
+    if (refersToPipelines) dealsStore.ensurePipelinesLoaded().catch(reportApplicationError);
+  }, [dealsStore, refersToPipelines]);
 
   if (changes.length === 0) return null;
 
@@ -59,6 +82,9 @@ export const AuditLogChanges = observer(function AuditLogChanges({ eventData }: 
 
     return String(value);
   };
+
+  const describeField = (field: string, value: unknown): string =>
+    pipelineReferenceName(field, value, dealsStore) ?? describe(value);
 
   return (
     <div className="flex flex-col gap-2" data-audit-log-changes="">
@@ -89,9 +115,11 @@ export const AuditLogChanges = observer(function AuditLogChanges({ eventData }: 
                   </td>
                 ) : (
                   <>
-                    <td className="px-3 py-2 break-words text-muted-foreground">{describe(change.previous)}</td>
+                    <td className="px-3 py-2 break-words text-muted-foreground">
+                      {describeField(field, change.previous)}
+                    </td>
 
-                    <td className="px-3 py-2 break-words">{describe(change.current)}</td>
+                    <td className="px-3 py-2 break-words">{describeField(field, change.current)}</td>
                   </>
                 )}
               </tr>

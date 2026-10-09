@@ -96,6 +96,16 @@ export class PrismaSuppressionRepo
   }
 
   @BypassTenantGuard
+  async isSuppressedUnscoped(target: UnsubscribeTarget): Promise<boolean> {
+    const row = await this.prisma.messageSuppression.findUnique({
+      where: { companyId_address: { companyId: target.companyId, address: target.address } },
+      select: { id: true },
+    });
+
+    return row !== null;
+  }
+
+  @BypassTenantGuard
   async suppressUnscoped(target: UnsubscribeTarget, tokenHash: string): Promise<void> {
     await this.prisma.messageSuppression.createMany({
       data: [

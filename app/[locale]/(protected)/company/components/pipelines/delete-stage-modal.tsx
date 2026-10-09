@@ -44,7 +44,8 @@ export const DeleteStageModal = observer(() => {
   }, [form, promptedStageId]);
 
   const items = store.stageDeletionTargets.map((stage) => ({ value: stage.id, label: stage.name }));
-  const canConfirm = form.moveToStageId !== "" && !store.isSaving;
+  const hasTarget = items.length > 0;
+  const canConfirm = hasTarget && form.moveToStageId !== "" && !store.isSaving;
 
   return (
     <AlertDialog
@@ -67,28 +68,36 @@ export const DeleteStageModal = observer(() => {
                 {t("Pipelines.deleteStage.description", { count: prompt?.dealCount ?? 0, dealSingular, deals })}
               </AlertDialogDescription>
 
-              <FormSelect
-                required
-                id="moveToStageId"
-                items={items}
-                label={t("Pipelines.deleteStage.destinationLabel")}
-                placeholder={t("Pipelines.deleteStage.destinationPlaceholder")}
-              />
+              {hasTarget ? (
+                <FormSelect
+                  required
+                  id="moveToStageId"
+                  items={items}
+                  label={t("Pipelines.deleteStage.destinationLabel")}
+                  placeholder={t("Pipelines.deleteStage.destinationPlaceholder")}
+                />
+              ) : (
+                <p className="mt-3 text-sm text-muted-foreground" data-delete-stage-no-target="">
+                  {t("Pipelines.deleteStage.noSameKindTarget", { deals })}
+                </p>
+              )}
             </AppCardBody>
 
             <AppCardFooter>
               <AlertDialogCancel disabled={store.isSaving}>{t("Common.actions.cancel")}</AlertDialogCancel>
 
-              <AlertDialogAction
-                disabled={!canConfirm}
-                variant="destructive"
-                onClick={(event) => {
-                  event.preventDefault();
-                  runUserAction(() => store.confirmStageDeletion(form.moveToStageId));
-                }}
-              >
-                {t("Pipelines.deleteStage.confirm")}
-              </AlertDialogAction>
+              {hasTarget ? (
+                <AlertDialogAction
+                  disabled={!canConfirm}
+                  variant="destructive"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    runUserAction(() => store.confirmStageDeletion(form.moveToStageId));
+                  }}
+                >
+                  {t("Pipelines.deleteStage.confirm")}
+                </AlertDialogAction>
+              ) : null}
             </AppCardFooter>
           </AppCard>
         </AppForm>

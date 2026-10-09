@@ -42,6 +42,8 @@ vi.mock("next-intl/server", () => ({
   getTranslations: () => Promise.resolve((key: string) => key),
 }));
 
+import { CustomErrorCode } from "@/core/validation/validation.types";
+
 import { UpsertRoleInteractor, UpsertRoleRepo, type UpsertRoleData } from "../upsert-role.interactor";
 
 const roleDto = (id: string, isSystemRole = false): RoleDto => ({
@@ -58,6 +60,7 @@ class MockRepo extends UpsertRoleRepo {
   isSystemRoleOrThrow = vi.fn((id: string) => Promise.resolve(id === SYSTEM_ROLE_ID));
   upsertRoleOrThrow = vi.fn((data: UpsertRoleData) => Promise.resolve(roleDto(data.id ?? OTHER_ROLE_ID)));
   getRoleByIdOrThrow = vi.fn((id: string) => Promise.resolve(roleDto(id)));
+  findRoleIdByName = vi.fn((_name: string): Promise<string | null> => Promise.resolve(null));
 }
 
 const escalatingPermissions = (): UpsertRoleData["permissions"] => ({
@@ -130,5 +133,27 @@ describe("UpsertRoleInteractor self-escalation guard", () => {
 
     expect(result.ok).toBe(true);
     expect(repo.upsertRoleOrThrow).toHaveBeenCalledOnce();
+  });
+});
+
+describe("UpsertRoleInteractor role names", () => {
+  it("refuses a new role whose name another role already has, without writing", async () => {
+    const repo = new MockRepo();
+    repo.findRoleIdByName.mockResolvedValue(OTHER_ROLE_ID);
+
+    const result = await invoke(repo, payload(undefined));
+
+    expect(result.ok).toBe(false);
+    expect(JSON.stringify(result)).toContain(CustomErrorCode.roleNameTaken);
+    expect(repo.upsertRoleOrThrow).not.toHaveBeenCalled();
+  });
+
+  it("lets a role keep its own name when it is saved again", async () => {
+    const repo = new MockRepo();
+    repo.findRoleIdByName.mockResolvedValue(OTHER_ROLE_ID);
+
+    const result = await invoke(repo, payload(OTHER_ROLE_ID));
+
+    expect(result.ok).toBe(true);
   });
 });

@@ -3,6 +3,7 @@
 import { observer } from "mobx-react-lite";
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { DealStatus, StageKind } from "@/generated/prisma";
 
 import { EntityDetailField } from "@/components/entity-detail/entity-detail-field";
 import { EntityDetailFieldActions } from "@/components/entity-detail/entity-detail-field-actions";
@@ -27,6 +28,7 @@ export const DealPipelineFields = observer(function DealPipelineFields({ showFie
 
   const pipelineLabel = t("DealModal.pipeline.label");
   const stageLabel = t("DealModal.pipeline.stageLabel");
+  const isClosed = (dealDetailStore.fetchedEntity?.status ?? DealStatus.open) !== DealStatus.open;
   const selectedPipelineId = dealDetailStore.form.pipelineId;
 
   const pipelineItems = dealDetailStore.pipelineOptions.map((pipeline) => ({
@@ -35,7 +37,11 @@ export const DealPipelineFields = observer(function DealPipelineFields({ showFie
     disabled: pipeline.isArchived && pipeline.id !== selectedPipelineId,
   }));
 
-  const stageItems = dealDetailStore.stageOptions.map((stage) => ({ value: stage.id, label: stage.name }));
+  const stageItems = dealDetailStore.stageOptions.map((stage) => ({
+    value: stage.id,
+    label: stage.name,
+    disabled: stage.kind !== StageKind.open,
+  }));
 
   return (
     <>
@@ -67,6 +73,7 @@ export const DealPipelineFields = observer(function DealPipelineFields({ showFie
             ) : undefined
           }
           placeholder={t("DealModal.pipeline.stagePlaceholder")}
+          readOnly={isClosed}
           onValueChange={dealDetailStore.selectStage}
         />
       </EntityDetailField>

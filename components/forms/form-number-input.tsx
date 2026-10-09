@@ -117,6 +117,11 @@ export const FormNumberInput = observer(
                 return;
               }
               const parsed = intlStore.parseNumber(text);
+              if (parsed == null && text.trim() !== "") {
+                setText(formattedValue);
+                onBlur?.(e);
+                return;
+              }
               setText(parsed == null ? "" : intlStore.formatNumber(parsed));
               commit(parsed);
               onBlur?.(e);
@@ -124,7 +129,8 @@ export const FormNumberInput = observer(
             onChange={(e) => {
               const next = e.target.value;
               setText(next);
-              commit(intlStore.parseNumber(next));
+              const parsed = intlStore.parseNumber(next);
+              if (parsed != null || next.trim() === "") commit(parsed);
             }}
             onFocus={(e) => {
               if (!isReadOnly) {

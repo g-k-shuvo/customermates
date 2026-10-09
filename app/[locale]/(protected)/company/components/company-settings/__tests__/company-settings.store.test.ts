@@ -9,9 +9,11 @@ const actions = vi.hoisted(() => ({
   updateCompanyAction: vi.fn(),
   updateStageAction: vi.fn(),
 }));
+const sonner = vi.hoisted(() => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 vi.mock("../../../actions", () => actions);
 vi.mock("@/app/actions", () => ({ upsertEntityTerminologyAction: vi.fn() }));
+vi.mock("sonner", () => sonner);
 
 import { CompanySettingsStore } from "../company-settings.store";
 
@@ -22,6 +24,7 @@ function makeRootStore() {
       setCompany: vi.fn(),
     },
     terminologyStore: { refresh: vi.fn().mockResolvedValue(undefined) },
+    localeStore: { getTranslation: (key: string) => key },
   } as unknown as RootStore;
 }
 
@@ -98,6 +101,7 @@ describe("CompanySettingsStore terminology", () => {
     });
     expect(rootStore.terminologyStore.refresh).toHaveBeenCalledOnce();
     expect(store.hasUnsavedChanges).toBe(false);
+    expect(sonner.toast.success).toHaveBeenCalledWith("Common.notifications.saved", expect.anything());
   });
 
   it("keeps a failed Task change dirty and does not refresh terminology", async () => {

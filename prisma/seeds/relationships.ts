@@ -188,6 +188,7 @@ export async function seedRelationships(context: SeedContext, entities: Relation
         dealId: deals[dealIndex].id,
         quantity,
         serviceId: services[serviceIndex].id,
+        unitPrice: services[serviceIndex].amount,
       }) satisfies Prisma.ServiceDealCreateManyInput,
   );
   await prisma.serviceDeal.deleteMany({

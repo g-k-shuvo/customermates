@@ -33568,6 +33568,11 @@
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991
                       },
+                      "skippedCount": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
                       "createdAt": {
                         "type": "string"
                       },
@@ -33591,6 +33596,7 @@
                       "suppressedCount",
                       "failedCount",
                       "pendingCount",
+                      "skippedCount",
                       "createdAt",
                       "updatedAt"
                     ],
@@ -34548,6 +34554,11 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "skippedCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -34571,6 +34582,7 @@
                     "suppressedCount",
                     "failedCount",
                     "pendingCount",
+                    "skippedCount",
                     "createdAt",
                     "updatedAt"
                   ],
@@ -35119,6 +35131,11 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "skippedCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -35142,6 +35159,7 @@
                     "suppressedCount",
                     "failedCount",
                     "pendingCount",
+                    "skippedCount",
                     "createdAt",
                     "updatedAt"
                   ],
@@ -36120,6 +36138,11 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "skippedCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -36143,6 +36166,7 @@
                     "suppressedCount",
                     "failedCount",
                     "pendingCount",
+                    "skippedCount",
                     "createdAt",
                     "updatedAt"
                   ],
@@ -36709,6 +36733,11 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "skippedCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -36732,6 +36761,7 @@
                     "suppressedCount",
                     "failedCount",
                     "pendingCount",
+                    "skippedCount",
                     "createdAt",
                     "updatedAt"
                   ],
@@ -37474,6 +37504,11 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "skippedCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -37497,6 +37532,7 @@
                     "suppressedCount",
                     "failedCount",
                     "pendingCount",
+                    "skippedCount",
                     "createdAt",
                     "updatedAt"
                   ],
@@ -38070,6 +38106,11 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "skippedCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "createdAt": {
                       "type": "string"
                     },
@@ -38093,6 +38134,7 @@
                     "suppressedCount",
                     "failedCount",
                     "pendingCount",
+                    "skippedCount",
                     "createdAt",
                     "updatedAt"
                   ],

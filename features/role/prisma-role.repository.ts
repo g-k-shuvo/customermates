@@ -193,6 +193,17 @@ export class PrismaRoleRepo
     return usersWithRole > 0;
   }
 
+  async findRoleIdByName(name: string) {
+    const { companyId } = this.user;
+
+    const role = await this.prisma.userRole.findFirst({
+      where: { companyId, name: { equals: name.trim(), mode: "insensitive" } },
+      select: { id: true },
+    });
+
+    return role?.id ?? null;
+  }
+
   async getRoleByIdOrThrow(id: string) {
     const { companyId } = this.user;
 

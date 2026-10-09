@@ -5,7 +5,7 @@ import type { BuiltReply } from "../build-reply";
 import type { ReplyMailer } from "../send-reply.service";
 
 import { MailboxTransportError, MailboxTransportFailure } from "../../sync/mailbox-transport";
-import { SendReplyService } from "../send-reply.service";
+import { classifySmtpError, SendReplyService } from "../send-reply.service";
 
 const DELIVERY = {
   host: "smtp.mailhost.io",
@@ -180,4 +180,40 @@ describe("SendReplyService sent copy", () => {
       expect(sent.sentCopySaved).toBe(true);
     },
   );
+});
+
+function smtpError(code: string, message: string) {
+  return Object.assign(new Error(message), { code, command: "CONN" });
+}
+
+describe("SendReplyService smtp failures", () => {
+  const publicLookup = lookupReturning({ address: "93.184.216.34", family: 4 });
+
+  it("turns a failed smtp delivery into a typed transport error and files nothing", async () => {
+    const { service, mailer, appendToSent } = serviceWith({ resolveAddresses: publicLookup });
+    mailer.mockRejectedValue(smtpError("ESOCKET", "tls_validate_record_header:wrong version number"));
+
+    const failure = await failureOf(service.send(DELIVERY, REPLY, IMAP));
+
+    expect(failure?.failure).toBe(MailboxTransportFailure.tlsFailed);
+    expect(appendToSent).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["EAUTH", "Invalid login: 535 Authentication failed", MailboxTransportFailure.authenticationFailed],
+    ["EDNS", "getaddrinfo ENOTFOUND smtp.nowhere.example", MailboxTransportFailure.unresolvableHost],
+    ["ETLS", "Error upgrading connection with STARTTLS", MailboxTransportFailure.tlsFailed],
+    ["ESOCKET", "connect ECONNREFUSED 93.184.216.34:587", MailboxTransportFailure.connectionRefused],
+    ["ESOCKET", "unable to verify the first certificate", MailboxTransportFailure.tlsFailed],
+    ["ETIMEDOUT", "Connection timeout", MailboxTransportFailure.connectionTimedOut],
+    ["EENVELOPE", "Can't send mail - all recipients were rejected", MailboxTransportFailure.protocolFailed],
+  ])("classifies nodemailer %s (%s)", (code, message, expected) => {
+    expect(classifySmtpError(smtpError(code, message)).failure).toBe(expected);
+  });
+
+  it("keeps a transport error it already classified", () => {
+    const original = new MailboxTransportError(MailboxTransportFailure.hostRejected);
+
+    expect(classifySmtpError(original)).toBe(original);
+  });
 });

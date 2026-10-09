@@ -44,17 +44,20 @@ async function page(
 }
 
 function resultPage(request: NextRequest, outcome: UnsubscribeOutcome) {
-  return page(request, (t) =>
-    outcome.status === "unsubscribed"
-      ? `<h1>${escapeHtml(t("doneTitle"))}</h1><p>${escapeHtml(t("doneBody", { address: outcome.address }))}</p>`
-      : `<h1>${escapeHtml(t("unknownTitle"))}</h1><p>${escapeHtml(t("unknownBody"))}</p>`,
-  );
+  return page(request, (t) => {
+    if (outcome.status === "unknown")
+      return `<h1>${escapeHtml(t("unknownTitle"))}</h1><p>${escapeHtml(t("unknownBody"))}</p>`;
+
+    const title = outcome.status === "alreadyUnsubscribed" ? t("alreadyTitle") : t("doneTitle");
+
+    return `<h1>${escapeHtml(title)}</h1><p>${escapeHtml(t("doneBody", { address: outcome.address }))}</p>`;
+  });
 }
 
 export async function GET(request: NextRequest, { params }: Params) {
   const { token } = await params;
   const outcome = await getUnsubscribeInteractor().lookup({ token });
-  if (outcome.status === "unknown") return resultPage(request, outcome);
+  if (outcome.status !== "unsubscribed") return resultPage(request, outcome);
 
   return page(
     request,

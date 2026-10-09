@@ -29,6 +29,7 @@ export const CampaignDtoSchema = z.object({
   suppressedCount: z.number().int(),
   failedCount: z.number().int(),
   pendingCount: z.number().int(),
+  skippedCount: z.number().int(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });

@@ -67,10 +67,21 @@ describe("range presets", () => {
 
 describe("parseIsoDate", () => {
   it("parses a stored value and rejects anything unusable", () => {
-    expect(parseIsoDate("2026-03-09")?.getTime()).toBe(new Date("2026-03-09").getTime());
+    expect(parseIsoDate("2026-03-09")?.getTime()).toBe(new Date(2026, 2, 9).getTime());
+    expect(parseIsoDate("2026-03-09T10:00:00.000Z")?.getTime()).toBe(Date.UTC(2026, 2, 9, 10));
     expect(parseIsoDate(undefined)).toBeUndefined();
     expect(parseIsoDate("")).toBeUndefined();
     expect(parseIsoDate("not-a-date")).toBeUndefined();
+  });
+});
+
+describe("date-only round trip", () => {
+  it("reads a stored calendar date back as the same day it was saved as", () => {
+    const saved = toLocalIso(new Date(2026, 9, 6), true);
+    const reread = parseIsoDate(saved);
+
+    expect(saved).toBe("2026-10-06");
+    expect(reread && toLocalIso(reread, true)).toBe("2026-10-06");
   });
 });
 

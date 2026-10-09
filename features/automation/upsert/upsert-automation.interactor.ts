@@ -4,7 +4,7 @@ import type { Data } from "@/core/validation/validation.utils";
 import type { z as zType } from "zod";
 
 import z from "zod";
-import { Action, AutomationTriggerKind, Resource } from "@/generated/prisma";
+import { Action, AutomationActionKind, AutomationTriggerKind, Resource } from "@/generated/prisma";
 
 import {
   AUTOMATION_DESCRIPTION_MAX_LENGTH,
@@ -17,6 +17,8 @@ import {
 import { AutomationStepSchema } from "../automation-action.schema";
 import { isSupportedAutomationSchedule } from "../automation-schedule";
 import { assertActionsFitEntity } from "../automation-action-support";
+import { parseMergePlaceholders } from "@/features/messaging-send/render/merge-fields";
+import { isPublicWebhookUrl } from "@/features/webhook/webhook-target-guard";
 
 import { DomainEvent } from "@/features/event/domain-events";
 import { TenantInteractor } from "@/core/decorators/tenant-interactor.decorator";
@@ -76,6 +78,27 @@ export const UpsertAutomationSchema = UpsertAutomationFieldsSchema.superRefine((
       params: { error: CustomErrorCode.automationEntityTypeRequired },
     });
   }
+
+  data.steps?.forEach((step, index) => {
+    if (step.kind !== AutomationActionKind.sendEmail) return;
+
+    for (const key of ["subject", "body"] as const) {
+      const parsed = parseMergePlaceholders(step.config[key]);
+      if (parsed.ok) continue;
+
+      ctx.addIssue({
+        code: "custom",
+        path: ["steps", index, "config", key],
+        params: {
+          error:
+            parsed.failure.code === "malformedMergeField"
+              ? CustomErrorCode.mergeFieldMalformed
+              : CustomErrorCode.mergeFieldUnknown,
+          field: parsed.failure.field,
+        },
+      });
+    }
+  });
 });
 
 export type UpsertAutomationData = Data<typeof UpsertAutomationSchema>;
@@ -90,6 +113,7 @@ export class UpsertAutomationInteractor extends AuthenticatedInteractor<UpsertAu
   constructor(
     private repo: UpsertAutomationRepo,
     private eventService: EventService,
+    private allowPrivateWebhookTargets = false,
   ) {
     super();
   }
@@ -123,5 +147,16 @@ export class UpsertAutomationInteractor extends AuthenticatedInteractor<UpsertAu
     const steps = data.steps ?? [];
 
     assertActionsFitEntity(steps, entityType, ctx);
+
+    steps.forEach((step, index) => {
+      if (step.kind !== AutomationActionKind.callWebhook) return;
+      if (isPublicWebhookUrl(step.config.url, { allowPrivateHosts: this.allowPrivateWebhookTargets })) return;
+
+      ctx.addIssue({
+        code: "custom",
+        path: ["steps", index, "config", "url"],
+        params: { error: CustomErrorCode.webhookTargetPrivate },
+      });
+    });
   }
 }

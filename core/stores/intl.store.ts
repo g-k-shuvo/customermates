@@ -20,6 +20,8 @@ const TIMEAGO_LOCALES = { de, en, es, fr, it } satisfies Record<AppLocale, Param
 
 for (const [locale, definition] of Object.entries(TIMEAGO_LOCALES)) register(locale, definition);
 
+export const CALENDAR_DATE = { timeZone: "UTC" } as const;
+
 export class IntlStore {
   constructor(private readonly rootStore: RootStore) {
     makeAutoObservable(this);
@@ -33,6 +35,12 @@ export class IntlStore {
 
   get rendersZonedValues(): boolean {
     return this.clientHydrated;
+  }
+
+  get timeZone(): string {
+    if (!this.clientHydrated) return "UTC";
+
+    return new Intl.DateTimeFormat(this.formattingLocale).resolvedOptions().timeZone || "UTC";
   }
 
   get companyCurrency() {
@@ -130,7 +138,7 @@ export class IntlStore {
     }).format(date);
   }
 
-  formatNumericalShortDate(date: Date | undefined): string {
+  formatNumericalShortDate(date: Date | undefined, options?: { timeZone?: string }): string {
     if (date === undefined) return "";
     if (!this.clientHydrated) return "";
 
@@ -138,6 +146,7 @@ export class IntlStore {
       year: "2-digit" as const,
       month: "2-digit" as const,
       day: "2-digit" as const,
+      ...(options?.timeZone ? { timeZone: options.timeZone } : {}),
     }).format(date);
   }
 

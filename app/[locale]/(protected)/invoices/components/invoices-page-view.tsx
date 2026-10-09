@@ -24,6 +24,7 @@ import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { useRootStore } from "@/core/stores/root-store.provider";
 import { toastZodErrorTree } from "@/core/utils/toast-zod-error-tree";
 import { useRouter } from "@/i18n/navigation";
+import { CALENDAR_DATE } from "@/core/stores/intl.store";
 
 const STATUS_FILTERS = [null, InvoiceStatus.draft, InvoiceStatus.issued, InvoiceStatus.paid, InvoiceStatus.void];
 
@@ -143,10 +144,12 @@ export const InvoicesPageView = observer(({ initial }: { initial: InvoiceListDto
                     </TableCell>
 
                     <TableCell>
-                      {invoice.issueDate ? intlStore.formatNumericalShortDate(invoice.issueDate) : ""}
+                      {invoice.issueDate ? intlStore.formatNumericalShortDate(invoice.issueDate, CALENDAR_DATE) : ""}
                     </TableCell>
 
-                    <TableCell>{invoice.dueDate ? intlStore.formatNumericalShortDate(invoice.dueDate) : ""}</TableCell>
+                    <TableCell>
+                      {invoice.dueDate ? intlStore.formatNumericalShortDate(invoice.dueDate, CALENDAR_DATE) : ""}
+                    </TableCell>
 
                     <TableCell className="text-right tabular-nums">
                       {intlStore.formatCurrency(invoice.grossTotal, invoice.currency)}

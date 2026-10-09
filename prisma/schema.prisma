@@ -434,6 +434,7 @@ model InviteToken {
   token       String   @unique
   companyId   String
   createdById String
+  email       String?
   expiresAt   DateTime
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -442,6 +443,7 @@ model InviteToken {
 
   @@index([companyId])
   @@index([companyId, expiresAt])
+  @@index([companyId, email])
   @@index([expiresAt])
 }
 
@@ -680,6 +682,7 @@ model ServiceDeal {
   serviceId String
   dealId    String
   quantity  Float    @default(1)
+  unitPrice Float?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
@@ -3073,8 +3076,8 @@ model Invoice {
   dealId          String?
   organizationId  String?
   currency        Currency
-  issueDate       DateTime?
-  dueDate         DateTime?
+  issueDate       DateTime?        @db.Date
+  dueDate         DateTime?        @db.Date
   buyerName       String           @default("")
   buyerAddress    String           @default("")
   buyerVatId      String?

@@ -6,6 +6,7 @@ import { Send, Square, Trash2 } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Action, Resource } from "@/generated/prisma";
 
 import { deleteCampaignAction } from "../actions";
@@ -138,7 +139,11 @@ export const CampaignEditorView = observer(({ initial }: { initial: CampaignDto 
                   size="sm"
                   type="button"
                   variant="secondary"
-                  onClick={() => runUserAction(() => store.save())}
+                  onClick={() =>
+                    runUserAction(async () => {
+                      if (await store.save()) toast.success(t("Common.notifications.saved"));
+                    })
+                  }
                 >
                   {t("Common.actions.save")}
                 </Button>
@@ -175,6 +180,7 @@ export const CampaignEditorView = observer(({ initial }: { initial: CampaignDto 
             sent: intlStore.formatNumber(campaign.sentCount),
             suppressed: intlStore.formatNumber(campaign.suppressedCount),
             failed: intlStore.formatNumber(campaign.failedCount),
+            skipped: intlStore.formatNumber(campaign.skippedCount),
             pending: intlStore.formatNumber(campaign.pendingCount),
           })}
         </p>

@@ -231,6 +231,17 @@ describe("ForwardThreadInteractor", () => {
     expect(storeOutboundReply).not.toHaveBeenCalled();
   });
 
+  it("reports an smtp server that fails the handshake as a typed tls failure instead of throwing", async () => {
+    const { interactor, send, storeOutboundReply } = harness();
+    send.mockRejectedValue(new MailboxTransportError(MailboxTransportFailure.tlsFailed));
+
+    const result = await interactor.invoke({ threadId: THREAD_ID, to: ["carol@partner.example"], body: "FYI" });
+
+    expect(result.ok).toBe(false);
+    expect(errorCodesOf(result)).toContain(CustomErrorCode.mailboxTlsFailed);
+    expect(storeOutboundReply).not.toHaveBeenCalled();
+  });
+
   it("refuses to forward when the instance has no mailbox secret key", async () => {
     const { interactor } = harness(context(), null);
 

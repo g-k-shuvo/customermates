@@ -94,6 +94,7 @@ export abstract class UpsertRoleRepo {
   abstract isSystemRoleOrThrow(id: string): Promise<boolean>;
   abstract upsertRoleOrThrow(data: UpsertRoleData): Promise<RoleDto>;
   abstract getRoleByIdOrThrow(id: string): Promise<RoleDto>;
+  abstract findRoleIdByName(name: string): Promise<string | null>;
 }
 
 @TenantInteractor({
@@ -147,5 +148,9 @@ export class UpsertRoleInteractor extends AuthenticatedInteractor<UpsertRoleData
       ctx.addIssue({ code: "custom", params: { error: CustomErrorCode.roleSystemImmutable }, path: ["id"] });
 
     await this.validator.invoke([{ ids: data.id, path: ["id"] }], ctx);
+
+    const sameName = await this.repo.findRoleIdByName(data.name);
+    if (sameName && sameName !== data.id)
+      ctx.addIssue({ code: "custom", params: { error: CustomErrorCode.roleNameTaken }, path: ["name"] });
   }
 }

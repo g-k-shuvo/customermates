@@ -15,6 +15,7 @@ import type { RotateWebFormSecretData } from "@/features/webform/upsert/rotate-w
 import type { RetryWebFormSubmissionData } from "@/features/webform/submissions/web-form-submission.schema";
 import type { DeleteWebhookData } from "@/features/webhook/delete-webhook.interactor";
 import type { ResendWebhookDeliveryData } from "@/features/webhook/resend-webhook-delivery.interactor";
+import type { InvitationIdData } from "@/features/company/invitations/invitation.schema";
 import type { InviteUsersByEmailData } from "@/features/company/invite-users-by-email.interactor";
 import type { CreateCheckoutSessionData } from "@/ee/subscription/create-checkout-session.interactor";
 import type { UpdateStageData } from "@/features/pipelines/stages/update-stage.interactor";
@@ -53,6 +54,9 @@ import {
   getUpdateCompanySettingsInteractor,
   getGetOrCreateInviteTokenInteractor,
   getInviteUsersByEmailInteractor,
+  getGetPendingInvitationsInteractor,
+  getResendInvitationInteractor,
+  getRevokeInvitationInteractor,
   getSendFeedbackInteractor,
   getGetRolesInteractor,
   getUpsertRoleInteractor,
@@ -185,6 +189,18 @@ export async function getOrCreateInviteTokenAction() {
 
 export async function inviteUsersByEmailAction(data: InviteUsersByEmailData) {
   return serializeResult(getInviteUsersByEmailInteractor().invoke(data));
+}
+
+export async function getPendingInvitationsAction() {
+  return serializeResult(getGetPendingInvitationsInteractor().invoke());
+}
+
+export async function resendInvitationAction(data: InvitationIdData) {
+  return serializeResult(getResendInvitationInteractor().invoke(data));
+}
+
+export async function revokeInvitationAction(data: InvitationIdData) {
+  return serializeResult(getRevokeInvitationInteractor().invoke(data));
 }
 
 export async function getCompanyDetailsAction() {

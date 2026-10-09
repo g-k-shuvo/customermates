@@ -23,6 +23,7 @@ import {
 } from "../actions";
 import { FOLLOW_UP_OPTIONS, followUpDateFor, isFollowUpDue, type FollowUpOption } from "./mail-schedule-options";
 import { MailLabelChip } from "./mail-label-chip";
+import { MAIL_TOAST_OPTIONS } from "./mail-toast-options";
 
 export type ThreadWorkspaceState = {
   archived: boolean;
@@ -83,6 +84,7 @@ export function MailThreadWorkspaceBar({ threadId, state, allLabels, onChanged, 
       onChanged(threadId, { archived: result.data.archived });
       toast.success(
         result.data.archived ? t("Mailbox.workspace.archivedToast") : t("Mailbox.workspace.unarchivedToast"),
+        MAIL_TOAST_OPTIONS,
       );
     });
 
@@ -102,6 +104,7 @@ export function MailThreadWorkspaceBar({ threadId, state, allLabels, onChanged, 
         result.data.followUpAt
           ? t("Mailbox.workspace.followUpSet", { date: intlStore.formatNumericalShortDateTime(result.data.followUpAt) })
           : t("Mailbox.workspace.followUpCleared"),
+        MAIL_TOAST_OPTIONS,
       );
     });
   };

@@ -50,3 +50,22 @@ describe("MailPageView deep link", () => {
     expect(html).not.toContain("data-thread-panel");
   });
 });
+
+describe("MailPageView on a narrow screen", () => {
+  it("gives an open conversation the whole width, with a way back to the list", () => {
+    const html = renderToStaticMarkup(
+      createElement(MailPageView, { threads: [], folders: [], initialThreadId: THREAD_ID }),
+    );
+
+    expect(html).toContain('class="hidden min-h-0 w-full max-w-sm md:flex"><div data-thread-list');
+    expect(html).toContain("Mailbox.backToConversations");
+  });
+
+  it("shows the list and no back button while no conversation is open", () => {
+    const threads = [{ id: THREAD_ID }] as never;
+    const html = renderToStaticMarkup(createElement(MailPageView, { threads, folders: [] }));
+
+    expect(html).toContain('class="flex min-h-0 w-full max-w-sm"><div data-thread-list="none"');
+    expect(html).not.toContain("Mailbox.backToConversations");
+  });
+});

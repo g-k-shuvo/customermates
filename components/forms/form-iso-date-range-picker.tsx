@@ -13,7 +13,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { FormLabel } from "./form-label";
 import { InputClearButton } from "./input-clear-button";
-import { RANGE_PRESET_KEYS, localTimeValue, rangeForPreset, toLocalIso } from "./iso-date-values";
+import { RANGE_PRESET_KEYS, localTimeValue, parseIsoDate, rangeForPreset, toLocalIso } from "./iso-date-values";
 import type { RangePresetKey } from "./iso-date-values";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
@@ -249,8 +249,8 @@ function parseRange(value: string | undefined): { from: Date; to: Date } | undef
   if (!value) return undefined;
   const [fromStr, toStr] = value.split(",").map((s) => s.trim());
   if (!fromStr || !toStr) return undefined;
-  const from = new Date(fromStr);
-  const to = new Date(toStr);
-  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return undefined;
+  const from = parseIsoDate(fromStr);
+  const to = parseIsoDate(toStr);
+  if (!from || !to) return undefined;
   return { from, to };
 }

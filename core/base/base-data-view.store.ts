@@ -30,6 +30,7 @@ import {
   getCustomColumnsByEntityTypeAction,
   bulkDeleteEntitiesAction,
   bulkUpdateCustomFieldValuesAction,
+  bulkUpdateAssigneesAction,
   updateEntityCustomFieldValueAction,
   updateEntityStageAction,
 } from "@/app/actions";
@@ -218,6 +219,7 @@ export abstract class BaseDataViewStore<Entity extends HasId> extends BaseStore 
       setBulkMutating: action,
       bulkDelete: action,
       bulkUpdateCustomField: action,
+      bulkUpdateAssignees: action,
       updateCustomFieldValue: action,
       moveItemBetweenGroups: action,
     });
@@ -279,6 +281,32 @@ export abstract class BaseDataViewStore<Entity extends HasId> extends BaseStore 
         entityIds,
         customFieldValues: [{ columnId, value }],
       });
+      if (res && !res.ok) {
+        if (!toastZodErrorTree(res.error)) this.toastError("Common.notifications.unexpectedError");
+        await this.refresh();
+        return false;
+      }
+      this.rootStore.activityTimelines.refreshForMany(this.entityType, entityIds);
+      this.clearSelection();
+      await this.refresh();
+      this.toastSuccess("Common.notifications.updated");
+      return true;
+    } finally {
+      this.setBulkMutating(false);
+    }
+  };
+
+  bulkUpdateAssignees = async (userIds: string[]): Promise<boolean> => {
+    const entityIds = Array.from(this.selectedIds);
+    if (entityIds.length === 0 || !this.entityType) return false;
+    if (entityIds.length > MAX_SELECTION_SIZE) {
+      this.toastError("MassActions.limitReached", { values: { limit: MAX_SELECTION_SIZE } });
+      return false;
+    }
+
+    this.setBulkMutating(true);
+    try {
+      const res = await bulkUpdateAssigneesAction({ entityType: this.entityType, entityIds, userIds: [...userIds] });
       if (res && !res.ok) {
         if (!toastZodErrorTree(res.error)) this.toastError("Common.notifications.unexpectedError");
         await this.refresh();

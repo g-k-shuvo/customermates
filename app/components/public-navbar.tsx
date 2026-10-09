@@ -383,7 +383,7 @@ export const PublicNavbar = observer(({ accountState, hasValidSession, onboardin
   }
 
   function renderSignOutButton(className?: string) {
-    if (marketingChromeHidden || actions.signOut === "hidden") return null;
+    if (actions.signOut === "hidden") return null;
 
     return (
       <Button
@@ -454,7 +454,11 @@ export const PublicNavbar = observer(({ accountState, hasValidSession, onboardin
           {renderHomeButton()}
 
           {marketingChromeHidden ? (
-            renderPreferenceButtons()
+            <div className="flex items-center gap-1">
+              {renderPreferenceButtons()}
+
+              {renderSignOutButton()}
+            </div>
           ) : (
             <Sheet open={layoutStore.isMenuOpen} onOpenChange={layoutStore.setIsMenuOpen}>
               <SheetTrigger asChild>

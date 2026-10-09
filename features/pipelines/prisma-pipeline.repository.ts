@@ -389,6 +389,31 @@ export class PrismaPipelineRepo
     return this.prisma.deal.count({ where: { stageId, companyId } });
   }
 
+  async findStageKinds(ids: string[]) {
+    const { companyId } = this.user;
+
+    const stages = await this.prisma.pipelineStage.findMany({
+      where: { id: { in: ids }, companyId },
+      select: { id: true, kind: true },
+    });
+
+    return new Map(stages.map((stage) => [stage.id, stage.kind]));
+  }
+
+  async countOtherStagesOfSameKind(stageId: string) {
+    const { companyId } = this.user;
+
+    const stage = await this.prisma.pipelineStage.findFirst({
+      where: { id: stageId, companyId },
+      select: { pipelineId: true, kind: true },
+    });
+    if (!stage) return 0;
+
+    return this.prisma.pipelineStage.count({
+      where: { companyId, pipelineId: stage.pipelineId, kind: stage.kind, id: { not: stageId } },
+    });
+  }
+
   async countDealsInPipeline(pipelineId: string) {
     const { companyId } = this.user;
 

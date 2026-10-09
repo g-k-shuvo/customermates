@@ -42,9 +42,12 @@ export function rangeForPreset(key: RangePresetKey): { from: Date; to: Date } {
   }
 }
 
+const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
 export function parseIsoDate(value: string | undefined): Date | undefined {
   if (!value) return undefined;
-  const d = new Date(value);
+  const dateOnly = DATE_ONLY.exec(value.trim());
+  const d = dateOnly ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3])) : new Date(value);
   return Number.isNaN(d.getTime()) ? undefined : d;
 }
 

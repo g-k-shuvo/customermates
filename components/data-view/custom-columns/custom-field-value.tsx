@@ -25,6 +25,7 @@ import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { Icon } from "@/components/shared/icon";
 import { useCopyToClipboard } from "@/core/utils/use-copy-to-clipboard";
 import { runUserAction } from "@/core/errors/report-application-error";
+import { parseIsoDate } from "@/components/forms/iso-date-values";
 
 import { RelationFieldValue } from "./relation-field-value";
 
@@ -172,11 +173,9 @@ export const CustomFieldValue = observer(
           );
 
         case CustomColumnType.date: {
-          if (!value) return <span />;
+          const parsedDate = parseIsoDate(value);
 
-          const parsedDate = new Date(value);
-
-          if (isNaN(parsedDate.getTime())) return <span />;
+          if (!parsedDate) return <span />;
 
           const displayFormat = column.options?.displayFormat ?? "descriptiveLong";
           const formatFn = intlStore.dateFormatMap[displayFormat];
@@ -211,10 +210,10 @@ export const CustomFieldValue = observer(
           if (!value) return <span />;
 
           const [startStr, endStr] = value.split(",").map((s) => s.trim());
-          const start = startStr ? new Date(startStr) : undefined;
-          const end = endStr ? new Date(endStr) : undefined;
+          const start = parseIsoDate(startStr);
+          const end = parseIsoDate(endStr);
 
-          if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) return <span />;
+          if (!start || !end) return <span />;
 
           const displayFormat = column.options?.displayFormat ?? "descriptiveLong";
           const formatFn = intlStore.dateFormatMap[displayFormat];
@@ -229,10 +228,10 @@ export const CustomFieldValue = observer(
           if (!value) return <span />;
 
           const [startStr, endStr] = value.split(",").map((s) => s.trim());
-          const start = startStr ? new Date(startStr) : undefined;
-          const end = endStr ? new Date(endStr) : undefined;
+          const start = parseIsoDate(startStr);
+          const end = parseIsoDate(endStr);
 
-          if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) return <span />;
+          if (!start || !end) return <span />;
 
           const displayFormat = column.options?.displayFormat ?? "descriptiveLong";
           const formatFn = intlStore.dateTimeFormatMap[displayFormat];

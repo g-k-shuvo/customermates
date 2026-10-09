@@ -4,6 +4,7 @@ import type { WidgetModalForm } from "./widget-modal.store";
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
 import type { Filter } from "@/core/base/base-get.schema";
 import type { ReactNode } from "react";
+import type { DiagramDataPoint, WidgetDataSummary } from "@/features/widget/widget.schema";
 
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
@@ -23,11 +24,12 @@ import { useFunnelCopy } from "./use-funnel-copy";
 import { WidgetChart } from "./widget-chart";
 import { buildChartPreviewData, getChartPreviewSummary, getChartPreviewTotal } from "./widget-preview-data";
 import { useWidgetMetricCopy } from "./use-widget-metric-copy";
-import { widgetMetricNote } from "./widget-metric-note";
+import { widgetHeadlineValue, widgetMetricNote } from "./widget-metric-note";
+import { hasValidFilterConfiguration } from "@/components/data-view/table-view.utils";
 import { widgetSubheader } from "./widget-subheader";
 import { resolveResourcePageState } from "@/components/page-state/resource-page-state";
 import { useDebouncedValue } from "@/core/utils/use-debounced-value";
-import { previewFunnelWidgetAction } from "../actions";
+import { previewChartWidgetAction, previewFunnelWidgetAction } from "../actions";
 
 const ACTIVITY_PREVIEW_PAGE_SIZE = 5;
 const ACTIVITY_PREVIEW_DEBOUNCE_MS = 400;
@@ -55,6 +57,33 @@ function useLiveFunnel(pipelineId: string | undefined, periodDays: number | unde
   }, [key]);
 
   return live && live.key === JSON.stringify({ pipelineId, periodDays }) ? live.funnel : null;
+}
+
+type PreviewChartWidgetData = Parameters<typeof previewChartWidgetAction>[0];
+
+type LiveChart = { data: DiagramDataPoint[]; dataSummary: WidgetDataSummary | null };
+
+function useLiveChart(request: PreviewChartWidgetData | null): LiveChart | null {
+  const requestKey = request ? JSON.stringify(request) : "";
+  const [live, setLive] = useState<{ key: string; chart: LiveChart } | null>(null);
+  const key = useDebouncedValue(requestKey, ACTIVITY_PREVIEW_DEBOUNCE_MS);
+
+  useEffect(() => {
+    if (!key) return;
+
+    let active = true;
+    void previewChartWidgetAction(JSON.parse(key) as PreviewChartWidgetData)
+      .then((result) => {
+        if (active && result) setLive({ key, chart: result });
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [key]);
+
+  return live && live.key === requestKey ? live.chart : null;
 }
 
 type Props = {
@@ -165,6 +194,20 @@ export const WidgetPreview = observer(({ activeFilterCount, activityFilters, cus
   const { summaryLabel } = useFunnelCopy();
   const title = form.name.trim() || t("Dashboard.widgetEditor.preview.untitled");
   const showSummary = form.displayOptions?.showFilters !== false;
+  const liveChart = useLiveChart(
+    form.kind === WidgetKind.chart
+      ? {
+          entityType: form.entityType,
+          entityFilters: (form.entityFilters ?? []).filter(hasValidFilterConfiguration),
+          dealFilters: (form.dealFilters ?? []).filter(hasValidFilterConfiguration),
+          groupByType: form.groupByType,
+          groupByCustomColumnId: form.groupByCustomColumnId ?? null,
+          aggregationType: form.aggregationType,
+          periodDays: form.periodDays ?? null,
+          displayOptions: form.displayOptions ?? null,
+        }
+      : null,
+  );
   const liveFunnel = useLiveFunnel(
     form.kind === WidgetKind.funnel ? form.pipelineId || undefined : undefined,
     form.kind === WidgetKind.funnel ? (form.periodDays ?? undefined) : undefined,
@@ -193,7 +236,7 @@ export const WidgetPreview = observer(({ activeFilterCount, activityFilters, cus
 
   if (form.kind === WidgetKind.chart) {
     const displayType = form.displayOptions?.displayType ?? DisplayType.verticalBarChart;
-    const previewData = buildChartPreviewData({
+    const sampleData = buildChartPreviewData({
       aggregationType: form.aggregationType,
       customColumns,
       fallbackLabels: [1, 2, 3].map((number) =>
@@ -204,8 +247,18 @@ export const WidgetPreview = observer(({ activeFilterCount, activityFilters, cus
       groupByCustomColumnId: form.groupByCustomColumnId,
       groupByType: form.groupByType,
     });
-    const previewSummaryData = getChartPreviewSummary(form.aggregationType);
-    const formattedTotal = formatHeadline(form.aggregationType, getChartPreviewTotal(form.aggregationType));
+    const previewData = liveChart?.data ?? sampleData;
+    const previewSummaryData = liveChart ? liveChart.dataSummary : getChartPreviewSummary(form.aggregationType);
+    const formattedTotal = formatHeadline(
+      form.aggregationType,
+      liveChart
+        ? widgetHeadlineValue(
+            form.aggregationType,
+            liveChart.dataSummary,
+            liveChart.data.reduce((sum, item) => sum + (Number(item.value) || 0), 0),
+          )
+        : getChartPreviewTotal(form.aggregationType),
+    );
     const previewSummary =
       widgetSubheader(
         previewData.length,

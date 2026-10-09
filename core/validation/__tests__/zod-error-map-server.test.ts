@@ -62,6 +62,45 @@ describe("getZodParseContext", () => {
     if (!url.success) expect(url.error.issues[0].message).toBe(`${locale}:Common.errors.invalidUrl`);
   });
 
+  it.each(APP_LOCALES)("uses application copy when a required %s value is empty or missing", async (locale) => {
+    registry.locale = locale;
+    const context = await getZodParseContext();
+    const schema = z.object({ firstName: z.string().min(1), lastName: z.string() });
+
+    const empty = schema.safeParse({ firstName: "", lastName: "Bergmann" }, context);
+    const missing = schema.safeParse({ firstName: "Max" }, context);
+    const tooShort = z.string().min(3).safeParse("ab", context);
+
+    expect(empty.error?.issues[0].message).toBe(`${locale}:Common.errors.required`);
+    expect(missing.error?.issues[0].message).toBe(`${locale}:Common.errors.required`);
+    expect(tooShort.error?.issues[0].message).not.toBe(`${locale}:Common.errors.required`);
+  });
+
+  it.each(APP_LOCALES)("does not show the regular expression of a failed %s pattern", async (locale) => {
+    registry.locale = locale;
+    const context = await getZodParseContext();
+
+    const slug = z
+      .string()
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+      .safeParse("E2E Site!", context);
+
+    expect(slug.error?.issues[0].message).toBe(`${locale}:Common.errors.invalidPattern`);
+  });
+
+  it.each(APP_LOCALES)("uses application copy for %s number bounds", async (locale) => {
+    registry.locale = locale;
+    const context = await getZodParseContext();
+
+    const positive = z.number().positive().safeParse(-5, context);
+    const atLeast = z.number().min(1).safeParse(0, context);
+    const atMost = z.number().max(100).safeParse(150, context);
+
+    expect(positive.error?.issues[0].message).toBe(`${locale}:Common.errors.numberTooSmallExclusive`);
+    expect(atLeast.error?.issues[0].message).toBe(`${locale}:Common.errors.numberTooSmall`);
+    expect(atMost.error?.issues[0].message).toBe(`${locale}:Common.errors.numberTooBig`);
+  });
+
   it("loads the registry-selected Zod locale without mutating global configuration", async () => {
     registry.locale = "de";
     const context = await getZodParseContext();

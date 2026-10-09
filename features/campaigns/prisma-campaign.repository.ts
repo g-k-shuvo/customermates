@@ -29,10 +29,14 @@ const CAMPAIGN_SELECT = {
 
 type CampaignRow = Prisma.CampaignGetPayload<{ select: typeof CAMPAIGN_SELECT }>;
 
-function toDto(row: CampaignRow, pendingCount: number): CampaignDto {
+type RecipientCounts = { pendingCount: number; skippedCount: number };
+
+const NO_RECIPIENT_COUNTS: RecipientCounts = { pendingCount: 0, skippedCount: 0 };
+
+function toDto(row: CampaignRow, counts: RecipientCounts): CampaignDto {
   const audience = AudienceDefinitionSchema.safeParse(row.audience);
 
-  return { ...row, audience: audience.success ? audience.data : null, pendingCount };
+  return { ...row, audience: audience.success ? audience.data : null, ...counts };
 }
 
 const COUNT_FIELD: Partial<Record<CampaignRecipientStatus, "sentCount" | "suppressedCount" | "failedCount">> = {
@@ -42,14 +46,26 @@ const COUNT_FIELD: Partial<Record<CampaignRecipientStatus, "sentCount" | "suppre
 };
 
 export class PrismaCampaignRepo extends BaseRepository implements CampaignRepo {
-  private async pendingCounts(ids: string[]): Promise<Map<string, number>> {
+  private async recipientCounts(ids: string[]): Promise<Map<string, RecipientCounts>> {
     const rows = await this.prisma.campaignRecipient.groupBy({
-      by: ["campaignId"],
-      where: { companyId: this.companyId, campaignId: { in: ids }, status: CampaignRecipientStatus.pending },
+      by: ["campaignId", "status"],
+      where: {
+        companyId: this.companyId,
+        campaignId: { in: ids },
+        status: { in: [CampaignRecipientStatus.pending, CampaignRecipientStatus.skipped] },
+      },
       _count: { _all: true },
     });
+    const counts = new Map<string, RecipientCounts>();
 
-    return new Map(rows.map((row) => [row.campaignId, row._count._all]));
+    for (const row of rows) {
+      const current = counts.get(row.campaignId) ?? { ...NO_RECIPIENT_COUNTS };
+      if (row.status === CampaignRecipientStatus.pending) current.pendingCount = row._count._all;
+      else current.skippedCount = row._count._all;
+      counts.set(row.campaignId, current);
+    }
+
+    return counts;
   }
 
   async findCampaignsCompanyWide(): Promise<CampaignDto[]> {
@@ -58,9 +74,9 @@ export class PrismaCampaignRepo extends BaseRepository implements CampaignRepo {
       orderBy: { createdAt: "desc" },
       select: CAMPAIGN_SELECT,
     });
-    const pending = await this.pendingCounts(rows.map((row) => row.id));
+    const counts = await this.recipientCounts(rows.map((row) => row.id));
 
-    return rows.map((row) => toDto(row, pending.get(row.id) ?? 0));
+    return rows.map((row) => toDto(row, counts.get(row.id) ?? NO_RECIPIENT_COUNTS));
   }
 
   async findCampaignOrNull(id: string): Promise<CampaignDto | null> {
@@ -70,7 +86,7 @@ export class PrismaCampaignRepo extends BaseRepository implements CampaignRepo {
     });
     if (!row) return null;
 
-    return toDto(row, (await this.pendingCounts([id])).get(id) ?? 0);
+    return toDto(row, (await this.recipientCounts([id])).get(id) ?? NO_RECIPIENT_COUNTS);
   }
 
   private data(fields: CampaignFieldsInput) {
@@ -83,7 +99,7 @@ export class PrismaCampaignRepo extends BaseRepository implements CampaignRepo {
       select: CAMPAIGN_SELECT,
     });
 
-    return toDto(row, 0);
+    return toDto(row, NO_RECIPIENT_COUNTS);
   }
 
   async updateDraft(id: string, fields: CampaignFieldsInput): Promise<boolean> {

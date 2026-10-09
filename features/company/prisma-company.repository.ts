@@ -122,6 +122,7 @@ export class PrismaCompanyRepo
     return await this.prisma.inviteToken.findFirst({
       where: {
         companyId,
+        email: null,
         expiresAt: { gt: new Date() },
       },
       orderBy: {

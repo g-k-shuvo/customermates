@@ -195,6 +195,7 @@ export class RoleModalStore extends BaseModalStore<UpsertRoleData> {
           hasUsersAssigned: currentRole?.hasUsersAssigned ?? false,
         });
         this.close();
+        this.toastSuccess("Common.notifications.saved");
       } else this.setError(res.error);
     } finally {
       this.setIsLoading(false);

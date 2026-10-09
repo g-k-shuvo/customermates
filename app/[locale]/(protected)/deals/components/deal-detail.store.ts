@@ -90,7 +90,7 @@ export class DealDetailStore extends BaseCustomColumnEntityModalStore<CreateDeal
       notes: null,
       baseValue: 0,
       organizationIds: [],
-      userIds: [],
+      userIds: this.rootStore.userStore.user ? [this.rootStore.userStore.user.id] : [],
       contactIds: [],
       taskIds: [],
       services: [],
@@ -108,7 +108,7 @@ export class DealDetailStore extends BaseCustomColumnEntityModalStore<CreateDeal
   get stageOptions(): DealStageOption[] {
     return this.rootStore.dealsStore
       .stagesForPipeline(this.form.pipelineId ?? null)
-      .filter((stage) => stage.kind === StageKind.open);
+      .filter((stage) => stage.kind === StageKind.open || stage.id === this.form.stageId);
   }
 
   applyDefaultPipeline = () => {
@@ -171,15 +171,17 @@ export class DealDetailStore extends BaseCustomColumnEntityModalStore<CreateDeal
     const nextReferences = new Map(this.serviceReferenceById);
     let amountsChanged = false;
     let referencesChanged = false;
+    const lineIds = new Set(this.fetchedEntity?.services.map((service) => service.id) ?? []);
     for (const item of items) {
-      if (nextAmounts.get(item.id) !== item.amount) {
-        nextAmounts.set(item.id, item.amount);
+      const amount = lineIds.has(item.id) ? (nextAmounts.get(item.id) ?? item.amount) : item.amount;
+      if (nextAmounts.get(item.id) !== amount) {
+        nextAmounts.set(item.id, amount);
         amountsChanged = true;
       }
       if (item.name) {
         const current = nextReferences.get(item.id);
-        if (!current || current.name !== item.name || current.amount !== item.amount) {
-          nextReferences.set(item.id, { id: item.id, name: item.name, amount: item.amount });
+        if (!current || current.name !== item.name || current.amount !== amount) {
+          nextReferences.set(item.id, { id: item.id, name: item.name, amount });
           referencesChanged = true;
         }
       }

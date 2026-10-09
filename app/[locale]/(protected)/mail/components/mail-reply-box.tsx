@@ -23,6 +23,7 @@ import {
   sendReplyAction,
 } from "../actions";
 import { SEND_LATER_OPTIONS, sendLaterDateFor, type SendLaterOption } from "./mail-schedule-options";
+import { MAIL_TOAST_OPTIONS } from "./mail-toast-options";
 
 type Props = {
   threadId: string;
@@ -163,13 +164,15 @@ export function MailReplyBox({
 
         if (!result.ok) {
           toastZodErrorTree(result.error);
+          saveDraftLater(compose);
           return;
         }
 
         const sentMessage = forwarding ? t("Mailbox.forwardSent") : t("Mailbox.replySent");
-        if (result.data.sentCopySaved) toast.success(sentMessage);
+        if (result.data.sentCopySaved) toast.success(sentMessage, MAIL_TOAST_OPTIONS);
         else {
           toast.warning(sentMessage, {
+            ...MAIL_TOAST_OPTIONS,
             description: t("Mailbox.sentCopyNotSaved"),
             duration: WARNING_TOAST_DURATION_MS,
           });
@@ -213,11 +216,13 @@ export function MailReplyBox({
 
         if (!result.ok) {
           toastZodErrorTree(result.error);
+          saveDraftLater(compose);
           return;
         }
 
         toast.success(
           t("Mailbox.workspace.scheduledFor", { date: intlStore.formatNumericalShortDateTime(result.data.sendAt) }),
+          MAIL_TOAST_OPTIONS,
         );
         clear();
         onScheduled?.();

@@ -25,7 +25,26 @@ function invalidFormatError(issue: $ZodRawIssue, errors: Record<string, string>)
   if (issue.code !== "invalid_format") return undefined;
   if (issue.format === "email") return errors[CustomErrorCode.invalidEmail];
   if (issue.format === "url") return errors[CustomErrorCode.invalidUrl];
+  if (issue.format === "regex") return errors[CustomErrorCode.invalidPattern];
   return undefined;
+}
+
+function numberBoundError(issue: $ZodRawIssue, errors: Record<string, string>): string | undefined {
+  if (issue.code === "too_small" && issue.origin === "number") {
+    const code = issue.inclusive ? CustomErrorCode.numberTooSmall : CustomErrorCode.numberTooSmallExclusive;
+    return errors[code]?.replace("{minimum}", String(issue.minimum));
+  }
+  if (issue.code === "too_big" && issue.origin === "number") {
+    const code = issue.inclusive ? CustomErrorCode.numberTooBig : CustomErrorCode.numberTooBigExclusive;
+    return errors[code]?.replace("{maximum}", String(issue.maximum));
+  }
+  return undefined;
+}
+
+function missingValueError(issue: $ZodRawIssue, errors: Record<string, string>): string | undefined {
+  const emptyString = issue.code === "too_small" && issue.origin === "string" && issue.minimum === 1;
+  const absent = issue.code === "invalid_type" && issue.input === undefined;
+  return emptyString || absent ? errors[CustomErrorCode.required] : undefined;
 }
 
 export async function getZodParseContext(): Promise<ParseContext<$ZodIssue>> {
@@ -42,6 +61,10 @@ export async function getZodParseContext(): Promise<ParseContext<$ZodIssue>> {
 
   return {
     error: (issue) =>
-      customError(issue) ?? invalidFormatError(issue, customErrorTranslations) ?? localeConfig.localeError(issue),
+      customError(issue) ??
+      invalidFormatError(issue, customErrorTranslations) ??
+      missingValueError(issue, customErrorTranslations) ??
+      numberBoundError(issue, customErrorTranslations) ??
+      localeConfig.localeError(issue),
   };
 }

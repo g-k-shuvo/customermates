@@ -216,6 +216,7 @@ export class CompanySettingsStore extends BaseFormStore<CompanySettingsFormData>
         terminology: toJS(this.form.terminology),
         stageProbabilities: toJS(this.form.stageProbabilities),
       });
+      this.toastSuccess("Common.notifications.saved");
     } finally {
       this.setIsLoading(false);
     }

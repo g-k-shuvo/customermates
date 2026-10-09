@@ -4,6 +4,7 @@ import type { Filter } from "@/core/base/base-get.schema";
 import type { EntityType } from "@/generated/prisma";
 import type { Validated } from "@/core/validation/validation.utils";
 import type { EventService } from "@/features/event/event.service";
+import type { AutomationStepError } from "../automation-step-errors";
 
 import z from "zod";
 import { AutomationActionKind, AutomationRunStatus, AutomationTriggerKind } from "@/generated/prisma";
@@ -28,7 +29,7 @@ export type AutomationConditionCheck = {
   conditions: Filter[];
 };
 
-export const CONDITIONS_NO_LONGER_MET = "conditionsNoLongerMet";
+export const CONDITIONS_NO_LONGER_MET = "conditionsNoLongerMet" satisfies AutomationStepError;
 
 export type PreparedAutomationRun = {
   ownerUserId: string | null;

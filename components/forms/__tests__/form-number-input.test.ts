@@ -26,7 +26,10 @@ vi.mock("@/core/stores/use-hydrated-intl-store", () => ({
   useHydratedIntlStore: () => ({
     formatNumber: (value: number) => String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ","),
     formatNumberForEditing: (value: number | undefined) => (value == null ? "" : String(value)),
-    parseNumber: (text: string) => (text.trim() === "" ? undefined : Number(text.replaceAll(",", ""))),
+    parseNumber: (text: string) => {
+      const parsed = Number(text.replaceAll(",", ""));
+      return text.trim() === "" || Number.isNaN(parsed) ? undefined : parsed;
+    },
   }),
 }));
 
@@ -45,10 +48,51 @@ function mountInput() {
   return input;
 }
 
+function type(input: HTMLInputElement, text: string) {
+  const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+  act(() => {
+    descriptor?.set?.call(input, text);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
 afterEach(() => {
   for (const root of roots.splice(0)) act(() => root.unmount());
   document.body.innerHTML = "";
   form.value = 2500;
+  form.onChange.mockClear();
+});
+
+describe("FormNumberInput typing", () => {
+  it("keeps the stored number when the text is not a number", () => {
+    const input = mountInput();
+    act(() => input.focus());
+
+    type(input, "12abc");
+    act(() => input.blur());
+
+    expect(form.onChange).not.toHaveBeenCalledWith("baseValue", undefined);
+    expect(input.value).toBe("2,500");
+  });
+
+  it("clears the stored number when the field is emptied", () => {
+    const input = mountInput();
+    act(() => input.focus());
+
+    type(input, "");
+    act(() => input.blur());
+
+    expect(form.onChange).toHaveBeenLastCalledWith("baseValue", undefined);
+  });
+
+  it("commits a valid number as it is typed", () => {
+    const input = mountInput();
+    act(() => input.focus());
+
+    type(input, "1200");
+
+    expect(form.onChange).toHaveBeenLastCalledWith("baseValue", 1200);
+  });
 });
 
 describe("FormNumberInput focus", () => {

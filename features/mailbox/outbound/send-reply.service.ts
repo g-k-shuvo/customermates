@@ -7,6 +7,8 @@ import type { BuiltReply } from "./build-reply";
 import type { MailboxAuthMethod, MailboxConnection, MailboxTransport } from "../sync/mailbox-transport";
 import type { AddressLookup } from "../sync/resolve-imap-address";
 
+import { classifyImapError } from "../sync/imapflow.transport";
+import { MailboxTransportError, MailboxTransportFailure } from "../sync/mailbox-transport";
 import { pinImapTarget } from "../sync/resolve-imap-address";
 
 export type SmtpDelivery = {
@@ -38,6 +40,26 @@ const SELF_FILING_IMAP_HOSTS =
 
 export function filesSentMailItself(imapHost: string): boolean {
   return SELF_FILING_IMAP_HOSTS.test(imapHost.trim());
+}
+
+const SMTP_FAILURES: Record<string, MailboxTransportFailure> = {
+  EAUTH: MailboxTransportFailure.authenticationFailed,
+  EDNS: MailboxTransportFailure.unresolvableHost,
+  ETLS: MailboxTransportFailure.tlsFailed,
+};
+
+const REFUSED_MESSAGE = /econnrefused|ehostunreach|enetunreach|econnreset/i;
+
+export function classifySmtpError(error: unknown): MailboxTransportError {
+  if (error instanceof MailboxTransportError) return error;
+
+  const code = (error as { code?: unknown })?.code;
+  const known = typeof code === "string" ? SMTP_FAILURES[code] : undefined;
+  if (known) return new MailboxTransportError(known);
+  if (error instanceof Error && REFUSED_MESSAGE.test(error.message))
+    return new MailboxTransportError(MailboxTransportFailure.connectionRefused);
+
+  return new MailboxTransportError(classifyImapError(error));
 }
 
 export type ReplyMailer = (delivery: PinnedSmtpDelivery, reply: BuiltReply, messageId: string) => Promise<SentReply>;
@@ -101,7 +123,9 @@ export class SendReplyService {
       { ...delivery, host: target.address, servername: target.servername },
       reply,
       messageIdFor(delivery.username),
-    );
+    ).catch((error: unknown) => {
+      throw classifySmtpError(error);
+    });
 
     const sentCopySaved = filesSentMailItself(imap.host)
       ? true

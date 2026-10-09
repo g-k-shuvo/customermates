@@ -11,8 +11,18 @@ import { Button } from "@/components/ui/button";
 import { runUserAction } from "@/core/errors/report-application-error";
 import { toastZodErrorTree } from "@/core/utils/toast-zod-error-tree";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
+import { CustomErrorCode } from "@/core/validation/validation.types";
 
 import { cancelOutboxMessageAction, sendOutboxMessageNowAction } from "../actions";
+import { MAIL_TOAST_OPTIONS } from "./mail-toast-options";
+
+const ERROR_CODES: ReadonlySet<string> = new Set(Object.values(CustomErrorCode));
+
+export function outboxFailureReason(lastError: string | null, t: (key: string) => string): string | null {
+  if (!lastError) return null;
+
+  return ERROR_CODES.has(lastError) ? t(`Common.errors.${lastError}`) : t("Mailbox.workspace.outboxUnexpected");
+}
 
 type Props = {
   messages: MailOutboxMessageDto[];
@@ -39,7 +49,10 @@ export function MailThreadOutbox({ messages, onChanged }: Props) {
           return;
         }
 
-        toast.success(kind === "cancel" ? t("Mailbox.workspace.scheduleCancelled") : t("Mailbox.workspace.sendingNow"));
+        toast.success(
+          kind === "cancel" ? t("Mailbox.workspace.scheduleCancelled") : t("Mailbox.workspace.sendingNow"),
+          MAIL_TOAST_OPTIONS,
+        );
         onChanged({ draftRestored: kind === "cancel" });
       } finally {
         setBusyId(null);
@@ -71,6 +84,12 @@ export function MailThreadOutbox({ messages, onChanged }: Props) {
                       date: intlStore.formatNumericalShortDateTime(message.sendAt),
                     })}
             </span>
+
+            {message.status === "failed" && outboxFailureReason(message.lastError, t) ? (
+              <span className="min-w-0 truncate text-muted-foreground" data-mail-outbox-reason="">
+                {outboxFailureReason(message.lastError, t)}
+              </span>
+            ) : null}
 
             {message.status === "scheduled" && message.attempts > 0 ? (
               <span className="shrink-0 text-muted-foreground">

@@ -10,7 +10,10 @@ const companyActions = vi.hoisted(() => ({
   upsertRoleAction: vi.fn(),
 }));
 
+const sonner = vi.hoisted(() => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+
 vi.mock("../../../actions", () => companyActions);
+vi.mock("sonner", () => sonner);
 
 import { RoleModalStore } from "../role-modal.store";
 
@@ -41,6 +44,7 @@ function makeStore(role: RoleDto, signedInRoleId: string | null = null): RoleMod
   };
   const rootStore = {
     registerModalStore: vi.fn(),
+    localeStore: { getTranslation: (key: string) => key },
     rolesStore,
     userStore: {
       user: signedInRoleId ? { roleId: signedInRoleId } : null,
@@ -101,6 +105,7 @@ describe("RoleModalStore delete availability", () => {
 
     expect(store.rootStore.rolesStore.items[0]?.hasUsersAssigned).toBe(true);
     expect(store.canDeleteRole).toBe(false);
+    expect(sonner.toast.success).toHaveBeenCalledWith("Common.notifications.saved", expect.anything());
   });
 });
 

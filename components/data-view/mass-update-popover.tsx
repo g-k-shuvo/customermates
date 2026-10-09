@@ -3,12 +3,15 @@
 import type { BaseDataViewStore, HasId } from "@/core/base/base-data-view.store";
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
 
-import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon, UsersIcon } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { EntityType, Resource } from "@/generated/prisma";
 
+import { getUsersAction } from "@/app/[locale]/(protected)/company/actions";
 import { AppForm } from "@/components/forms/form-context";
+import { FormAutocompleteAvatar } from "@/components/forms/form-autocomplete-avatar";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/shared/icon";
 import { Input } from "@/components/ui/input";
@@ -19,6 +22,7 @@ import { useRootStore } from "@/core/stores/root-store.provider";
 import { CUSTOM_COLUMN_TYPE_ICON } from "./custom-columns/custom-column-type-icon";
 import { CustomFieldEditor } from "./custom-columns/custom-field-editor";
 import { MASS_UPDATE_VALUE_PATH, MassUpdateFormStore } from "./mass-update-form.store";
+import { MassAssigneesFormStore } from "./mass-assignees-form.store";
 
 type Props<E extends HasId> = {
   store: BaseDataViewStore<E>;
@@ -31,6 +35,65 @@ type EditorProps<E extends HasId> = {
 };
 
 const SEARCH_THRESHOLD = 6;
+
+const ASSIGNEES_ENTRY = "assignees";
+
+const ASSIGNABLE_ENTITY_TYPES: ReadonlySet<EntityType> = new Set([
+  EntityType.contact,
+  EntityType.organization,
+  EntityType.deal,
+  EntityType.service,
+  EntityType.task,
+]);
+
+const MassAssigneesEditor = observer(function MassAssigneesEditor<E extends HasId>({
+  store,
+  onApplied,
+}: Omit<EditorProps<E>, "column">) {
+  const t = useTranslations();
+  const rootStore = useRootStore();
+  const formStore = useMemo(() => new MassAssigneesFormStore(rootStore), [rootStore]);
+
+  async function applyUserIds(userIds: string[]) {
+    const ok = await store.bulkUpdateAssignees(userIds);
+    if (ok) onApplied();
+  }
+
+  return (
+    <AppForm store={formStore}>
+      <div className="flex flex-col gap-3 px-3 py-2.5">
+        <FormAutocompleteAvatar getItems={getUsersAction} id="userIds" selectionMode="multiple" />
+
+        <p className="text-xs text-muted-foreground">{t("MassActions.assigneesReplaceHint")}</p>
+
+        <div className="flex items-center gap-2">
+          <Button
+            className="h-8"
+            disabled={store.isBulkMutating}
+            size="sm"
+            type="button"
+            variant="secondary"
+            onClick={() => runUserAction(() => applyUserIds([]))}
+          >
+            {t("MassActions.clearField")}
+          </Button>
+
+          <div className="grow" />
+
+          <Button
+            className="h-8"
+            disabled={store.isBulkMutating || formStore.userIds.length === 0}
+            size="sm"
+            type="button"
+            onClick={() => runUserAction(() => applyUserIds(formStore.userIds))}
+          >
+            {t("MassActions.apply")}
+          </Button>
+        </div>
+      </div>
+    </AppForm>
+  );
+});
 
 const MassFieldEditor = observer(function MassFieldEditor<E extends HasId>({
   column,
@@ -90,6 +153,7 @@ const MassFieldEditor = observer(function MassFieldEditor<E extends HasId>({
 
 export const MassUpdatePopover = observer(function MassUpdatePopover<E extends HasId>({ store }: Props<E>) {
   const t = useTranslations();
+  const { userStore } = useRootStore();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeColumnId, setActiveColumnId] = useState<string | undefined>(undefined);
@@ -104,8 +168,13 @@ export const MassUpdatePopover = observer(function MassUpdatePopover<E extends H
   }, [columns, query]);
 
   const activeColumn = columns.find((column) => column.id === activeColumnId);
+  const canAssign =
+    entityType !== undefined && ASSIGNABLE_ENTITY_TYPES.has(entityType) && userStore.canAccess(Resource.users);
+  const assigneesLabel = t("Common.inputs.userIds");
+  const showAssignees = canAssign && assigneesLabel.toLowerCase().includes(query.trim().toLowerCase());
+  const isEditing = activeColumn !== undefined || activeColumnId === ASSIGNEES_ENTRY;
 
-  if (!entityType || columns.length === 0) return null;
+  if (!entityType || (columns.length === 0 && !canAssign)) return null;
 
   function closeAndReset() {
     setOpen(false);
@@ -129,7 +198,7 @@ export const MassUpdatePopover = observer(function MassUpdatePopover<E extends H
     </Button>
   );
 
-  const title = activeColumn ? (
+  const title = isEditing ? (
     <button
       className="flex cursor-pointer items-center gap-1.5 outline-none"
       type="button"
@@ -154,7 +223,9 @@ export const MassUpdatePopover = observer(function MassUpdatePopover<E extends H
         if (!next) setActiveColumnId(undefined);
       }}
     >
-      {activeColumn ? (
+      {activeColumnId === ASSIGNEES_ENTRY ? (
+        <MassAssigneesEditor store={store} onApplied={closeAndReset} />
+      ) : activeColumn ? (
         <MassFieldEditor column={activeColumn} store={store} onApplied={closeAndReset} />
       ) : (
         <div className="flex flex-col divide-y divide-border">
@@ -172,7 +243,22 @@ export const MassUpdatePopover = observer(function MassUpdatePopover<E extends H
             </div>
           )}
 
-          {filtered.length === 0 ? (
+          {showAssignees && (
+            <button
+              className="flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 text-left text-sm outline-none hover:bg-accent focus-visible:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={store.isBulkMutating}
+              type="button"
+              onClick={() => setActiveColumnId(ASSIGNEES_ENTRY)}
+            >
+              <Icon className="shrink-0 text-muted-foreground" icon={UsersIcon} />
+
+              <span className="min-w-0 flex-1 truncate">{assigneesLabel}</span>
+
+              <ChevronRightIcon className="size-3.5 shrink-0 opacity-60" />
+            </button>
+          )}
+
+          {filtered.length === 0 && !showAssignees ? (
             <div className="px-3 py-6 text-center text-sm text-muted-foreground">
               {t("MassActions.noMatchingFields")}
             </div>

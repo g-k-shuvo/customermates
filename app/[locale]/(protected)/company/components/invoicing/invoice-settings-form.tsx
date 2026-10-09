@@ -25,6 +25,20 @@ export const InvoiceSettingsForm = observer(({ settings }: { settings: InvoiceSe
   const store = useMemo(() => new InvoiceSettingsStore(rootStore, invoiceSettingsForm(settings)), [rootStore]);
 
   useEffect(() => store.onInitOrRefresh(invoiceSettingsForm(settings)), [store, settings]);
+  const { layoutStore } = rootStore;
+  const title = t("InvoiceSettings.title");
+
+  useEffect(() => {
+    layoutStore.setRuntimeIdentity({
+      scope: "entity",
+      key: "company:invoicing",
+      title,
+      pictureUrl: null,
+      avatarKind: null,
+    });
+
+    return () => layoutStore.clearRuntimeIdentity("entity", "company:invoicing");
+  }, [layoutStore, title]);
 
   const topBarActions = useMemo(
     () => <FormActions anchorScope="invoice-settings" formId={formId} store={store} variant="topbar" />,

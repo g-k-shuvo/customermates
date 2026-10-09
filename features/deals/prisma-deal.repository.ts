@@ -219,6 +219,7 @@ export class PrismaDealRepo
           service: { select: { id: true, name: true, amount: true } },
           serviceId: true,
           quantity: true,
+          unitPrice: true,
         },
       },
       tasks: {
@@ -465,7 +466,11 @@ export class PrismaDealRepo
       organizations: deal.organizations.map((it) => it.organization),
       users: deal.users.map((it) => it.user),
       contacts: deal.contacts.map((it) => it.contact),
-      services: deal.services.map((it) => ({ ...it.service, quantity: it.quantity })),
+      services: deal.services.map((it) => ({
+        ...it.service,
+        amount: it.unitPrice ?? it.service.amount,
+        quantity: it.quantity,
+      })),
       tasks: deal.tasks.map((it) => it.task),
     };
   }
@@ -607,12 +612,15 @@ export class PrismaDealRepo
     }
 
     if (services.length > 0) {
+      const unitPrices = await this.lineUnitPrices(null, services);
+
       promises.push(
         this.prisma.serviceDeal.createMany({
           data: services.map((service) => ({
             dealId: deal.id,
             serviceId: service.serviceId,
             quantity: service.quantity,
+            unitPrice: unitPrices.get(service.serviceId),
             companyId,
           })),
         }),
@@ -760,6 +768,8 @@ export class PrismaDealRepo
     }
 
     if (services !== undefined) {
+      const unitPrices = await this.lineUnitPrices(id, services ?? []);
+
       deletePromises.push(
         this.prisma.serviceDeal.deleteMany({
           where: { dealId: id, companyId, service: this.accessWhere("service") },
@@ -773,6 +783,7 @@ export class PrismaDealRepo
               dealId: id,
               serviceId: service.serviceId,
               quantity: service.quantity,
+              unitPrice: unitPrices.get(service.serviceId),
               companyId,
             })),
           }),
@@ -865,6 +876,20 @@ export class PrismaDealRepo
     });
 
     return new Map(deals.flatMap((deal) => (deal.pipelineId ? [[deal.id, deal.pipelineId] as const] : [])));
+  }
+
+  async findStatusAndStageByDealIds(ids: Set<string>) {
+    if (ids.size === 0) return new Map<string, { status: DealStatus; stageId: string | null }>();
+
+    const deals = await this.prisma.deal.findMany({
+      where: {
+        id: { in: Array.from(ids) },
+        ...this.accessWhere("deal"),
+      },
+      select: { id: true, status: true, stageId: true },
+    });
+
+    return new Map(deals.map((deal) => [deal.id, { status: deal.status, stageId: deal.stageId }] as const));
   }
 
   async findIds(ids: Set<string>) {
@@ -1047,6 +1072,33 @@ export class PrismaDealRepo
     });
   }
 
+  private async lineUnitPrices(
+    dealId: string | null,
+    lines: ReadonlyArray<{ serviceId: string }>,
+  ): Promise<Map<string, number>> {
+    const serviceIds = Array.from(new Set(lines.map((line) => line.serviceId)));
+    if (serviceIds.length === 0) return new Map();
+
+    const { companyId } = this.user;
+    const [existingLines, catalogue] = await Promise.all([
+      dealId
+        ? this.prisma.serviceDeal.findMany({
+            where: { dealId, companyId, serviceId: { in: serviceIds } },
+            select: { serviceId: true, unitPrice: true },
+          })
+        : Promise.resolve([]),
+      this.prisma.service.findMany({
+        where: { id: { in: serviceIds }, companyId },
+        select: { id: true, amount: true },
+      }),
+    ]);
+    const prices = new Map(catalogue.map((service) => [service.id, service.amount]));
+
+    for (const line of existingLines) if (line.unitPrice !== null) prices.set(line.serviceId, line.unitPrice);
+
+    return prices;
+  }
+
   async recalculateTotals(dealIds: string[]) {
     if (dealIds.length === 0) return;
 
@@ -1079,7 +1131,7 @@ export class PrismaDealRepo
     for (const serviceDeal of serviceDeals) {
       const totals = computedTotalsByDealId.get(serviceDeal.dealId);
       if (!totals) continue;
-      totals.totalValue += serviceDeal.service.amount * serviceDeal.quantity;
+      totals.totalValue += (serviceDeal.unitPrice ?? serviceDeal.service.amount) * serviceDeal.quantity;
       totals.totalQuantity += serviceDeal.quantity;
     }
 

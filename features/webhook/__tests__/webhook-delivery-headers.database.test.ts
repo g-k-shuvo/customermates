@@ -20,7 +20,8 @@ const { DeliverWebhookInteractor } = await import("../deliver-webhook.interactor
 const { PrismaWebhookRepo } = await import("../prisma-webhook.repository");
 const { PrismaWebhookDeliveryRepo } = await import("../prisma-webhook-delivery.repository");
 
-const deliverWebhook = new DeliverWebhookInteractor(new PrismaWebhookDeliveryRepo(), new PrismaWebhookRepo());
+const deliverWebhook = new DeliverWebhookInteractor(new PrismaWebhookDeliveryRepo(), new PrismaWebhookRepo(), true);
+const guardedDeliverWebhook = new DeliverWebhookInteractor(new PrismaWebhookDeliveryRepo(), new PrismaWebhookRepo());
 
 type CapturedRequest = { headers: Record<string, string | string[] | undefined>; rawBody: string };
 
@@ -110,6 +111,18 @@ describeDatabase("outbound webhook custom headers and body template", () => {
       await prisma.company.deleteMany({ where: { id: { in: companyIds } } });
     });
     await new Promise<void>((resolve) => server.close(() => resolve()));
+  });
+
+  it("refuses a private target without sending when the installation does not allow private hosts", async () => {
+    captured = [];
+    const seeded = await seedWebhook({ path: "/guarded" });
+
+    const outcome = await runWithoutTenant(() =>
+      guardedDeliverWebhook.invoke({ ...seeded, requestBody: ENVELOPE as Record<string, unknown> }),
+    );
+
+    expect(outcome.status).not.toBe("success");
+    expect(captured).toHaveLength(0);
   });
 
   it("sends configured custom headers alongside the signature", async () => {

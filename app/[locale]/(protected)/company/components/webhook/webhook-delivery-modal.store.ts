@@ -1,7 +1,7 @@
 import type { RootStore } from "@/core/stores/root.store";
 import type { WebhookDeliveryDto } from "@/features/webhook/get-webhook-deliveries.interactor";
 
-import { makeObservable, action, observable } from "mobx";
+import { makeObservable, action, observable, runInAction } from "mobx";
 import { Resource, WebhookDeliveryStatus } from "@/generated/prisma";
 
 import { resendWebhookDeliveryAction } from "../../actions";
@@ -54,8 +54,11 @@ export class WebhookDeliveryModalStore extends BaseModalStore<WebhookDeliveryDto
       }
 
       await this.rootStore.webhookDeliveriesStore.refresh();
+      this.toastSuccess("Common.notifications.resent");
     } finally {
-      this.isResending = false;
+      runInAction(() => {
+        this.isResending = false;
+      });
     }
   };
 }

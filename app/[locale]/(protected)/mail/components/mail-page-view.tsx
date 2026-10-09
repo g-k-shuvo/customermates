@@ -11,7 +11,9 @@ import type { ThreadWorkspaceState } from "./mail-thread-workspace-bar";
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Mail, MailSearch } from "lucide-react";
+import { ArrowLeft, Mail, MailSearch } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 
 import { PageState } from "@/components/page-state/page-state";
 import { runUserAction } from "@/core/errors/report-application-error";
@@ -215,26 +217,44 @@ export function MailPageView({
         />
       ) : (
         <div className="flex min-h-0 flex-1 gap-4">
-          <MailThreadList
-            readThreadIds={readThreadIds}
-            selectedThreadId={selectedId}
-            threads={threads}
-            onSelect={(threadId) => openThread(threadId, allowRemoteImages)}
-          />
+          <div className={selectedId ? "hidden min-h-0 w-full max-w-sm md:flex" : "flex min-h-0 w-full max-w-sm"}>
+            <MailThreadList
+              readThreadIds={readThreadIds}
+              selectedThreadId={selectedId}
+              threads={threads}
+              onSelect={(threadId) => openThread(threadId, allowRemoteImages)}
+            />
+          </div>
 
-          <MailThreadPanel
-            allLabels={labels}
-            outbox={outbox}
-            state={panel}
-            onLabelCreated={addLabel}
-            onOutboxChanged={refreshOutbox}
-            onReplySent={() => {
-              if (panel.status === "ready") openThread(panel.thread.id, allowRemoteImages);
-            }}
-            onSharedChanged={applyShared}
-            onShowRemoteImages={showRemoteImages}
-            onWorkspaceChanged={applyWorkspace}
-          />
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
+            {selectedId ? (
+              <Button
+                className="self-start md:hidden"
+                size="sm"
+                type="button"
+                variant="ghost"
+                onClick={() => setPanel({ status: "idle" })}
+              >
+                <ArrowLeft aria-hidden="true" className="size-4" />
+
+                {t("Mailbox.backToConversations")}
+              </Button>
+            ) : null}
+
+            <MailThreadPanel
+              allLabels={labels}
+              outbox={outbox}
+              state={panel}
+              onLabelCreated={addLabel}
+              onOutboxChanged={refreshOutbox}
+              onReplySent={() => {
+                if (panel.status === "ready") openThread(panel.thread.id, allowRemoteImages);
+              }}
+              onSharedChanged={applyShared}
+              onShowRemoteImages={showRemoteImages}
+              onWorkspaceChanged={applyWorkspace}
+            />
+          </div>
         </div>
       )}
     </div>

@@ -188,6 +188,7 @@ export class AutomationModalStore extends BaseFormStore<AutomationForm> {
         triggerKind: this.form.triggerKind,
         entityType: this.isSchedule ? null : this.form.entityType,
         schedule: this.isSchedule ? this.form.schedule : null,
+        scheduleTimeZone: this.isSchedule ? this.rootStore.intlStore.timeZone : null,
         steps: toJS(this.form.steps),
         changedFields: this.watchesChanges ? toJS(this.form.changedFields) : [],
         conditions: this.isSchedule ? null : toJS(this.form.conditions).filter(hasValidFilterConfiguration),
@@ -198,6 +199,7 @@ export class AutomationModalStore extends BaseFormStore<AutomationForm> {
         return false;
       }
 
+      this.toastSuccess("Common.notifications.saved");
       return true;
     } finally {
       this.setIsLoading(false);

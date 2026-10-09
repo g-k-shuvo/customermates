@@ -8,7 +8,6 @@ import { Currency, Resource } from "@/generated/prisma";
 import { updateInvoiceAction } from "../actions";
 
 import { BaseFormStore } from "@/core/base/base-form.store";
-import { toLocalIso } from "@/components/forms/iso-date-values";
 import { invoiceTotals } from "@/features/invoices/invoice-totals";
 
 type LineDraft = {
@@ -49,7 +48,7 @@ function formFor(invoice: InvoiceDto): InvoiceEditorForm {
     buyerVatId: invoice.buyerVatId ?? "",
     buyerEmail: invoice.buyerEmail ?? "",
     currency: invoice.currency,
-    dueDate: invoice.dueDate ? toLocalIso(new Date(invoice.dueDate), true) : "",
+    dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().slice(0, 10) : "",
     notes: invoice.notes ?? "",
     lines: invoice.lines.map((line) => ({
       description: line.description,

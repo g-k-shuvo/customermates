@@ -38,7 +38,7 @@ const emailSenderStub = {
   },
 };
 
-function executor() {
+function executor(allowPrivateWebhookTargets = true) {
   return new CrmAutomationActionExecutor(
     new PrismaAutomationRecordWriter(di.getCustomColumnRepo()),
     di.getCreateTaskInteractor(),
@@ -46,6 +46,7 @@ function executor() {
     di.getCreateLeadInteractor(),
     di.getUpdateDealInteractor(),
     emailSenderStub as never,
+    allowPrivateWebhookTargets,
   );
 }
 
@@ -87,9 +88,10 @@ async function runAction(
   kind: string,
   config: unknown,
   context: { entityType: EntityTypeValue | null; entityId: string | null; triggerEvent?: string },
+  options: { guardWebhookTargets?: boolean } = {},
 ) {
   return runWithTenant(tenantUser(workspace), () =>
-    executor().execute({
+    executor(!options.guardWebhookTargets).execute({
       kind,
       config,
       context: {
@@ -638,11 +640,41 @@ describeDatabase("every action an automation can run", () => {
       { entityType: null, entityId: null },
     );
 
+    globalThis.fetch = (() => Promise.reject(new TypeError("fetch failed"))) as typeof fetch;
+
+    const unreachable = await runAction(
+      workspace,
+      AutomationActionKind.callWebhook,
+      { url: "https://example.invalid/hook", includeRecord: false },
+      { entityType: null, entityId: null },
+    );
+
     globalThis.fetch = originalFetch;
 
     expect(accepted.ok).toBe(true);
     expect(webhookCalls).toEqual(["https://example.invalid/hook"]);
-    expect(refused.ok).toBe(false);
+    expect(refused).toEqual({ ok: false, error: "webhookRejected" });
+    expect(unreachable).toEqual({ ok: false, error: "webhookUnreachable" });
+  });
+
+  it("callWebhook refuses a private target without sending anything", async () => {
+    const workspace = await makeWorkspace();
+    const originalFetch = globalThis.fetch;
+    const fetchSpy = vi.fn(() => Promise.resolve({ ok: true, status: 200 } as Response));
+    globalThis.fetch = fetchSpy as unknown as typeof fetch;
+
+    const outcome = await runAction(
+      workspace,
+      AutomationActionKind.callWebhook,
+      { url: "http://169.254.169.254/latest/meta-data", includeRecord: false },
+      { entityType: null, entityId: null },
+      { guardWebhookTargets: true },
+    );
+
+    globalThis.fetch = originalFetch;
+
+    expect(outcome).toEqual({ ok: false, error: "webhookTargetRefused" });
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it("refuses an action whose configuration does not parse", async () => {

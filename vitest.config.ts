@@ -24,6 +24,7 @@ const domTestFiles = [
   "app/**/deals/components/__tests__/deal-status-badges.test.ts",
   "app/**/dashboard/components/__tests__/widget-chart.test.ts",
   "app/[locale]/(protected)/__tests__/protected-layout.test.ts",
+  "app/**/mail/components/__tests__/mail-reply-box-draft.dom.test.ts",
   "app/components/agent-chat/__tests__/use-activity-group-state.test.ts",
   "app/components/agent-chat/__tests__/agent-chat-items.dom.test.ts",
   "app/components/agent-chat/__tests__/agent-composer-contexts.dom.test.ts",

@@ -135,6 +135,19 @@ describe("DeleteStageModal", () => {
     expect(harness.actions).toEqual([{ disabled: false }]);
   });
 
+  it("explains why a stage with no stage of its type to take its deals cannot be deleted", () => {
+    store.stageDeletionTargets = [];
+
+    renderToStaticMarkup(createElement(DeleteStageModal));
+
+    expect(harness.selects).toHaveLength(0);
+    expect(harness.actions).toEqual([]);
+    expect(harness.translationCalls).toContainEqual({
+      key: "Pipelines.deleteStage.noSameKindTarget",
+      values: { deals: "deals" },
+    });
+  });
+
   it("keeps confirmation blocked while a mutation is already in flight", () => {
     form.moveToStageId = "stage-won";
     store.isSaving = true;

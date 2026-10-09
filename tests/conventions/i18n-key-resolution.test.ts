@@ -688,6 +688,7 @@ export const DYNAMIC_KEY_SITES = [
   "app/[locale]/(protected)/company/components/webform/web-form-submission-modal.tsx :: t :: WebFormSubmissions.statuses.${submission.status}",
   "app/[locale]/(protected)/automations/components/automation-modal.tsx :: t :: Automations.triggerKinds.${kind}",
   "app/[locale]/(protected)/automations/components/automation-row.tsx :: t :: Automations.triggers.${automation.triggerKind}",
+  "app/[locale]/(protected)/automations/components/automation-runs-modal.tsx :: t :: Automations.triggers.${trigger.triggerKind}",
   "app/[locale]/(protected)/automations/components/automation-runs-modal.tsx :: t :: Automations.actions.${step.kind}",
   "app/[locale]/(protected)/automations/components/automation-runs-modal.tsx :: t :: Automations.runStatuses.${run.status}",
   "app/[locale]/(protected)/automations/components/automation-runs-modal.tsx :: t :: Automations.runStatuses.${step.status}",
@@ -741,6 +742,7 @@ export const DYNAMIC_KEY_SITES = [
   "app/[locale]/(protected)/routines/components/routine-configuration-pane.tsx :: t :: RoutineWeekday.${key}",
   "ee/routines/routine-run-outcome.ts :: t :: RoutineRunReason.${reason}",
   "ee/routines/routine-run-outcome.ts :: t :: Common.errors.${reason}",
+  "app/[locale]/(protected)/mail/components/mail-thread-outbox.tsx :: t :: Common.errors.${lastError}",
   "ee/routines/routine-schedule-preset.ts :: t :: RoutineSchedulePreset.${schedule.preset}",
   "ee/routines/routine-schedule-preset.ts :: t :: RoutineWeekday.${ROUTINE_WEEKDAY_KEYS[schedule.weekday]}",
   "app/[locale]/(protected)/routines/components/use-routine-columns.tsx :: t :: RoutineRunStatus.${row.original.lastRunStatus}",
@@ -1126,7 +1128,7 @@ const NAMESPACE_PATTERN = /(?:useTranslations|getTranslations)\(\s*"([^"]+)"\s*\
 const TRANSLATOR_NAMESPACE_PATTERN = /getTranslator\(\s*[^,)]+,\s*"([^"]+)"\s*\)/g;
 const STRING_LITERAL_PATTERN = /"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|`((?:[^`\\]|\\.)*)`/g;
 const INDIRECT_TRANSLATION_KEY_PATTERN =
-  /(?:alertTranslationKey|descriptionKey|i18nKey|labelKey|nameTranslationKey|primaryButtonLabel|titleKey|translationKey)\s*(?::|=)\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g;
+  /(?:alertTranslationKey|descriptionKey|i18nKey|labelKey|nameTranslationKey|primaryButtonLabel|successKey|titleKey|translationKey)\s*(?::|=)\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g;
 const TOAST_CALL_PATTERN = /toast(?:Success|Error)\(([\s\S]*?)\);/g;
 
 function loadCatalogPaths(): {

@@ -1,12 +1,14 @@
 "use client";
 
 import type { AutomationDto, AutomationRunDto } from "@/features/automation/automation.schema";
+import type { EntityType } from "@/generated/prisma";
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { AutomationRunStatus } from "@/generated/prisma";
+import { AutomationRunStatus, AutomationTriggerKind } from "@/generated/prisma";
 import { isAutomationStepError } from "@/features/automation/automation-step-errors";
+import { automationTriggerForEvent } from "@/features/automation/automation-trigger-map";
 
 import { AppChip } from "@/components/chip/app-chip";
 import { AppModal } from "@/components/modal";
@@ -15,6 +17,7 @@ import { AppCardHeader } from "@/components/card/app-card-header";
 import { AppCardBody } from "@/components/card/app-card-body";
 import { runUserAction } from "@/core/errors/report-application-error";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
+import { useEntityTerminology } from "@/components/entity-terminology/use-entity-terminology";
 import { getAutomationRunsAction } from "../actions";
 
 type Props = {
@@ -41,9 +44,25 @@ export function stepNeverRan(runStatus: AutomationRunStatus, stepStatus: Automat
   return SETTLED_WITHOUT_RUNNING.has(runStatus) && stepStatus === AutomationRunStatus.queued;
 }
 
+type Translate = (key: string, values?: Record<string, string>) => string;
+
+export function runTriggerLabel(
+  event: string | null,
+  t: Translate,
+  singular: (entityType: EntityType) => string,
+): string {
+  if (!event || event === AutomationTriggerKind.schedule) return t("Automations.triggerKinds.schedule");
+
+  const trigger = automationTriggerForEvent(event);
+  if (!trigger) return event;
+
+  return t(`Automations.triggers.${trigger.triggerKind}`, { entity: singular(trigger.entityType) });
+}
+
 export function AutomationRunsModal({ automation, isOpen, onClose }: Props) {
   const t = useTranslations();
   const intlStore = useHydratedIntlStore();
+  const { singular } = useEntityTerminology();
   const [runs, setRuns] = useState<AutomationRunDto[]>([]);
 
   useEffect(() => {
@@ -69,7 +88,7 @@ export function AutomationRunsModal({ automation, isOpen, onClose }: Props) {
               {runs.map((run) => (
                 <li key={run.id} className="flex flex-col gap-1 rounded-md border px-3 py-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm">{run.triggerEvent ?? t("Automations.triggerKinds.schedule")}</span>
+                    <span className="text-sm">{runTriggerLabel(run.triggerEvent, t, singular)}</span>
 
                     <AppChip size="sm" variant={STATUS_COLOR[run.status]}>
                       {t(`Automations.runStatuses.${run.status}`)}

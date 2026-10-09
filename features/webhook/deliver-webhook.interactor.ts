@@ -5,6 +5,7 @@ import { Enforce } from "@/core/decorators/enforce.decorator";
 
 import { renderWebhookBody } from "./webhook-body-template";
 import { allowsCredentialedHeaders } from "./webhook-headers";
+import { WEBHOOK_PRIVATE_TARGET_MESSAGE, checkWebhookTarget } from "./webhook-target-guard";
 
 const HTTP_TIMEOUT_MS = 5000;
 
@@ -55,6 +56,7 @@ export class DeliverWebhookInteractor {
   constructor(
     private readonly repo: DeliverWebhookRepo,
     private readonly webhookRepo: DeliverWebhookConfigRepo,
+    private readonly allowPrivateTargets = false,
   ) {}
 
   @Enforce(Schema)
@@ -142,6 +144,9 @@ export class DeliverWebhookInteractor {
     statusCode: number | null;
     responseMessage: string | null;
   }> {
+    if ((await checkWebhookTarget(args.url, { allowPrivateHosts: this.allowPrivateTargets })) === "refused")
+      return { success: false, statusCode: null, responseMessage: WEBHOOK_PRIVATE_TARGET_MESSAGE };
+
     const body = JSON.stringify(args.requestBody);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), HTTP_TIMEOUT_MS);

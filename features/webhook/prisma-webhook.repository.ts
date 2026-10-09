@@ -200,6 +200,14 @@ export class PrismaWebhookRepo
     return this.toWebhookDto(webhook);
   }
 
+  async findWebhooksByUrl(url: string) {
+    const { companyId } = this.user;
+
+    const webhooks = await this.prisma.webhook.findMany({ where: { companyId, url }, select: this.baseSelect });
+
+    return webhooks.map((webhook) => this.toWebhookDto(webhook));
+  }
+
   async getWebhookById(id: string) {
     const { companyId } = this.user;
 

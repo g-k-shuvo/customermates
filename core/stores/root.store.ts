@@ -15,6 +15,7 @@ import { SubscriptionExpiredStore } from "@/app/[locale]/(protected)/subscriptio
 import { LegalUpdateStore } from "@/app/[locale]/(protected)/legal-update/components/legal-update.store";
 import { CompanyInviteModalStore } from "@/app/[locale]/(protected)/company/components/company-invite/company-invite-modal.store";
 import { InviteByEmailStore } from "@/app/[locale]/(protected)/company/components/company-invite/invite-by-email.store";
+import { PendingInvitationsStore } from "@/app/[locale]/(protected)/company/components/company-invite/pending-invitations.store";
 import { UserModalStore } from "@/app/[locale]/(protected)/company/components/user/user-modal.store";
 import { RoleModalStore } from "@/app/[locale]/(protected)/company/components/role/role-modal.store";
 import { UsersStore } from "@/app/[locale]/(protected)/company/components/user/users.store";
@@ -144,6 +145,7 @@ export class RootStore {
   private _verifyEmailStore?: VerifyEmailStore;
   private _mcpConsentStore?: McpConsentStore;
   private _inviteByEmailStore?: InviteByEmailStore;
+  private _pendingInvitationsStore?: PendingInvitationsStore;
   private _stepAiStore?: AiConnectionStore;
   private _stepProfileStore?: StepProfileStore;
   private _onboardingWizardStore?: OnboardingWizardStore;
@@ -342,6 +344,10 @@ export class RootStore {
 
   get inviteByEmailStore() {
     return (this._inviteByEmailStore ??= new InviteByEmailStore(this));
+  }
+
+  get pendingInvitationsStore() {
+    return (this._pendingInvitationsStore ??= new PendingInvitationsStore(this));
   }
 
   get verifyEmailStore() {

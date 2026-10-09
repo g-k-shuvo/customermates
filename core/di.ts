@@ -145,7 +145,9 @@ import { PrismaWidgetRepo } from "@/features/widget/prisma-widget.repository";
 import { PrismaWidgetCalculatorRepo } from "@/features/widget/calculator/prisma-widget-calculator.repository";
 import { PrismaWidgetFunnelRepo } from "@/features/widget/calculator/prisma-widget-funnel.repository";
 import { PreviewFunnelWidgetInteractor } from "@/features/widget/preview-funnel-widget.interactor";
+import { PreviewChartWidgetInteractor } from "@/features/widget/preview-chart-widget.interactor";
 import { PrismaWebhookRepo } from "@/features/webhook/prisma-webhook.repository";
+import type { TriggerRoutinesRepo } from "@/ee/routines/trigger-routines.repo";
 import { PrismaRoutineRepo } from "@/ee/routines/prisma-routine.repository";
 import { PrismaRoutineFilterMatcher } from "@/ee/routines/routine-filter-matcher";
 import { PrismaRoutineEventAccess } from "@/ee/routines/routine-event-access";
@@ -522,6 +524,10 @@ import { GetCompanySettingsInteractor } from "@/features/company/get-company-set
 import { UpdateCompanySettingsInteractor } from "@/features/company/update-company-settings.interactor";
 import { GetOrCreateInviteTokenInteractor } from "@/features/company/get-or-create-invite-token.interactor";
 import { InviteUsersByEmailInteractor } from "@/features/company/invite-users-by-email.interactor";
+import { PrismaInvitationRepo } from "@/features/company/invitations/prisma-invitation.repository";
+import { GetPendingInvitationsInteractor } from "@/features/company/invitations/get-pending-invitations.interactor";
+import { ResendInvitationInteractor } from "@/features/company/invitations/resend-invitation.interactor";
+import { RevokeInvitationInteractor } from "@/features/company/invitations/revoke-invitation.interactor";
 import { InviteTokenValidationInteractor } from "@/features/company/invite-token-validation.interactor";
 import { OpenInvitationInteractor } from "@/features/company/open-invitation.interactor";
 import { ChooseWorkspaceOnboardingInteractor } from "@/features/company/choose-workspace-onboarding.interactor";
@@ -825,10 +831,17 @@ export const getEventService = () => {
     getWebhookDeliveryRepo(),
     getAuditLogRepo(),
     getBackgroundTaskService(),
-    getRoutineRepo(),
+    env.APP_MODE === "self-hosted" ? NO_EVENT_ROUTINES : getRoutineRepo(),
     getRoutineEventAccess(),
     getAutomationRepo(),
   );
+};
+
+// Routines are an Enterprise feature that self-hosted mode does not offer (the routines cron
+// skips self-hosted too), so no event may start one there, even if demo seeds created some.
+const NO_EVENT_ROUTINES: TriggerRoutinesRepo = {
+  findEventRoutinesUnscoped: () => Promise.resolve([]),
+  admitEventRoutineRunsUnscoped: () => Promise.resolve([]),
 };
 
 export const getAutomationRepo = () => new PrismaAutomationRepo();
@@ -977,6 +990,7 @@ export const getAutomationActionExecutor = () =>
     getCreateLeadInteractor(),
     getUpdateDealInteractor(),
     getAutomationEmailSender(),
+    env.WEBHOOK_ALLOW_PRIVATE_HOSTS,
   );
 
 export const getPrepareAutomationRunInteractor = () =>
@@ -996,7 +1010,7 @@ export const getGetAutomationsInteractor = () => new GetAutomationsInteractor(ge
 export const getGetAutomationRunsInteractor = () => new GetAutomationRunsInteractor(getAutomationRepo());
 
 export const getUpsertAutomationInteractor = () =>
-  new UpsertAutomationInteractor(getAutomationRepo(), getEventService());
+  new UpsertAutomationInteractor(getAutomationRepo(), getEventService(), env.WEBHOOK_ALLOW_PRIVATE_HOSTS);
 
 export const getDeleteAutomationInteractor = () =>
   new DeleteAutomationInteractor(getAutomationRepo(), getEventService());
@@ -1745,8 +1759,17 @@ export const getUpdateCompanySettingsInteractor = () =>
 
 export const getGetOrCreateInviteTokenInteractor = () => new GetOrCreateInviteTokenInteractor(getCompanyRepo());
 
+export const getInvitationRepo = () => new PrismaInvitationRepo();
+
 export const getInviteUsersByEmailInteractor = () =>
-  new InviteUsersByEmailInteractor(getEmailService(), getGetOrCreateInviteTokenInteractor());
+  new InviteUsersByEmailInteractor(getEmailService(), getInvitationRepo());
+
+export const getGetPendingInvitationsInteractor = () => new GetPendingInvitationsInteractor(getInvitationRepo());
+
+export const getResendInvitationInteractor = () =>
+  new ResendInvitationInteractor(getInvitationRepo(), getInviteUsersByEmailInteractor());
+
+export const getRevokeInvitationInteractor = () => new RevokeInvitationInteractor(getInvitationRepo());
 
 export const getInviteTokenValidationInteractor = () => new InviteTokenValidationInteractor(getCompanyRepo());
 
@@ -1795,6 +1818,8 @@ export const getGetCompanyWidgetsInteractor = () => new GetCompanyWidgetsInterac
 export const getGetWidgetByIdInteractor = () => new GetWidgetByIdInteractor(getWidgetRepo());
 export const getPreviewFunnelWidgetInteractor = () => new PreviewFunnelWidgetInteractor(getWidgetFunnelRepo());
 
+export const getPreviewChartWidgetInteractor = () => new PreviewChartWidgetInteractor(getWidgetCalculatorRepo());
+
 export const getGetWidgetFilterableFieldsInteractor = () =>
   new GetWidgetFilterableFieldsInteractor(
     getContactRepo(),
@@ -1816,7 +1841,12 @@ export const getGetWebhooksApiInteractor = () =>
   new GetWebhooksInteractor(getWebhookRepo(), getDataViewStateRepo(), "api", getQueryParamsPrecheck());
 
 export const getUpsertWebhookInteractor = () =>
-  new UpsertWebhookInteractor(getWebhookRepo(), getEventService(), getWebhookIdsValidator());
+  new UpsertWebhookInteractor(
+    getWebhookRepo(),
+    getEventService(),
+    getWebhookIdsValidator(),
+    env.WEBHOOK_ALLOW_PRIVATE_HOSTS,
+  );
 
 export const getGetWebhookByIdInteractor = () => new GetWebhookByIdInteractor(getWebhookRepo());
 
@@ -2401,7 +2431,7 @@ export const getAcceptLegalDocumentsInteractor = () =>
 // --- Webhook delivery (workflow task) ---
 
 export const getDeliverWebhookInteractor = () =>
-  new DeliverWebhookInteractor(getWebhookDeliveryRepo(), getWebhookRepo());
+  new DeliverWebhookInteractor(getWebhookDeliveryRepo(), getWebhookRepo(), env.WEBHOOK_ALLOW_PRIVATE_HOSTS);
 
 export const getCreateSupportTicketInteractor = () => new CreateSupportTicketInteractor(getFeedbackCreator());
 

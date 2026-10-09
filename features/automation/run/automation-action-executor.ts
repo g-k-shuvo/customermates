@@ -1,3 +1,4 @@
+import type { AutomationStepError } from "../automation-step-errors";
 import type { AutomationRunPlan } from "./execute-automation-run.repo";
 import type { EntityType } from "@/generated/prisma";
 
@@ -8,7 +9,7 @@ export type AutomationActionContext = {
   entityId: string | null;
 };
 
-export type AutomationActionOutcome = { ok: true; output: unknown } | { ok: false; error: string };
+export type AutomationActionOutcome = { ok: true; output: unknown } | { ok: false; error: AutomationStepError };
 
 export abstract class AutomationActionExecutor {
   abstract execute(args: {

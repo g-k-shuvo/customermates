@@ -30,5 +30,6 @@ export type UnsubscribeTarget = { companyId: string; address: string; deliveryId
 
 export abstract class UnsubscribeRepo {
   abstract findTokenUnscoped(tokenHash: string): Promise<UnsubscribeTarget | null>;
+  abstract isSuppressedUnscoped(target: UnsubscribeTarget): Promise<boolean>;
   abstract suppressUnscoped(target: UnsubscribeTarget, tokenHash: string): Promise<void>;
 }

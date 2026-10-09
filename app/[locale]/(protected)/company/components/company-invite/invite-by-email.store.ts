@@ -49,6 +49,7 @@ export class InviteByEmailStore extends BaseFormStore<InviteUsersByEmailData> {
       if (res.ok) {
         this.onInitOrRefresh({ emails: [] });
         this.toastSuccess("OnboardingWizard.invite.sentSuccess", { values: { count: res.data.sent } });
+        await this.rootStore.pendingInvitationsStore.load();
       } else this.setError(res.error);
     } finally {
       this.setIsLoading(false);

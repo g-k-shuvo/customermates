@@ -160,3 +160,24 @@ export async function bulkUpdateCustomFieldValuesAction(data: {
       return serializeResult(getUpdateManyTasksInteractor().invoke({ tasks: items }));
   }
 }
+
+export async function bulkUpdateAssigneesAction(data: {
+  entityType: EntityType;
+  entityIds: string[];
+  userIds: string[];
+}) {
+  const { entityType, entityIds, userIds } = data;
+  const items = entityIds.map((id) => ({ id, userIds }));
+  switch (entityType) {
+    case EntityType.contact:
+      return serializeResult(getUpdateManyContactsInteractor().invoke({ contacts: items }));
+    case EntityType.organization:
+      return serializeResult(getUpdateManyOrganizationsInteractor().invoke({ organizations: items }));
+    case EntityType.deal:
+      return serializeResult(getUpdateManyDealsInteractor().invoke({ deals: items }));
+    case EntityType.service:
+      return serializeResult(getUpdateManyServicesInteractor().invoke({ services: items }));
+    case EntityType.task:
+      return serializeResult(getUpdateManyTasksInteractor().invoke({ tasks: items }));
+  }
+}

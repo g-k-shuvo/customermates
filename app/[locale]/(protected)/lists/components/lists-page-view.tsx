@@ -7,6 +7,7 @@ import { ListChecks, Trash2 } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Action, BulkJobStatus, Resource } from "@/generated/prisma";
 
 import { createContactListAction, deleteContactListAction, updateContactListAction } from "../actions";
@@ -77,6 +78,7 @@ export const ListsPageView = observer(({ initial }: { initial: ContactListDto[] 
       setNewName("");
       await store.reload();
       store.select(result.data.id);
+      toast.success(t("Common.notifications.saved"));
     });
 
   const createForm = canWrite ? (
