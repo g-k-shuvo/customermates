@@ -420,6 +420,7 @@ export class PrismaTaskRepo
         companyId,
         name: args.name,
         dueAt: args.dueAt,
+        followUpForLeadId: args.leadId,
       },
       select: { id: true },
     });
@@ -694,6 +695,20 @@ export class PrismaTaskRepo
   }
 
   @Transaction
+  async deleteOpenLeadFollowUpTasks(leadId: string) {
+    const tasks = await this.prisma.task.findMany({
+      where: { followUpForLeadId: leadId, completedAt: null, ...this.accessWhere("task") },
+      select: this.userScopedSelect,
+    });
+    if (tasks.length === 0) return [];
+
+    await this.prisma.task.deleteMany({
+      where: { id: { in: tasks.map((task) => task.id) }, ...this.accessWhere("task") },
+    });
+
+    return tasks.map((task) => this.toDto(task));
+  }
+
   async deleteTaskOrThrow(id: string) {
     const task = await this.prisma.task.findFirstOrThrow({
       where: { id, ...this.accessWhere("task") },

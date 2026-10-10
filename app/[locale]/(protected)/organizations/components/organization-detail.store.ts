@@ -16,6 +16,8 @@ import {
 import { BaseCustomColumnEntityModalStore } from "@/core/base/base-custom-column-entity-modal.store";
 import { reportApplicationError } from "@/core/errors/report-application-error";
 
+const NAMESAKE_WARNING_DURATION_MS = 10_000;
+
 function sameOrganizationName(left: string, right: string): boolean {
   return left.trim().toLowerCase() === right.trim().toLowerCase();
 }
@@ -29,6 +31,7 @@ async function warnAboutNamesake(rootStore: RootStore, created: OrganizationDto)
   if (namesake) {
     toast.warning(
       rootStore.localeStore.getTranslation("OrganizationModal.duplicateNameWarning", { name: created.name }),
+      { duration: NAMESAKE_WARNING_DURATION_MS },
     );
   }
 }

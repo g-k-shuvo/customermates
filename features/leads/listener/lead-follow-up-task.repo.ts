@@ -1,4 +1,7 @@
+import type { TaskDto } from "@/features/tasks/task.schema";
+
 export type CreateLeadFollowUpTaskArgs = {
+  leadId: string;
   name: string;
   dueAt: Date;
   ownerUserId: string | null;
@@ -8,4 +11,5 @@ export type CreateLeadFollowUpTaskArgs = {
 
 export abstract class LeadFollowUpTaskRepo {
   abstract createLeadFollowUpTaskOrThrow(args: CreateLeadFollowUpTaskArgs): Promise<{ id: string }>;
+  abstract deleteOpenLeadFollowUpTasks(leadId: string): Promise<TaskDto[]>;
 }

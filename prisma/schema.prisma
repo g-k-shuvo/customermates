@@ -407,6 +407,7 @@ model Task {
   durationMinutes   Int?
   completedAt       DateTime?
   completedById     String?
+  followUpForLeadId String?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   company           Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -427,6 +428,7 @@ model Task {
   @@index([companyId, completedAt, dueAt])
   @@index([companyId, dueAt])
   @@index([completedById])
+  @@index([companyId, followUpForLeadId])
 }
 
 model InviteToken {

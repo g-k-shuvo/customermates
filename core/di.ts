@@ -458,6 +458,7 @@ import { RetryWebFormSubmissionInteractor } from "@/features/webform/submissions
 
 import { LeadCreatedNotificationListener } from "@/features/leads/listener/lead-created-notification.listener";
 import { LeadCreatedFollowUpTaskListener } from "@/features/leads/listener/lead-created-follow-up-task.listener";
+import { LeadDeletedFollowUpTaskListener } from "@/features/leads/listener/lead-deleted-follow-up-task.listener";
 
 // Leads interactors
 import { GetLeadsInteractor } from "@/features/leads/get/get-leads.interactor";
@@ -792,6 +793,8 @@ export const getLeadCreatedNotificationListener = () =>
   new LeadCreatedNotificationListener(getLeadRepo(), getEmailService());
 export const getLeadCreatedFollowUpTaskListener = () =>
   new LeadCreatedFollowUpTaskListener(getTaskRepo(), getLeadRepo());
+export const getLeadDeletedFollowUpTaskListener = (): LeadDeletedFollowUpTaskListener =>
+  new LeadDeletedFollowUpTaskListener(getTaskRepo(), (): EventService => getEventService());
 
 const EXPECTED_EVENT_LISTENERS = [
   {
@@ -809,6 +812,10 @@ const EXPECTED_EVENT_LISTENERS = [
   {
     factory: getLeadCreatedFollowUpTaskListener,
     events: [DomainEvent.LEAD_CREATED],
+  },
+  {
+    factory: getLeadDeletedFollowUpTaskListener,
+    events: [DomainEvent.LEAD_DELETED],
   },
 ] as const;
 

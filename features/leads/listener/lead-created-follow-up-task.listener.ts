@@ -42,6 +42,7 @@ export class LeadCreatedFollowUpTaskListener extends DomainEventListener {
         const t = await getTranslator(locale, "LeadFollowUpTask");
 
         await this.taskRepo.createLeadFollowUpTaskOrThrow({
+          leadId: entityId,
           name: t("name", { leadTitle: payload.title }),
           dueAt: leadFollowUpDueAt(payload.createdAt),
           ownerUserId: payload.owner?.id ?? null,
