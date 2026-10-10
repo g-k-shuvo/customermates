@@ -3,7 +3,7 @@ import type { StorageConfig } from "../storage-config";
 import { describe, expect, it, vi } from "vitest";
 
 import { nullStorageProvider } from "../null-storage.provider";
-import { createS3StorageProvider, objectPath } from "../s3-storage.provider";
+import { createS3StorageProvider, objectPath, runtimeOriginalFetch } from "../s3-storage.provider";
 import { StorageError, StorageFailure } from "../storage-provider";
 
 const CONFIG: StorageConfig = {
@@ -145,6 +145,31 @@ describe("S3 storage provider requests", () => {
 
     await expect(storage.statObject(KEY)).rejects.toEqual(new StorageError(StorageFailure.unavailable, "AbortError"));
     await expect(storage.deleteObject(KEY)).rejects.toMatchObject({ failure: StorageFailure.unavailable });
+  });
+});
+
+describe("S3 storage provider transport", () => {
+  it("talks to the bucket through the runtime's original fetch, not a framework-patched one", () => {
+    const original = vi.fn() as unknown as typeof globalThis.fetch;
+    const patched = Object.assign(vi.fn(), { _nextOriginalFetch: original });
+    vi.stubGlobal("fetch", patched);
+
+    try {
+      expect(runtimeOriginalFetch()).toBe(original);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("uses the global fetch when nothing has patched it", () => {
+    const plain = vi.fn() as unknown as typeof globalThis.fetch;
+    vi.stubGlobal("fetch", plain);
+
+    try {
+      expect(runtimeOriginalFetch()).toBe(plain);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 

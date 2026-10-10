@@ -33,6 +33,12 @@ type SignInit = {
   aws?: { signQuery?: boolean; allHeaders?: boolean };
 };
 
+type FrameworkPatchedFetch = typeof fetch & { _nextOriginalFetch?: typeof fetch };
+
+export function runtimeOriginalFetch(): typeof fetch {
+  return (globalThis.fetch as FrameworkPatchedFetch)._nextOriginalFetch ?? globalThis.fetch;
+}
+
 type RequestSigner = { sign(input: string, init: SignInit): Promise<Request> };
 
 export function createS3StorageProvider(
@@ -46,7 +52,7 @@ export function createS3StorageProvider(
     service: "s3",
     retries: 2,
   });
-  const send = options.fetch ?? fetch;
+  const send: typeof fetch = options.fetch ?? ((input, init) => runtimeOriginalFetch()(input, init));
   const now = options.now ?? (() => new Date());
   const requestTimeoutMs = options.requestTimeoutMs ?? STORAGE_REQUEST_TIMEOUT_MS;
   const expiresAt = () => new Date(now().getTime() + STORAGE_PRESIGN_TTL_SECONDS * 1000);

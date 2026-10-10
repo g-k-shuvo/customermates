@@ -1,6 +1,7 @@
-import type { StorageProvider } from "./storage-provider";
+import { type StorageProvider, StorageError, StorageFailure } from "./storage-provider";
 
 export const CONTENT_SIGNATURE_BYTES = 16;
+export const OBJECT_HEAD_READ_TIMEOUT_MS = 30_000;
 
 const EXECUTABLE_SIGNATURES: readonly (readonly number[])[] = [
   [0x4d, 0x5a],
@@ -78,22 +79,31 @@ export function contentMatchesType(contentType: string, head: Uint8Array): boole
   return expected.some((signature) => startsWith(head, signature));
 }
 
-export async function readObjectHead(storage: StorageProvider, key: string): Promise<Uint8Array> {
+export async function readObjectHead(
+  storage: StorageProvider,
+  key: string,
+  timeoutMs: number = OBJECT_HEAD_READ_TIMEOUT_MS,
+): Promise<Uint8Array> {
   const { body } = await storage.getObject(key);
   const reader = body.getReader();
   const head = new Uint8Array(CONTENT_SIGNATURE_BYTES);
   let filled = 0;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new StorageError(StorageFailure.unavailable, "object read timed out")), timeoutMs);
+  });
 
   try {
     while (filled < CONTENT_SIGNATURE_BYTES) {
-      const { done, value } = await reader.read();
+      const { done, value } = await Promise.race([reader.read(), expired]);
       if (done || !value) break;
       const take = Math.min(value.length, CONTENT_SIGNATURE_BYTES - filled);
       head.set(value.subarray(0, take), filled);
       filled += take;
     }
   } finally {
-    await reader.cancel().catch(() => undefined);
+    clearTimeout(timer);
+    reader.cancel().catch(() => undefined);
   }
 
   return head.subarray(0, filled);

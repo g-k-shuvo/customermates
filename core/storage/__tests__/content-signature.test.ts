@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { contentMatchesType, readObjectHead } from "../content-signature";
+import { StorageFailure } from "../storage-provider";
 
 const bytes = (...values: number[]) => new Uint8Array(values);
 const ascii = (text: string) => new TextEncoder().encode(text);
@@ -50,6 +51,22 @@ describe("readObjectHead", () => {
     const head = await readObjectHead(storage, "key");
 
     expect(new TextDecoder().decode(head)).toBe("%PDF-1.4 and a l");
+    expect(cancelled).toBe(true);
+  });
+
+  it("gives up on a body that stops sending, so the upload reports a failure instead of hanging", async () => {
+    let cancelled = false;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(ascii("%PD"));
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    const storage = { getObject: () => Promise.resolve({ body }) } as never;
+
+    await expect(readObjectHead(storage, "key", 20)).rejects.toMatchObject({ failure: StorageFailure.unavailable });
     expect(cancelled).toBe(true);
   });
 });
