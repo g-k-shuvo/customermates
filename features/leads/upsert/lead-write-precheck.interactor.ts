@@ -14,6 +14,7 @@ import type { UpdateLeadData } from "./update-lead.interactor";
 import type { CreateManyLeadsData } from "./create-many-leads.interactor";
 import type { UpdateManyLeadsData } from "./update-many-leads.interactor";
 import type { DeleteLeadData } from "../delete/delete-lead.interactor";
+import type { DeleteManyLeadsData } from "../delete/delete-many-leads.interactor";
 import type { ConvertLeadToDealData } from "../convert/convert-lead-to-deal.interactor";
 
 import { Resource, EntityType } from "@/generated/prisma";
@@ -88,6 +89,10 @@ export class LeadWritePrecheckInteractor {
 
   async delete(data: DeleteLeadData, ctx: z.RefinementCtx) {
     await this.leadValidator.invoke([{ ids: data.id, path: ["id"] }], ctx);
+  }
+
+  async deleteMany(data: DeleteManyLeadsData, ctx: z.RefinementCtx) {
+    await this.leadValidator.invoke([{ ids: data.ids, path: ["ids"] }], ctx);
   }
 
   async convert(data: ConvertLeadToDealData, ctx: z.RefinementCtx) {

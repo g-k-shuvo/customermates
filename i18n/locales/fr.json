@@ -4430,6 +4430,7 @@
     }
   },
   "OrganizationModal": {
+    "duplicateNameWarning": "Une autre organisation s’appelle déjà « {name} ». S’il s’agit de la même entreprise, fusionnez-les dans Organisations → Trouver les doublons.",
     "title": "Organisation"
   },
   "PageState": {

@@ -7,4 +7,5 @@ export type LeadNotificationRecipient = {
 
 export abstract class LeadNotificationRepo {
   abstract findLeadOwnerCompanyWide(leadId: string): Promise<LeadNotificationRecipient | null>;
+  abstract findCompanyAdminsCompanyWide(): Promise<LeadNotificationRecipient[]>;
 }

@@ -4430,6 +4430,7 @@
     }
   },
   "OrganizationModal": {
+    "duplicateNameWarning": "Ya existe otra organización llamada «{name}». Si es la misma empresa, combínalas en Organizaciones → Buscar duplicados.",
     "title": "Organización"
   },
   "PageState": {

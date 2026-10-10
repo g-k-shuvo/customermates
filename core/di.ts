@@ -472,6 +472,7 @@ import { GetLeadByIdInteractor } from "@/features/leads/get/get-lead-by-id.inter
 import { CreateLeadInteractor } from "@/features/leads/upsert/create-lead.interactor";
 import { UpdateLeadInteractor } from "@/features/leads/upsert/update-lead.interactor";
 import { DeleteLeadInteractor } from "@/features/leads/delete/delete-lead.interactor";
+import { DeleteManyLeadsInteractor } from "@/features/leads/delete/delete-many-leads.interactor";
 import { ConvertLeadToDealInteractor } from "@/features/leads/convert/convert-lead-to-deal.interactor";
 
 // Services interactors
@@ -1488,7 +1489,7 @@ export const getRetryWebFormSubmissionInteractor = () =>
   );
 
 export const getUpdateWebFormSourceInteractor = () =>
-  new UpdateWebFormSourceInteractor(getWebFormRepo(), getWebFormSourceWritePrecheck());
+  new UpdateWebFormSourceInteractor(getWebFormRepo(), getWebFormSourceWritePrecheck(), getBackgroundTaskService());
 
 export const getDeleteWebFormSourceInteractor = () =>
   new DeleteWebFormSourceInteractor(getWebFormRepo(), getWebFormSourceWritePrecheck());
@@ -1511,6 +1512,9 @@ export const getUpdateLeadInteractor = () =>
 
 export const getDeleteLeadInteractor = () =>
   new DeleteLeadInteractor(getLeadRepo(), getEventService(), getLeadWritePrecheck());
+
+export const getDeleteManyLeadsInteractor = () =>
+  new DeleteManyLeadsInteractor(getLeadRepo(), getEventService(), getLeadWritePrecheck());
 
 export const getConvertLeadToDealInteractor = () =>
   new ConvertLeadToDealInteractor(getLeadRepo(), getDealRepo(), getEventService(), getLeadWritePrecheck());

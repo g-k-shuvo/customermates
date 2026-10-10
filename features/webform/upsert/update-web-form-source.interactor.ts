@@ -1,4 +1,5 @@
 import type { UpdateWebFormSourceRepo } from "./update-web-form-source.repo";
+import type { BackgroundTaskService } from "@/core/utils/background-task.service";
 import type { Data, Validated } from "@/core/validation/validation.utils";
 import type { WebFormSourceWritePrecheckInteractor } from "./web-form-source-write-precheck.interactor";
 
@@ -32,6 +33,7 @@ export class UpdateWebFormSourceInteractor extends AuthenticatedInteractor<Updat
   constructor(
     private repo: UpdateWebFormSourceRepo,
     private precheck: WebFormSourceWritePrecheckInteractor,
+    private backgroundTasks: BackgroundTaskService,
   ) {
     super();
   }
@@ -42,6 +44,15 @@ export class UpdateWebFormSourceInteractor extends AuthenticatedInteractor<Updat
     precheck: (self, data, ctx) => self.precheck.update(data, ctx),
   })
   async invoke(data: UpdateWebFormSourceData): Validated<WebFormSourceDto> {
-    return { ok: true as const, data: await this.repo.updateWebFormSourceOrThrow(data) };
+    const previous = await this.repo.getWebFormSourceOrThrowCompanyWide(data.id);
+    const updated = await this.repo.updateWebFormSourceOrThrow(data);
+
+    if (!previous.active && updated.active) {
+      const heldIds = await this.repo.findHeldSubmissionIdsCompanyWide(updated.id);
+      for (const submissionId of heldIds)
+        await this.backgroundTasks.dispatch("process-web-form-submission", { submissionId });
+    }
+
+    return { ok: true as const, data: updated };
   }
 }

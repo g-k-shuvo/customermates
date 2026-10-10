@@ -113,9 +113,10 @@ export class WebFormSourceModalStore extends BaseModalStore<WebFormSourceFormDat
     );
 
     if (this.form.fieldMapping.phone?.trim()) {
-      this.onInitOrRefresh({
-        fieldMapping: withEveryMappingKey(adoptLegacyPhoneMapping(this.form.fieldMapping, this.mappableColumns)),
-      });
+      this.onChange(
+        "fieldMapping",
+        withEveryMappingKey(adoptLegacyPhoneMapping(this.form.fieldMapping, this.mappableColumns)),
+      );
     }
   };
 

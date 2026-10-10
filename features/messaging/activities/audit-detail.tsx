@@ -4,7 +4,7 @@ import type { CustomColumnDto } from "@/features/custom-column/custom-column.sch
 import type { MessagingProvider } from "@/generated/prisma";
 import type { ActivityEntryDto } from "@/ee/messaging/activities/activities.schema";
 
-import { Fragment, type ComponentProps, type ReactNode } from "react";
+import { Fragment, useEffect, type ComponentProps, type ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useLocale, useTranslations } from "next-intl";
@@ -16,6 +16,7 @@ import { channelDisplayLabel } from "@/ee/messaging/thread-display";
 
 import { isEmpty, partitionRelationIds } from "@/features/audit-log/audit-log-changes";
 import { hasNotesDiff, NotesDiff } from "@/app/[locale]/(protected)/company/components/audit-log/notes-diff";
+import { pipelineReferenceName } from "@/app/[locale]/(protected)/company/components/audit-log/audit-log-changes";
 
 import { auditCategory, DetailHeader, IdentityAvatar, TypeBadge } from "./activities-row";
 import { AppCard } from "@/components/card/app-card";
@@ -27,6 +28,7 @@ import { CustomFieldValue } from "@/components/data-view/custom-columns/custom-f
 import { Icon } from "@/components/shared/icon";
 import { serializeJSONToMarkdown } from "@/components/editor/editor.utils";
 import { useRootStore } from "@/core/stores/root-store.provider";
+import { reportApplicationError } from "@/core/errors/report-application-error";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { useEntityHref, useOpenEntity } from "@/components/entity-detail/hooks/use-entity-drawer-stack";
 import { CustomColumnType, EntityType, TaskType } from "@/generated/prisma";
@@ -51,6 +53,7 @@ type AvatarItem = {
 
 const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
 
+const PIPELINE_REFERENCE_FIELDS: ReadonlySet<string> = new Set(["stageId", "pipelineId"]);
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
 function isPrimitive(value: unknown): boolean {
@@ -139,10 +142,20 @@ export const AuditDetail = observer(({ entry, customColumns }: Props) => {
   const t = useTranslations();
   const locale = useLocale() as AppLocale;
   const columnLabel = useCanonicalColumnLabel();
-  const { userModalStore } = useRootStore();
+  const { userModalStore, dealsStore, dealCloseStore, lostReasonsStore } = useRootStore();
   const intlStore = useHydratedIntlStore();
   const openEntity = useOpenEntity();
   const entityHref = useEntityHref();
+  const refersToPipelines = entry.changes.some((change) => PIPELINE_REFERENCE_FIELDS.has(change.field));
+  const refersToLostReasons = entry.changes.some((change) => change.field === "lostReasonId");
+
+  useEffect(() => {
+    if (refersToPipelines) dealsStore.ensurePipelinesLoaded().catch(reportApplicationError);
+  }, [dealsStore, refersToPipelines]);
+
+  useEffect(() => {
+    if (refersToLostReasons) dealCloseStore.ensureLostReasonsLoaded().catch(reportApplicationError);
+  }, [dealCloseStore, refersToLostReasons]);
 
   function legalDocumentLabel(document: string): string {
     return t.has(`LegalDocumentNotice.documents.${document}`)
@@ -268,8 +281,14 @@ export const AuditDetail = observer(({ entry, customColumns }: Props) => {
         return String(value);
       case "baseValue":
       case "totalValue":
+      case "weightedValue":
       case "amount":
         return intlStore.formatCurrency(value as number);
+      case "stageId":
+      case "pipelineId":
+        return pipelineReferenceName(key, value, dealsStore) ?? String(value);
+      case "lostReasonId":
+        return lostReasonsStore.lostReasons.find((reason) => reason.id === value)?.name ?? String(value);
       case "totalQuantity":
         return intlStore.formatNumber(value as number);
       case "country":
@@ -397,6 +416,10 @@ export const AuditDetail = observer(({ entry, customColumns }: Props) => {
           ? t(`AccountRemovalReason.${String(value)}`)
           : String(value);
       case "status":
+        if (entry.event.startsWith("deal.") && t.has(`Common.dealStatuses.${String(value)}`))
+          return t(`Common.dealStatuses.${String(value)}`);
+        if (entry.event.startsWith("lead.") && t.has(`Common.leadStatuses.${String(value)}`))
+          return t(`Common.leadStatuses.${String(value)}`);
         return t.has(`Common.userStatuses.${String(value)}`)
           ? t(`Common.userStatuses.${String(value)}`)
           : String(value);

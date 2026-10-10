@@ -252,7 +252,12 @@ export abstract class BaseDataViewStore<Entity extends HasId> extends BaseStore 
     this.setBulkMutating(true);
     try {
       const res = await bulkDeleteEntitiesAction({ entityType: this.entityType, ids });
-      if (res && !res.ok) {
+      if (!res) {
+        this.toastError("Common.notifications.unexpectedError");
+        await this.refresh();
+        return false;
+      }
+      if (!res.ok) {
         toastZodErrorTree(res.error);
         await this.refresh();
         return false;

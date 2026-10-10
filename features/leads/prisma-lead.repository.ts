@@ -14,7 +14,7 @@ import type { FindLeadsByIdsRepo } from "./find-leads-by-ids.repo";
 import type { FindLeadRelationsRepo, LeadRelations } from "./find-lead-relations.repo";
 import type { LeadNotificationRecipient, LeadNotificationRepo } from "./listener/lead-notification.repo";
 
-import { EntityType, LeadStatus, Resource } from "@/generated/prisma";
+import { EntityType, LeadStatus, Resource, Status } from "@/generated/prisma";
 
 import type { CustomColumnDto } from "@/features/custom-column/custom-column.schema";
 import type { Filter } from "@/core/base/base-get.schema";
@@ -240,6 +240,13 @@ export class PrismaLeadRepo
     });
 
     return lead?.owner ?? null;
+  }
+
+  async findCompanyAdminsCompanyWide(): Promise<LeadNotificationRecipient[]> {
+    return this.prisma.user.findMany({
+      where: { companyId: this.companyId, status: { not: Status.inactive }, role: { isSystemRole: true } },
+      select: { email: true, displayLanguage: true },
+    });
   }
 
   async getOrThrowCompanyWide(id: string): Promise<LeadDto> {

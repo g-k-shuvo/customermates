@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { CustomErrorCode } from "@/core/validation/validation.types";
+import { compactPhoneNumber } from "@/core/utils/phone-number";
 
 export function validateCustomFieldPhone(
   value: string | string[],
@@ -12,7 +13,7 @@ export function validateCustomFieldPhone(
   const isArray = Array.isArray(value) || (allowMultiple && values.length > 1);
 
   for (let i = 0; i < values.length; i++) {
-    const phoneResult = z.e164().safeParse(values[i]);
+    const phoneResult = z.e164().safeParse(compactPhoneNumber(values[i]));
     if (!phoneResult.success) {
       ctx.addIssue({
         code: "custom",

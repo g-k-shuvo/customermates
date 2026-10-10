@@ -73,7 +73,7 @@ describe("WebFormSourceModalStore extra fields", () => {
     toastError.mockReset();
   });
 
-  it("loads lead and contact columns when opened, and adopts a legacy phone mapping", async () => {
+  it("loads lead and contact columns when opened, and adopts a legacy phone mapping as an unsaved change so it can be stored", async () => {
     getCustomColumnsByEntityTypeAction.mockImplementation(({ entityType }: { entityType: EntityType }) =>
       Promise.resolve(entityType === EntityType.lead ? [plainColumn] : [phoneColumn("p1")]),
     );
@@ -90,7 +90,7 @@ describe("WebFormSourceModalStore extra fields", () => {
     await vi.waitFor(() => expect(store.mappableColumns).toHaveLength(2));
 
     expect(store.form.fieldMapping).toEqual({ customFields: [{ path: "fields.phone", columnId: "p1" }] });
-    expect(store.hasUnsavedChanges).toBe(false);
+    expect(store.hasUnsavedChanges).toBe(true);
   });
 
   it("keeps a mapping path reactive even when the saved source never had it", () => {

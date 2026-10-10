@@ -35,6 +35,9 @@ import {
   getUpdateTaskInteractor,
   getUpdateManyTasksInteractor,
   getDeleteManyTasksInteractor,
+  getDeleteManyLeadsInteractor,
+  getUpdateLeadInteractor,
+  getUpdateManyLeadsInteractor,
   getGetP13nInteractor,
   getUpsertP13nInteractor,
   getGetDataViewsInteractor,
@@ -115,6 +118,8 @@ export async function updateEntityCustomFieldValueAction(data: {
       return serializeResult(getUpdateServiceInteractor().invoke({ id: entityId, customFieldValues }));
     case EntityType.task:
       return serializeResult(getUpdateTaskInteractor().invoke({ id: entityId, customFieldValues }));
+    case EntityType.lead:
+      return serializeResult(getUpdateLeadInteractor().invoke({ id: entityId, customFieldValues }));
   }
 }
 
@@ -137,6 +142,8 @@ export async function bulkDeleteEntitiesAction(data: { entityType: EntityType; i
       return serializeResult(getDeleteManyServicesInteractor().invoke({ ids }));
     case EntityType.task:
       return serializeResult(getDeleteManyTasksInteractor().invoke({ ids }));
+    case EntityType.lead:
+      return serializeResult(getDeleteManyLeadsInteractor().invoke({ ids }));
   }
 }
 
@@ -158,6 +165,8 @@ export async function bulkUpdateCustomFieldValuesAction(data: {
       return serializeResult(getUpdateManyServicesInteractor().invoke({ services: items }));
     case EntityType.task:
       return serializeResult(getUpdateManyTasksInteractor().invoke({ tasks: items }));
+    case EntityType.lead:
+      return serializeResult(getUpdateManyLeadsInteractor().invoke({ leads: items }));
   }
 }
 

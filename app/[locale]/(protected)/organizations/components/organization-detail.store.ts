@@ -3,15 +3,35 @@ import type { OrganizationDto } from "@/features/organizations/organization.sche
 import type { RootStore } from "@/core/stores/root.store";
 
 import { Resource } from "@/generated/prisma";
+import { toast } from "sonner";
 
 import {
   deleteOrganizationAction,
   getOrganizationByIdAction,
+  getOrganizationsAction,
   createOrganizationAction,
   updateOrganizationAction,
 } from "../actions";
 
 import { BaseCustomColumnEntityModalStore } from "@/core/base/base-custom-column-entity-modal.store";
+import { reportApplicationError } from "@/core/errors/report-application-error";
+
+function sameOrganizationName(left: string, right: string): boolean {
+  return left.trim().toLowerCase() === right.trim().toLowerCase();
+}
+
+async function warnAboutNamesake(rootStore: RootStore, created: OrganizationDto): Promise<void> {
+  const others = await getOrganizationsAction({ searchTerm: created.name, pagination: { page: 1, pageSize: 25 } });
+  const namesake = others.items.some(
+    (organization) => organization.id !== created.id && sameOrganizationName(organization.name, created.name),
+  );
+
+  if (namesake) {
+    toast.warning(
+      rootStore.localeStore.getTranslation("OrganizationModal.duplicateNameWarning", { name: created.name }),
+    );
+  }
+}
 
 export class OrganizationDetailStore extends BaseCustomColumnEntityModalStore<
   CreateOrganizationData & { id?: string },
@@ -33,7 +53,11 @@ export class OrganizationDetailStore extends BaseCustomColumnEntityModalStore<
       rootStore.organizationsStore,
       {
         getById: getOrganizationByIdAction,
-        create: createOrganizationAction,
+        create: async (data) => {
+          const result = await createOrganizationAction(data);
+          if (result.ok) warnAboutNamesake(rootStore, result.data).catch(reportApplicationError);
+          return result;
+        },
         update: updateOrganizationAction,
         delete: deleteOrganizationAction,
       },

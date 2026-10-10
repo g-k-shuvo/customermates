@@ -1,6 +1,7 @@
 import type { DomainEventHandlers } from "@/features/event/domain-event.listener";
+import type { DomainEventMap } from "@/features/event/domain-events";
 import type { EmailService } from "@/features/email/email.service";
-import type { LeadNotificationRepo } from "./lead-notification.repo";
+import type { LeadNotificationRecipient, LeadNotificationRepo } from "./lead-notification.repo";
 
 import { createElement } from "react";
 
@@ -23,36 +24,42 @@ export class LeadCreatedNotificationListener extends DomainEventListener {
 
     this.handlers = {
       [DomainEvent.LEAD_CREATED]: async ({ entityId, payload }) => {
-        const recipient = await this.repo.findLeadOwnerCompanyWide(entityId);
-        if (!recipient) return;
+        const owner = await this.repo.findLeadOwnerCompanyWide(entityId);
+        const recipients = owner ? [owner] : await this.repo.findCompanyAdminsCompanyWide();
 
-        const locale = resolveUserLocale(recipient);
-        const t = await getTranslator(locale, "LeadCreatedNotice");
-        const layoutCopy = await getEmailLayoutCopy(locale);
-
-        const sourceName = payload.source?.name ?? payload.sourceOrigin;
-        const personName = payload.contact ? `${payload.contact.firstName} ${payload.contact.lastName}`.trim() : "";
-        const subject = t("subject", { leadTitle: payload.title });
-
-        await this.emailService.send({
-          to: recipient.email,
-          subject,
-          react: createElement(LeadCreatedNotice, {
-            locale,
-            layoutCopy,
-            leadLink: `${env.BASE_URL}/leads/${entityId}`,
-            subject,
-            preview: t("preview", { sourceName }),
-            intro: t("intro", { leadTitle: payload.title, sourceName }),
-            person: personName ? t("person", { personName }) : null,
-            organization: payload.organization
-              ? t("organization", { organizationName: payload.organization.name })
-              : null,
-            cta: t("cta"),
-            fallback: t("fallback"),
-          }),
-        });
+        for (const recipient of recipients) await this.notify(recipient, entityId, payload);
       },
     };
+  }
+
+  private async notify(
+    recipient: LeadNotificationRecipient,
+    entityId: string,
+    payload: DomainEventMap[typeof DomainEvent.LEAD_CREATED]["payload"],
+  ) {
+    const locale = resolveUserLocale(recipient);
+    const t = await getTranslator(locale, "LeadCreatedNotice");
+    const layoutCopy = await getEmailLayoutCopy(locale);
+
+    const sourceName = payload.source?.name ?? payload.sourceOrigin;
+    const personName = payload.contact ? `${payload.contact.firstName} ${payload.contact.lastName}`.trim() : "";
+    const subject = t("subject", { leadTitle: payload.title });
+
+    await this.emailService.send({
+      to: recipient.email,
+      subject,
+      react: createElement(LeadCreatedNotice, {
+        locale,
+        layoutCopy,
+        leadLink: `${env.BASE_URL}/leads/${entityId}`,
+        subject,
+        preview: t("preview", { sourceName }),
+        intro: t("intro", { leadTitle: payload.title, sourceName }),
+        person: personName ? t("person", { personName }) : null,
+        organization: payload.organization ? t("organization", { organizationName: payload.organization.name }) : null,
+        cta: t("cta"),
+        fallback: t("fallback"),
+      }),
+    });
   }
 }

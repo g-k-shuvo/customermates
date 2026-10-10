@@ -2,6 +2,7 @@ export type WebFormSourceRecord = {
   id: string;
   companyId: string;
   signingSecret: string;
+  active: boolean;
 };
 
 export type StoreSubmissionArgs = {
@@ -19,7 +20,7 @@ export type ConsumeRateLimitArgs = {
 };
 
 export abstract class IngestWebFormSubmissionRepo {
-  abstract findActiveSourceBySlugUnscoped(slug: string): Promise<WebFormSourceRecord | null>;
+  abstract findSourceBySlugUnscoped(slug: string): Promise<WebFormSourceRecord | null>;
   abstract consumeRateLimitUnscoped(args: ConsumeRateLimitArgs): Promise<boolean>;
   abstract storeSubmissionUnscoped(args: StoreSubmissionArgs): Promise<{ id: string; created: boolean }>;
 }

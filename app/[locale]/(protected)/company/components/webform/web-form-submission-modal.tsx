@@ -12,6 +12,7 @@ import { AppCard } from "@/components/card/app-card";
 import { AppCardBody } from "@/components/card/app-card-body";
 import { AppCardHeader } from "@/components/card/app-card-header";
 import { InfoRow } from "@/components/shared/info-row";
+import { AppLink } from "@/components/shared/app-link";
 import { AppChip } from "@/components/chip/app-chip";
 import { useColumnLabel } from "@/components/entity-terminology/use-column-label";
 import { CodeBlockAccordion } from "@/components/shared/code-block-accordion";
@@ -77,7 +78,13 @@ export const WebFormSubmissionModal = observer(function WebFormSubmissionModal()
             {[submission.name, submission.email].filter(Boolean).join(" · ") || "-"}
           </InfoRow>
 
-          <InfoRow label={columnLabel("lead")}>{submission.leadTitle ?? "-"}</InfoRow>
+          <InfoRow label={columnLabel("lead")}>
+            {submission.leadId ? (
+              <AppLink href={`/leads/${submission.leadId}`}>{submission.leadTitle ?? submission.leadId}</AppLink>
+            ) : (
+              (submission.leadTitle ?? "-")
+            )}
+          </InfoRow>
 
           <InfoRow label={t("WebFormSubmissions.externalId")}>{submission.externalId ?? "-"}</InfoRow>
 

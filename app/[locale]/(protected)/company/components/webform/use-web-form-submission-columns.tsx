@@ -7,6 +7,7 @@ import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 
 import { AppChip } from "@/components/chip/app-chip";
+import { AppLink } from "@/components/shared/app-link";
 import { useColumnLabel } from "@/components/entity-terminology/use-column-label";
 import { useHydratedIntlStore } from "@/core/stores/use-hydrated-intl-store";
 import { WEB_FORM_SUBMISSION_STATUS_CHIP_COLOR } from "@/features/webform/submissions/web-form-submission-status-colors";
@@ -48,7 +49,18 @@ export function useWebFormSubmissionColumns(): ColumnDef<WebFormSubmissionDto>[]
       {
         id: "lead",
         header: columnLabel("lead"),
-        cell: ({ row }) => <span className="truncate text-sm">{row.original.leadTitle ?? "-"}</span>,
+        cell: ({ row }) =>
+          row.original.leadId ? (
+            <AppLink
+              className="truncate text-sm"
+              href={`/leads/${row.original.leadId}`}
+              onClick={(event) => event.stopPropagation()}
+            >
+              {row.original.leadTitle ?? row.original.leadId}
+            </AppLink>
+          ) : (
+            <span className="truncate text-sm">{row.original.leadTitle ?? "-"}</span>
+          ),
       },
       {
         id: "error",

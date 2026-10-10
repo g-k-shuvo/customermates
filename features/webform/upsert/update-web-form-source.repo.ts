@@ -5,4 +5,5 @@ import { type UpdateWebFormSourceData } from "./update-web-form-source.interacto
 export abstract class UpdateWebFormSourceRepo {
   abstract updateWebFormSourceOrThrow(args: UpdateWebFormSourceData): Promise<WebFormSourceDto>;
   abstract getWebFormSourceOrThrowCompanyWide(id: string): Promise<WebFormSourceDto>;
+  abstract findHeldSubmissionIdsCompanyWide(sourceId: string): Promise<string[]>;
 }

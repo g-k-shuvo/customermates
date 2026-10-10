@@ -190,6 +190,16 @@ export class PrismaWebFormRepo
     return this.getWebFormSourceOrThrowCompanyWide(id);
   }
 
+  async findHeldSubmissionIdsCompanyWide(sourceId: string): Promise<string[]> {
+    const rows = await this.prisma.webFormSubmission.findMany({
+      where: { companyId: this.companyId, sourceId, status: "received", leadId: null },
+      select: { id: true },
+      orderBy: { receivedAt: "asc" },
+    });
+
+    return rows.map((row) => row.id);
+  }
+
   async getWebFormSourceOrThrowCompanyWide(id: string): Promise<WebFormSourceDto> {
     const row = await this.prisma.webFormSource.findFirstOrThrow({
       where: { companyId: this.companyId, id },
@@ -248,10 +258,10 @@ export class PrismaWebFormRepo
   }
 
   @BypassTenantGuard
-  async findActiveSourceBySlugUnscoped(slug: string): Promise<WebFormSourceRecord | null> {
+  async findSourceBySlugUnscoped(slug: string): Promise<WebFormSourceRecord | null> {
     return this.prisma.webFormSource.findFirst({
-      where: { slug, active: true },
-      select: { id: true, companyId: true, signingSecret: true },
+      where: { slug },
+      select: { id: true, companyId: true, signingSecret: true, active: true },
     });
   }
 

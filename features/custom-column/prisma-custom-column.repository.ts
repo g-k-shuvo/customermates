@@ -15,6 +15,7 @@ import type { TaskCustomColumnRepo } from "@/features/tasks/get/get-task-by-id.i
 import { CustomColumnType, EntityType } from "@/generated/prisma";
 
 import { canonicalIsoDateTime, isIsoDateTime } from "@/core/validation/iso-date-time";
+import { compactPhoneList } from "@/core/utils/phone-number";
 
 import type { Prisma } from "@/generated/prisma";
 
@@ -319,7 +320,11 @@ export class PrismaCustomColumnRepo
 
         if (!type) return acc;
 
-        const value = DATE_LIKE_CUSTOM_COLUMN_TYPES.has(type) ? canonicalIsoDateTimeParts(v.value) : v.value;
+        const value = DATE_LIKE_CUSTOM_COLUMN_TYPES.has(type)
+          ? canonicalIsoDateTimeParts(v.value)
+          : type === CustomColumnType.phone && v.value
+            ? compactPhoneList(v.value)
+            : v.value;
 
         const numericValue =
           type === CustomColumnType.currency && value != null && value !== "" && !Number.isNaN(Number(value))

@@ -4430,6 +4430,7 @@
     }
   },
   "OrganizationModal": {
+    "duplicateNameWarning": "Another organization is already called “{name}”. If it is the same company, merge them under Organizations → Find duplicates.",
     "title": "Organization"
   },
   "PageState": {

@@ -44,7 +44,7 @@ export class IngestWebFormSubmissionInteractor {
   @Validate(IngestWebFormSubmissionSchema)
   @ValidateOutput(IngestWebFormSubmissionOutcomeSchema)
   async invoke(data: IngestWebFormSubmissionData): Validated<IngestWebFormSubmissionOutcome> {
-    const source = await this.repo.findActiveSourceBySlugUnscoped(data.slug);
+    const source = await this.repo.findSourceBySlugUnscoped(data.slug);
     if (!source) return { ok: true as const, data: { outcome: "unknown-source", submissionId: null } };
 
     const allowed = await this.repo.consumeRateLimitUnscoped({
@@ -74,7 +74,7 @@ export class IngestWebFormSubmissionInteractor {
 
     if (!stored.created) return { ok: true as const, data: { outcome: "duplicate", submissionId: stored.id } };
 
-    await this.backgroundTasks.dispatch("process-web-form-submission", { submissionId: stored.id });
+    if (source.active) await this.backgroundTasks.dispatch("process-web-form-submission", { submissionId: stored.id });
 
     return { ok: true as const, data: { outcome: "accepted", submissionId: stored.id } };
   }
